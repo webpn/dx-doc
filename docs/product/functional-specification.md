@@ -1,0 +1,99 @@
+# Functional Specification
+
+This is the canonical functional specification for the dx-doc Platform. It is derived from the consolidated discovery-phase specification (v1.2) and is the authoritative reference for all product requirements.
+
+> **Note:** The full specification is maintained in a separate document due to its length. This file serves as the index and entry point. When the specification changes, this file is updated to reflect the current version.
+
+## Current Version
+
+**Version 1.2** — Preliminary analysis consolidated; benchmark findings adopted.
+
+The full specification is attached as a project artefact. Key sections:
+
+1. Purpose and scope
+2. Background and problem statement
+3. Goals, non-goals and success criteria
+4. Personas and organisational roles
+5. Scale and volumes
+6. Domain model (entities, relationships, rules)
+7. Functional requirements — authoring
+8. Functional requirements — structure and navigation
+9. Functional requirements — versioning and publication
+10. Functional requirements — audience views and distribution channels
+11. Functional requirements — developer handoff
+12. Functional requirements — API and MCP
+13. Functional requirements — migration
+14. Deferred modules
+15. Non-functional requirements
+16. Architecture and technology decisions
+17. Security, authentication and authorisation
+18. Configuration reference
+19. MoSCoW prioritisation
+20. Delivery roadmap
+21. Open decisions log
+22. Risk register
+23. Glossary
+24. Appendix A — Entity-relationship diagram
+25. Appendix B — Permission matrix
+26. Appendix C — Environment variable reference
+
+## Key Domain Entities
+
+The domain model defines ~25 entities. See `docs/product/glossary.md` for definitions and the ER diagram in the full specification for relationships.
+
+### Core Entities (R1)
+
+- Company, Project
+- Page/Screen, Flow, FlowEdge, Trigger
+- Tracking, TrackingTemplate
+- DataLayerProperty, Module
+- SpecificValue, PropertyCondition
+- Destination
+- CdpAudience, Survey
+- FreePage
+- Version, ChangeEntry
+- User, Role, ProjectGrant, AuditEntry
+
+### Deferred Entities
+
+- Extension, Segment, CalculatedMetric (containers in R3, substance in R5)
+
+## Critical Business Rules
+
+1. **Property composition:** Properties may be added individually or via a Module. Any property may be removed individually. If all properties of a module are removed, the module association is removed automatically.
+2. **Module propagation:** Module changes do NOT propagate automatically to existing trackings. The editor is asked and the default is no propagation.
+3. **Catalogue inheritance:** Company catalogue is copied at project creation. No live link. Changes do not propagate.
+4. **Draft model:** Single draft stream per project. No branches, no merges, no approval workflow.
+5. **Property isolation:** Properties are fully isolated per project. No cross-project references.
+6. **Immutable IDs:** Every entity has an immutable internal ID separate from name and slug.
+7. **No cross-project references:** An entity may only reference entities in its own project.
+
+## Delivery Roadmap Summary
+
+| Release | Content | Timeline |
+|---|---|---|
+| R0 | Foundations: stack, schema, auth, API, CI, public repo | Weeks 1–2 |
+| R1 | MVP: full data model, editor, versioning, importer, SSO | Weeks 3–8 |
+| R2 | Navigation: flows, bulk ops, exports, email, SAML | Months 3–4 |
+| R3 | Developer handoff: snippets, Confluence, MCP, public API | Months 5–6 |
+| R4 | Data quality: analytics integrations, conformance reports, Figma import | Months 7–8 |
+| R5 | Semantic layer: OWL/RDF/SKOS, business glossary | Months 9+ |
+| R6 | Lifecycle: tracking implementation status, insights | Beyond R5 |
+
+## Open Decisions
+
+See §21 of the full specification. Critically open items:
+
+- **O1:** Semantic layer ontology classes, IRI scheme, export formats — blocks R5
+- **O2:** Business glossary details — blocks R5
+- **O3:** "How to read this in the analytics platform" — structured field design — blocks R2 Analyst view
+- **O4:** Data quality interaction with unstructured placeholders — blocks R4
+- **O5:** Verification/QA module scope — blocks R4
+- **O6:** Complete environment variable matrix — blocks R0 (immediately)
+- **O7:** Schema migration strategy for third-party installs — blocks R1
+- **O8:** Design patterns from reference products — partly closed; developer-handoff ref remains
+- **O9:** Extension/Segment/CalculatedMetric attributes before R5 — blocks R3
+- **O10:** Config key split (environment vs database) — blocks R0 (immediately)
+- **O11:** "Manage company catalogue" permission model — blocks R1
+- **O12:** Self-hostable search adapter before public release — blocks R1 public release
+- **O13:** Bulk operations list completeness — blocks R2
