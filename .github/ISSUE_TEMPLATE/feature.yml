@@ -1,0 +1,37 @@
+name: Feature Request
+description: Propose a new feature or enhancement
+title: "feat: "
+labels: ["type:feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing a feature. Please check the [functional specification](docs/product/functional-specification.md) and [scope](docs/product/scope.md) first to make sure the feature is not already defined or explicitly out of scope.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What should the Platform do that it doesn't do today?
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale
+      description: Why is this needed? Who benefits?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Is this in scope per the product scope document? If this touches a deferred module, which release does it belong to?
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: What alternatives have you considered?
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
