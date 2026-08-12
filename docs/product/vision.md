@@ -57,6 +57,10 @@ Beyond documenting trackings, the Platform could grow into the place where the r
 
 This is not yet scoped or committed; it's a candidate direction to evaluate against the [What Success Looks Like](#what-success-looks-like) analyst-view goal.
 
+**None of it carries a requirement, deliberately.** Of the three, only data quality is specified (REQ-DQ-001 … REQ-DQ-003, R4) and only the insights repository has a placeholder ID (REQ-DQ-008, R6+, treated as a separate product). **Analysis guidance has no requirement and will not get one until there is a clear idea of what it is** — writing requirements for it now would produce detail that gets discarded. It is a product-development path, recorded here so it is not lost, and explicitly not a commitment the requirement set is expected to honour.
+
+Read against this, the analyst view in R1–R3 means property documentation, destination mappings and the version an item was introduced in — not interpretation guidance.
+
 ## What the Platform Is Not
 
 - **Not an analytics tool.** It documents; it does not report.

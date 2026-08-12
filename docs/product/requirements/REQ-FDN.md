@@ -12,8 +12,8 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-FDN-004 | Immutable internal identifiers | Must | R0 | M0.2 | Not Started |
 | REQ-FDN-005 | Persistence behind repository ports; SQLite default | Must | R0 | M0.2 | Not Started |
 | REQ-FDN-006 | S3-compatible object storage behind an interface | Must | R0 | M0.3 | Not Started |
-| REQ-FDN-007 | Algolia search behind an interface | Must | R0 | M0.3 | Not Started |
-| REQ-FDN-008 | Search index design and server-side scoped keys | Must | R0 | M0.3 | Not Started |
+| REQ-FDN-007 | Search behind a port; Pagefind is the default adapter | Must | R0 | M0.3 | Not Started |
+| REQ-FDN-008 | Search scoping enforced server-side | Must | R0 | M0.3 | Not Started |
 | REQ-FDN-009 | Versioned, idempotent, forward-only migrations | Must | R0 | M0.2 | Not Started |
 | REQ-FDN-010 | Server-side validation shared by UI, API and MCP | Must | R0 | M0.5 | Not Started |
 | REQ-FDN-011 | Public MIT repository with README | Must | R0 | M0.6 | Not Started |
@@ -21,11 +21,13 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-FDN-013 | Two-level configuration, environment and company | Must | R0 | M0.3 | Not Started |
 | REQ-FDN-014 | Error-tracking integration | Should | R1 | M1.9 | Not Started |
 | REQ-FDN-015 | Per-company branding | Should | R2 | M2.8 | Not Started |
-| REQ-FDN-016 | Self-hostable search adapter | Could | R3 | — | Not Started |
+| REQ-FDN-016 | Self-hostable search adapter | Won't | — | — | Rejected |
 | REQ-FDN-017 | Kubernetes/Helm packaging | Could | R3+ | — | Not Started |
 | REQ-FDN-018 | MariaDB adapter | Should | R2 | M2.8 | Not Started |
 | REQ-FDN-019 | PostgreSQL adapter | Should | R2 | M2.8 | Not Started |
 | REQ-FDN-020 | Schema constrained to a portable SQL subset | Must | R0 | M0.2 | Not Started |
+| REQ-FDN-021 | Third-party data-flow statement | Must | R0 | M0.6 | Not Started |
+| REQ-FDN-022 | Hosted search adapter | Could | R3 | — | Not Started |
 
 ---
 
@@ -97,7 +99,7 @@ The schema stays within SQL that runs unchanged on SQLite, MariaDB and PostgreSQ
 **Acceptance**
 - No generated or computed columns, no dialect-specific index types, no database-specific functions in constraints or defaults.
 - JSON is stored as text and queried in application code, never through SQL JSON functions. This affects the annotation layer (REQ-AUTH-014) and custom field values (REQ-DOM-014).
-- No database full-text search — search is Algolia behind its own port (REQ-FDN-007), so this costs nothing.
+- No database full-text search — search sits behind its own port (REQ-FDN-007), so this costs nothing.
 - Timestamps are stored as UTC ISO 8601 text or integer epoch, not dialect-specific datetime types.
 - Identifiers are application-generated (REQ-FDN-004), never auto-increment.
 - Where a construct genuinely cannot be expressed portably, the escape hatch is a per-dialect migration file — explicit and reviewable, not dialect-specific DDL slipped into a shared migration.
@@ -115,28 +117,35 @@ Assets live in S3-compatible object storage, reached through a port. The interfa
 - An in-memory adapter is used by integration tests, demonstrating the abstraction holds.
 - `STORAGE_S3_FORCE_PATH_STYLE` is honoured, so providers requiring path-style addressing work unmodified.
 
-### REQ-FDN-007 — Algolia search behind an interface
+### REQ-FDN-007 — Search behind a port; Pagefind is the default adapter
 
 **Must** · R0 · [M0.3](../milestones.md) · spec §16.1, §16.2 · [ADR-0009](../../adr/0009-search-abstraction.md) · **Not Started** · Issue: — · PR: —
 
-Algolia is the single shipped search implementation, reached through a port. `SEARCH_DRIVER` selects the adapter, retaining the option of a self-hosted one (REQ-FDN-016, open decision O12).
+Search is reached through a port. **Pagefind is the default and the only adapter through R2** — it has no hosted dependency, no account, and no egress of documentation content, so a stock instance is self-contained. `SEARCH_DRIVER` selects the adapter; a hosted adapter is additive (REQ-FDN-022).
 
 **Acceptance**
 - Index, reindex, delete and query are expressed on the port.
 - Swapping the adapter requires no change outside `src/infrastructure/`.
+- A stock instance performs no network call to any search service — verified by test, since this is the property that makes REQ-FDN-021's statement short.
+- Index artefacts are stored per project and served only through an authorised path (REQ-FDN-008); they are never placed in a publicly readable location.
 
-### REQ-FDN-008 — Search index design and server-side scoped keys
+> Supersedes the Algolia-first position in [ADR-0009](../../adr/0009-search-abstraction.md). The database is not the hardest dependency for a deployer to satisfy — a SaaS account that corporate procurement must approve is, and search was the only remaining one. Choosing a self-contained default closes open decision **O12** rather than deferring it, and makes REQ-FDN-016 unnecessary.
+>
+> **Two consequences are open, not solved.** Pagefind builds an index rather than updating it per record, so draft-search freshness needs a rebuild strategy; and Pagefind does prefix matching and stemming, not typo tolerance, which REQ-AUTH-007 currently requires. Both are open decision **O14**.
+
+### REQ-FDN-008 — Search scoping enforced server-side
 
 **Must** · R0 · [M0.3](../milestones.md) · spec §16.4 · **Not Started** · Issue: — · PR: —
 
-A single index with a `project_id` facet. Scope filtering is applied server-side from the caller's project grants. Search keys are generated server-side and scoped per request.
+One index per project. Scope filtering is applied server-side from the caller's project grants, before any index artefact or result reaches the client.
 
 **Acceptance**
-- No search API key is ever sent to the client unscoped; a shared client-side key does not exist in the codebase.
 - A user without a grant on a project receives zero hits from it, verified by test rather than by UI filtering.
-- Content from non-publishable free pages is never submitted to the index (see REQ-SEC-012).
+- Index artefacts are served through an authorised route that applies the same grant check as project content — a client that guesses a project's index path receives a 403, not a file.
+- Where an adapter uses API keys (REQ-FDN-022), no key is ever sent to the client unscoped; a shared client-side key does not exist in the codebase.
+- Content from non-publishable free pages is never submitted to any index (see REQ-SEC-012).
 
-> Mitigates risk R7. A hosted search dependency is the one place where a scoping mistake leaks content across tenants, so the guarantee belongs in tests from the first commit.
+> Mitigates risk R7, whose shape changed with the default adapter. With a hosted index the risk was a scoping mistake leaking content across tenants *and out of the instance*; with a local index the leak is bounded by the instance, and the failure mode is an unauthorised route rather than an unscoped key. The guarantee still belongs in tests from the first commit.
 
 ### REQ-FDN-009 — Versioned, idempotent, forward-only migrations
 
@@ -217,11 +226,13 @@ Company name, logo and colours applied across the application and generated arte
 
 ### REQ-FDN-016 — Self-hostable search adapter
 
-**Could** · R3 · spec §16.2, §16.4 · **Not Started** · Issue: — · PR: —
+**Won't** · spec §16.2, §16.4 · **Rejected — superseded by REQ-FDN-007**
 
-A search adapter with no hosted dependency, for organisations that cannot use Algolia. The port (REQ-FDN-007) keeps this additive.
+A search adapter with no hosted dependency, originally a `Could` in R3 for organisations that could not use Algolia.
 
-**Blocked by:** open decision O12 — whether this is required before the public release, given the "deployable anywhere" promise.
+Rejected because the shipped default now *is* self-hostable (REQ-FDN-007). A separate requirement for the property the default already has would never be actionable. The entry stays so that open decision **O12** — "self-hostable search adapter before public release" — resolves to something rather than to a missing ID: **O12 is closed by the choice of default**, not deferred.
+
+> This is the finding-F03 ordering problem removed rather than scheduled. O12 asked for a decision before a public release that R0 had already performed; making the default self-contained means the question no longer needs an answer before anything.
 
 ### REQ-FDN-017 — Kubernetes/Helm packaging
 
@@ -242,3 +253,26 @@ A MariaDB implementation of the repository ports, selected by `DB_DRIVER=mariadb
 A PostgreSQL implementation of the repository ports, selected by `DB_DRIVER=postgres`. Broadens the deployability promise to organisations standardised on PostgreSQL.
 
 > REQ-FDN-018 and REQ-FDN-019 are what make REQ-FDN-020 worth enforcing, and they are also what makes the R2 dialect test matrix ([ADR-0017](../../adr/0017-testing-strategy.md)) start costing anything. Until they land there is one dialect and the portability constraint is free.
+
+### REQ-FDN-021 — Third-party data-flow statement
+
+**Must** · R0 · [M0.6](../milestones.md) · **Not Started** · Issue: — · PR: —
+
+The README enumerates every external service a running instance may contact, what content or metadata is sent to each, and what is never sent. Services that are optional are stated as optional, with the default named.
+
+**Acceptance**
+- The statement covers the full set: object storage (REQ-FDN-006), search (REQ-FDN-007 and REQ-FDN-022), identity providers (REQ-SEC-004, REQ-SEC-007), SMTP (REQ-VER-009), error tracking (REQ-FDN-014), the export targets (REQ-VIEW-004 … REQ-VIEW-009) and, from R4, the analytics platforms (REQ-DQ-001).
+- For a stock instance the statement is short and provable: with the default adapters, no documentation content leaves the instance except to the object storage the operator configured.
+- Enabling an optional integration that changes the statement changes the statement in the same pull request — a new outbound destination without a README change fails review.
+
+> This is the artefact an operator forwards to whoever must approve the deployment, and the reason it is cheap to write is REQ-FDN-007: a self-contained default means the honest answer is "almost nothing", which is only worth saying if it is written down. Related: REQ-SEC-012, which governs the one category of content that must never leave under any configuration.
+
+### REQ-FDN-022 — Hosted search adapter
+
+**Could** · R3 · **Not Started** · Issue: — · PR: —
+
+An adapter for a hosted search service — Algolia being the obvious candidate — for organisations that would rather buy typo tolerance and relevance tuning than run with the default. The port (REQ-FDN-007) keeps this purely additive.
+
+Selecting it changes what leaves the instance, so it changes REQ-FDN-021's statement, and it reintroduces the scoped-key obligation in REQ-FDN-008.
+
+> Replaces the previous arrangement, in which the hosted service was the default and the self-hostable adapter was the deferred `Could` (REQ-FDN-016). The two swapped places: the default is now the one with no external dependency, and the hosted option is the one an organisation opts into.

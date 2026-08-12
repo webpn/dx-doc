@@ -53,7 +53,7 @@ Describes the dx-doc Platform in its environment: who uses it, what external sys
 |---|---|---|---|
 | Database (SQLite default; MariaDB/PostgreSQL R2) | Primary data store | Local file or SQL over TCP | Internal (write/read) |
 | S3-compatible object storage | Asset storage (images) | S3 API (HTTP) | Internal (write/read) |
-| Algolia | Full-text search index | REST API | Internal (write/read) |
+| Search index (Pagefind) | Full-text search index | In-process; index artefacts on local disk | **Not external** — no network egress |
 | OIDC Identity Provider | SSO authentication | OpenID Connect | Inbound (auth) |
 | SMTP Server | Email notifications | SMTP | Outbound |
 | Sentry | Error tracking | SDK / HTTP | Outbound |
@@ -80,7 +80,7 @@ Describes the dx-doc Platform in its environment: who uses it, what external sys
 Editor publishes → REST API → Application Layer
                                ├── Create Version snapshot (database)
                                ├── Generate changelog
-                               ├── Update search index → Algolia
+                               ├── Update search index → Pagefind
                                ├── Send email notification → SMTP
                                ├── Regenerate static site → Static Host (R2)
                                ├── Git export → Git Repository (R2)
@@ -92,7 +92,7 @@ Editor publishes → REST API → Application Layer
 ```
 AI Agent → MCP Protocol → MCP Server → REST API (same as web client)
                                           ├── Draft writes (database)
-                                          └── Read queries (database/Algolia)
+                                          └── Read queries (database/search)
 ```
 
 ### Data Flow: Migration
@@ -101,13 +101,13 @@ AI Agent → MCP Protocol → MCP Server → REST API (same as web client)
 Legacy Wiki Export (Markdown & CSV ZIP) → AI agent → committed migration script → REST API
                                                        └── Create entities (database)
                                                        └── Upload assets (S3)
-                                                       └── Index (Algolia)
+                                                       └── Index (Pagefind)
 ```
 
 ## Constraints from External Systems
 
 - **Database:** repository ports with a SQLite adapter by default; MariaDB and PostgreSQL from R2. Schema must support multi-tenancy natively and stay within a portable SQL subset.
-- **Algolia:** indices must exclude non-publishable free pages. Search keys must be server-side scoped to user's project grants. A self-hostable adapter may be required before public release (O12).
+- **Search:** Pagefind by default — in-process, no account, no egress ([ADR-0009](../adr/0009-search-abstraction.md)). Indices must exclude non-publishable free pages, and index artefacts must be served only through a route applying the caller's project grants. Two capability gaps are open decision O14: no typo tolerance, and the index is built rather than updated per record. An optional hosted adapter (R3) reintroduces the scoped-key obligation and changes the data-flow statement (REQ-FDN-021).
 - **S3:** any S3-compatible provider. Path-style access must be supported. Public base URL for CDN is optional.
 - **OIDC:** must work with the corporate identity provider. SAML is added in R2 for generality.
 - **SMTP:** instance-level fallback; per-company SMTP settings in the database override it (O10).
@@ -116,6 +116,6 @@ Legacy Wiki Export (Markdown & CSV ZIP) → AI agent → committed migration scr
 
 - **Public internet ↔ Platform:** HTTPS only. Authentication required for all endpoints except health checks and shared-password project views.
 - **Platform ↔ Database:** internal network. TLS where available.
-- **Platform ↔ Algolia:** server-side admin API key. Client never receives this key. Search keys are scoped and generated server-side.
+- **Platform ↔ search:** none by default — the index is in-process and never leaves the instance. Index artefacts are served through an authorised route, so a client requesting another project's index receives a 403. With an optional hosted adapter (R3), the admin key stays server-side and per-request search keys are scoped.
 - **Platform ↔ S3:** access key + secret key. IAM role in production.
-- **Non-publishable content boundary:** free pages marked non-publishable are never included in any external artefact (static site, Confluence, git export, PDF, Algolia index).
+- **Non-publishable content boundary:** free pages marked non-publishable are never included in any artefact or index (static site, Confluence, git export, PDF, search index). Standing requirement, re-verified per channel — REQ-SEC-012.

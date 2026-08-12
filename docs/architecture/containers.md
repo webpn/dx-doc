@@ -31,7 +31,7 @@ Describes the deployable containers/services that compose the dx-doc Platform.
 │  │         Infrastructure Adapters                              │  │
 │  │                                                              │  │
 │  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐   │  │
-│  │  │  SQLite  │ │ Algolia  │ │   S3     │ │ OIDC / SAML  │   │  │
+│  │  │  SQLite  │ │ Pagefind │ │   S3     │ │ OIDC / SAML  │   │  │
 │  │  │ Adapter  │ │ Adapter  │ │ Adapter  │ │   Adapter    │   │  │
 │  │  └────┬─────┘ └────┬─────┘ └────┬─────┘ └──────┬───────┘   │  │
 │  └───────┼────────────┼────────────┼──────────────┼───────────┘  │
@@ -39,7 +39,7 @@ Describes the deployable containers/services that compose the dx-doc Platform.
            │            │            │              │
            ▼            ▼            ▼              ▼
     ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐
-    │  SQLite  │ │  Algolia  │ │   S3     │ │   Identity   │
+    │  SQLite  │ │ Pagefind  │ │   S3     │ │   Identity   │
     │          │ │           │ │ Storage  │ │   Provider   │
     └──────────┘ └──────────┘ └──────────┘ └──────────────┘
 ```
@@ -62,7 +62,7 @@ Describes the deployable containers/services that compose the dx-doc Platform.
   - Application layer: use case orchestration, command/query execution
   - Domain logic: business rules and invariants
   - Infrastructure: persistence, search, storage, authentication, email, exports
-- **Communicates with:** the configured database (SQLite file by default; MariaDB or PostgreSQL over TCP from R2), Algolia (REST), S3 (REST), OIDC/SAML providers, SMTP server
+- **Communicates with:** the configured database (SQLite file by default; MariaDB or PostgreSQL over TCP from R2), S3 (REST), OIDC/SAML providers, SMTP server. Search is in-process by default and is not a network dependency
 - **Packaging:** Node.js process, configured via environment variables
 
 ### Database (SQLite by default; MariaDB / PostgreSQL from R2)
@@ -72,13 +72,15 @@ Describes the deployable containers/services that compose the dx-doc Platform.
 - **Migrations:** forward-only versioned migrations executed at application start-up (O7)
 - **Backup:** responsibility of the operator; git export provides partial off-site copy (R2)
 
-### Search Index (Algolia)
+### Search Index (Pagefind, in-process)
 
-- **Purpose:** Full-text and fuzzy search within a project
-- **Index design:** single index with `project_id` facet; project-scope filtering enforced server-side
+- **Purpose:** Full-text search within a project
+- **Index design:** one index per project, built by the application and stored on local disk — not a separate service and not an external one
+- **Access control:** index artefacts are served only through a route applying the caller's project grants; a request for an unauthorised project's index returns 403
 - **Exclusions:** non-publishable free pages are excluded from the index
-- **Key management:** admin API key server-side only; search keys generated scoped to user's project grants
-- **Abstraction:** behind an interface (`SearchIndex`) in the application layer; a self-hostable adapter may be added later (O12)
+- **Known gaps (O14):** no typo tolerance; the index is rebuilt rather than updated per record, so draft-search freshness depends on the rebuild trigger
+- **Optional hosted adapter (R3):** selected by `SEARCH_DRIVER`; reintroduces admin-key-server-side-only and per-request scoped search keys
+- **Abstraction:** behind an interface (`SearchIndex`) in the application layer ([ADR-0009](../adr/0009-search-abstraction.md))
 
 ### Object Storage (S3-compatible)
 
@@ -109,7 +111,7 @@ Describes the deployable containers/services that compose the dx-doc Platform.
 
 ### Configuration
 
-- **Instance-level:** environment variables for infrastructure credentials (database, S3, Algolia, identity providers, SMTP fallback, analytics service accounts). Set by the operator.
+- **Instance-level:** environment variables for infrastructure credentials (database, S3, search, identity providers, SMTP fallback, analytics service accounts). Set by the operator.
 - **Company-level:** branding, SMTP overrides, catalogue defaults. Stored in the database, editable by Admins. (O10 — split to be confirmed.)
 - See `docs/product/functional-specification.md` Appendix C for the full variable reference.
 
@@ -120,6 +122,6 @@ The Platform is a white-label product deployed by each organisation. A reference
 - Node.js application server
 - A database: SQLite file (default, no service) or MariaDB / PostgreSQL from R2
 - S3-compatible storage (any provider)
-- Algolia (hosted)
+- No search service — Pagefind runs in-process
 
 The application is a single Node.js process serving the REST API, the MCP server, and the SPA's static assets. It can be deployed on a single server, a container orchestrator (Docker Compose, Kubernetes), or a PaaS — the only requirements are a Node.js runtime, a database (a SQLite file by default), S3 credentials, and environment variables.

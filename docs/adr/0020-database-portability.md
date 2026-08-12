@@ -32,7 +32,7 @@ Specifically, from the first migration onward:
 
 - No generated/computed columns, no dialect-specific index types, no database-specific functions in constraints or defaults.
 - JSON is stored as text. Any querying of JSON contents happens in application code, not in SQL. The annotation layer (REQ-AUTH-014) and custom field values (REQ-DOM-014) are the entities this affects.
-- No database full-text search. Search is Algolia behind its own port (ADR-0009), so this costs nothing.
+- No database full-text search. Search sits behind its own port (ADR-0009), so this costs nothing.
 - Identifiers are application-generated (ADR-0004), not auto-increment — already required, and it removes a common dialect difference.
 - Timestamps are stored as UTC ISO 8601 text or integer epoch, not as dialect-specific datetime types.
 

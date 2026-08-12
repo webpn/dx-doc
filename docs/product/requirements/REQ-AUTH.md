@@ -102,8 +102,16 @@ Full-text and fuzzy search, scoped to a single project. Property names and track
 **Acceptance**
 - Searching a literal specific value answers "which tracking sets `page_name` to this?" — the most frequent lookup for analysts and developers alike.
 - A fuzzy match on a misspelled property name still returns it.
+- Search reflects the draft for an editor and the published version for a reader, consistently with REQ-NAV-002.
 - Scope filtering is server-side from project grants (REQ-FDN-008); there is no cross-project search.
 - Non-publishable content is absent from the index, verified against the index itself (REQ-SEC-012).
+
+**Blocked by:** open decision **O14**. The default adapter (Pagefind, REQ-FDN-007) does not satisfy two of the criteria above as written, and both need an answer before [M1.7](../milestones.md):
+
+- **Typo tolerance.** Pagefind does prefix matching and stemming, not typo correction. Either the fuzzy criterion is relaxed to "prefix and stem matching", or it is met another way — an application-side match over the property-name list is cheap at ~200 properties per project and would cover the case the criterion actually describes.
+- **Draft freshness.** Pagefind builds an index rather than updating it per record. Editors search the draft, so the rebuild trigger and its acceptable lag must be decided — per save, debounced, or on demand.
+
+> Neither is a reason to reconsider the adapter: both are bounded, and the property being bought — no documentation content leaving the instance — is the one an operator cannot add later (REQ-FDN-021). But they are real, and search is a Must in R1.
 
 ### REQ-AUTH-008 — Page and flow duplication
 
@@ -127,7 +135,7 @@ Every operation previews the affected items and the resulting change before appl
 
 Exposure through API and MCP carries the same validation, but agents must target an explicit list of identifiers — never a filter expression (REQ-API-008).
 
-**Blocked by:** open decision O13. The operation list is a considered proposal, not an observed requirement. Confirm or extend it from what editors actually did by hand during the pilot migration (M1.2) — that evidence exists only once.
+**Blocked by:** open decision O13. The operation list is a considered proposal, not an observed requirement. Confirm or extend it from what editors actually did by hand during the pilot migration and its item-by-item verification ([M1.10](../milestones.md)) — that evidence exists only once.
 
 > This addresses the second-costliest shortcoming of the legacy wiki. The presentation half is already solved by application-controlled layout: changing how trackings render updates every tracking at once, with no data migration.
 

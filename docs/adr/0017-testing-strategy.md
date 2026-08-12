@@ -17,7 +17,7 @@ The Platform needs a testing strategy that covers domain logic, application use 
 |---|---|---|---|
 | Domain (unit) | Vitest | Business rules, invariants, value objects, Result types | Pure TypeScript, no I/O |
 | Application (unit/integration) | Vitest | Use cases with mocked ports | Mocked infrastructure |
-| Infrastructure (integration) | Vitest | Repository implementations, search adapter, storage adapter | Test database (SQLite; MariaDB and PostgreSQL from R2 — see dialect matrix below), test S3 (MinIO), test search (Algolia sandbox or mock) |
+| Infrastructure (integration) | Vitest | Repository implementations, search adapter, storage adapter | Test database (SQLite; MariaDB and PostgreSQL from R2 — see dialect matrix below), test S3 (MinIO), real search adapter (Pagefind needs no external service) |
 | API (integration) | Vitest + supertest | Endpoint behavior, validation, auth | Test database, mocked external services |
 | UI (component) | Vitest + React Testing Library | Component behavior: interactions, states, accessibility | JSDOM |
 | E2E | Playwright | Critical user journeys: create project, edit tracking, publish, view | Full stack (test database, test S3, etc.) |
@@ -25,7 +25,7 @@ The Platform needs a testing strategy that covers domain logic, application use 
 ### Principles
 - Test behavior, not implementation. A test titled "calls the repository" is about implementation. A test titled "returns the tracking with the added property" is about behavior.
 - Domain tests have the highest volume; E2E tests have the lowest.
-- Infrastructure tests run against real services (a real database, test S3 bucket, Algolia test index). No mocking at the infrastructure level — it defeats the purpose.
+- Infrastructure tests run against real services (a real database, test S3 bucket, a real search index). No mocking at the infrastructure level — it defeats the purpose.
 
 ### Database dialect matrix
 
@@ -50,7 +50,7 @@ Through R0 and R1 there is exactly one adapter, so this matrix costs nothing unt
 ### CI Requirements
 - All tests must pass before merge.
 - Test database is ephemeral (created at start of CI run, destroyed at end).
-- Algolia tests use a dedicated test index (or are skipped if Algolia credentials are not configured in CI — at the cost of reduced search coverage).
+- Search tests run the default adapter for real: Pagefind needs no account and no network, so search coverage is never skipped in CI ([ADR-0009](0009-search-abstraction.md)). A hosted adapter (R3) would reintroduce a credential-gated suite, and that is a cost to weigh when it is added.
 
 ## Alternatives Considered
 

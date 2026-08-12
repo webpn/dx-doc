@@ -11,8 +11,8 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-NFR-001 | Open a tracking page | < 2 s | M1.5 | Not Started |
 | REQ-NFR-002 | Full-text search | < 4 s | M1.7 | Not Started |
 | REQ-NFR-003 | Generate a diff between versions | < 6 s | M1.8 | Not Started |
-| REQ-NFR-004 | Load a very large project | < 3 s | M1.2 | Not Started |
-| REQ-NFR-005 | Availability | SLA 99% | R1 | Not Started |
+| REQ-NFR-004 | Load a very large project | < 3 s | M1.6 | Not Started |
+| REQ-NFR-005 | Architecture must not require redundancy | — | R1 | Not Started |
 | REQ-NFR-006 | Backup is the operator's responsibility | — | M2.6 | Not Started |
 | REQ-NFR-007 | Desktop only; no responsive layout | — | M1.5 | Not Started |
 | REQ-NFR-008 | Browser support `browserslist >5%` | — | M0.1 | Not Started |
@@ -34,17 +34,25 @@ Entry format and status legend: [requirements index](README.md).
 | Open a tracking page | < 2 s | M1.5 |
 | Full-text search | < 4 s | M1.7 |
 | Generate a diff between versions | < 6 s | M1.8 |
-| Load a very large project | < 3 s | M1.2 |
+| Load a very large project | < 3 s | M1.6 |
 
 **Acceptance**
-- Targets are measured against **pilot-scale data** — thousands of trackings and ~200 properties in one project — not against a seeded fixture. The pilot import (M1.2) is what makes this possible, and is a second reason to run it early.
+- Targets are measured against **pilot-scale data** — thousands of trackings and ~200 properties in one project — not against a seeded fixture. The pilot migration ([M1.4](../milestones.md)) is what makes this possible, and is a second reason to run it early.
 - A regression past a target fails CI or is recorded as an accepted exception with a reason.
 
-### REQ-NFR-005 — Availability, SLA 99%
+> REQ-NFR-004 is measured at M1.6, not earlier: the data arrives at M1.4, but the page hierarchy and sidebar that constitute "loading a project" for a user do not exist until M1.6. Measuring it against an API response before then would be measuring something else and calling it this.
+
+### REQ-NFR-005 — Architecture must not require redundancy
 
 **Must** · R1 · spec §15.2 · **Not Started**
 
-The Platform is not business-critical. 99% is deliberate: it permits a maintenance approach that does not require redundancy, and it should not be quietly raised without revisiting the deployment model.
+The Platform must be operable to roughly 99% availability by a single instance with no redundancy — no clustering requirement, no leader election, no assumption of more than one running process. The Platform is not business-critical, and this ceiling is deliberate.
+
+**The SLA itself is not a property of the software.** Availability is a property of a deployment, so the SLA of any given instance is its operator's commitment, not the Platform's — the same division REQ-NFR-006 already applies to backup. The corporate pilot's 99% target is recorded in [deployment.md](../../architecture/deployment.md).
+
+**Acceptance**
+- Nothing in the architecture requires a second instance to function correctly — scheduled work, index rebuilds (REQ-FDN-007) and migrations (REQ-FDN-009) are all safe on a single process.
+- Raising the expectation above this ceiling means revisiting the deployment model, and is a decision rather than a configuration change.
 
 ### REQ-NFR-006 — Backup is the operator's responsibility
 

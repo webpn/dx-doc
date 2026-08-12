@@ -16,7 +16,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-DOM-008 | Property removal with automatic module detachment | Must | R1 | M1.1 | Not Started |
 | REQ-DOM-009 | Tracking Template, editor-configurable | Must | R1 | M1.1 | Not Started |
 | REQ-DOM-010 | Specific Values with plain `[placeholder]` strings | Must | R1 | M1.1 | Not Started |
-| REQ-DOM-011 | Prose conditional valorisations | Must | R1 | M1.1 | Not Started |
+| REQ-DOM-011 | Prose conditional valorisations | Won't | — | — | Rejected |
 | REQ-DOM-012 | Structured property conditions, four operators + note | Should | R2 | M2.1 | Not Started |
 | REQ-DOM-013 | Conditions targeting nested property paths | Should | R2 | M2.1 | Not Started |
 | REQ-DOM-014 | Company-defined custom fields | Should | R2 | M2.1 | Not Started |
@@ -63,9 +63,10 @@ A single tracked event. Attaches either to a specific Page or to a page template
 
 **Must** · R1 · [M1.1](../milestones.md) · spec §6.4 · **Not Started** · Issue: — · PR: —
 
-The central entity. Attributes: `id`, `name`, `business_label`, `description`, `data_source` (`development` / `tag_manager` / `other`), `type`, `format_pattern`, `allowed_values`, `example_values`, `presence`, `pii_flag`, `hashing_policy`, `status`, `introduced_in_version`, `analysis_notes`, `aep_field_group`, `parent_property`, `derived_from`, `destinations`.
+The central entity. Attributes: `id`, `name`, `business_label`, `description`, `data_source` (`development` / `tag_manager` / `other`), `type`, `format_pattern`, `allowed_values`, `example_values`, `pii_flag`, `hashing_policy`, `status`, `introduced_in_version`, `analysis_notes`, `aep_field_group`, `parent_property`, `derived_from`, `destinations`.
 
 **Acceptance**
+- **The property carries no `presence`.** Presence exists only on the tracking↔property relationship (REQ-DOM-027) — there is no default on the property and no second place to read it from.
 - `data_source` drives the development-view filter (REQ-VIEW-003): a `tag_manager` property is physically excluded from development artefacts.
 - `introduced_in_version` is set automatically at first publication and never edited by hand.
 - `status` supports `deprecated` without deletion; deprecation is manual, never scheduled.
@@ -158,19 +159,23 @@ The concrete value a property must take within a given tracking. Values may cont
 
 ### REQ-DOM-011 — Prose conditional valorisations
 
-**Must** · R1 · [M1.1](../milestones.md) · spec §6.8 · **Not Started** · Issue: — · PR: —
+**Won't** · spec §6.8 · **Rejected — superseded by REQ-DOM-012**
 
-In R1 a conditional valorisation ("one value if logged in, another otherwise") is expressed in prose. The structured form arrives in R2 (REQ-DOM-012).
+Originally a `Must` in R1: a conditional valorisation ("one value if logged in, another otherwise") expressed in prose, with the structured form arriving in R2.
 
-**Acceptance**
-- Prose conditions are authorable and legible in every view and artefact.
-- Nothing in R1 depends on parsing them.
+Rejected. **R1 carries no conditional valorisations in any form.** The structured mechanism (REQ-DOM-012) is the only one, and it arrives in R2.
+
+An editor who needs to express a condition before then does so as ordinary description text, which is not a mechanism and is not treated as one: nothing reads it, nothing reports on it, and nothing is expected to convert it later.
+
+> Rejecting the prose form removes the conversion problem instead of scheduling it. Had R1 shipped prose conditions, ~30 migrated products would have carried an unknown number of them in free text with no marker, and R2 would have needed an inventory report to find them before the structured field could be populated. That report is now unnecessary — which is the whole reason to accept the R1 gap rather than fill it with something that has to be undone.
 
 ### REQ-DOM-012 — Structured property conditions, four operators + note
 
 **Should** · R2 · [M2.1](../milestones.md) · spec §6.8 · **Not Started** · Issue: — · PR: —
 
-*property* + *operator* + *value* + optional *note*. Exactly four operators: `is`, `is not`, `is set`, `is not set` — the last available only where `presence` is `sometimes`. The note is the escape hatch for anything the operators cannot express.
+*property* + *operator* + *value* + optional *note*. Exactly four operators: `is`, `is not`, `is set`, `is not set` — the last available only where the tracking↔property `presence` (REQ-DOM-027) is `sometimes`. The note is the escape hatch for anything the operators cannot express.
+
+**This is the only mechanism for conditional valorisation.** The prose form was rejected rather than deferred (REQ-DOM-011), so conditions do not exist in the product before R2 and no migration path into this field is required.
 
 Two downstream capabilities depend on this and on nothing else: snippet narrowing (REQ-DEV-005) and mechanical conformance checking (REQ-DQ-003).
 
@@ -240,9 +245,12 @@ The company catalogue holds standard properties, modules, templates and free-pag
 **Acceptance**
 - Subsequent catalogue changes do not propagate to existing projects.
 - A property created inside a project cannot be promoted into the catalogue — the operation does not exist.
-- A copied item has its own identifier, independent of its catalogue source.
+- A copied item has its own identifier, independent of its catalogue source. **No provenance column is stored**: the copy retains no reference of any kind to the catalogue item it came from.
+- Where a later feature needs to relate a project item back to a catalogue item (REQ-DOM-024), it does so by **matching on name**, computed at the moment it is needed.
 
 > Accepted consequence: the catalogue drifts from project reality over time. Conscious trade-off for project autonomy. The mitigation (REQ-DOM-026) is optional and deferred.
+>
+> **Name matching is the deliberate choice, and it has a stated cost.** Renaming a module on either side breaks the correspondence, and two items that coincidentally share a name are treated as the same item. That is acceptable because every feature built on the match is advisory and human-confirmed — REQ-DOM-024 proposes, an editor accepts. The alternative, a stored `catalogue_source_id`, buys precision at the cost of a link the model has otherwise gone to some trouble not to have.
 
 ### REQ-DOM-020 — Project-scoped impact analysis
 
@@ -280,6 +288,8 @@ Preferring generic properties qualified by context, and explicit names over gene
 
 A project may choose on demand to adopt a change made to a company-level module, and then separately whether to propagate it internally (REQ-DOM-007). Two independent decisions.
 
+Correspondence between a project module and a catalogue module is established by **name match**, computed when the comparison is requested — no provenance is stored at copy time (REQ-DOM-019). The feature is therefore advisory: it shows the editor a candidate correspondence and the difference it implies, and the editor accepts or ignores it. A renamed module on either side simply produces no match, and no adoption is proposed.
+
 ### REQ-DOM-025 — Extension / Segment / Calculated Metric containers
 
 **Should** · R3 · [M3.5](../milestones.md) · spec §6.9, §14.2 · **Not Started** · Issue: — · PR: —
@@ -300,8 +310,11 @@ A report highlighting custom properties recurring across many projects as candid
 
 `always` / `sometimes` / `never`, resolved per tracking on the tracking↔property relationship. Replaces a plain boolean.
 
+**This is the only place `presence` exists.** The Data Layer Property carries no presence attribute and no default (REQ-DOM-003) — a property has a presence only in the context of a tracking that uses it.
+
 **Acceptance**
 - The value lives on the relationship, so the same property may be `always` in one tracking and `sometimes` in another.
+- No schema, API payload or export represents presence as an attribute of the property itself.
 - `never` is expressible, and is what lets a condition state that a property must **not** be present in a scenario.
 - `is not set` (REQ-DOM-012) is offered only where presence is `sometimes`.
 

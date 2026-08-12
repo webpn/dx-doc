@@ -18,7 +18,7 @@
 | Domain errors | PascalCase, `Error` suffix | `PropertyNameNotUniqueError` |
 | Database tables | snake_case, plural | `data_layer_properties` |
 | API endpoints | kebab-case | `/projects/:id/data-layer-properties` |
-| Environment variables | UPPER_SNAKE_CASE | `DB_HOST`, `ALGOLIA_APP_ID` |
+| Environment variables | UPPER_SNAKE_CASE | `DB_HOST`, `SEARCH_DRIVER` |
 
 ## File Naming
 

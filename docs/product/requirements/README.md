@@ -2,14 +2,14 @@
 
 Traceable requirements derived from the [functional specification](../functional-specification.md). Each requirement carries a stable ID, a MoSCoW priority, a target release, the [milestone](../milestones.md) that delivers it, and — as implementation progresses — links to the GitHub Issue and PR that closed it.
 
-**Related:** [milestones](../milestones.md) · [scope](../scope.md) · [functional specification](../functional-specification.md) · [ADRs](../../adr/) · [decisions](../../decisions/README.md)
+**Related:** [milestones](../milestones.md) · [scope](../scope.md) · [user stories](../user-stories.md) · [requirements review](../requirements-review.md) · [functional specification](../functional-specification.md) · [ADRs](../../adr/) · [decisions](../../decisions/README.md)
 
 ## Files
 
 | Prefix | Area | Spec | Count |
 |---|---|---|---|
-| [REQ-FDN](REQ-FDN.md) | Foundations — platform, persistence, abstractions, configuration, distribution | §16, §18, §19.1 | 20 |
-| [REQ-SEC](REQ-SEC.md) | Security, authentication and authorisation | §17, Appendix B | 12 |
+| [REQ-FDN](REQ-FDN.md) | Foundations — platform, persistence, abstractions, configuration, distribution | §16, §18, §19.1 | 22 |
+| [REQ-SEC](REQ-SEC.md) | Security, authentication and authorisation | §17, Appendix B | 15 |
 | [REQ-DOM](REQ-DOM.md) | Domain model — entities, attributes, composition rules | §6, Appendix A | 28 |
 | [REQ-AUTH](REQ-AUTH.md) | Authoring — editor, assets, duplication, concurrency, search | §7 | 15 |
 | [REQ-NAV](REQ-NAV.md) | Structure and navigation — hierarchy, recap, flows, sidebar | §8 | 9 |
@@ -21,7 +21,7 @@ Traceable requirements derived from the [functional specification](../functional
 | [REQ-NFR](REQ-NFR.md) | Non-functional — performance, availability, i18n, observability | §15 | 14 |
 | [REQ-DQ](REQ-DQ.md) | Data quality and deferred modules | §14 | 8 |
 
-**154 requirements total.**
+**159 requirements total.**
 
 > Three prefixes were added beyond the original list: **REQ-DOM** (§6 has ~28 requirements of its own and does not belong inside Foundations), **REQ-NFR** (§15 was previously unrepresented), and **REQ-DQ** (§14's deferred modules need IDs so milestones can reference them). **REQ-AUTH** means *authoring*; authentication lives in **REQ-SEC**.
 
@@ -29,16 +29,16 @@ Traceable requirements derived from the [functional specification](../functional
 
 | Release | Requirements | Focus |
 |---|---|---|
-| R0 | 20 | Foundations, auth, API, public repository |
-| R1 | 66 | Full data model, editor, versioning, migration API + MCP, SSO |
-| R2 | 35 | Flows, bulk operations, distribution channels, MariaDB/Postgres adapters |
-| R3 | 16 | Snippets, Confluence, interactive agent access |
+| R0 | 23 | Foundations, auth and account lifecycle, API, public repository, data-flow statement |
+| R1 | 65 | Full data model, editor, versioning, migration API + MCP, SSO |
+| R2 | 36 | Flows, bulk operations, distribution channels, MariaDB/Postgres adapters, instance portal |
+| R3 | 16 | Snippets, Confluence, interactive agent access, hosted search adapter |
 | R4 | 6 | Data quality, Figma import, webhooks |
 | R5 | 3 | Semantic layer — blocked on O1/O2 |
 | R6 | 2 | Lifecycle status, insights |
-| — | 6 | Explicitly rejected (recorded, not gaps) |
+| — | 8 | Explicitly rejected (recorded, not gaps) |
 
-R1 carries 66 requirements in six weeks. That concentration is risk R1 in the register, and it is why the [milestones](../milestones.md) name demotion candidates in advance rather than improvising under pressure.
+R1 carries 65 requirements in six weeks. That concentration is risk R1 in the register, and it is why the [milestones](../milestones.md) name demotion candidates in advance rather than improvising under pressure.
 
 > **Two decisions moved requirements after the first draft.** [ADR-0020](../../adr/0020-database-portability.md) replaced the MariaDB-only stance with repository ports and a SQLite default, adding three REQ-FDN entries and moving two database adapters into R2. [ADR-0021](../../adr/0021-agent-driven-migration.md) replaced the bespoke Notion importer with an agent driving a complete API, which rewrote REQ-MIG and pulled the documented public API, MCP read tools, MCP write tools and MCP resources from R3 into R1. Net effect on R1: six requirements out, ten in.
 
@@ -73,7 +73,7 @@ What the requirement means, and any rationale that is not obvious from the state
 | **Blocked** | Cannot proceed until a named open decision closes. |
 | **Rejected** | Consciously excluded. The entry stays, with the reason. |
 
-Everything is currently **Not Started** — the repository is pre-R0.
+Everything not marked **Rejected** is currently **Not Started** — the repository is pre-R0.
 
 ## Keeping this current
 
@@ -92,7 +92,7 @@ The requirement files are the live status record. [scope.md](../scope.md) stays 
 | O10 — instance vs company configuration split | REQ-FDN-013 | Immediately |
 | O7 — upgrade and schema-migration strategy | REQ-FDN-009 | End of R0 |
 | O11 — catalogue permission flag vs fifth role | REQ-SEC-010 | Start of R1 |
-| O12 — self-hostable search adapter | REQ-FDN-016 | End of R1 |
+| **O14 — typo tolerance and draft-index freshness under Pagefind** | REQ-AUTH-007 | Start of R1 |
 | O13 — bulk-operation list completeness | REQ-AUTH-010, REQ-API-008 | End of R1 |
 | O8 — developer-handoff reference patterns | REQ-DEV-002 | End of R1 |
 | O3 — structured analytics-reading guidance | REQ-DOM-014, REQ-VIEW-002 | Start of R2 |
@@ -103,3 +103,5 @@ The requirement files are the live status record. [scope.md](../scope.md) stays 
 | O5 — verification module scope | REQ-DQ-001 | Start of R4 |
 
 Full text of each in [functional specification §21](../functional-specification.md#open-decisions). Two are marked *immediately* and gate the first milestone.
+
+**O12 is closed** — see [ADR-0009](../../adr/0009-search-abstraction.md). It asked whether a self-hostable search adapter was needed before the public release, a release R0 had already performed. Making the default self-contained ([REQ-FDN-007](REQ-FDN.md)) removed the question and retired [REQ-FDN-016](REQ-FDN.md), at the cost of opening O14.

@@ -2,7 +2,7 @@
 
 Breaks the release roadmap ([functional specification §20](functional-specification.md)) into numbered, individually verifiable milestones. Each milestone names the requirements it delivers, what it depends on, which open decisions gate it, and how it is judged complete.
 
-**Related:** [requirements index](requirements/README.md) · [scope](scope.md) · [vision](vision.md) · [ADRs](../adr/) · [testing strategy](../testing/strategy.md)
+**Related:** [requirements index](requirements/README.md) · [user stories](user-stories.md) · [requirements review](requirements-review.md) · [scope](scope.md) · [vision](vision.md) · [ADRs](../adr/) · [testing strategy](../testing/strategy.md)
 
 ## How to read this
 
@@ -16,7 +16,7 @@ Breaks the release roadmap ([functional specification §20](functional-specifica
 
 Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that slips keeps its ID and moves release, it is never renumbered.
 
-**Definition of Done** (applies to every milestone, in addition to its own exit criterion): code merged to `main`; unit and integration tests per the [testing strategy](../testing/strategy.md); requirement rows updated in the relevant `REQ-*.md` file with Issue/PR links and status; any decision taken during the work recorded as an ADR or in [decisions](../decisions/README.md).
+**Definition of Done** (applies to every milestone, in addition to its own exit criterion): code merged to `main`; unit and integration tests per the [testing strategy](../testing/strategy.md); requirement rows updated in the relevant `REQ-*.md` file with Issue/PR links and status; any decision taken during the work recorded as an ADR or in [decisions](../decisions/README.md). **Any milestone that adds an output channel also adds its [REQ-SEC-012](requirements/REQ-SEC.md) omission test** — the requirement is standing, not closed at M1.7.
 
 ---
 
@@ -62,25 +62,29 @@ Repository ports owned by the domain, with a **SQLite adapter** as the default a
 
 **Delivers:** REQ-FDN-006, REQ-FDN-007, REQ-FDN-008, REQ-FDN-013
 
-S3-compatible object storage behind a port. Algolia search behind a port, with the single-index-plus-`project_id`-facet design and server-side scoped key generation. Environment-variable configuration loader with validation at boot.
+S3-compatible object storage behind a port. Search behind a port with **Pagefind as the default adapter** ([ADR-0009](../adr/0009-search-abstraction.md)), one index per project, served only through an authorised route. Environment-variable configuration loader with validation at boot.
 
 **Depends on:** M0.1
 
 **Gated by:** O6, O10
 
-**Exit:** the application refuses to start with a missing required variable and names it; an integration test substitutes an in-memory storage adapter without touching application-layer code; no search key is ever generated client-side.
+**Exit:** the application refuses to start with a missing required variable and names it; an integration test substitutes an in-memory storage adapter without touching application-layer code; a stock instance makes no network call to any search service; a client requesting another project's index artefact receives a 403.
+
+> The search default changed from a hosted service to a self-contained one, which closes O12 outright and shortens [REQ-FDN-021](requirements/REQ-FDN.md)'s data-flow statement to almost nothing. It opens **O14** in exchange: Pagefind offers no typo tolerance and builds its index rather than updating it per record, and [REQ-AUTH-007](requirements/REQ-AUTH.md) needs both settled before M1.7.
 
 ### M0.4 — Authentication and authorisation
 
 **Goal:** who a user is, and which projects they may touch, is enforced in one place.
 
-**Delivers:** REQ-SEC-001, REQ-SEC-002, REQ-SEC-003, REQ-SEC-011
+**Delivers:** REQ-SEC-001, REQ-SEC-002, REQ-SEC-003, REQ-SEC-011, REQ-SEC-013, REQ-SEC-014
 
-Email + password login. Four global roles. Explicit per-project grants. Permission checks enforced server-side against [Appendix B](functional-specification.md).
+Email + password login. Four global roles. Explicit per-project grants. Permission checks enforced server-side against [Appendix B](functional-specification.md). **Account lifecycle**: environment-variable first-run bootstrap, invitation by Admin/Project Manager/Editor, password reset, deactivation. **Instance-administration capability**: a discrete flag with step-up re-authentication and a guaranteed local-password recovery path.
 
 **Depends on:** M0.2
 
-**Exit:** every row of the permission matrix has a passing test, including the negative case — a user without a grant cannot read the project through any entry point.
+**Exit:** every row of the permission matrix has a passing test, including the negative case — a user without a grant cannot read the project through any entry point; a fresh instance is reachable exactly once through the bootstrap variables and never again, proven by a test that sets them against a populated database and asserts nothing happens; a holder of the instance-administration flag with no project grants can administer the instance and read no documentation.
+
+> REQ-SEC-013 and REQ-SEC-014 were not in the original requirement set. Nothing described how the first identity came into being, which made this milestone's own exit criterion undemonstrable — there were no users to test the matrix with. See [decisions](../decisions/README.md) D10.
 
 ### M0.5 — REST API and shared validation
 
@@ -100,13 +104,13 @@ CRUD for Company, Project and Page. Validation rules defined once in the domain/
 
 **Goal:** a third party can stand up an instance without asking anyone.
 
-**Delivers:** REQ-FDN-011, REQ-FDN-012
+**Delivers:** REQ-FDN-011, REQ-FDN-012, REQ-FDN-021
 
-MIT licence, README with setup instructions, reference deployment stack (compose file with S3-compatible storage — no database container needed with SQLite), CI running lint, typecheck and tests.
+MIT licence, README with setup instructions, reference deployment stack (compose file with S3-compatible storage — no database container and no search container needed, with SQLite and Pagefind as defaults), CI running lint, typecheck and tests. The README carries the third-party data-flow statement (REQ-FDN-021).
 
 **Depends on:** M0.5
 
-**Exit:** a clean machine following the README alone reaches a running instance in one command; CI is green on `main`; the reference stack demonstrates a file-level snapshot of the SQLite database and the README states plainly that backup is the operator's job.
+**Exit:** a clean machine following the README alone reaches a running instance in one command; CI is green on `main`; the reference stack demonstrates a file-level snapshot of the SQLite database and the README states plainly that backup is the operator's job; the data-flow statement lists every external service the stock configuration contacts, and a test asserts the stock configuration contacts no search service at all.
 
 > **R0 gate.** A user can create a company, a project and an empty page. The repository is public and a third party can stand up an instance from the README.
 
@@ -114,15 +118,17 @@ MIT licence, README with setup instructions, reference deployment stack (compose
 
 ## R1 — MVP: parity plus versioning
 
-*Target: weeks 3–8. The entire Must set. This is the release that retires the legacy wiki for the pilot product.*
+*Target: weeks 3–8. The entire Must set except [REQ-VIEW-003](requirements/REQ-VIEW.md), which stays a Must but has no consumer until R2. This is the release that retires the legacy wiki for the pilot product.*
 
 ### M1.1 — Tracking data model
 
 **Goal:** every R1 entity exists, persists, and enforces its composition rules.
 
-**Delivers:** REQ-DOM-001 … REQ-DOM-011, REQ-DOM-015 … REQ-DOM-019, REQ-DOM-027, REQ-DOM-028, REQ-SEC-010
+**Delivers:** REQ-DOM-001 … REQ-DOM-010, REQ-DOM-015 … REQ-DOM-019, REQ-DOM-027, REQ-DOM-028, REQ-SEC-010
 
-Page, Tracking, DataLayerProperty (full attribute set including `presence`, `business_label`, `object` type with parent-child paths), Module, TrackingTemplate, SpecificValue, Destination with N:N mapping and `destination_name_override`, CdpAudience, Survey, FreePage, company catalogue with copy-on-creation.
+Page, Tracking, DataLayerProperty (full attribute set including `business_label` and the `object` type with parent-child paths), Module, TrackingTemplate, SpecificValue, Destination with N:N mapping and `destination_name_override`, CdpAudience, Survey, FreePage, company catalogue with copy-on-creation. `presence` lives on the tracking↔property relationship and nowhere else (REQ-DOM-027).
+
+**Not in R1:** conditional valorisations in any form. The prose form was rejected outright (REQ-DOM-011) rather than shipped and later converted; the structured form (REQ-DOM-012) arrives in M2.1.
 
 **Depends on:** M0.5
 
@@ -206,13 +212,13 @@ Page hierarchy driving a navigable sidebar. Automatic per-page recap of every at
 
 **Goal:** the most frequent lookup — which tracking sets this value — is answerable.
 
-**Delivers:** REQ-AUTH-007, REQ-SEC-012
+**Delivers:** REQ-AUTH-007, REQ-SEC-012 (first enforcement; the requirement then stands)
 
-Project-scoped full-text and fuzzy search. Property and tracking names ranked above other text. Specific values indexed. Non-publishable free pages excluded from the index.
+Project-scoped full-text search. Property and tracking names ranked above other text. Specific values indexed. Non-publishable free pages excluded from the index.
 
-**Depends on:** M0.3, M1.1
+**Depends on:** M0.3, M1.1 · **Gated by:** O14 (typo tolerance and draft-index freshness under the Pagefind default)
 
-**Exit:** searching a literal specific value returns the trackings that set it; a page marked non-publishable is provably absent from the index; a user without a grant on a project gets no hits from it.
+**Exit:** searching a literal specific value returns the trackings that set it; a page marked non-publishable is provably absent from the index, queried directly; a user without a grant on a project gets no hits from it and cannot fetch its index artefact; an edit made in the draft is findable within the lag O14 settles on.
 
 ### M1.8 — Versioning and publication
 
@@ -248,7 +254,7 @@ Final migration run, **item-by-item editorial verification of the first product*
 
 **Depends on:** M1.4, M1.5, M1.6, M1.7, M1.8, M1.9
 
-**Gated by:** O12 (self-hostable search adapter before public release), O13 (confirm the bulk-operation list from what was actually done by hand during migration), O8 (developer-handoff reference review)
+**Gated by:** O13 (confirm the bulk-operation list from what was actually done by hand during migration), O8 (developer-handoff reference review)
 
 **Exit:** the pilot product's documentation is fully migrated and verified item-by-item; an editor works a full week without returning to the legacy wiki; version 1 is published with an automatically generated changelog.
 
@@ -337,9 +343,9 @@ Full rollback; publication email notifications with per-project subscription; pa
 
 ### M2.8 — Platform hardening
 
-**Delivers:** REQ-SEC-007, REQ-SEC-008, REQ-SEC-009, REQ-FDN-015, REQ-FDN-018, REQ-FDN-019
+**Delivers:** REQ-SEC-007, REQ-SEC-008, REQ-SEC-009, REQ-SEC-015, REQ-FDN-015, REQ-FDN-018, REQ-FDN-019
 
-SAML SSO; audit log UI as a paginated list with CSV export; project archive and restore; per-company branding. **MariaDB and PostgreSQL adapters** ([ADR-0020](../adr/0020-database-portability.md)), plus the dialect test matrix that verifies them.
+SAML SSO; audit log UI as a paginated list with CSV export; project archive and restore; the instance-administration portal (the surface over the R0 capability); per-company branding. **MariaDB and PostgreSQL adapters** ([ADR-0020](../adr/0020-database-portability.md)), plus the dialect test matrix that verifies them.
 
 **Depends on:** M1.9, M0.2
 
@@ -487,7 +493,7 @@ Four things sit on the critical path and are worth protecting:
 | O10 — instance vs company configuration split | M0.1, M0.3 | Immediately |
 | O7 — upgrade and schema-migration strategy | M0.1 | End of R0 |
 | O11 — *manage company catalogue* permission vs role | M1.1 | Start of R1 |
-| O12 — self-hostable search adapter before public release | M1.10 | End of R1 |
+| **O14 — typo tolerance and draft-index freshness under Pagefind** | M1.7 | Start of R1 |
 | O13 — bulk-operation list completeness | M1.10, M2.4 | End of R1 |
 | O8 — developer-handoff reference patterns | M1.10 | End of R1 |
 | O3 — structured "how to read this in the analytics platform" | M2.1 | Start of R2 |
@@ -496,6 +502,8 @@ Four things sit on the critical path and are worth protecting:
 | O9 — container entity attributes | M3.5 | Start of R3 |
 | O4 — data quality vs unstructured placeholders | M4.2 | Start of R4 |
 | O5 — verification module scope | M4.1 | Start of R4 |
+
+**O12 is closed.** It asked whether a self-hostable search adapter was needed before the public release — a release R0 had already performed, which made the question unanswerable in the order it was scheduled. Choosing a self-contained default ([REQ-FDN-007](requirements/REQ-FDN.md)) removes the question rather than answering it, and retires [REQ-FDN-016](requirements/REQ-FDN.md) with it.
 
 ## Risk mitigations owned by milestones
 
@@ -507,11 +515,25 @@ Four things sit on the critical path and are worth protecting:
 | R4 — bus factor of one | M2.6 | Git export as human-readable backup; second maintainer before R3 |
 | R5 — semantic layer undefined | M5.0 | Workshop before the end of R2; immutable IDs and `business_label` already shipped |
 | R6 — adoption | M1.8, M1.10 | Invest in the pre-publication diff; onboard on the pilot before extending |
-| R7 — hosted search dependency | M0.3 | Server-side scoped keys; non-publishable pages excluded from the index |
+| R7 — ~~hosted search dependency~~ **search adapter capability gap** | M0.3, M1.7 | Risk replaced rather than mitigated: the default adapter has no hosted dependency, so nothing leaks off-instance and nothing needs procurement. What remains is that the default is less capable — no typo tolerance, index built rather than updated (O14) |
 | R8 — analytics API access not provisioned in time | M4.1 | Start provisioning during R2 |
 | **R9 — agent migration produces plausible-looking wrong data** | M1.4, M1.10 | Script reviewed before it runs at scale; reconciliation counts checked against source; first product verified item-by-item before the remaining ~29 |
 | **R10 — pilot content lives in one unbacked SQLite file** | M0.6 | File-level snapshot demonstrated in the reference stack; README states backup is the operator's job; git export closes it properly in R2 |
 
-**If R1 overruns**, demote in this order and no further: the audit-log UI (REQ-SEC-008, already R2), non-blocking validation warnings (REQ-DOM-023, already R2), then opt-in module propagation (REQ-DOM-007) from Must to Should. Do not demote the migration chain (M1.2–M1.4), the diff, or selective publication — each is load-bearing for the release criterion.
+**If R1 overruns**, demote in this order and no further. Every item below is genuinely scheduled in R1, so demoting it relieves R1:
+
+| Order | Demote | From | What is lost |
+|---|---|---|---|
+| 1 | [REQ-FDN-014](requirements/REQ-FDN.md) error tracking | Should, M1.9 | Troubleshooting during the pilot is by log reading. Cheapest to lose, easiest to add back |
+| 2 | [REQ-API-006](requirements/REQ-API.md) naming guidelines as MCP resources | Should, M1.3 | The agent writes without house conventions in context; migrated content needs an editorial pass it would otherwise not need. Costs editor time across ~30 products, so prefer 1 first |
+| 3 | [REQ-AUTH-004](requirements/REQ-AUTH.md) Mermaid **live** preview | Must, M1.5 | Partial demotion only: keep the block and render on save, drop render-as-you-type. The block itself is not negotiable — R2's generated diagrams need it |
+| 4 | [REQ-DOM-009](requirements/REQ-DOM.md) tracking templates | Must, M1.1 | Editors create trackings by duplication ([REQ-AUTH-006](requirements/REQ-AUTH.md)) instead. Slower per tracking and less consistent, but nothing becomes impossible |
+| 5 | [REQ-DOM-007](requirements/REQ-DOM.md) opt-in module propagation | Must → Should | A module correction has to be reapplied by hand to existing trackings. Painful at pilot scale — this is the last resort, not the first |
+
+**Do not demote** the migration chain (M1.2–M1.4), the diff, selective publication, or the reconciliation report ([REQ-MIG-006](requirements/REQ-MIG.md)) — the first three are load-bearing for the release criterion, and the fourth is the only mechanical check on agent-written content (risk R9).
+
+**Evaluate but do not assume**: [REQ-DOM-018](requirements/REQ-DOM.md) Survey and [REQ-DOM-017](requirements/REQ-DOM.md) CDP Audience look like the largest single saving in M1.1 and are the most tempting. Both are Must because a 1:1 migration that loses them fails the pilot — the requirement says so itself. If either is cut, the pilot's acceptance criterion changes with it, and that is a conversation, not a demotion.
+
+> The previous version of this list named three candidates, two of which were parenthetically noted as already being in R2 — so it read as three options and was one. A demotion list is only useful if every entry is actually in the release it is meant to relieve.
 
 > **R1 got harder, deliberately.** Dropping the bespoke importer removed roughly six requirements; adding the documented public API, MCP read and write tools, service tokens and idempotent upserts added ten. The trade is not about R1 velocity — it is that R1 now ends with permanent product capability rather than code that is dead after thirty runs, and that capability was already scheduled for R3. R1 was the release most at risk of overrunning before this change and it still is. Watch M1.2 closely: it is the milestone where "complete API" can quietly expand.

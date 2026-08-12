@@ -49,11 +49,17 @@ Editors see clearly which changes are not yet published.
 At publication the editor may exclude individual Trackings and individual Pages/Flows. Properties and Modules cannot be selectively excluded — their changes always publish.
 
 **Acceptance**
-- A published tracking can never reference an unpublished property. This is why properties are not selectively excludable, and it is enforced, not merely documented.
+- **No published entity may reference an excluded entity.** This is the general rule; the cases below are its consequences, and it is enforced rather than merely documented.
+- A published tracking can never reference an unpublished property. This is why properties are not selectively excludable.
+- Excluding a Page **proposes excluding the Trackings attached to it**, selected by default. If the editor overrides the proposal and publishes a tracking whose page is excluded, the publication is **refused** with the conflicting pair named — it does not proceed and leave a tracking attached to nothing.
+- From R2, the same rule covers Flows: publishing a Flow whose Trigger references an excluded Tracking or Page is refused, so a generated diagram (REQ-NAV-006) can never contain a node that does not exist in the version.
+- Destinations, audiences and surveys are not excludable, so they cannot produce this conflict.
 - An exclusion applies to that publication only; excluded items are not remembered as excluded next time.
 - Excluded items remain in the draft, unchanged.
 
 > The property exclusion carve-out is a deliberate simplification to avoid dependency resolution. Reopening it means building a dependency resolver, so it should be reopened only with that cost accepted.
+>
+> The page-and-tracking case is not that: it is one reference, checked in one direction, and excluding a page is the natural way to hold back an unfinished feature — which makes its trackings exactly what an editor would forget to exclude alongside it. Proposing the exclusion is the convenience; refusing the conflict is the guarantee.
 
 ### REQ-VER-004 — Version metadata
 

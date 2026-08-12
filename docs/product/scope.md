@@ -13,7 +13,7 @@ The documentation of tracking plans for websites and mobile applications:
 - Reusable property modules.
 - Tracking templates for standardised creation.
 - Specific values (including placeholders) for each property within a tracking.
-- Conditional valorisations of properties (structured in R2, prose in R1).
+- Conditional valorisations of properties — structured only, from R2. Not expressible in R1 in any form.
 - Destinations (analytics variables/events/schema paths) with many-to-many mapping to properties.
 - CDP audiences.
 - Feedback surveys.
@@ -87,7 +87,7 @@ The documentation of tracking plans for websites and mobile applications:
 - Immutable internal IDs on every entity.
 - Persistence behind repository ports: SQLite by default, MariaDB and PostgreSQL adapters in R2. Schema constrained to a portable SQL subset.
 - S3-compatible storage behind an interface.
-- Algolia search behind an interface.
+- Search behind an interface: Pagefind by default, with no hosted dependency and no documentation content leaving the instance. A hosted adapter is optional and additive (R3).
 - Environment-variable configuration.
 - Versioned schema migrations.
 - Server-side validation shared by UI, API, and MCP.
@@ -137,6 +137,7 @@ These ship as containers in R3 and gain substance with the semantic layer in R5.
 ## Explicitly Rejected
 
 - **Event variants** — a tracking that behaves differently across contexts is expressed through structured property conditions, not through a second inheritance axis.
+- **Prose conditional valorisations** — rejected rather than shipped as an R1 stopgap. The structured form (R2) is the only mechanism, which means no conversion exercise across ~30 migrated products.
 - **Parallel branches and merge workflows** for versioning — single draft stream only.
 - **Approval workflow** — editors publish autonomously.
 - **Scheduled deprecation** — properties are deprecated manually.

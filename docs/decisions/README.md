@@ -14,5 +14,7 @@ Current outstanding decisions:
 | D6 | Testing tooling (Vitest vs Jest, etc.) | Proposed | [ADR-0017](../adr/0017-testing-strategy.md) |
 | D7 | Database portability — SQLite first, MariaDB/PostgreSQL in R2 | Accepted | [ADR-0020](../adr/0020-database-portability.md), supersedes [ADR-0003](../adr/0003-mariadb-single-database.md) |
 | D8 | Agent-driven migration instead of a bespoke importer | Accepted | [ADR-0021](../adr/0021-agent-driven-migration.md) |
+| D9 | Search default — Pagefind in-process, hosted adapter optional | Accepted | [ADR-0009](../adr/0009-search-abstraction.md) (amended); closes O12, opens O14 |
+| D10 | Account lifecycle — env-var first-run bootstrap; instance admin as a capability flag with step-up re-auth | Accepted | [REQ-SEC-013](../product/requirements/REQ-SEC.md), [REQ-SEC-014](../product/requirements/REQ-SEC.md), [REQ-SEC-015](../product/requirements/REQ-SEC.md) |
 
 For all open decisions from the functional specification, see the [spec §21](../product/functional-specification.md) and the [open decisions log](../product/functional-specification.md#21-open-decisions-log).

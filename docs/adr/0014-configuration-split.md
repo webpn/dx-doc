@@ -22,7 +22,7 @@ The spec's open decision O10 asks: "Split of configuration keys between instance
 **Infrastructure configuration → environment variables (instance-level):**
 - Database: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
 - Object storage: `STORAGE_S3_*`
-- Search: `ALGOLIA_APP_ID`, `ALGOLIA_ADMIN_API_KEY`
+- Search: `SEARCH_DRIVER`, `SEARCH_INDEX_PATH` (and adapter credentials, if a hosted adapter is selected)
 - Identity providers: `AUTH_OIDC_*`, `AUTH_SAML_*` (R2)
 - SMTP fallback: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`
 - Error tracking: `SENTRY_DSN`

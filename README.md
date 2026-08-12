@@ -17,7 +17,6 @@ An open-source, white-label platform that replaces legacy wiki-based tracking do
 - Node.js 20 LTS or later
 - npm 10 or later
 - S3-compatible object storage (e.g., MinIO for local development)
-- Algolia account (for search)
 
 No database server is required: the default adapter is SQLite. MariaDB and PostgreSQL adapters arrive in R2, selected with `DB_DRIVER`.
 
@@ -71,7 +70,7 @@ The Platform follows a modular architecture with clear separation between:
 **Key architectural constraints:**
 - Persistence behind repository ports; SQLite by default, MariaDB and PostgreSQL adapters in R2. The schema stays within a portable SQL subset.
 - S3-compatible object storage behind an interface
-- Algolia search behind an interface (self-hostable adapter deferred)
+- Search behind an interface; Pagefind by default, so a stock instance sends no documentation content anywhere
 - Internal REST API consumed by all clients; MCP server is a layer above it
 - No source-format-specific import code. Legacy content is migrated by an agent driving the public API, producing a committed re-runnable script.
 - Multi-company tenancy on a single instance
@@ -93,6 +92,8 @@ The Platform follows a modular architecture with clear separation between:
 | [`docs/product/vision.md`](docs/product/vision.md) | Product vision and strategic context |
 | [`docs/product/scope.md`](docs/product/scope.md) | In-scope, out-of-scope, and deferred |
 | [`docs/product/glossary.md`](docs/product/glossary.md) | Domain terminology |
+| [`docs/product/personas.md`](docs/product/personas.md) | Personas and system roles |
+| [`docs/product/user-stories.md`](docs/product/user-stories.md) | What each persona needs to get done, traced to requirements |
 | [`docs/product/milestones.md`](docs/product/milestones.md) | Delivery milestones, critical path, and release gates |
 | [`docs/product/requirements/`](docs/product/requirements/) | Traceable requirements, by area, with acceptance criteria |
 | [`docs/architecture/system-context.md`](docs/architecture/system-context.md) | System context and external integrations |

@@ -50,6 +50,8 @@ A named user journey: title, rich-text description, and a directed graph over th
 
 Funnel steps *are* Pages; there is no separate step entity. A Page may belong to several flows. The graph is a graph, not a tree: branching, loops and re-entry are supported.
 
+Because a Flow references Pages and Trackings it does not own, it participates in the publication referential rule (REQ-VER-003): publishing a Flow whose nodes include an excluded Page or Tracking is refused, so no generated diagram (REQ-NAV-006) can contain a node absent from the version.
+
 ### REQ-NAV-004 — Trigger nodes distinct from visual transitions
 
 **Should** · R2 · [M2.2](../milestones.md) · spec §8.3 · **Not Started** · Issue: — · PR: —

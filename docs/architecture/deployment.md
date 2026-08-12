@@ -25,13 +25,13 @@ The Platform is a **white-label, open-source product**. Each organisation deploy
 ┌────────────────────────────────────────────────────────┐
 │              Application Server (Node.js)               │
 │              Single process or replicated               │
-│              Env vars: DB, S3, Algolia, OIDC, SMTP     │
+│              Env vars: DB, S3, SEARCH, OIDC, SMTP      │
 └──────┬──────────────────────┬────────────────┬─────────┘
        │                      │                │
        ▼                      ▼                ▼
 ┌────────────┐    ┌──────────────┐    ┌──────────────┐
-│  Database  │    │  S3 Storage  │    │   Algolia    │
-│  (primary) │    │  (assets)    │    │   (search)   │
+│  Database  │    │  S3 Storage  │    │   Pagefind   │
+│  (primary) │    │  (assets)    │    │ (local disk) │
 └────────────┘    └──────────────┘    └──────────────┘
 ```
 
@@ -41,14 +41,18 @@ A single server running:
 - Node.js application process
 - A database: SQLite file by default (no separate service); MariaDB or PostgreSQL from R2
 - S3-compatible storage (MinIO for self-hosted, or any cloud provider)
-- Algolia account (hosted)
+- No search service — Pagefind runs in-process, indexes on local disk
+
+### Availability
+
+The Platform targets roughly **99% availability, achievable on a single instance with no redundancy** ([REQ-NFR-005](../product/requirements/REQ-NFR.md)). That ceiling is a constraint on the architecture, not a promise the software makes: availability is a property of a deployment, so **the SLA of any given instance is its operator's commitment**. The corporate pilot instance targets 99%.
 
 ### Production Deployment (R1+)
 
-- Application server: replicated across multiple instances behind a load balancer
+- Application server: a single process is the supported shape. Replication behind a load balancer is possible but not free — see the caveat below
 - Database: a SQLite file with a scheduled file-level snapshot, or from R2 a managed MariaDB/PostgreSQL service with backup
 - S3: cloud provider object storage (AWS S3, Cloudflare R2, Backblaze B2, etc.)
-- Algolia: hosted search service
+- Search: Pagefind indexes on the application's own disk; an optional hosted adapter (R3) is the only configuration that changes this
 - HTTPS termination at the load balancer
 
 ## Configuration
@@ -65,7 +69,7 @@ Critical variables for R0:
 | `DB_FILE` | SQLite database file path |
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Server database connection (R2 adapters) |
 | `STORAGE_S3_*` | S3-compatible object storage |
-| `ALGOLIA_APP_ID`, `ALGOLIA_ADMIN_API_KEY` | Algolia search |
+| `SEARCH_DRIVER`, `SEARCH_INDEX_PATH` | Search adapter (`pagefind` default) and index location |
 | `APP_URL`, `APP_SECRET` | Application base URL and signing key |
 | `AUTH_PASSWORD_ENABLED` | Email+password authentication |
 | `AUTH_OIDC_*` | OIDC SSO (R1) |
@@ -99,9 +103,9 @@ Company-level configuration (branding, SMTP, catalogue defaults) is stored in th
 
 ## Scaling
 
-- **Horizontal:** the application server is stateless. Multiple instances can run behind a load balancer. Session state is stored in the database or a shared session store.
+- **Horizontal:** the application server is stateless *except for the search index*, which the default adapter writes to local disk. Replicating the process therefore needs either shared storage for the index directory or a per-instance rebuild — which is why a single instance is the supported shape and why [REQ-NFR-005](../product/requirements/REQ-NFR.md) requires the architecture to work without redundancy. Session state is stored in the database or a shared session store.
 - **Database:** a single writer. SQLite serialises writes, which at the projected concurrency is not a bottleneck. Read replicas can be added for read-heavy workloads, though the projected concurrency (≤50 viewers, ≤10 editors) suggests this is unnecessary for the foreseeable scale.
-- **Search:** Algolia is a hosted service and scales independently.
+- **Search:** Pagefind indexes live on the application's disk, so search does **not** scale independently — see the replication caveat above.
 - **Storage:** S3 is a hosted/self-hosted service and scales independently.
 
 ## Monitoring
@@ -116,4 +120,4 @@ Company-level configuration (branding, SMTP, catalogue defaults) is stored in th
 - **Environment variables** for all secrets. No credentials in the codebase.
 - **Database TLS** where supported by the provider.
 - **Session cookies:** `HttpOnly`, `Secure` (in production), `SameSite=Lax`.
-- **Content Security Policy:** configured to allow the application's own assets, the S3/CDN domain, and Algolia.
+- **Content Security Policy:** configured to allow the application's own assets and the S3/CDN domain. The default search adapter adds no external origin.
