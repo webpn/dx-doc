@@ -47,6 +47,16 @@ The Platform is developed as a **white-label, open-source product** under the MI
 
 The Platform is the first step toward a broader corporate data ecosystem. The documentation will eventually export into a semantic layer (OWL, RDF, ISO 25964) that describes digital tracking metadata for the whole organisation. That semantic layer — not the Platform — will be the corporate data catalogue. The Platform's job is to be the authoritative editor of tracking metadata and a clean, complete source for that catalogue.
 
+### Open Point: Insights & Analysis Layer
+
+Beyond documenting trackings, the Platform could grow into the place where the resulting knowledge about the data is captured and shared. Interesting features to explore:
+
+- **Insights repository** — a place to record findings and observations that come out of working with the tracked data (e.g. known quirks, notable patterns, past investigations), so they aren't lost in tickets or chat threads and can be reused by whoever touches the same tracking next.
+- **Guide on how to do the analysis** — documentation that helps a digital analyst go from a tracking definition to a correct analysis: what the properties mean in practice, common pitfalls, and recommended approaches for typical questions.
+- **Data quality** — signals and checks (e.g. completeness, consistency, freshness) surfaced against the documented trackings, so analysts and specialists can trust — or flag — what they're seeing in the analytics platform.
+
+This is not yet scoped or committed; it's a candidate direction to evaluate against the [What Success Looks Like](#what-success-looks-like) analyst-view goal.
+
 ## What the Platform Is Not
 
 - **Not an analytics tool.** It documents; it does not report.
