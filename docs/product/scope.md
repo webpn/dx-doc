@@ -83,9 +83,9 @@ Everything above is replacement. These are the capabilities the legacy wiki neve
 ### What R1 deliberately does not carry over
 
 - **Conditional valorisations in any form.** The legacy wiki expressed these in prose; R1 has no mechanism at all, and the structured form arrives in R2 ([REQ-DOM-011](requirements/REQ-DOM.md) rejected, [REQ-DOM-012](requirements/REQ-DOM.md)).
-- **Flows and process diagrams are not migrated** — they are catalogued by hand after migration ([REQ-MIG-009](requirements/REQ-MIG.md)).
-- **History is not migrated.** Every migrated project starts at version 1.
-- **Internal cross-links are not migrated.**
+- **Flows and process diagrams are not imported** — they are catalogued by hand after import ([REQ-MIG-009](requirements/REQ-MIG.md)).
+- **History is not imported.** Every imported project starts at version 1.
+- **Internal cross-links are not imported.**
 
 > **Two rows are worth checking against a real product before R1 planning is locked.** CDP audiences and surveys are listed above as *beyond* parity, because the legacy authoring guidelines do not describe a table for either — yet [REQ-DOM-017](requirements/REQ-DOM.md) and [REQ-DOM-018](requirements/REQ-DOM.md) are `Must` in R1 on the grounds that a 1:1 migration losing them would fail the pilot. Both cannot be true. Either they exist in product documentation beyond the template, in which case they are parity, or their `Must` justification needs restating.
 
@@ -154,19 +154,19 @@ The documentation of tracking plans for websites and mobile applications:
 ### API and MCP
 
 - Internal REST API (R0), the single entry point for all operations.
-- Documented public API (R1) — migration is written against it.
+- Documented public API (R1) — the basis for importing content from other systems.
 - MCP read and write tools (R1), as a layer above the REST API.
 - Service-account API tokens (R1) for scripted clients.
 - OAuth with user consent for interactive agent clients (R3).
 
-### Migration
+### Import
 
-- **No source-format-specific code in the Platform.** Migration is performed by an AI agent driving the public API, producing a committed re-runnable script ([ADR-0021](../adr/0021-agent-driven-migration.md)).
+- **No source-format-specific code in the Platform.** Content is imported by an AI agent driving the public API, producing a committed re-runnable script ([ADR-0021](../adr/0021-agent-driven-migration.md)).
 - API surface complete enough to construct any project without opening the UI.
-- Idempotent upsert keyed on `external_ref`, so a migration can be corrected and re-run.
+- Idempotent upsert keyed on `external_ref`, so an import can be corrected and re-run.
 - Asset upload through the API into object storage.
 - Batch write endpoints and a reconciliation report.
-- Applies to all ~30 existing products, not the pilot alone.
+- General-purpose: the same capability serves any bulk ingestion, from any source system.
 
 ### Foundation
 
@@ -200,8 +200,8 @@ The documentation of tracking plans for websites and mobile applications:
 - No field-level permissions — views are presentation filters, not security boundaries.
 - No cross-project search.
 - No cross-project references — entities may only reference entities in their own project.
-- No flow or graph reconstruction from the legacy wiki — flows are catalogued manually after migration.
-- No history migration from the legacy wiki — each migrated project starts at version 1.
+- No flow or graph reconstruction from a source system — flows are catalogued manually after import.
+- No history import — each imported project starts at version 1.
 - No importer UI and no import endpoint accepting an export archive — the Platform holds no knowledge of any source format.
 
 ## Deferred (with target release)

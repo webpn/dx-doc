@@ -2,11 +2,11 @@
 
 ## What We Are Building
 
-**dx-doc** (the Platform) is the single source of truth for digital analytics tracking documentation within an organisation. It replaces a legacy wiki-based workflow with a purpose-built tool designed for the specific domain: documenting which trackings fire on which pages, which data layer properties they carry, and how those properties map onto analytics platforms.
+**dx-doc** (the Platform) is the single source of truth for digital analytics tracking documentation within an organisation. It is a purpose-built tool for a specific domain: documenting which trackings fire on which pages, which data layer properties they carry, and how those properties map onto analytics platforms.
 
 ## Why It Matters
 
-The legacy approach (a standardised wiki template duplicated per product) served well for years, but has hit structural limits:
+The approach it replaces — a standardised wiki template duplicated per product — served well for years, but has hit structural limits:
 
 1. **Cost** — hundreds of users need write access for a bounded period, then remain licensed indefinitely.
 2. **Rigidity** — changing how trackings are presented requires editing every existing page by hand.
@@ -20,7 +20,7 @@ The Platform addresses all seven.
 
 ## What Success Looks Like
 
-**R1:** The largest existing product's documentation is fully migrated. An editor works on the Platform for a full week without returning to the legacy wiki. A first version is published with an automatically generated changelog.
+**R1:** A first product's documentation is fully in the Platform. An editor works on the Platform for a full week without returning to the old workflow. A first version is published with an automatically generated changelog.
 
 **Longer term:** The documentation becomes the single source of truth consumed by developers (through generated code snippets), by analysts (through the analyst view enriched with data-quality signals), and by machines (through the API, MCP, and semantic-layer exports).
 

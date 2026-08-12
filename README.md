@@ -2,21 +2,62 @@
 
 **Status:** Pre-R0 — repository scaffolding and documentation foundation
 
-## Purpose
+## What we are building
 
-An open-source, white-label platform that replaces legacy wiki-based tracking documentation for digital analytics. The Platform documents tracking plans for websites and mobile applications — the pages/screens that compose a product, the tracking events attached to them, the data layer properties those events carry, how those properties map onto analytics platforms, and the publication of that documentation to different audiences in a versioned, auditable way.
+**dx-doc is the single source of truth for digital analytics tracking documentation within an organisation.**
+
+It is a self-hosted, open-source, white-label platform that documents *tracking plans* for websites and mobile applications. A tracking plan answers three questions about a digital product:
+
+1. **What fires where?** — which pages/screens exist, and which tracking events (page views, clicks, form submissions, user errors) are attached to them.
+2. **What data does it carry?** — the data-layer properties each event sends, their meaning, format, origin, allowed values, and examples.
+3. **Where does it go?** — how those properties map onto analytics platforms (Adobe Analytics, CJA, GA4, PostHog).
+
+dx-doc turns that documentation into a **structured, versioned, publishable, API-first system** — instead of a set of hand-maintained wiki pages.
+
+## Why it exists
+
+dx-doc exists to give you a **solid, purpose-built application for documenting everything related to trackings** — tailor-made for this use case, rather than a pile of Word/Excel documents (like an Adobe SDR) or a generic wiki.
+
+A generic tool can hold the content, but it doesn't understand it. dx-doc is built around the tracking domain, so it can do what a document or a wiki cannot:
+
+- **Structured, not free-form** — pages, trackings, data-layer properties, and destinations are first-class entities with defined relationships, not paragraphs.
+- **Versioned** — a draft → published model with an automatically generated diff and changelog.
+- **Navigable** — the page hierarchy and journeys are exposed in the sidebar, not buried in a document.
+- **Machine-readable** — a complete API and MCP surface, so anything doable in the UI is doable by a machine.
+- **Cost-effective to read** — read access without a licensed account, via project shared passwords.
+
+dx-doc is **not** an analytics tool (it documents, it doesn't report), **not** a project-management tool, and **not** the tracking implementation itself — it describes what must be implemented.
+
+## Who it's for
+
+| Persona | What they need |
+|---|---|
+| **Tracking specialist** | Owns the docs — efficient authoring, templates, bulk operations, publication workflow |
+| **Digital analyst** | Understands what data to expect in the analytics platform and how to interpret it |
+| **Business user / PM** | Reviews flows and trackings at a high level; knows what's in each release |
+| **Developer** | Knows exactly which trackings to implement — which properties, which values |
+| **Designer** | Understands which interactions are tracked, anchored to screenshots |
+
+## The goal of the first release (R1)
+
+R1 is the MVP: a complete, usable platform for authoring, versioning, and publishing tracking documentation. Concretely, R1 delivers:
+
+- The full structured data model (pages, trackings, data-layer properties, modules, destinations, and more).
+- A rich authoring editor with Markdown, Mermaid, and image upload.
+- **Draft → published versioning** with an automatically generated diff and changelog.
+- Search over specific values — *"which tracking sets this value?"* is answerable.
+- Audience-specific views (Analyst/Business and Development).
+- A complete REST API and MCP surface — anything doable in the UI is doable by a machine.
+- Read access without a licensed account, via project shared passwords.
+- An append-only audit log.
+
+The detailed, enumerated definition of R1 scope lives in [What R1 parity means](docs/product/scope.md#what-r1-parity-means).
 
 ## Current Status
 
 - Functional specification complete (see `docs/product/functional-specification.md`)
 - Architecture and engineering foundation documents in progress
 - No application code yet; the repository is being scaffolded for R0
-
-## What the first release must do
-
-The MVP (R1) is described as *"parity plus versioning"*. **Parity is defined explicitly, not by reference to the legacy system it replaces** — see [What R1 parity means](docs/product/scope.md#what-r1-parity-means), which enumerates every capability the legacy documentation template provided and the requirement that replaces it. R1 is at parity when every row in that table is satisfied.
-
-On top of parity, R1 adds what the legacy wiki never had: draft-to-published versioning with an automatically generated changelog, search over specific values, audience-specific views, a complete API and MCP surface, read access without a licensed account, and an append-only audit log.
 
 ## Prerequisites
 
@@ -78,7 +119,7 @@ The Platform follows a modular architecture with clear separation between:
 - S3-compatible object storage behind an interface
 - Search behind an interface; Pagefind by default, so a stock instance sends no documentation content anywhere
 - Internal REST API consumed by all clients; MCP server is a layer above it
-- No source-format-specific import code. Legacy content is migrated by an agent driving the public API, producing a committed re-runnable script.
+- Content can be imported from other platforms through the public API — no source-format-specific import code ships in the product. Bulk ingestion is idempotent, keyed on an external reference.
 - Multi-company tenancy on a single instance
 - Single draft stream per project; no branches or merge workflows
 - All validation in the backend, shared by UI, API and MCP

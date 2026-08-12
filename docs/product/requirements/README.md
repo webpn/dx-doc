@@ -17,7 +17,7 @@ Traceable requirements derived from the [functional specification](../functional
 | [REQ-VIEW](REQ-VIEW.md) | Audience views and distribution channels | §10 | 10 |
 | [REQ-DEV](REQ-DEV.md) | Developer handoff — snippets, Figma and dashboard links | §11 | 7 |
 | [REQ-API](REQ-API.md) | API and MCP | §12 | 10 |
-| [REQ-MIG](REQ-MIG.md) | Migration from the legacy wiki | §13 | 9 |
+| [REQ-MIG](REQ-MIG.md) | Import — ingesting content from other systems | §13 | 9 |
 | [REQ-NFR](REQ-NFR.md) | Non-functional — performance, availability, i18n, observability | §15 | 14 |
 | [REQ-DQ](REQ-DQ.md) | Data quality and deferred modules | §14 | 8 |
 
