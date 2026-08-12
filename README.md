@@ -89,6 +89,8 @@ The Platform follows a modular architecture with clear separation between:
 | [`docs/product/vision.md`](docs/product/vision.md) | Product vision and strategic context |
 | [`docs/product/scope.md`](docs/product/scope.md) | In-scope, out-of-scope, and deferred |
 | [`docs/product/glossary.md`](docs/product/glossary.md) | Domain terminology |
+| [`docs/product/milestones.md`](docs/product/milestones.md) | Delivery milestones, critical path, and release gates |
+| [`docs/product/requirements/`](docs/product/requirements/) | Traceable requirements, by area, with acceptance criteria |
 | [`docs/architecture/system-context.md`](docs/architecture/system-context.md) | System context and external integrations |
 | [`docs/architecture/containers.md`](docs/architecture/containers.md) | Container/service-level architecture |
 | [`docs/architecture/deployment.md`](docs/architecture/deployment.md) | Deployment model and reference stack |
