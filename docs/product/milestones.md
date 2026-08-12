@@ -48,7 +48,7 @@ Accept or supersede the pending ADRs: [0011 UI library](../adr/0011-ui-library-s
 
 **Delivers:** REQ-FDN-002, REQ-FDN-003, REQ-FDN-004, REQ-FDN-005, REQ-FDN-009, REQ-FDN-020
 
-Repository ports owned by the domain, with a **SQLite adapter** as the default and only implementation through R1 ([ADR-0020](../adr/0020-database-portability.md)). Schema v1 covering Company, Project (with grouping labels), User, Role, ProjectGrant, and an empty Page, plus the `external_ref` column that makes migration idempotent (REQ-MIG-003). Immutable internal identifiers on every entity, distinct from name and slug. Forward-only versioned migrations run at start-up, written in the portable SQL subset from the first file.
+Repository ports owned by the domain, with a **SQLite adapter** as the default and only implementation through R1 ([ADR-0020](../adr/0020-database-portability.md)). Schema v1 covering Company, Project (with grouping labels), User, Role, ProjectGrant, and an empty Page, plus the `external_ref` column that makes import idempotent (REQ-IMP-003). Immutable internal identifiers on every entity, distinct from name and slug. Forward-only versioned migrations run at start-up, written in the portable SQL subset from the first file.
 
 **Depends on:** M0.1
 
@@ -114,11 +114,11 @@ MIT licence, README with setup instructions, reference deployment stack (compose
 
 ---
 
-## R1 — MVP: parity plus versioning
+## R1 — MVP
 
 *Target: weeks 3–8. The entire Must set except [REQ-VIEW-003](requirements/REQ-VIEW.md), which stays a Must but has no consumer until R2. This is the release that retires the legacy wiki for the pilot product.*
 
-> **"Parity" means the checklist, not the legacy wiki.** [What R1 parity means](scope.md#what-r1-parity-means) enumerates every capability the legacy template provided and the requirement replacing it. R1 is at parity when every row is satisfied — which is what makes the M1.10 exit criterion falsifiable rather than a matter of opinion.
+> **The [R1 minimum requirements](minimum-requirements.md) are the checklist, not a matter of opinion.** They enumerate what R1 must deliver. R1 is complete when every row is satisfied — which is what makes the M1.10 exit criterion falsifiable rather than a matter of opinion.
 
 ### M1.1 — Tracking data model
 
@@ -136,13 +136,13 @@ Page, Tracking, DataLayerProperty (full attribute set including `business_label`
 
 **Exit:** the composition rules hold under test — removing the last module-supplied property from a tracking detaches the module and warns; a module edit does not reach existing trackings unless propagation is explicitly requested; no entity can reference an entity in another project.
 
-### M1.2 — Migration-grade API
+### M1.2 — Import-grade API
 
 *Target: week 4.*
 
 **Goal:** everything in the product is reachable and idempotently writable by a machine.
 
-**Delivers:** REQ-MIG-001, REQ-MIG-002, REQ-MIG-003, REQ-MIG-004, REQ-MIG-005, REQ-MIG-006, REQ-API-002, REQ-API-009
+**Delivers:** REQ-IMP-001, REQ-IMP-002, REQ-IMP-003, REQ-IMP-004, REQ-IMP-005, REQ-IMP-006, REQ-API-002, REQ-API-009
 
 Every R1 entity creatable, readable and updatable through the API. Idempotent upsert on `external_ref`. Asset upload. Batch write endpoints. Reconciliation report. Documented public API contract, generated from the implementation. Service-account tokens.
 
@@ -150,7 +150,7 @@ Every R1 entity creatable, readable and updatable through the API. Idempotent up
 
 **Exit:** the pilot product can be constructed through the API alone, with the UI never opened — this single test is the acceptance criterion for the whole milestone; a script written against the published documentation, with no reading of Platform source, succeeds.
 
-> The Platform ships **no source-format-specific code** ([ADR-0021](../adr/0021-agent-driven-migration.md)). Every requirement here has post-migration value; none of it is throwaway. That is the trade that justified dropping the bespoke importer.
+> The Platform ships **no source-format-specific code** ([ADR-0021](../adr/0021-agent-driven-migration.md)). Every requirement here has post-import value; none of it is throwaway. That is the trade that justified dropping the bespoke importer.
 
 ### M1.3 — MCP server
 
@@ -172,13 +172,13 @@ Read tools over the R1 entity set plus the reconciliation report. Write tools co
 
 **Goal:** the data model is validated against years of accumulated real usage, while there is still time to change it.
 
-**Delivers:** REQ-MIG-007
+**Delivers:** REQ-IMP-007
 
-Claude reads the pilot product's legacy export from the filesystem, explores its structure, and writes a migration script. The script is reviewed, committed, and run against real pilot data.
+Claude reads the pilot product's legacy export from the filesystem, explores its structure, and writes an import script. The script is reviewed, committed, and run against real pilot data.
 
 **Depends on:** M1.3
 
-**Exit:** the full pilot content exists in dx-doc; the reconciliation report is reviewed against the source by an editor; running the script twice produces no duplicates; every model ambiguity the migration exposed is either fixed or written down as an accepted limitation.
+**Exit:** the full pilot content exists in dx-doc; the reconciliation report is reviewed against the source by an editor; running the script twice produces no duplicates; every model ambiguity the import exposed is either fixed or written down as an accepted limitation.
 
 > **Scheduled at week 5–6, deliberately ahead of a complete UI.** This is the mitigation for risks R1 and R2 in the [risk register](functional-specification.md), and its logic is unchanged from the importer it replaces: it is the only test that measures the data model against reality, and it must happen while the model is still cheap to change. It now does double duty — a gap in the API surface shows up here as something the agent cannot create. Do not reorder it behind the authoring UI.
 >
@@ -248,22 +248,22 @@ OIDC SSO. Project shared-password access with optional expiry. Append-only audit
 
 **Goal:** the release criterion is met, not approximated.
 
-**Delivers:** REQ-MIG-008 — otherwise the acceptance milestone for R1.
+**Delivers:** REQ-IMP-008 — otherwise the acceptance milestone for R1.
 
-Final migration run, **item-by-item editorial verification of the first product**, editor onboarding, freeze of the legacy wiki to read-only. A human publishes version 1 — agents cannot (REQ-API-004).
+Final import run, **item-by-item editorial verification of the first product**, editor onboarding, freeze of the legacy wiki to read-only. A human publishes version 1 — agents cannot (REQ-API-004).
 
 **Depends on:** M1.4, M1.5, M1.6, M1.7, M1.8, M1.9
 
-**Gated by:** O13 (confirm the bulk-operation list from what was actually done by hand during migration), O8 (developer-handoff reference review)
+**Gated by:** O13 (confirm the bulk-operation list from what was actually done by hand during import), O8 (developer-handoff reference review)
 
-**Exit:** every row of the [parity checklist](scope.md#what-r1-parity-means) is satisfied; the pilot product's documentation is fully migrated and verified item-by-item; an editor works a full week without returning to the legacy wiki; version 1 is published with an automatically generated changelog.
+**Exit:** every row of the [minimum requirements](minimum-requirements.md) is satisfied; the pilot product's documentation is fully imported and verified item-by-item; an editor works a full week without returning to the legacy wiki; version 1 is published with an automatically generated changelog.
 
-> The item-by-item verification is also the only chance to correct the parity checklist itself. It was derived from the legacy template's authoring guidelines, and the template drifted over years — anything found in the real product that the checklist does not name belongs in it.
+> The item-by-item verification is also the only chance to correct the minimum-requirements checklist itself. It was derived from the baseline documentation structure, and real products drift from any baseline — anything found in the real product that the checklist does not name belongs in it.
 
-> **R1 gate.** The pilot is migrated and live. Two things must be recorded here and are not recoverable later:
+> **R1 gate.** The pilot is imported and live. Two things must be recorded here and are not recoverable later:
 >
-> - **O13's answer.** The operations editors performed by hand during this migration are the evidence base for R2's bulk operations.
-> - **Whether the migration script generalises.** The pilot is one of ~30 products documented against a template that drifted over years. If the script needed heavy per-product adaptation, that is the signal that the remaining products are a longer job than one script run each — and it is worth knowing before committing to a schedule for them.
+> - **O13's answer.** The operations editors performed by hand during this import are the evidence base for R2's bulk operations.
+> - **Whether the import script generalises.** The pilot is one of ~30 products documented against a template that drifted over years. If the script needed heavy per-product adaptation, that is the signal that the remaining products are a longer job than one script run each — and it is worth knowing before committing to a schedule for them.
 
 ---
 
@@ -385,9 +385,9 @@ Confluence Cloud via API to a configurable space, development view only, full ov
 
 **Exit:** a manual edit made in Confluence is overwritten on the next publication — by design and documented as such.
 
-### M3.3 — Public API — *moved to [M1.2](#m12--migration-grade-api)*
+### M3.3 — Public API — *moved to [M1.2](#m12--import-grade-api)*
 
-The documented public API is no longer an R3 deliverable. Migration is written against it, so it ships in R1. The ID is retained rather than reused, so that anything referring to "M3.3" resolves to this note instead of silently pointing at different work.
+The documented public API is no longer an R3 deliverable. Import is written against it, so it ships in R1. The ID is retained rather than reused, so that anything referring to "M3.3" resolves to this note instead of silently pointing at different work.
 
 ### M3.4 — Interactive agent access
 
@@ -399,7 +399,7 @@ OAuth with user consent for interactive MCP clients — analysts' assistants and
 
 **Exit:** an analyst queries the documentation from their own AI assistant, authenticated by consent rather than a shared token, and sees exactly what their project grants allow.
 
-> **Most of this milestone moved to R1.** The MCP server itself, its write tools, the documented public API and the naming-guideline resources are all M1.2–M1.3 now, because migration depends on them ([ADR-0021](../adr/0021-agent-driven-migration.md)). What remains here is the part migration never needed: interactive consent, and read tools over capabilities that only exist from R2 onward.
+> **Most of this milestone moved to R1.** The MCP server itself, its write tools, the documented public API and the naming-guideline resources are all M1.2–M1.3 now, because import depends on them ([ADR-0021](../adr/0021-agent-driven-migration.md)). What remains here is the part import never needed: interactive consent, and read tools over capabilities that only exist from R2 onward.
 
 ### M3.5 — Containers and conveniences
 
@@ -483,8 +483,8 @@ M0.1 ─→ M0.2 ─→ M0.4 ─┐
 Four things sit on the critical path and are worth protecting:
 
 1. **M0.1 blocks everything.** It is a decision milestone with no code. It is also the cheapest place in the project to spend a week.
-2. **M1.2 → M1.3 → M1.4 is now a three-milestone chain, and it is the longest one in R1.** The migration cannot start until the API is complete and the MCP tools exist. This chain replaced a single self-contained importer milestone, and it is the main reason R1 got harder rather than easier ([ADR-0021](../adr/0021-agent-driven-migration.md)).
-3. **M1.4 must not slip behind the UI.** Its value is diagnostic and it decays: a migration that runs in week 6 can still change the data model, one that runs in week 8 cannot.
+2. **M1.2 → M1.3 → M1.4 is now a three-milestone chain, and it is the longest one in R1.** The import cannot start until the API is complete and the MCP tools exist. This chain replaced a single self-contained importer milestone, and it is the main reason R1 got harder rather than easier ([ADR-0021](../adr/0021-agent-driven-migration.md)).
+3. **M1.4 must not slip behind the UI.** Its value is diagnostic and it decays: an import that runs in week 6 can still change the data model, one that runs in week 8 cannot.
 4. **M2.5 blocks all of R2's distribution.** Every export milestone depends on the non-leakage guarantee. Building exports first and retrofitting the rendering profile means auditing every artefact twice.
 
 ## Open decisions, by the milestone they gate
@@ -511,15 +511,15 @@ Four things sit on the critical path and are worth protecting:
 
 | Risk (spec §22) | Owning milestone | Mitigation |
 |---|---|---|
-| R1 — Must set exceeds the R1 budget | M1.4, M1.10 | Week 5–6 migration checkpoint; named demotion candidates below |
-| R2 — pilot migration exposes model ambiguities | M1.4 | Front-load the migration ahead of the UI |
+| R1 — Must set exceeds the R1 budget | M1.4, M1.10 | Week 5–6 import checkpoint; named demotion candidates below |
+| R2 — pilot import exposes model ambiguities | M1.4 | Front-load the import ahead of the UI |
 | R3 — open-source work competes with features | M0.6 | One database adapter, one search implementation, one deployment path at launch |
 | R4 — bus factor of one | M2.6 | Git export as human-readable backup; second maintainer before R3 |
 | R5 — semantic layer undefined | M5.0 | Workshop before the end of R2; immutable IDs and `business_label` already shipped |
 | R6 — adoption | M1.8, M1.10 | Invest in the pre-publication diff; onboard on the pilot before extending |
 | R7 — ~~hosted search dependency~~ **search adapter capability gap** | M0.3, M1.7 | Risk replaced rather than mitigated: the default adapter has no hosted dependency, so nothing leaks off-instance and nothing needs procurement. What remains is reduced capability — typo tolerance given up until REQ-FDN-022, index built rather than updated (O14) |
 | R8 — analytics API access not provisioned in time | M4.1 | Start provisioning during R2 |
-| **R9 — agent migration produces plausible-looking wrong data** | M1.4, M1.10 | Script reviewed before it runs at scale; reconciliation counts checked against source; first product verified item-by-item before the remaining ~29 |
+| **R9 — agent import produces plausible-looking wrong data** | M1.4, M1.10 | Script reviewed before it runs at scale; reconciliation counts checked against source; first product verified item-by-item before the remaining ~29 |
 | **R10 — pilot content lives in one unbacked SQLite file** | M0.6 | File-level snapshot demonstrated in the reference stack; README states backup is the operator's job; git export closes it properly in R2 |
 
 **If R1 overruns**, demote in this order and no further. Every item below is genuinely scheduled in R1, so demoting it relieves R1:
@@ -527,14 +527,14 @@ Four things sit on the critical path and are worth protecting:
 | Order | Demote | From | What is lost |
 |---|---|---|---|
 | 1 | [REQ-FDN-014](requirements/REQ-FDN.md) error tracking | Should, M1.9 | Troubleshooting during the pilot is by log reading. Cheapest to lose, easiest to add back |
-| 2 | [REQ-API-006](requirements/REQ-API.md) naming guidelines as MCP resources | Should, M1.3 | The agent writes without house conventions in context; migrated content needs an editorial pass it would otherwise not need. Costs editor time across ~30 products, so prefer 1 first |
+| 2 | [REQ-API-006](requirements/REQ-API.md) naming guidelines as MCP resources | Should, M1.3 | The agent writes without house conventions in context; imported content needs an editorial pass it would otherwise not need. Costs editor time across ~30 products, so prefer 1 first |
 | 3 | [REQ-AUTH-004](requirements/REQ-AUTH.md) Mermaid **live** preview | Must, M1.5 | Partial demotion only: keep the block and render on save, drop render-as-you-type. The block itself is not negotiable — R2's generated diagrams need it |
 | 4 | [REQ-DOM-009](requirements/REQ-DOM.md) tracking templates | Must, M1.1 | Editors create trackings by duplication ([REQ-AUTH-006](requirements/REQ-AUTH.md)) instead. Slower per tracking and less consistent, but nothing becomes impossible |
 | 5 | [REQ-DOM-007](requirements/REQ-DOM.md) opt-in module propagation | Must → Should | A module correction has to be reapplied by hand to existing trackings. Painful at pilot scale — this is the last resort, not the first |
 
-**Do not demote** the migration chain (M1.2–M1.4), the diff, selective publication, or the reconciliation report ([REQ-MIG-006](requirements/REQ-MIG.md)) — the first three are load-bearing for the release criterion, and the fourth is the only mechanical check on agent-written content (risk R9).
+**Do not demote** the import chain (M1.2–M1.4), the diff, selective publication, or the reconciliation report ([REQ-IMP-006](requirements/REQ-IMP.md)) — the first three are load-bearing for the release criterion, and the fourth is the only mechanical check on agent-written content (risk R9).
 
-**Evaluate but do not assume**: [REQ-DOM-018](requirements/REQ-DOM.md) Survey and [REQ-DOM-017](requirements/REQ-DOM.md) CDP Audience look like the largest single saving in M1.1 and are the most tempting. Both are Must because a 1:1 migration that loses them fails the pilot — the requirement says so itself. If either is cut, the pilot's acceptance criterion changes with it, and that is a conversation, not a demotion.
+**Evaluate but do not assume**: [REQ-DOM-018](requirements/REQ-DOM.md) Survey and [REQ-DOM-017](requirements/REQ-DOM.md) CDP Audience look like the largest single saving in M1.1 and are the most tempting. Both are Must because a 1:1 import that loses them fails the pilot — the requirement says so itself. If either is cut, the pilot's acceptance criterion changes with it, and that is a conversation, not a demotion.
 
 > The previous version of this list named three candidates, two of which were parenthetically noted as already being in R2 — so it read as three options and was one. A demotion list is only useful if every entry is actually in the release it is meant to relieve.
 

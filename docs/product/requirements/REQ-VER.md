@@ -102,7 +102,7 @@ Any historical version can be consulted in full, not only as a list of changes.
 
 **Acceptance**
 - A version's content renders as it was at publication, including assets, which are therefore never deleted while a version references them.
-- Migrated projects start at version 1 with no prior history (REQ-MIG-009).
+- Imported projects start at version 1 with no prior history (REQ-IMP-009).
 
 ### REQ-VER-008 — Full rollback
 
@@ -124,7 +124,7 @@ Changes made through MCP agents and service-account tokens are visually distingu
 
 > This is the whole agent-review mechanism. There is deliberately no separate agent-review queue: human review happens at publication, where the diff is inspected and items can be excluded. That only works if agent changes are visible as such.
 >
-> **Moved R3 → R2.** MCP write tools land in R1 (REQ-API-004, per [ADR-0021](../../adr/0021-agent-driven-migration.md)), so agents and humans start sharing a draft from R1 rather than R3. Attribution is not needed for the migration itself — version 1 has nothing to diff against — but it is needed as soon as agents edit alongside editors, which is the release immediately after.
+> **Moved R3 → R2.** MCP write tools land in R1 (REQ-API-004, per [ADR-0021](../../adr/0021-agent-driven-migration.md)), so agents and humans start sharing a draft from R1 rather than R3. Attribution is not needed for the import itself — version 1 has nothing to diff against — but it is needed as soon as agents edit alongside editors, which is the release immediately after.
 
 ### REQ-VER-011 — Selective rollback
 

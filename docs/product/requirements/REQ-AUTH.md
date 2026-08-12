@@ -134,7 +134,7 @@ Every operation previews the affected items and the resulting change before appl
 
 Exposure through API and MCP carries the same validation, but agents must target an explicit list of identifiers — never a filter expression (REQ-API-008).
 
-**Blocked by:** open decision O13. The operation list is a considered proposal, not an observed requirement. Confirm or extend it from what editors actually did by hand during the pilot migration and its item-by-item verification ([M1.10](../milestones.md)) — that evidence exists only once.
+**Blocked by:** open decision O13. The operation list is a considered proposal, not an observed requirement. Confirm or extend it from what editors actually did by hand during the pilot import and its item-by-item verification ([M1.10](../milestones.md)) — that evidence exists only once.
 
 > This addresses the second-costliest shortcoming of the legacy wiki. The presentation half is already solved by application-controlled layout: changing how trackings render updates every tracking at once, with no data migration.
 

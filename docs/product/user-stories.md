@@ -50,7 +50,7 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 | **E3 — Publish and communicate change** | Turn a stream of edits into a release other people can act on | R1 → R2 |
 | **E4 — Hand off to development** | Give a developer exactly what to implement, and nothing else | R1 → R3 |
 | **E5 — Navigate the journey** | Move through the plan by structure and by journey, not by search alone | R1 → R2 |
-| **E6 — Migrate off the legacy wiki** | Move ~30 products across without a bespoke importer | R1 |
+| **E6 — Import content from other platforms** | Move ~30 products across without a bespoke importer | R1 |
 | **E7 — Govern access** | Let the right people in, keep the record of what they did | R0 → R2 |
 | **E8 — Operate and deploy** | Run the Platform, anywhere, without asking its authors | R0 → R2 |
 | **E9 — Trust the data** | Know whether what is documented is what is actually collected | R4 → R6 |
@@ -155,7 +155,7 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 #### US-OPS-02 — Know what to back up and when · *Operator* · E8
 
-**As a** system administrator **I want** to be told plainly that backup is mine, and shown how **so that** the pilot's migrated content does not sit in one unbacked file for six weeks by accident.
+**As a** system administrator **I want** to be told plainly that backup is mine, and shown how **so that** the pilot's imported content does not sit in one unbacked file for six weeks by accident.
 
 [REQ-NFR-006](requirements/REQ-NFR.md), [REQ-FDN-012](requirements/REQ-FDN.md) → R2: [REQ-VIEW-005](requirements/REQ-VIEW.md)
 
@@ -177,7 +177,7 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 ---
 
-# R1 — MVP: parity plus versioning
+# R1 — MVP
 
 *Weeks 3–8. The release that retires the legacy wiki for the pilot product.*
 
@@ -249,21 +249,21 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 #### US-EDT-10 — Document audiences and surveys · *Editor* · E1
 
-**As a** tracking specialist **I want** CDP audiences and feedback surveys documented alongside the trackings they are built on **so that** a 1:1 migration of the legacy wiki loses nothing.
+**As a** tracking specialist **I want** CDP audiences and feedback surveys documented alongside the trackings they are built on **so that** a 1:1 import of the legacy wiki loses nothing.
 
 [REQ-DOM-017](requirements/REQ-DOM.md), [REQ-DOM-018](requirements/REQ-DOM.md)
 
 **Done when** — both appear as consumers in impact analysis and neither appears in the development view.
 
-> These two look secondary and are the most tempting saving in M1.1. They are Must because a migration that drops them fails the pilot — see the *evaluate but do not assume* note in the [demotion list](milestones.md).
+> These two look secondary and are the most tempting saving in M1.1. They are Must because an import that drops them fails the pilot — see the *evaluate but do not assume* note in the [demotion list](milestones.md).
 
-## M1.2 — Migration-grade API
+## M1.2 — Import-grade API
 
 #### US-AGT-01 — Build a whole project through the API · *Agent* · E6
 
-**As an** agent migrating a product **I want** every entity in the R1 model creatable, readable and updatable through a documented API **so that** I can construct the pilot without a human opening the UI once.
+**As an** agent importing a product **I want** every entity in the R1 model creatable, readable and updatable through a documented API **so that** I can construct the pilot without a human opening the UI once.
 
-[REQ-MIG-002](requirements/REQ-MIG.md), [REQ-API-002](requirements/REQ-API.md)
+[REQ-IMP-002](requirements/REQ-IMP.md), [REQ-API-002](requirements/REQ-API.md)
 
 **Done when** — every attribute writable in the UI is writable through the API, relationships are settable in either order or the ordering is documented, and I can write the script from the published documentation alone without reading Platform source.
 
@@ -271,31 +271,31 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 #### US-AGT-02 — Re-run a corrected script safely · *Agent* · E6
 
-**As an** agent migrating a product **I want** writes keyed on an `external_ref` to update rather than duplicate **so that** getting it wrong the first time costs a re-run rather than a cleanup.
+**As an** agent importing a product **I want** writes keyed on an `external_ref` to update rather than duplicate **so that** getting it wrong the first time costs a re-run rather than a cleanup.
 
-[REQ-MIG-003](requirements/REQ-MIG.md)
+[REQ-IMP-003](requirements/REQ-IMP.md)
 
-**Done when** — running the same script twice produces no duplicates and no orphans, and a corrected script converges over a partial migration without manual repair.
+**Done when** — running the same script twice produces no duplicates and no orphans, and a corrected script converges over a partial import without manual repair.
 
 #### US-AGT-03 — Bring the images across · *Agent* · E6
 
-**As an** agent migrating a product **I want** to upload an image from the export folder and reference it from Markdown in the same run **so that** migrated content is not a wall of broken images.
+**As an** agent importing a product **I want** to upload an image from the export folder and reference it from Markdown in the same run **so that** imported content is not a wall of broken images.
 
-[REQ-MIG-004](requirements/REQ-MIG.md)
+[REQ-IMP-004](requirements/REQ-IMP.md)
 
 **Done when** — upload obeys the same limits and processing as the UI path, is idempotent by `external_ref`, and anything unresolved is listed in the reconciliation report.
 
 #### US-AGT-04 — Write thousands of records without thousands of round trips · *Agent* · E6
 
-**As an** agent migrating ~30 products **I want** batch write endpoints with per-item outcomes **so that** one invalid row does not discard the batch and I know exactly which rows failed.
+**As an** agent importing ~30 products **I want** batch write endpoints with per-item outcomes **so that** one invalid row does not discard the batch and I know exactly which rows failed.
 
-[REQ-MIG-005](requirements/REQ-MIG.md), [REQ-API-008](requirements/REQ-API.md)
+[REQ-IMP-005](requirements/REQ-IMP.md), [REQ-API-008](requirements/REQ-API.md)
 
 **Done when** — batch semantics are documented and consistent, the target is always an explicit list of identifiers rather than a filter, and audit entries are proportionate rather than one per item.
 
 #### US-AGT-07 — Be unable to publish, delete a user or change a permission · *Agent* · E6
 
-**As the** editor accountable for the migration **I want** the agent to have no tool for publishing, user deletion or permission changes **so that** the boundary is structural rather than a permission check that could be misconfigured.
+**As the** editor accountable for the import **I want** the agent to have no tool for publishing, user deletion or permission changes **so that** the boundary is structural rather than a permission check that could be misconfigured.
 
 [REQ-API-009](requirements/REQ-API.md) → M1.3: [REQ-API-004](requirements/REQ-API.md), [REQ-SEC-011](requirements/REQ-SEC.md)
 
@@ -305,9 +305,9 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 #### US-AGT-05 — Check my own work · *Agent* · E6
 
-**As an** agent migrating a product **I want** to read back what I wrote and pull the reconciliation report mid-run **so that** the migration is self-checking rather than blind.
+**As an** agent importing a product **I want** to read back what I wrote and pull the reconciliation report mid-run **so that** the import is self-checking rather than blind.
 
-[REQ-MIG-006](requirements/REQ-MIG.md), [REQ-API-003](requirements/REQ-API.md)
+[REQ-IMP-006](requirements/REQ-IMP.md), [REQ-API-003](requirements/REQ-API.md)
 
 **Done when** — the report is produced by the Platform from its own state, because a process that reports on itself is not verification.
 
@@ -321,13 +321,13 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 ## M1.4 — Agent-driven pilot import
 
-#### US-EDT-20 — Verify a migrated product against its source · *Editor* · E6
+#### US-EDT-20 — Verify an imported product against its source · *Editor* · E6
 
 **As a** tracking specialist **I want** a report of what actually landed in the Platform, legible to me rather than to a developer **so that** I can check the agent's work against the wiki before trusting it.
 
-[REQ-MIG-006](requirements/REQ-MIG.md), [REQ-MIG-007](requirements/REQ-MIG.md)
+[REQ-IMP-006](requirements/REQ-IMP.md), [REQ-IMP-007](requirements/REQ-IMP.md)
 
-**Done when** — the report is generated by the Platform from its own state rather than by the migration script, and the first product is verified item by item before the remaining ~29 are attempted.
+**Done when** — the report is generated by the Platform from its own state rather than by the import script, and the first product is verified item by item before the remaining ~29 are attempted.
 
 > The whole mitigation for risk R9 lands on this story. An agent can produce plausible-looking wrong data where a parser would have failed loudly; this is where a human catches it.
 
@@ -531,11 +531,11 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 #### US-EDT-28 — Retire the legacy wiki · *Editor* · E6
 
-**As a** tracking specialist **I want** the legacy wiki frozen per product as it is migrated, then kept read-only **so that** no edit is stranded and nothing is destroyed.
+**As a** tracking specialist **I want** the legacy wiki frozen per product as it is imported, then kept read-only **so that** no edit is stranded and nothing is destroyed.
 
-[REQ-MIG-008](requirements/REQ-MIG.md)
+[REQ-IMP-008](requirements/REQ-IMP.md)
 
-**Done when** — the freeze is announced and effective before the final migration run, applies per product rather than to all ~30 at once, and the archive stays reachable.
+**Done when** — the freeze is announced and effective before the final import run, applies per product rather than to all ~30 at once, and the archive stays reachable.
 
 > **R1 gate, as one sentence:** *an editor works a full week without returning to the legacy wiki.* Every R1 editor story above is something they would otherwise go back for. If one is demoted, that is the sentence to re-read before agreeing.
 
@@ -555,7 +555,7 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 **Done when** — the condition is *property + operator + value + note*, including on nested paths, with `is not set` offered where presence is `sometimes`.
 
-> **This capability does not exist in R1 in any form.** The prose stopgap was rejected rather than shipped ([REQ-DOM-011](requirements/REQ-DOM.md)), which is why there is no conversion exercise across ~30 migrated products and why this story appears once, here, rather than spanning two releases. Two later stories depend on it and on nothing else: [US-DEV-04](#us-dev-04--see-only-the-values-that-apply-to-my-scenario--developer--e4) and mechanical conformance checking in R4.
+> **This capability does not exist in R1 in any form.** The prose stopgap was rejected rather than shipped ([REQ-DOM-011](requirements/REQ-DOM.md)), which is why there is no conversion exercise across ~30 imported products and why this story appears once, here, rather than spanning two releases. Two later stories depend on it and on nothing else: [US-DEV-04](#us-dev-04--see-only-the-values-that-apply-to-my-scenario--developer--e4) and mechanical conformance checking in R4.
 
 ## M2.2 — Flows
 
@@ -605,7 +605,7 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 **Done when** — every operation previews the affected items first, produces a single audit entry, and appears in the publication diff as ordinary per-entity changes.
 
-> **Blocked by O13.** The operation list is a proposal, not an observation — confirm it from what editors actually did by hand during the pilot migration and its item-by-item verification at M1.10. That evidence exists exactly once.
+> **Blocked by O13.** The operation list is a proposal, not an observation — confirm it from what editors actually did by hand during the pilot import and its item-by-item verification at M1.10. That evidence exists exactly once.
 
 ## M2.5 / M2.6 — Rendering and distribution
 
@@ -691,7 +691,7 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 [REQ-DEV-001](requirements/REQ-DEV.md)
 
-**Done when** — the link is stored as `figma_file_id` + `figma_node_id` rather than as an opaque URL, which is what makes frame import in R4 additive rather than a migration.
+**Done when** — the link is stored as `figma_file_id` + `figma_node_id` rather than as an opaque URL, which is what makes frame import in R4 additive rather than a data migration.
 
 #### US-BUS-03 — Be told when something is published · *Business* · E3
 
@@ -811,7 +811,7 @@ R4 · [M4.3](milestones.md) · [REQ-DEV-007](requirements/REQ-DEV.md), [REQ-DEV-
 
 | Persona | Stories, in delivery order |
 |---|---|
-| **Editor** (US-EDT) | R1: [01](#us-edt-01--start-a-project-from-the-company-catalogue--editor--e1) [03](#us-edt-03--create-a-tracking-from-a-template--editor--e1) [04](#us-edt-04--add-properties-in-bulk-with-a-module--editor--e1) [05](#us-edt-05--change-a-module-without-disturbing-existing-trackings--editor--e1) [06](#us-edt-06--document-a-nested-data-layer--editor--e1) [07](#us-edt-07--state-when-a-property-is-present--editor--e1) [08](#us-edt-08--record-the-value-a-property-must-take--editor--e1) [09](#us-edt-09--map-a-property-onto-each-analytics-platform--editor--e1) [10](#us-edt-10--document-audiences-and-surveys--editor--e1) [20](#us-edt-20--verify-a-migrated-product-against-its-source--editor--e6) [11](#us-edt-11--paste-a-screenshot-straight-into-the-page--editor--e1) [12](#us-edt-12--write-rich-descriptions-with-diagrams--editor--e1) [13](#us-edt-13--duplicate-a-tracking-instead-of-retyping-it--editor--e1) [14](#us-edt-14--not-lose-work-when-a-colleague-saves-first--editor--e1) [15](#us-edt-15--keep-test-credentials-out-of-everything-published--editor--e1) [02](#us-edt-02--catalogue-the-page-hierarchy--editor--e1) [17](#us-edt-17--see-what-i-am-about-to-publish--editor--e3) [18](#us-edt-18--hold-back-work-in-progress-from-a-publication--editor--e3) [19](#us-edt-19--publish-with-a-changelog-i-did-not-write--editor--e3) [28](#us-edt-28--retire-the-legacy-wiki--editor--e6) · R2: [16](#us-edt-16--express-a-conditional-valorisation--editor--e1) [27](#us-edt-27--model-an-action-that-exists-on-many-screens--editor--e5) [26](#us-edt-26--anchor-a-tracking-to-the-element-that-fires-it--editor--e1) [22](#us-edt-22--apply-one-change-across-a-multi-selection--editor--e1) [21](#us-edt-21--tell-an-agents-edits-from-a-colleagues--editor--e6) [23](#us-edt-23--adopt-a-catalogue-change-i-actually-want--editor--e1) [24](#us-edt-24--know-what-references-a-property-before-deprecating-it--editor--e1) [25](#us-edt-25--undo-a-publication-and-see-who-changed-a-field--editor--e3) [29](#us-edt-29--reuse-the-web-plan-when-documenting-the-app--editor--e1) |
+| **Editor** (US-EDT) | R1: [01](#us-edt-01--start-a-project-from-the-company-catalogue--editor--e1) [03](#us-edt-03--create-a-tracking-from-a-template--editor--e1) [04](#us-edt-04--add-properties-in-bulk-with-a-module--editor--e1) [05](#us-edt-05--change-a-module-without-disturbing-existing-trackings--editor--e1) [06](#us-edt-06--document-a-nested-data-layer--editor--e1) [07](#us-edt-07--state-when-a-property-is-present--editor--e1) [08](#us-edt-08--record-the-value-a-property-must-take--editor--e1) [09](#us-edt-09--map-a-property-onto-each-analytics-platform--editor--e1) [10](#us-edt-10--document-audiences-and-surveys--editor--e1) [20](#us-edt-20--verify-an-imported-product-against-its-source--editor--e6) [11](#us-edt-11--paste-a-screenshot-straight-into-the-page--editor--e1) [12](#us-edt-12--write-rich-descriptions-with-diagrams--editor--e1) [13](#us-edt-13--duplicate-a-tracking-instead-of-retyping-it--editor--e1) [14](#us-edt-14--not-lose-work-when-a-colleague-saves-first--editor--e1) [15](#us-edt-15--keep-test-credentials-out-of-everything-published--editor--e1) [02](#us-edt-02--catalogue-the-page-hierarchy--editor--e1) [17](#us-edt-17--see-what-i-am-about-to-publish--editor--e3) [18](#us-edt-18--hold-back-work-in-progress-from-a-publication--editor--e3) [19](#us-edt-19--publish-with-a-changelog-i-did-not-write--editor--e3) [28](#us-edt-28--retire-the-legacy-wiki--editor--e6) · R2: [16](#us-edt-16--express-a-conditional-valorisation--editor--e1) [27](#us-edt-27--model-an-action-that-exists-on-many-screens--editor--e5) [26](#us-edt-26--anchor-a-tracking-to-the-element-that-fires-it--editor--e1) [22](#us-edt-22--apply-one-change-across-a-multi-selection--editor--e1) [21](#us-edt-21--tell-an-agents-edits-from-a-colleagues--editor--e6) [23](#us-edt-23--adopt-a-catalogue-change-i-actually-want--editor--e1) [24](#us-edt-24--know-what-references-a-property-before-deprecating-it--editor--e1) [25](#us-edt-25--undo-a-publication-and-see-who-changed-a-field--editor--e3) [29](#us-edt-29--reuse-the-web-plan-when-documenting-the-app--editor--e1) |
 | **Analyst** (US-ANL) | R1: [02](#us-anl-02--see-everything-tracked-on-a-page--analyst--e2) [01](#us-anl-01--find-which-tracking-sets-a-value--analyst--e2) [05](#us-anl-05--know-when-a-property-first-appeared--analyst--e2) [03](#us-anl-03--understand-what-a-property-means--analyst--e2) [04](#us-anl-04--see-which-audiences-and-surveys-consume-a-property--analyst--e2) · R2: [06](#us-anl-06--pull-the-property-list-into-a-spreadsheet--analyst--e2) · R3: [07](#us-anl-07--ask-my-own-ai-assistant--analyst--e2) · R4: [08](#us-anl-08--judge-whether-the-data-is-trustworthy--analyst--e9) |
 | **Developer** (US-DEV) | R1: [01](#us-dev-01--see-only-what-i-have-to-implement--developer--e4) · R2: [02](#us-dev-02--know-what-changed-since-the-last-release--developer--e4) [05](#us-dev-05--receive-a-self-contained-handoff-for-a-release--developer--e4) [07](#us-dev-07--jump-to-the-design-frame--developer--e4) · R3: [03](#us-dev-03--take-a-snippet-rather-than-read-a-table--developer--e4) [04](#us-dev-04--see-only-the-values-that-apply-to-my-scenario--developer--e4) [06](#us-dev-06--read-the-documentation-where-my-team-already-works--developer--e4) [08](#us-dev-08--query-the-plan-from-my-ide--developer--e4) |
 | **Business** (US-BUS) | R1: [02](#us-bus-02--know-what-is-in-this-release--business--e3) [05](#us-bus-05--consult-the-documentation-as-it-was-at-a-past-release--business--e3) [01](#us-bus-01--read-the-documentation-without-an-account--business--e3) · R2: [04](#us-bus-04--follow-a-customer-journey-end-to-end--business--e5) [06](#us-bus-06--read-it-outside-the-application--business--e3) [03](#us-bus-03--be-told-when-something-is-published--business--e3) |
@@ -838,7 +838,7 @@ Recorded so each is visibly a decision rather than an oversight. Each maps to a 
 | *"Read it on my phone."* | Desktop only; 99% of usage | [REQ-NFR-007](requirements/REQ-NFR.md) |
 | *"Work on it offline."* | PDF export covers disconnected consultation | [REQ-NFR-009](requirements/REQ-NFR.md) |
 | *"Edit the git export and sync it back."* | One-way by design; no second source of truth | [REQ-VIEW-005](requirements/REQ-VIEW.md) |
-| *"Import our wiki through an upload screen."* | The Platform holds no knowledge of any source format | [REQ-MIG-009](requirements/REQ-MIG.md) |
+| *"Import our wiki through an upload screen."* | The Platform holds no knowledge of any source format | [REQ-IMP-009](requirements/REQ-IMP.md) |
 | *"Schedule this property to be deprecated next quarter."* | Deprecation is manual | [REQ-VER-012](requirements/REQ-VER.md) |
 | *"Tell me how to analyse this tracking."* | A product direction, deliberately carrying no requirement until there is a clear idea of what it is | [vision](vision.md) |
 | *"Make it screen-reader compliant."* | No WCAG requirement — a known position, worth revisiting if public-sector deployers appear | [REQ-NFR-013](requirements/REQ-NFR.md) |

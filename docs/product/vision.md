@@ -6,17 +6,17 @@
 
 ## Why It Matters
 
-The approach it replaces — a standardised wiki template duplicated per product — served well for years, but has hit structural limits:
+dx-doc exists to give an organisation a **solid, purpose-built application for documenting everything related to trackings** — tailor-made for this use case, rather than a pile of Word/Excel documents (like an Adobe SDR) or a generic wiki.
 
-1. **Cost** — hundreds of users need write access for a bounded period, then remain licensed indefinitely.
-2. **Rigidity** — changing how trackings are presented requires editing every existing page by hand.
-3. **No flows** — customer journeys are drawn manually with no connection to the documented pages.
-4. **No navigation** — the sidebar doesn't expose the page hierarchy or journeys.
-5. **No versioning** — there's no published version, no diff, no changelog.
-6. **No machine access** — programmatic consumption is extremely limited.
-7. **No path forward** — the documentation cannot feed the corporate semantic layer.
+A generic tool can hold the content, but it doesn't understand it. dx-doc is built around the tracking domain, so it can do what a document or a wiki cannot:
 
-The Platform addresses all seven.
+1. **Structured, not free-form** — pages, trackings, data-layer properties, and destinations are first-class entities with defined relationships, not paragraphs.
+2. **Versioned** — a draft → published model with an automatically generated diff and changelog.
+3. **Navigable** — the page hierarchy and journeys are exposed in the sidebar, not buried in a document.
+4. **Machine-readable** — a complete API and MCP surface, so anything doable in the UI is doable by a machine.
+5. **Cost-effective to read** — read access without a licensed account, via project shared passwords.
+
+The Platform addresses all five.
 
 ## What Success Looks Like
 
@@ -25,6 +25,8 @@ The Platform addresses all seven.
 **Longer term:** The documentation becomes the single source of truth consumed by developers (through generated code snippets), by analysts (through the analyst view enriched with data-quality signals), and by machines (through the API, MCP, and semantic-layer exports).
 
 ## Who It's For
+
+The full persona and role definitions live in [personas.md](personas.md). In short, the Platform serves:
 
 | Persona | Need |
 |---|---|

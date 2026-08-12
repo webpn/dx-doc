@@ -96,10 +96,10 @@ AI Agent → MCP Protocol → MCP Server → REST API (same as web client)
                                           └── Read queries (database/search)
 ```
 
-### Data Flow: Migration
+### Data Flow: Import
 
 ```
-Legacy Wiki Export (Markdown & CSV ZIP) → AI agent → committed migration script → REST API
+Source system export (e.g. Markdown & CSV ZIP) → AI agent → committed import script → REST API
                                                        └── Create entities (database)
                                                        └── Upload assets (S3)
                                                        └── Index (Pagefind)

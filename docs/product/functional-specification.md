@@ -11,9 +11,9 @@ Two decisions taken after v1.2 override the specification. Where they conflict, 
 | Spec says | Now | Recorded in |
 |---|---|---|
 | §16.1 — MariaDB only, single database target | Persistence behind repository ports. SQLite is the default and the only adapter through R1; MariaDB and PostgreSQL adapters in R2. Schema constrained to a portable SQL subset. | [ADR-0020](../adr/0020-database-portability.md), supersedes [ADR-0003](../adr/0003-mariadb-single-database.md) |
-| §13 — bespoke importer for the legacy wiki's Markdown & CSV export, built into the Platform | The Platform ships **no source-format-specific code**. Migration is performed by an AI agent driving the public API, producing a committed re-runnable script, applied across all ~30 products. Pulls the documented public API and MCP read/write tools from R3 into R1. | [ADR-0021](../adr/0021-agent-driven-migration.md) |
+| §13 — bespoke importer for the legacy wiki's Markdown & CSV export, built into the Platform | The Platform ships **no source-format-specific code**. Content is imported by an AI agent driving the public API, producing a committed re-runnable script. Pulls the documented public API and MCP read/write tools from R3 into R1. | [ADR-0021](../adr/0021-agent-driven-migration.md) |
 
-§13's *scope* decisions are unchanged: no flow reconstruction, no history migration, no internal-link migration.
+§13's *scope* decisions are unchanged: no flow reconstruction, no history import, no internal-link import.
 
 ## Current Version
 
@@ -33,7 +33,7 @@ The full specification is attached as a project artefact. Key sections:
 10. Functional requirements — audience views and distribution channels
 11. Functional requirements — developer handoff
 12. Functional requirements — API and MCP
-13. Functional requirements — migration
+13. Functional requirements — import
 14. Deferred modules
 15. Non-functional requirements
 16. Architecture and technology decisions
@@ -84,7 +84,7 @@ The domain model defines ~25 entities. See `docs/product/glossary.md` for defini
 | Release | Content | Timeline |
 |---|---|---|
 | R0 | Foundations: stack, schema, auth, API, CI, public repo | Weeks 1–2 |
-| R1 | MVP: full data model, editor, versioning, migration API + MCP, SSO | Weeks 3–8 |
+| R1 | MVP: full data model, editor, versioning, import API + MCP, SSO | Weeks 3–8 |
 | R2 | Navigation: flows, bulk ops, exports, email, SAML, MariaDB/Postgres adapters | Months 3–4 |
 | R3 | Developer handoff: snippets, Confluence, interactive agent access | Months 5–6 |
 | R4 | Data quality: analytics integrations, conformance reports, Figma import | Months 7–8 |

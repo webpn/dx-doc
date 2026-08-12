@@ -94,8 +94,8 @@ Critical user journeys covered by Playwright:
 1. **Create and publish a project:**
    - Admin creates a company → creates a project → editor adds a page → adds a tracking → publishes version 1 → viewer sees the published documentation.
 
-2. **Migration import:**
-   - Run a migration script against the API → verify pages, trackings, and properties are present, and that a second run creates no duplicates.
+2. **Import:**
+   - Run an import script against the API → verify pages, trackings, and properties are present, and that a second run creates no duplicates.
 
 3. **Edit conflict:**
    - Two editors open the same tracking → one saves → the other tries to save → sees conflict message.

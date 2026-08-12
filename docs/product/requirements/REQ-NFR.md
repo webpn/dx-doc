@@ -37,7 +37,7 @@ Entry format and status legend: [requirements index](README.md).
 | Load a very large project | < 3 s | M1.6 |
 
 **Acceptance**
-- Targets are measured against **pilot-scale data** — thousands of trackings and ~200 properties in one project — not against a seeded fixture. The pilot migration ([M1.4](../milestones.md)) is what makes this possible, and is a second reason to run it early.
+- Targets are measured against **pilot-scale data** — thousands of trackings and ~200 properties in one project — not against a seeded fixture. The pilot import ([M1.4](../milestones.md)) is what makes this possible, and is a second reason to run it early.
 - A regression past a target fails CI or is recorded as an accepted exception with a reason.
 
 > REQ-NFR-004 is measured at M1.6, not earlier: the data arrives at M1.4, but the page hierarchy and sidebar that constitute "loading a project" for a user do not exist until M1.6. Measuring it against an API response before then would be measuring something else and calling it this.
@@ -65,7 +65,7 @@ The Platform provides no backup mechanism. Whoever operates the database owns ba
 - No documentation implies the Platform backs anything up.
 - The reference deployment stack demonstrates a file-level snapshot of the SQLite database (REQ-FDN-012).
 
-> **Sharper through R1 than the specification anticipated.** With SQLite as the only adapter ([ADR-0020](../../adr/0020-database-portability.md)), no backup mechanism, and no git export until R2, the pilot's entire migrated content lives in a single file for roughly six weeks — after a migration that cost real editorial effort to verify. The mitigation is cheap and belongs in R0: show the snapshot in the reference stack and say plainly in the README that it is the operator's job.
+> **Sharper through R1 than the specification anticipated.** With SQLite as the only adapter ([ADR-0020](../../adr/0020-database-portability.md)), no backup mechanism, and no git export until R2, the pilot's entire imported content lives in a single file for roughly six weeks — after an import that cost real editorial effort to verify. The mitigation is cheap and belongs in R0: show the snapshot in the reference stack and say plainly in the README that it is the operator's job.
 
 ### REQ-NFR-007 — Desktop only; no responsive layout
 

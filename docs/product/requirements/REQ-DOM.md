@@ -167,7 +167,7 @@ Rejected. **R1 carries no conditional valorisations in any form.** The structure
 
 An editor who needs to express a condition before then does so as ordinary description text, which is not a mechanism and is not treated as one: nothing reads it, nothing reports on it, and nothing is expected to convert it later.
 
-> Rejecting the prose form removes the conversion problem instead of scheduling it. Had R1 shipped prose conditions, ~30 migrated products would have carried an unknown number of them in free text with no marker, and R2 would have needed an inventory report to find them before the structured field could be populated. That report is now unnecessary — which is the whole reason to accept the R1 gap rather than fill it with something that has to be undone.
+> Rejecting the prose form removes the conversion problem instead of scheduling it. Had R1 shipped prose conditions, ~30 imported products would have carried an unknown number of them in free text with no marker, and R2 would have needed an inventory report to find them before the structured field could be populated. That report is now unnecessary — which is the whole reason to accept the R1 gap rather than fill it with something that has to be undone.
 
 ### REQ-DOM-012 — Structured property conditions, four operators + note
 
@@ -200,7 +200,7 @@ A single entity replaces the separate analytics-variable and analytics-event tab
 **Acceptance**
 - One property may feed several destinations and one destination may be fed by several properties.
 - Relationships to Extension and Calculated Metric are modelled even though those entities remain containers until R3 (REQ-DOM-025).
-- The migration maps both legacy tables into this single entity without loss (REQ-MIG-003).
+- The import maps both legacy tables into this single entity without loss (REQ-IMP-003).
 
 ### REQ-DOM-016 — Per-destination name override
 
@@ -234,7 +234,7 @@ Name, tool, trigger/invitation conditions, properties used, pages involved, stat
 **Acceptance**
 - Surveys appear in impact analysis and are excluded from the development view.
 
-> Audiences and surveys look secondary but are Must in R1: a 1:1 migration that loses them fails the pilot.
+> Audiences and surveys look secondary but are Must in R1: a 1:1 import that loses them fails the pilot.
 
 ### REQ-DOM-019 — Company catalogue, copy-on-project-creation
 

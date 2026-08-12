@@ -51,7 +51,7 @@ R1 is the MVP: a complete, usable platform for authoring, versioning, and publis
 - Read access without a licensed account, via project shared passwords.
 - An append-only audit log.
 
-The detailed, enumerated definition of R1 scope lives in [What R1 parity means](docs/product/scope.md#what-r1-parity-means).
+The detailed, enumerated definition of R1 scope lives in the [R1 minimum requirements](docs/product/minimum-requirements.md).
 
 ## Current Status
 
@@ -167,7 +167,8 @@ The Platform follows a modular architecture with clear separation between:
 | [`SECURITY.md`](SECURITY.md) | Security policy and vulnerability reporting |
 | [`docs/product/functional-specification.md`](docs/product/functional-specification.md) | Complete functional specification |
 | [`docs/product/vision.md`](docs/product/vision.md) | Product vision and strategic context |
-| [`docs/product/scope.md`](docs/product/scope.md) | In-scope, out-of-scope, deferred — and the explicit R1 parity checklist |
+| [`docs/product/scope.md`](docs/product/scope.md) | In-scope, out-of-scope, deferred |
+| [`docs/product/minimum-requirements.md`](docs/product/minimum-requirements.md) | The enumerated R1 minimum requirements — what R1 must deliver |
 | [`docs/product/glossary.md`](docs/product/glossary.md) | Domain terminology |
 | [`docs/product/personas.md`](docs/product/personas.md) | Personas and system roles |
 | [`docs/product/user-stories.md`](docs/product/user-stories.md) | What each persona needs to get done, traced to requirements |

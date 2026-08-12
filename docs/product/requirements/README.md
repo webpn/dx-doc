@@ -17,7 +17,7 @@ Traceable requirements derived from the [functional specification](../functional
 | [REQ-VIEW](REQ-VIEW.md) | Audience views and distribution channels | §10 | 10 |
 | [REQ-DEV](REQ-DEV.md) | Developer handoff — snippets, Figma and dashboard links | §11 | 7 |
 | [REQ-API](REQ-API.md) | API and MCP | §12 | 10 |
-| [REQ-MIG](REQ-MIG.md) | Import — ingesting content from other systems | §13 | 9 |
+| [REQ-IMP](REQ-IMP.md) | Import — ingesting content from other systems | §13 | 9 |
 | [REQ-NFR](REQ-NFR.md) | Non-functional — performance, availability, i18n, observability | §15 | 14 |
 | [REQ-DQ](REQ-DQ.md) | Data quality and deferred modules | §14 | 8 |
 
@@ -30,7 +30,7 @@ Traceable requirements derived from the [functional specification](../functional
 | Release | Requirements | Focus |
 |---|---|---|
 | R0 | 23 | Foundations, auth and account lifecycle, API, public repository, data-flow statement |
-| R1 | 65 | Full data model, editor, versioning, migration API + MCP, SSO |
+| R1 | 65 | Full data model, editor, versioning, import API + MCP, SSO |
 | R2 | 36 | Flows, bulk operations, distribution channels, MariaDB/Postgres adapters, instance portal |
 | R3 | 16 | Snippets, Confluence, interactive agent access, hosted search adapter |
 | R4 | 6 | Data quality, Figma import, webhooks |
@@ -40,7 +40,7 @@ Traceable requirements derived from the [functional specification](../functional
 
 R1 carries 65 requirements in six weeks. That concentration is risk R1 in the register, and it is why the [milestones](../milestones.md) name demotion candidates in advance rather than improvising under pressure.
 
-> **Two decisions moved requirements after the first draft.** [ADR-0020](../../adr/0020-database-portability.md) replaced the MariaDB-only stance with repository ports and a SQLite default, adding three REQ-FDN entries and moving two database adapters into R2. [ADR-0021](../../adr/0021-agent-driven-migration.md) replaced the bespoke Notion importer with an agent driving a complete API, which rewrote REQ-MIG and pulled the documented public API, MCP read tools, MCP write tools and MCP resources from R3 into R1. Net effect on R1: six requirements out, ten in.
+> **Two decisions moved requirements after the first draft.** [ADR-0020](../../adr/0020-database-portability.md) replaced the MariaDB-only stance with repository ports and a SQLite default, adding three REQ-FDN entries and moving two database adapters into R2. [ADR-0021](../../adr/0021-agent-driven-migration.md) replaced the bespoke Notion importer with an agent driving a complete API, which rewrote REQ-IMP and pulled the documented public API, MCP read tools, MCP write tools and MCP resources from R3 into R1. Net effect on R1: six requirements out, ten in.
 
 ## Entry format
 
@@ -129,7 +129,7 @@ The O3 case is also release-inconsistent: [REQ-VIEW-002](REQ-VIEW.md) is `Must` 
 1. **[REQ-FDN-017](REQ-FDN.md) uses release `R3+`**, the only non-canonical value in the set; the distribution table counts it under R3. Normalise it, or introduce an explicit `Backlog` release.
 2. **Status vocabulary for undefined scope is inconsistent.** [REQ-DQ-004](REQ-DQ.md)–[REQ-DQ-006](REQ-DQ.md) are `Blocked` while [REQ-DQ-007](REQ-DQ.md)–[REQ-DQ-008](REQ-DQ.md) are `Not Started`, despite being equally undefined.
 3. **[REQ-SEC-005](REQ-SEC.md)** says *"no per-reader audit is required for this mode"* while [REQ-SEC-006](REQ-SEC.md) records *"guest access"*. Reconcilable — the access event is recorded, the reader is not identifiable — but it reads as a contradiction until said.
-4. **`external_ref` behaviour under duplication is unspecified.** [REQ-AUTH-006](REQ-AUTH.md), [REQ-AUTH-008](REQ-AUTH.md), [REQ-AUTH-009](REQ-AUTH.md) and [REQ-AUTH-015](REQ-AUTH.md) all copy entities; [REQ-MIG-003](REQ-MIG.md) makes `external_ref` unique per project and the key for idempotent re-runs. A duplicated project carrying its `external_ref` values makes a later script re-run ambiguous. State that duplication clears it.
+4. **`external_ref` behaviour under duplication is unspecified.** [REQ-AUTH-006](REQ-AUTH.md), [REQ-AUTH-008](REQ-AUTH.md), [REQ-AUTH-009](REQ-AUTH.md) and [REQ-AUTH-015](REQ-AUTH.md) all copy entities; [REQ-IMP-003](REQ-IMP.md) makes `external_ref` unique per project and the key for idempotent re-runs. A duplicated project carrying its `external_ref` values makes a later script re-run ambiguous. State that duplication clears it.
 5. **[REQ-VER-004](REQ-VER.md)** makes the version number *"editable"* without stating whether uniqueness or monotonicity is enforced, though [REQ-VER-007](REQ-VER.md) and the changelog both assume an ordering.
 6. **Asset retention is implied, not required.** [REQ-VER-007](REQ-VER.md)'s acceptance — assets *"are never deleted while a version references them"* — is the only statement of asset lifecycle anywhere, and no requirement owns it. [REQ-SEC-009](REQ-SEC.md) archive/restore touches it.
 7. **[vision.md](../vision.md)'s persona table has five rows; [personas.md](../personas.md) has nine.** Align them, or have the vision defer to the persona document rather than restating it.
