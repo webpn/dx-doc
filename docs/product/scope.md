@@ -67,22 +67,25 @@ The documentation of tracking plans for websites and mobile applications:
 ### API and MCP
 
 - Internal REST API (R0), the single entry point for all operations.
-- Documented public API (R3).
-- MCP read and write tools (R3), as a layer above the REST API.
+- Documented public API (R1) — migration is written against it.
+- MCP read and write tools (R1), as a layer above the REST API.
+- Service-account API tokens (R1) for scripted clients.
+- OAuth with user consent for interactive agent clients (R3).
 
 ### Migration
 
-- Importer from the legacy wiki's "Markdown & CSV" export.
-- Idempotent, re-runnable.
-- 1:1 mapping of all structured tables.
-- Asset migration into object storage.
-- Legacy-wiki block conversion into supported Markdown.
+- **No source-format-specific code in the Platform.** Migration is performed by an AI agent driving the public API, producing a committed re-runnable script ([ADR-0021](../adr/0021-agent-driven-migration.md)).
+- API surface complete enough to construct any project without opening the UI.
+- Idempotent upsert keyed on `external_ref`, so a migration can be corrected and re-run.
+- Asset upload through the API into object storage.
+- Batch write endpoints and a reconciliation report.
+- Applies to all ~30 existing products, not the pilot alone.
 
 ### Foundation
 
 - Multi-company tenancy on a single instance.
 - Immutable internal IDs on every entity.
-- MariaDB persistence behind an interface.
+- Persistence behind repository ports: SQLite by default, MariaDB and PostgreSQL adapters in R2. Schema constrained to a portable SQL subset.
 - S3-compatible storage behind an interface.
 - Algolia search behind an interface.
 - Environment-variable configuration.
@@ -111,6 +114,7 @@ The documentation of tracking plans for websites and mobile applications:
 - No cross-project references — entities may only reference entities in their own project.
 - No flow or graph reconstruction from the legacy wiki — flows are catalogued manually after migration.
 - No history migration from the legacy wiki — each migrated project starts at version 1.
+- No importer UI and no import endpoint accepting an export archive — the Platform holds no knowledge of any source format.
 
 ## Deferred (with target release)
 

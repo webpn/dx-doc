@@ -8,13 +8,13 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 | ID | Requirement | MoSCoW | Rel. | Milestone | Status |
 |---|---|---|---|---|---|
-| REQ-AUTH-001 | Markdown editor with the full block set | Must | R1 | M1.3 | Not Started |
-| REQ-AUTH-002 | Image upload, 10 MB cap, resize to 2000 px | Must | R1 | M1.3 | Not Started |
-| REQ-AUTH-003 | Free wiki pages with publishable flag | Must | R1 | M1.3 | Not Started |
-| REQ-AUTH-004 | Mermaid blocks with live preview | Must | R1 | M1.3 | Not Started |
-| REQ-AUTH-005 | Optimistic concurrency with stale-write rejection | Must | R1 | M1.3 | Not Started |
-| REQ-AUTH-006 | Tracking duplication within a project | Must | R1 | M1.3 | Not Started |
-| REQ-AUTH-007 | Project-scoped full-text and fuzzy search | Must | R1 | M1.5 | Not Started |
+| REQ-AUTH-001 | Markdown editor with the full block set | Must | R1 | M1.5 | Not Started |
+| REQ-AUTH-002 | Image upload, 10 MB cap, resize to 2000 px | Must | R1 | M1.5 | Not Started |
+| REQ-AUTH-003 | Free wiki pages with publishable flag | Must | R1 | M1.5 | Not Started |
+| REQ-AUTH-004 | Mermaid blocks with live preview | Must | R1 | M1.5 | Not Started |
+| REQ-AUTH-005 | Optimistic concurrency with stale-write rejection | Must | R1 | M1.5 | Not Started |
+| REQ-AUTH-006 | Tracking duplication within a project | Must | R1 | M1.5 | Not Started |
+| REQ-AUTH-007 | Project-scoped full-text and fuzzy search | Must | R1 | M1.7 | Not Started |
 | REQ-AUTH-008 | Page and flow duplication | Should | R2 | M2.7 | Not Started |
 | REQ-AUTH-009 | Cross-project tracking copy with guided mapping | Should | R2 | M2.7 | Not Started |
 | REQ-AUTH-010 | Bulk operations on a multi-selection, with preview | Should | R2 | M2.4 | Not Started |
@@ -28,7 +28,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 ### REQ-AUTH-001 — Markdown editor with the full block set
 
-**Must** · R1 · [M1.3](../milestones.md) · spec §7.1, §16.1 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md) · spec §7.1, §16.1 · **Not Started** · Issue: — · PR: —
 
 Content is stored as Markdown. Required blocks: headings, ordered and unordered lists, bold and italic, links, tables, code blocks, images, quotes and callouts, Mermaid (REQ-AUTH-004).
 
@@ -41,7 +41,7 @@ Applies to tracking descriptions, page descriptions, flow descriptions, property
 
 ### REQ-AUTH-002 — Image upload, 10 MB cap, resize to 2000 px
 
-**Must** · R1 · [M1.3](../milestones.md) · spec §7.2 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md) · spec §7.2 · **Not Started** · Issue: — · PR: —
 
 Direct upload by drag-and-drop and clipboard paste. Maximum `UPLOAD_MAX_BYTES` (default 10 MB), automatic resize to `IMAGE_MAX_DIMENSION` (default 2000 px per side), stored in object storage (REQ-FDN-006).
 
@@ -52,7 +52,7 @@ Direct upload by drag-and-drop and clipboard paste. Maximum `UPLOAD_MAX_BYTES` (
 
 ### REQ-AUTH-003 — Free wiki pages with publishable flag
 
-**Must** · R1 · [M1.3](../milestones.md) · spec §7.7 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md) · spec §7.7 · **Not Started** · Issue: — · PR: —
 
 Hierarchically organised unstructured pages covering what the legacy template held outside the structured tables: data layer overview, script and SDK integration instructions, references, test URLs, test credentials.
 
@@ -63,7 +63,7 @@ Hierarchically organised unstructured pages covering what the legacy template he
 
 ### REQ-AUTH-004 — Mermaid blocks with live preview
 
-**Must** · R1 · [M1.3](../milestones.md) · spec §7.1, §8.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md) · spec §7.1, §8.4 · **Not Started** · Issue: — · PR: —
 
 Mermaid code blocks render live while editing. This is both the format used for hand-written diagrams and the format auto-generated from the flow graph in R2 (REQ-NAV-006).
 
@@ -73,7 +73,7 @@ Mermaid code blocks render live while editing. This is both the format used for 
 
 ### REQ-AUTH-005 — Optimistic concurrency with stale-write rejection
 
-**Must** · R1 · [M1.3](../milestones.md) · spec §7.5, §16.1 · [ADR-0016](../../adr/0016-concurrency-model.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md) · spec §7.5, §16.1 · [ADR-0016](../../adr/0016-concurrency-model.md) · **Not Started** · Issue: — · PR: —
 
 No pessimistic locking. A notice appears when a record being viewed is modified by someone else. A save is rejected if the record changed after the user opened it.
 
@@ -84,7 +84,7 @@ No pessimistic locking. A notice appears when a record being viewed is modified 
 
 ### REQ-AUTH-006 — Tracking duplication within a project
 
-**Must** · R1 · [M1.3](../milestones.md) · spec §7.3 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md) · spec §7.3 · **Not Started** · Issue: — · PR: —
 
 A duplicated tracking inherits everything: properties, modules, specific values, description, images, page attachment and destinations.
 
@@ -95,7 +95,7 @@ A duplicated tracking inherits everything: properties, modules, specific values,
 
 ### REQ-AUTH-007 — Project-scoped full-text and fuzzy search
 
-**Must** · R1 · [M1.5](../milestones.md) · spec §7.8, §16.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.7](../milestones.md) · spec §7.8, §16.4 · **Not Started** · Issue: — · PR: —
 
 Full-text and fuzzy search, scoped to a single project. Property names and tracking names rank above other text. **Specific values are indexed.** All textual content is indexed except non-publishable free pages.
 

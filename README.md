@@ -16,9 +16,12 @@ An open-source, white-label platform that replaces legacy wiki-based tracking do
 
 - Node.js 20 LTS or later
 - npm 10 or later
-- MariaDB (local or remote)
 - S3-compatible object storage (e.g., MinIO for local development)
 - Algolia account (for search)
+
+No database server is required: the default adapter is SQLite. MariaDB and PostgreSQL adapters arrive in R2, selected with `DB_DRIVER`.
+
+> **Backup is the operator's responsibility.** The Platform provides no backup mechanism. With the SQLite adapter, that means the database file — take a file-level snapshot on a schedule you are comfortable with, and always before upgrading.
 
 ## Local Setup
 
@@ -66,10 +69,11 @@ The Platform follows a modular architecture with clear separation between:
 - **App / UI** — React-based web application
 
 **Key architectural constraints:**
-- MariaDB only (single database target)
+- Persistence behind repository ports; SQLite by default, MariaDB and PostgreSQL adapters in R2. The schema stays within a portable SQL subset.
 - S3-compatible object storage behind an interface
 - Algolia search behind an interface (self-hostable adapter deferred)
 - Internal REST API consumed by all clients; MCP server is a layer above it
+- No source-format-specific import code. Legacy content is migrated by an agent driving the public API, producing a committed re-runnable script.
 - Multi-company tenancy on a single instance
 - Single draft stream per project; no branches or merge workflows
 - All validation in the backend, shared by UI, API and MCP

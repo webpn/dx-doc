@@ -31,7 +31,7 @@ Describes the deployable containers/services that compose the dx-doc Platform.
 │  │         Infrastructure Adapters                              │  │
 │  │                                                              │  │
 │  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐   │  │
-│  │  │ MariaDB  │ │ Algolia  │ │   S3     │ │ OIDC / SAML  │   │  │
+│  │  │  SQLite  │ │ Algolia  │ │   S3     │ │ OIDC / SAML  │   │  │
 │  │  │ Adapter  │ │ Adapter  │ │ Adapter  │ │   Adapter    │   │  │
 │  │  └────┬─────┘ └────┬─────┘ └────┬─────┘ └──────┬───────┘   │  │
 │  └───────┼────────────┼────────────┼──────────────┼───────────┘  │
@@ -39,7 +39,7 @@ Describes the deployable containers/services that compose the dx-doc Platform.
            │            │            │              │
            ▼            ▼            ▼              ▼
     ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐
-    │ MariaDB  │ │  Algolia  │ │   S3     │ │   Identity   │
+    │  SQLite  │ │  Algolia  │ │   S3     │ │   Identity   │
     │          │ │           │ │ Storage  │ │   Provider   │
     └──────────┘ └──────────┘ └──────────┘ └──────────────┘
 ```
@@ -62,10 +62,10 @@ Describes the deployable containers/services that compose the dx-doc Platform.
   - Application layer: use case orchestration, command/query execution
   - Domain logic: business rules and invariants
   - Infrastructure: persistence, search, storage, authentication, email, exports
-- **Communicates with:** MariaDB (SQL over TCP), Algolia (REST), S3 (REST), OIDC/SAML providers, SMTP server
+- **Communicates with:** the configured database (SQLite file by default; MariaDB or PostgreSQL over TCP from R2), Algolia (REST), S3 (REST), OIDC/SAML providers, SMTP server
 - **Packaging:** Node.js process, configured via environment variables
 
-### Database (MariaDB)
+### Database (SQLite by default; MariaDB / PostgreSQL from R2)
 
 - **Purpose:** Primary data store for all entities, versions, audit logs, and company-level configuration
 - **Multi-tenancy:** company-scoped data through `company_id` foreign keys on all tenant entities
@@ -118,8 +118,8 @@ Describes the deployable containers/services that compose the dx-doc Platform.
 The Platform is a white-label product deployed by each organisation. A reference deployment stack is provided but deployment is not prescribed. The reference stack uses:
 
 - Node.js application server
-- MariaDB (managed or self-hosted)
+- A database: SQLite file (default, no service) or MariaDB / PostgreSQL from R2
 - S3-compatible storage (any provider)
 - Algolia (hosted)
 
-The application is a single Node.js process serving the REST API, the MCP server, and the SPA's static assets. It can be deployed on a single server, a container orchestrator (Docker Compose, Kubernetes), or a PaaS — the only requirements are a Node.js runtime, a MariaDB connection, S3 credentials, and environment variables.
+The application is a single Node.js process serving the REST API, the MCP server, and the SPA's static assets. It can be deployed on a single server, a container orchestrator (Docker Compose, Kubernetes), or a PaaS — the only requirements are a Node.js runtime, a database (a SQLite file by default), S3 credentials, and environment variables.

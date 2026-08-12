@@ -81,8 +81,8 @@ describe('POST /projects/:id/trackings', () => {
 
 ## Test Database
 
-Integration tests that touch the database use an ephemeral MariaDB instance:
-- CI: MariaDB service container (see `ci.yml`)
+Integration tests that touch the database use an ephemeral database:
+- CI: SQLite (no service container). MariaDB and PostgreSQL join the nightly matrix from R2 — see [ADR-0017](../adr/0017-testing-strategy.md).
 - Local: a separate test database (`dxdoc_test`) — run migrations before tests
 
 Tests are responsible for their own data setup and cleanup. Use transactions where possible for isolation.
@@ -95,7 +95,7 @@ Critical user journeys covered by Playwright:
    - Admin creates a company → creates a project → editor adds a page → adds a tracking → publishes version 1 → viewer sees the published documentation.
 
 2. **Migration import:**
-   - Upload a legacy wiki export → importer creates entities → verify pages, trackings, and properties are present.
+   - Run a migration script against the API → verify pages, trackings, and properties are present, and that a second run creates no duplicates.
 
 3. **Edit conflict:**
    - Two editors open the same tracking → one saves → the other tries to save → sees conflict message.

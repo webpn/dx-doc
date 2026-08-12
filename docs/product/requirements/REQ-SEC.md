@@ -9,15 +9,15 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-SEC-001 | Email + password login | Must | R0 | M0.4 | Not Started |
 | REQ-SEC-002 | Four global roles | Must | R0 | M0.4 | Not Started |
 | REQ-SEC-003 | Per-project access grants | Must | R0 | M0.4 | Not Started |
-| REQ-SEC-004 | OIDC SSO | Must | R1 | M1.7 | Not Started |
-| REQ-SEC-005 | Project shared-password access with expiry | Must | R1 | M1.7 | Not Started |
-| REQ-SEC-006 | Append-only audit log, 24-month retention | Must | R1 | M1.7 | Not Started |
+| REQ-SEC-004 | OIDC SSO | Must | R1 | M1.9 | Not Started |
+| REQ-SEC-005 | Project shared-password access with expiry | Must | R1 | M1.9 | Not Started |
+| REQ-SEC-006 | Append-only audit log, 24-month retention | Must | R1 | M1.9 | Not Started |
 | REQ-SEC-007 | SAML SSO | Should | R2 | M2.8 | Not Started |
 | REQ-SEC-008 | Audit log UI, paginated list and CSV export | Should | R2 | M2.8 | Not Started |
 | REQ-SEC-009 | Project archive and restore; no hard delete | Should | R2 | M2.8 | Not Started |
 | REQ-SEC-010 | "Manage company catalogue" capability | Must | R1 | M1.1 | Not Started |
 | REQ-SEC-011 | Permission matrix enforced server-side | Must | R0 | M0.4 | Not Started |
-| REQ-SEC-012 | Non-publishable content never leaves the instance | Must | R1 | M1.5 | Not Started |
+| REQ-SEC-012 | Non-publishable content never leaves the instance | Must | R1 | M1.7 | Not Started |
 
 ---
 
@@ -56,7 +56,7 @@ A user sees only the projects explicitly granted to them. Every permission is ad
 
 ### REQ-SEC-004 — OIDC SSO
 
-**Must** · R1 · [M1.7](../milestones.md) · spec §17.1 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.9](../milestones.md) · spec §17.1 · **Not Started** · Issue: — · PR: —
 
 OIDC is the primary corporate authentication method, configured through `AUTH_OIDC_*`. Role and grant assignment remain manual inside the Platform.
 
@@ -67,7 +67,7 @@ OIDC is the primary corporate authentication method, configured through `AUTH_OI
 
 ### REQ-SEC-005 — Project shared-password access with expiry
 
-**Must** · R1 · [M1.7](../milestones.md) · spec §4.3, §17.1 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.9](../milestones.md) · spec §4.3, §17.1 · **Not Started** · Issue: — · PR: —
 
 A project may be exposed read-only behind a shared password. Multiple passwords per project, each with an optional expiry. Granularity is the whole project. No per-reader audit is required for this mode.
 
@@ -79,7 +79,7 @@ A project may be exposed read-only behind a shared password. Multiple passwords 
 
 ### REQ-SEC-006 — Append-only audit log, 24-month retention
 
-**Must** · R1 · [M1.7](../milestones.md) · spec §17.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.9](../milestones.md) · spec §17.4 · **Not Started** · Issue: — · PR: —
 
 Recorded: login and logout; entity creation, modification and deletion; publication; rollback; export; guest access; MCP calls; permission changes; integration configuration changes. Read events are deliberately not recorded. Retention is `AUDIT_RETENTION_MONTHS`, default 24.
 
@@ -139,7 +139,7 @@ Every action in Appendix B is authorised in the backend. The UI hides what a use
 
 ### REQ-SEC-012 — Non-publishable content never leaves the instance
 
-**Must** · R1 · [M1.5](../milestones.md) · spec §7.7, §16.4, §17.3 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.7](../milestones.md) · spec §7.7, §16.4, §17.3 · **Not Started** · Issue: — · PR: —
 
 The documentation contains no personal data, but it does contain test credentials and internal references. These live on free pages flagged non-publishable, which must never appear in any published artefact, static site, Confluence export, git export, PDF, or external search index.
 

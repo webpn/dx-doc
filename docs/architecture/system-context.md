@@ -51,7 +51,7 @@ Describes the dx-doc Platform in its environment: who uses it, what external sys
 
 | System | Purpose | Interface | Direction |
 |---|---|---|---|
-| MariaDB | Primary data store | SQL over TCP | Internal (write/read) |
+| Database (SQLite default; MariaDB/PostgreSQL R2) | Primary data store | Local file or SQL over TCP | Internal (write/read) |
 | S3-compatible object storage | Asset storage (images) | S3 API (HTTP) | Internal (write/read) |
 | Algolia | Full-text search index | REST API | Internal (write/read) |
 | OIDC Identity Provider | SSO authentication | OpenID Connect | Inbound (auth) |
@@ -78,7 +78,7 @@ Describes the dx-doc Platform in its environment: who uses it, what external sys
 
 ```
 Editor publishes → REST API → Application Layer
-                               ├── Create Version snapshot (MariaDB)
+                               ├── Create Version snapshot (database)
                                ├── Generate changelog
                                ├── Update search index → Algolia
                                ├── Send email notification → SMTP
@@ -91,22 +91,22 @@ Editor publishes → REST API → Application Layer
 
 ```
 AI Agent → MCP Protocol → MCP Server → REST API (same as web client)
-                                          ├── Draft writes (MariaDB)
-                                          └── Read queries (MariaDB/Algolia)
+                                          ├── Draft writes (database)
+                                          └── Read queries (database/Algolia)
 ```
 
 ### Data Flow: Migration
 
 ```
-Legacy Wiki Export (Markdown & CSV ZIP) → Importer → REST API
-                                                       └── Create entities (MariaDB)
+Legacy Wiki Export (Markdown & CSV ZIP) → AI agent → committed migration script → REST API
+                                                       └── Create entities (database)
                                                        └── Upload assets (S3)
                                                        └── Index (Algolia)
 ```
 
 ## Constraints from External Systems
 
-- **MariaDB:** single database target. Schema must support multi-tenancy natively.
+- **Database:** repository ports with a SQLite adapter by default; MariaDB and PostgreSQL from R2. Schema must support multi-tenancy natively and stay within a portable SQL subset.
 - **Algolia:** indices must exclude non-publishable free pages. Search keys must be server-side scoped to user's project grants. A self-hostable adapter may be required before public release (O12).
 - **S3:** any S3-compatible provider. Path-style access must be supported. Public base URL for CDN is optional.
 - **OIDC:** must work with the corporate identity provider. SAML is added in R2 for generality.

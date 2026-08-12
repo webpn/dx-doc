@@ -6,8 +6,8 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 | ID | Requirement | MoSCoW | Rel. | Milestone | Status |
 |---|---|---|---|---|---|
-| REQ-VIEW-001 | In-app read-only view | Must | R1 | M1.7 | Not Started |
-| REQ-VIEW-002 | View selector as a presentation filter | Must | R1 | M1.7 | Not Started |
+| REQ-VIEW-001 | In-app read-only view | Must | R1 | M1.9 | Not Started |
+| REQ-VIEW-002 | View selector as a presentation filter | Must | R1 | M1.9 | Not Started |
 | REQ-VIEW-003 | Profile-aware rendering engine | Must | R2 | M2.5 | Not Started |
 | REQ-VIEW-004 | Per-project static site | Should | R2 | M2.6 | Not Started |
 | REQ-VIEW-005 | Git export, one commit per publication | Should | R2 | M2.6 | Not Started |
@@ -21,7 +21,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 ### REQ-VIEW-001 — In-app read-only view
 
-**Must** · R1 · [M1.7](../milestones.md) · spec §10.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.9](../milestones.md) · spec §10.4 · **Not Started** · Issue: — · PR: —
 
 Read-only consultation behind SSO, email + password, or a project shared password (REQ-SEC-005).
 
@@ -31,7 +31,7 @@ Read-only consultation behind SSO, email + password, or a project shared passwor
 
 ### REQ-VIEW-002 — View selector as a presentation filter
 
-**Must** · R1 · [M1.7](../milestones.md) · spec §10.1, §10.2, §10.3 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.9](../milestones.md) · spec §10.1, §10.2, §10.3 · **Not Started** · Issue: — · PR: —
 
 Two views: **Analyst/Business** and **Development**. Designers use the Analyst/Business view. Inside the application, the selector is a presentation filter — any authenticated user with project access may switch views and can potentially see everything.
 

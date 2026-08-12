@@ -12,5 +12,7 @@ Current outstanding decisions:
 | D4 | Configuration split (env vs DB) | Proposed | [ADR-0014](../adr/0014-configuration-split.md) |
 | D5 | Schema migration strategy | Proposed | [ADR-0015](../adr/0015-schema-migration-strategy.md) |
 | D6 | Testing tooling (Vitest vs Jest, etc.) | Proposed | [ADR-0017](../adr/0017-testing-strategy.md) |
+| D7 | Database portability — SQLite first, MariaDB/PostgreSQL in R2 | Accepted | [ADR-0020](../adr/0020-database-portability.md), supersedes [ADR-0003](../adr/0003-mariadb-single-database.md) |
+| D8 | Agent-driven migration instead of a bespoke importer | Accepted | [ADR-0021](../adr/0021-agent-driven-migration.md) |
 
 For all open decisions from the functional specification, see the [spec §21](../product/functional-specification.md) and the [open decisions log](../product/functional-specification.md#21-open-decisions-log).

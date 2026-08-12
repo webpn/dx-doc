@@ -9,7 +9,7 @@ The Platform is a **white-label, open-source product**. Each organisation deploy
 ### Principles
 
 - **Single process, multiple responsibilities:** the application server serves the REST API, the MCP server, and static assets from a single Node.js process. No microservices.
-- **Stateless application:** the process holds no persistent state. All state is in MariaDB and S3. The process can be restarted or scaled horizontally without data loss.
+- **Stateless application:** the process holds no persistent state. All state is in the database and S3. The process can be restarted or scaled horizontally without data loss.
 - **Configuration through environment variables:** instance-level configuration uses environment variables. Company-level configuration is in the database.
 - **Forward-only migrations:** schema changes are applied at start-up by a migration runner. No automated rollback.
 
@@ -30,7 +30,7 @@ The Platform is a **white-label, open-source product**. Each organisation deploy
        │                      │                │
        ▼                      ▼                ▼
 ┌────────────┐    ┌──────────────┐    ┌──────────────┐
-│  MariaDB   │    │  S3 Storage  │    │   Algolia    │
+│  Database  │    │  S3 Storage  │    │   Algolia    │
 │  (primary) │    │  (assets)    │    │   (search)   │
 └────────────┘    └──────────────┘    └──────────────┘
 ```
@@ -39,14 +39,14 @@ The Platform is a **white-label, open-source product**. Each organisation deploy
 
 A single server running:
 - Node.js application process
-- MariaDB (can be on the same host for development/small deployments)
+- A database: SQLite file by default (no separate service); MariaDB or PostgreSQL from R2
 - S3-compatible storage (MinIO for self-hosted, or any cloud provider)
 - Algolia account (hosted)
 
 ### Production Deployment (R1+)
 
 - Application server: replicated across multiple instances behind a load balancer
-- MariaDB: managed service or dedicated server with backup
+- Database: a SQLite file with a scheduled file-level snapshot, or from R2 a managed MariaDB/PostgreSQL service with backup
 - S3: cloud provider object storage (AWS S3, Cloudflare R2, Backblaze B2, etc.)
 - Algolia: hosted search service
 - HTTPS termination at the load balancer
@@ -61,7 +61,9 @@ Critical variables for R0:
 
 | Variable | Purpose |
 |---|---|
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | MariaDB connection |
+| `DB_DRIVER` | Database adapter: `sqlite` (default), `mariadb` or `postgres` (R2) |
+| `DB_FILE` | SQLite database file path |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Server database connection (R2 adapters) |
 | `STORAGE_S3_*` | S3-compatible object storage |
 | `ALGOLIA_APP_ID`, `ALGOLIA_ADMIN_API_KEY` | Algolia search |
 | `APP_URL`, `APP_SECRET` | Application base URL and signing key |
@@ -98,7 +100,7 @@ Company-level configuration (branding, SMTP, catalogue defaults) is stored in th
 ## Scaling
 
 - **Horizontal:** the application server is stateless. Multiple instances can run behind a load balancer. Session state is stored in the database or a shared session store.
-- **Database:** MariaDB is the single writer. Read replicas can be added for read-heavy workloads, though the projected concurrency (≤50 viewers, ≤10 editors) suggests this is unnecessary for the foreseeable scale.
+- **Database:** a single writer. SQLite serialises writes, which at the projected concurrency is not a bottleneck. Read replicas can be added for read-heavy workloads, though the projected concurrency (≤50 viewers, ≤10 editors) suggests this is unnecessary for the foreseeable scale.
 - **Search:** Algolia is a hosted service and scales independently.
 - **Storage:** S3 is a hosted/self-hosted service and scales independently.
 

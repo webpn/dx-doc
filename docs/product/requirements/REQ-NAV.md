@@ -6,8 +6,8 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 | ID | Requirement | MoSCoW | Rel. | Milestone | Status |
 |---|---|---|---|---|---|
-| REQ-NAV-001 | Page hierarchy with navigable sidebar | Must | R1 | M1.4 | Not Started |
-| REQ-NAV-002 | Automatic per-page tracking recap | Must | R1 | M1.4 | Not Started |
+| REQ-NAV-001 | Page hierarchy with navigable sidebar | Must | R1 | M1.6 | Not Started |
+| REQ-NAV-002 | Automatic per-page tracking recap | Must | R1 | M1.6 | Not Started |
 | REQ-NAV-003 | Flow entity | Should | R2 | M2.2 | Not Started |
 | REQ-NAV-004 | Trigger nodes distinct from visual transitions | Should | R2 | M2.2 | Not Started |
 | REQ-NAV-005 | Directed graph with labels and conditions | Should | R2 | M2.2 | Not Started |
@@ -20,7 +20,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 ### REQ-NAV-001 — Page hierarchy with navigable sidebar
 
-**Must** · R1 · [M1.4](../milestones.md) · spec §8.1, §8.5 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md) · spec §8.1, §8.5 · **Not Started** · Issue: — · PR: —
 
 Pages and screens are organised in a hierarchy that drives a navigable sidebar. Where content is CMS-driven, only generic page templates are catalogued (*"single news page"*), not individual instances.
 
@@ -33,7 +33,7 @@ Pages and screens are organised in a hierarchy that drives a navigable sidebar. 
 
 ### REQ-NAV-002 — Automatic per-page tracking recap
 
-**Must** · R1 · [M1.4](../milestones.md) · spec §8.2 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md) · spec §8.2 · **Not Started** · Issue: — · PR: —
 
 Each page displays an automatic recap of every tracking attached to it — page views, popup views, actions — showing at minimum the tracking name and its specific values.
 

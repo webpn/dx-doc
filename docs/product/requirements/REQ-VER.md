@@ -6,16 +6,16 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 | ID | Requirement | MoSCoW | Rel. | Milestone | Status |
 |---|---|---|---|---|---|
-| REQ-VER-001 | Single draft → published model | Must | R1 | M1.6 | Not Started |
-| REQ-VER-002 | Unpublished-changes indicator | Must | R1 | M1.6 | Not Started |
-| REQ-VER-003 | Selective publication of trackings and pages/flows | Must | R1 | M1.6 | Not Started |
-| REQ-VER-004 | Version metadata | Must | R1 | M1.6 | Not Started |
-| REQ-VER-005 | Diff by entity, property and specific value | Must | R1 | M1.6 | Not Started |
-| REQ-VER-006 | Automatically generated changelog | Must | R1 | M1.6 | Not Started |
-| REQ-VER-007 | Full historical version consultation | Must | R1 | M1.6 | Not Started |
+| REQ-VER-001 | Single draft → published model | Must | R1 | M1.8 | Not Started |
+| REQ-VER-002 | Unpublished-changes indicator | Must | R1 | M1.8 | Not Started |
+| REQ-VER-003 | Selective publication of trackings and pages/flows | Must | R1 | M1.8 | Not Started |
+| REQ-VER-004 | Version metadata | Must | R1 | M1.8 | Not Started |
+| REQ-VER-005 | Diff by entity, property and specific value | Must | R1 | M1.8 | Not Started |
+| REQ-VER-006 | Automatically generated changelog | Must | R1 | M1.8 | Not Started |
+| REQ-VER-007 | Full historical version consultation | Must | R1 | M1.8 | Not Started |
 | REQ-VER-008 | Full rollback | Should | R2 | M2.7 | Not Started |
 | REQ-VER-009 | Publication email notifications | Should | R2 | M2.7 | Not Started |
-| REQ-VER-010 | Agent-vs-human attribution in the diff | Should | R3 | M3.4 | Not Started |
+| REQ-VER-010 | Agent-vs-human attribution in the diff | Should | R2 | M2.7 | Not Started |
 | REQ-VER-011 | Selective rollback | Could | R3 | M3.5 | Not Started |
 | REQ-VER-012 | Branches, merges, approval, scheduled deprecation | Won't | — | — | Rejected |
 
@@ -23,7 +23,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 ### REQ-VER-001 — Single draft → published model
 
-**Must** · R1 · [M1.6](../milestones.md) · spec §9.1 · [ADR-0005](../../adr/0005-draft-to-published-versioning.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md) · spec §9.1 · [ADR-0005](../../adr/0005-draft-to-published-versioning.md) · **Not Started** · Issue: — · PR: —
 
 One draft stream per project. All edits accumulate in the draft. Publishing creates a Version. No parallel branches, no merges, no approval workflow — editors publish autonomously.
 
@@ -34,7 +34,7 @@ One draft stream per project. All edits accumulate in the draft. Publishing crea
 
 ### REQ-VER-002 — Unpublished-changes indicator
 
-**Must** · R1 · [M1.6](../milestones.md) · spec §9.1 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md) · spec §9.1 · **Not Started** · Issue: — · PR: —
 
 Editors see clearly which changes are not yet published.
 
@@ -44,7 +44,7 @@ Editors see clearly which changes are not yet published.
 
 ### REQ-VER-003 — Selective publication of trackings and pages/flows
 
-**Must** · R1 · [M1.6](../milestones.md) · spec §9.2 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md) · spec §9.2 · **Not Started** · Issue: — · PR: —
 
 At publication the editor may exclude individual Trackings and individual Pages/Flows. Properties and Modules cannot be selectively excluded — their changes always publish.
 
@@ -57,7 +57,7 @@ At publication the editor may exclude individual Trackings and individual Pages/
 
 ### REQ-VER-004 — Version metadata
 
-**Must** · R1 · [M1.6](../milestones.md) · spec §9.3 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md) · spec §9.3 · **Not Started** · Issue: — · PR: —
 
 Auto-proposed progressive number, publication date, optional title, optional free-text release notes.
 
@@ -67,7 +67,7 @@ Auto-proposed progressive number, publication date, optional title, optional fre
 
 ### REQ-VER-005 — Diff by entity, property and specific value
 
-**Must** · R1 · [M1.6](../milestones.md) · spec §9.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md) · spec §9.4 · **Not Started** · Issue: — · PR: —
 
 Granularity: per entity (tracking, page, flow, property, module, destination, audience, survey — added, modified, removed); per property within a tracking; per specific value; textual diff on rich-text descriptions. **No image diff.**
 
@@ -78,7 +78,7 @@ Granularity: per entity (tracking, page, flow, property, module, destination, au
 
 ### REQ-VER-006 — Automatically generated changelog
 
-**Must** · R1 · [M1.6](../milestones.md) · spec §9.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md) · spec §9.4 · **Not Started** · Issue: — · PR: —
 
 The changelog is generated from the diff. The changelog view lists all versions with name, date, description and the set of changed elements.
 
@@ -90,13 +90,13 @@ The changelog is generated from the diff. The changelog view lists all versions 
 
 ### REQ-VER-007 — Full historical version consultation
 
-**Must** · R1 · [M1.6](../milestones.md) · spec §9.5 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md) · spec §9.5 · **Not Started** · Issue: — · PR: —
 
 Any historical version can be consulted in full, not only as a list of changes.
 
 **Acceptance**
 - A version's content renders as it was at publication, including assets, which are therefore never deleted while a version references them.
-- Migrated projects start at version 1 with no prior history (REQ-MIG-008).
+- Migrated projects start at version 1 with no prior history (REQ-MIG-009).
 
 ### REQ-VER-008 — Full rollback
 
@@ -112,11 +112,13 @@ On publication, email to users subscribed to that project. Subscription is per p
 
 ### REQ-VER-010 — Agent-vs-human attribution in the diff
 
-**Should** · R3 · [M3.4](../milestones.md) · spec §9.4, §12.2 · [ADR-0019](../../adr/0019-ai-coding-agent-model.md) · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.7](../milestones.md) · spec §9.4, §12.2 · [ADR-0019](../../adr/0019-ai-coding-agent-model.md) · **Not Started** · Issue: — · PR: —
 
-Changes made through MCP agents are visually distinguished from human edits in the diff.
+Changes made through MCP agents and service-account tokens are visually distinguished from human edits in the diff.
 
 > This is the whole agent-review mechanism. There is deliberately no separate agent-review queue: human review happens at publication, where the diff is inspected and items can be excluded. That only works if agent changes are visible as such.
+>
+> **Moved R3 → R2.** MCP write tools land in R1 (REQ-API-004, per [ADR-0021](../../adr/0021-agent-driven-migration.md)), so agents and humans start sharing a draft from R1 rather than R3. Attribution is not needed for the migration itself — version 1 has nothing to diff against — but it is needed as soon as agents edit alongside editors, which is the release immediately after.
 
 ### REQ-VER-011 — Selective rollback
 

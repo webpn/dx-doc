@@ -8,7 +8,7 @@ Traceable requirements derived from the [functional specification](../functional
 
 | Prefix | Area | Spec | Count |
 |---|---|---|---|
-| [REQ-FDN](REQ-FDN.md) | Foundations — platform, persistence, abstractions, configuration, distribution | §16, §18, §19.1 | 17 |
+| [REQ-FDN](REQ-FDN.md) | Foundations — platform, persistence, abstractions, configuration, distribution | §16, §18, §19.1 | 20 |
 | [REQ-SEC](REQ-SEC.md) | Security, authentication and authorisation | §17, Appendix B | 12 |
 | [REQ-DOM](REQ-DOM.md) | Domain model — entities, attributes, composition rules | §6, Appendix A | 28 |
 | [REQ-AUTH](REQ-AUTH.md) | Authoring — editor, assets, duplication, concurrency, search | §7 | 15 |
@@ -16,12 +16,12 @@ Traceable requirements derived from the [functional specification](../functional
 | [REQ-VER](REQ-VER.md) | Versioning and publication — draft, diff, changelog, rollback | §9 | 12 |
 | [REQ-VIEW](REQ-VIEW.md) | Audience views and distribution channels | §10 | 10 |
 | [REQ-DEV](REQ-DEV.md) | Developer handoff — snippets, Figma and dashboard links | §11 | 7 |
-| [REQ-API](REQ-API.md) | API and MCP | §12 | 8 |
-| [REQ-MIG](REQ-MIG.md) | Migration from the legacy wiki | §13 | 8 |
+| [REQ-API](REQ-API.md) | API and MCP | §12 | 10 |
+| [REQ-MIG](REQ-MIG.md) | Migration from the legacy wiki | §13 | 9 |
 | [REQ-NFR](REQ-NFR.md) | Non-functional — performance, availability, i18n, observability | §15 | 14 |
 | [REQ-DQ](REQ-DQ.md) | Data quality and deferred modules | §14 | 8 |
 
-**148 requirements total.**
+**154 requirements total.**
 
 > Three prefixes were added beyond the original list: **REQ-DOM** (§6 has ~28 requirements of its own and does not belong inside Foundations), **REQ-NFR** (§15 was previously unrepresented), and **REQ-DQ** (§14's deferred modules need IDs so milestones can reference them). **REQ-AUTH** means *authoring*; authentication lives in **REQ-SEC**.
 
@@ -29,16 +29,18 @@ Traceable requirements derived from the [functional specification](../functional
 
 | Release | Requirements | Focus |
 |---|---|---|
-| R0 | 19 | Foundations, auth, API, public repository |
-| R1 | 60 | Full data model, editor, versioning, importer, SSO |
-| R2 | 32 | Flows, bulk operations, distribution channels |
-| R3 | 20 | Snippets, public API, MCP |
+| R0 | 20 | Foundations, auth, API, public repository |
+| R1 | 66 | Full data model, editor, versioning, migration API + MCP, SSO |
+| R2 | 35 | Flows, bulk operations, distribution channels, MariaDB/Postgres adapters |
+| R3 | 16 | Snippets, Confluence, interactive agent access |
 | R4 | 6 | Data quality, Figma import, webhooks |
 | R5 | 3 | Semantic layer — blocked on O1/O2 |
 | R6 | 2 | Lifecycle status, insights |
 | — | 6 | Explicitly rejected (recorded, not gaps) |
 
-R1 carries 60 requirements in six weeks. That concentration is risk R1 in the register, and it is why the [milestones](../milestones.md) name demotion candidates in advance rather than improvising under pressure.
+R1 carries 66 requirements in six weeks. That concentration is risk R1 in the register, and it is why the [milestones](../milestones.md) name demotion candidates in advance rather than improvising under pressure.
+
+> **Two decisions moved requirements after the first draft.** [ADR-0020](../../adr/0020-database-portability.md) replaced the MariaDB-only stance with repository ports and a SQLite default, adding three REQ-FDN entries and moving two database adapters into R2. [ADR-0021](../../adr/0021-agent-driven-migration.md) replaced the bespoke Notion importer with an agent driving a complete API, which rewrote REQ-MIG and pulled the documented public API, MCP read tools, MCP write tools and MCP resources from R3 into R1. Net effect on R1: six requirements out, ten in.
 
 ## Entry format
 

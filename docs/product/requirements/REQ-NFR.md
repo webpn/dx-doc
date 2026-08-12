@@ -8,20 +8,20 @@ Entry format and status legend: [requirements index](README.md).
 
 | ID | Requirement | Target | First measurable | Status |
 |---|---|---|---|---|
-| REQ-NFR-001 | Open a tracking page | < 2 s | M1.3 | Not Started |
-| REQ-NFR-002 | Full-text search | < 4 s | M1.5 | Not Started |
-| REQ-NFR-003 | Generate a diff between versions | < 6 s | M1.6 | Not Started |
+| REQ-NFR-001 | Open a tracking page | < 2 s | M1.5 | Not Started |
+| REQ-NFR-002 | Full-text search | < 4 s | M1.7 | Not Started |
+| REQ-NFR-003 | Generate a diff between versions | < 6 s | M1.8 | Not Started |
 | REQ-NFR-004 | Load a very large project | < 3 s | M1.2 | Not Started |
 | REQ-NFR-005 | Availability | SLA 99% | R1 | Not Started |
 | REQ-NFR-006 | Backup is the operator's responsibility | — | M2.6 | Not Started |
-| REQ-NFR-007 | Desktop only; no responsive layout | — | M1.3 | Not Started |
+| REQ-NFR-007 | Desktop only; no responsive layout | — | M1.5 | Not Started |
 | REQ-NFR-008 | Browser support `browserslist >5%` | — | M0.1 | Not Started |
 | REQ-NFR-009 | No offline mode | — | — | Accepted |
-| REQ-NFR-010 | English by default, with translation support | — | M1.3 | Not Started |
+| REQ-NFR-010 | English by default, with translation support | — | M1.5 | Not Started |
 | REQ-NFR-011 | Content is single-language | — | M1.1 | Not Started |
-| REQ-NFR-012 | Localised date and number formats | — | M1.3 | Not Started |
+| REQ-NFR-012 | Localised date and number formats | — | M1.5 | Not Started |
 | REQ-NFR-013 | No WCAG compliance required | — | — | Accepted |
-| REQ-NFR-014 | Observability sufficient for troubleshooting | — | M1.7 | Not Started |
+| REQ-NFR-014 | Observability sufficient for troubleshooting | — | M1.9 | Not Started |
 
 ---
 
@@ -31,9 +31,9 @@ Entry format and status legend: [requirements index](README.md).
 
 | Operation | Target | Measured at |
 |---|---|---|
-| Open a tracking page | < 2 s | M1.3 |
-| Full-text search | < 4 s | M1.5 |
-| Generate a diff between versions | < 6 s | M1.6 |
+| Open a tracking page | < 2 s | M1.5 |
+| Full-text search | < 4 s | M1.7 |
+| Generate a diff between versions | < 6 s | M1.8 |
 | Load a very large project | < 3 s | M1.2 |
 
 **Acceptance**
@@ -55,6 +55,9 @@ The Platform provides no backup mechanism. Whoever operates the database owns ba
 **Acceptance**
 - The README states this plainly, alongside the mandatory pre-upgrade backup step (REQ-FDN-009).
 - No documentation implies the Platform backs anything up.
+- The reference deployment stack demonstrates a file-level snapshot of the SQLite database (REQ-FDN-012).
+
+> **Sharper through R1 than the specification anticipated.** With SQLite as the only adapter ([ADR-0020](../../adr/0020-database-portability.md)), no backup mechanism, and no git export until R2, the pilot's entire migrated content lives in a single file for roughly six weeks — after a migration that cost real editorial effort to verify. The mitigation is cheap and belongs in R0: show the snapshot in the reference stack and say plainly in the README that it is the operator's job.
 
 ### REQ-NFR-007 — Desktop only; no responsive layout
 
