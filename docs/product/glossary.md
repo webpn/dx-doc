@@ -7,9 +7,9 @@ Domain terminology for the dx-doc Platform. This glossary is authoritative — i
 | **Company** | Tenant of the Platform. Owns users, catalogue, branding, and SMTP configuration. A single instance hosts multiple companies. |
 | **Project** | Documentation of one product on one platform (e.g., "MyApp Web" or "MyApp iOS"). Unit of access control, versioning, and publication. |
 | **Data Layer** | The structured set of variables a product exposes for analytics collection (the `digitalData` or equivalent object). |
-| **Data Layer Property** | A single documented variable in the data layer. Carries name, type, presence, description, allowed values, examples, PII flag, hashing policy, AEP field group, and destination mappings. |
+| **Data Layer Property** | A single documented variable in the data layer. Carries name, type, description, allowed values, examples, PII flag, hashing policy, AEP field group, and destination mappings. It does **not** carry presence — see Presence. |
 | **Object Property** | A property of type `object` with child properties, forming a parent-child hierarchy addressed by path (e.g., `product.characteristics.colour`). |
-| **Presence** | Whether a property is `always`, `sometimes`, or `never` sent in a given tracking or scenario. The `never` state is what allows a condition to state that a property must not be present. |
+| **Presence** | Whether a property is `always`, `sometimes`, or `never` sent in a given tracking. It is an attribute of the **tracking↔property relationship and of nothing else** — a property has no presence of its own, and the same property may be `always` in one tracking and `sometimes` in another. The `never` state is what allows a condition to state that a property must not be present. |
 | **Module** | A named, project-scoped, reusable bundle of Data Layer Properties. Applied to a tracking to add properties in bulk. Not nestable. |
 | **Tracking** | A single documented tracked event. Attached to a Page or page template, carrying a navigation event type, a set of properties (from modules and individually added), and specific values. |
 | **Tracking Template** | A blueprint for creating new Trackings. Defines preselected modules, preconfigured properties, default specific values, and prefilled description sections. Templates are project-scoped. |

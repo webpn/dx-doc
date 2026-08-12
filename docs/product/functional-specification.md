@@ -4,6 +4,17 @@ This is the canonical functional specification for the dx-doc Platform. It is de
 
 > **Note:** The full specification is maintained in a separate document due to its length. This file serves as the index and entry point. When the specification changes, this file is updated to reflect the current version.
 
+## Deviations from specification v1.2
+
+Two decisions taken after v1.2 override the specification. Where they conflict, the ADR is authoritative and the specification is stale.
+
+| Spec says | Now | Recorded in |
+|---|---|---|
+| §16.1 — MariaDB only, single database target | Persistence behind repository ports. SQLite is the default and the only adapter through R1; MariaDB and PostgreSQL adapters in R2. Schema constrained to a portable SQL subset. | [ADR-0020](../adr/0020-database-portability.md), supersedes [ADR-0003](../adr/0003-mariadb-single-database.md) |
+| §13 — bespoke importer for the legacy wiki's Markdown & CSV export, built into the Platform | The Platform ships **no source-format-specific code**. Content is imported by an AI agent driving the public API, producing a committed re-runnable script. Pulls the documented public API and MCP read/write tools from R3 into R1. | [ADR-0021](../adr/0021-agent-driven-migration.md) |
+
+§13's *scope* decisions are unchanged: no flow reconstruction, no history import, no internal-link import.
+
 ## Current Version
 
 **Version 1.2** — Preliminary analysis consolidated; benchmark findings adopted.
@@ -22,7 +33,7 @@ The full specification is attached as a project artefact. Key sections:
 10. Functional requirements — audience views and distribution channels
 11. Functional requirements — developer handoff
 12. Functional requirements — API and MCP
-13. Functional requirements — migration
+13. Functional requirements — import
 14. Deferred modules
 15. Non-functional requirements
 16. Architecture and technology decisions
@@ -73,9 +84,9 @@ The domain model defines ~25 entities. See `docs/product/glossary.md` for defini
 | Release | Content | Timeline |
 |---|---|---|
 | R0 | Foundations: stack, schema, auth, API, CI, public repo | Weeks 1–2 |
-| R1 | MVP: full data model, editor, versioning, importer, SSO | Weeks 3–8 |
-| R2 | Navigation: flows, bulk ops, exports, email, SAML | Months 3–4 |
-| R3 | Developer handoff: snippets, Confluence, MCP, public API | Months 5–6 |
+| R1 | MVP: full data model, editor, versioning, import API + MCP, SSO | Weeks 3–8 |
+| R2 | Navigation: flows, bulk ops, exports, email, SAML, MariaDB/Postgres adapters | Months 3–4 |
+| R3 | Developer handoff: snippets, Confluence, interactive agent access | Months 5–6 |
 | R4 | Data quality: analytics integrations, conformance reports, Figma import | Months 7–8 |
 | R5 | Semantic layer: OWL/RDF/SKOS, business glossary | Months 9+ |
 | R6 | Lifecycle: tracking implementation status, insights | Beyond R5 |
@@ -89,11 +100,11 @@ See §21 of the full specification. Critically open items:
 - **O3:** "How to read this in the analytics platform" — structured field design — blocks R2 Analyst view
 - **O4:** Data quality interaction with unstructured placeholders — blocks R4
 - **O5:** Verification/QA module scope — blocks R4
-- **O6:** Complete environment variable matrix — blocks R0 (immediately)
+- **O6:** Complete environment variable matrix — **closed**, see [ADR-0014](../adr/0014-configuration-split.md); matrix reproduced in [README.md](../../README.md#environment-variables)
 - **O7:** Schema migration strategy for third-party installs — blocks R1
 - **O8:** Design patterns from reference products — partly closed; developer-handoff ref remains
 - **O9:** Extension/Segment/CalculatedMetric attributes before R5 — blocks R3
-- **O10:** Config key split (environment vs database) — blocks R0 (immediately)
+- **O10:** Config key split (environment vs database) — **closed**, see [ADR-0014](../adr/0014-configuration-split.md); SSO details, supported login methods and supported locales are company-level, not environment variables
 - **O11:** "Manage company catalogue" permission model — blocks R1
 - **O12:** Self-hostable search adapter before public release — blocks R1 public release
 - **O13:** Bulk operations list completeness — blocks R2

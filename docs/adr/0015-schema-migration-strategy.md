@@ -26,6 +26,15 @@ The spec's open decision O7 asks: "Upgrade and schema-migration strategy for thi
 - A documented mandatory backup step before running migrations. The operator is responsible for backing up the database before upgrading.
 - No supported downgrade path. Rolling back a deployment means restoring the database backup.
 
+**Dialect portability.** Since [ADR-0020](0020-database-portability.md), migrations must run unchanged against SQLite, MariaDB and PostgreSQL. Two constraints follow:
+
+- Migration DDL stays within the portable SQL subset defined in ADR-0020. A migration that only runs on one dialect is a defect, not a trade-off.
+- **SQLite has no general `ALTER COLUMN` and no `DROP CONSTRAINT`.** Any column type change, constraint change, or column drop is expressed as the create-copy-drop-rename table rebuild pattern. Because that pattern is also valid on MariaDB and PostgreSQL, it is used everywhere rather than branching per dialect.
+
+Where a migration genuinely cannot be expressed portably, the escape hatch is a per-dialect migration file (`003_xyz.sqlite.sql`, `003_xyz.mariadb.sql`) — explicit, reviewable, and rare. It is not a licence to write dialect-specific DDL by default.
+
+Adapters must be verified against the same migration sequence: the R2 dialect test matrix (ADR-0017) runs migrations from empty to current on every supported dialect.
+
 **Rationale:**
 - Forward-only migrations are simpler to write, test, and maintain than reversible migrations.
 - Start-up execution means there is no separate migration command to forget.
@@ -44,7 +53,8 @@ Rejected: a misconfigured deployment or a buggy migration could corrupt the data
 Rejected: rollback scripts are rarely tested and often fail. The backup+restore approach is more reliable. If a migration fails, restore the backup and fix the migration.
 
 ## Related Decisions
-- ADR-0003: MariaDB as Single Database — migrations are MariaDB DDL.
+- [ADR-0020](0020-database-portability.md): Database Portability — migrations must be dialect-portable. Supersedes ADR-0003, which had scoped migrations to MariaDB DDL only.
+- [ADR-0017](0017-testing-strategy.md): the dialect test matrix that verifies portability.
 - O7 (spec): This ADR directly addresses it.
 
 ## Last Responsible Moment

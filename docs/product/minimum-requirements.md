@@ -1,0 +1,84 @@
+# R1 Minimum Requirements
+
+**Appendix to [scope.md](scope.md).** This is the enumerated definition of what R1 must deliver. It is the checklist that makes the R1 release criterion falsifiable rather than a matter of opinion: R1 is complete when every row below is satisfied, and not before.
+
+The list is the minimum set of capabilities a tracking-documentation platform must provide to be genuinely usable in place of the ad-hoc documents and wikis it replaces. **It is a checklist, not a survey of what any particular product contains** — the item-by-item verification at [M1.10](milestones.md) is what confirms it, and anything found missing from this table belongs in it.
+
+## Document structure, per project
+
+| Capability | dx-doc delivers it as | Requirement |
+|---|---|---|
+| A standard documentation structure available for each new project | Company catalogue copied into a project at creation | [REQ-DOM-019](requirements/REQ-DOM.md) |
+| A project icon matching the tracked product's logo | Project `icon` attribute | [REQ-FDN-003](requirements/REQ-FDN.md) |
+| Table names prefixed with the product name to avoid collisions | **Obsolete.** Entities are project-scoped, so collisions are impossible by construction and no prefix is needed | [REQ-DOM-028](requirements/REQ-DOM.md) |
+
+## The five documentation sections
+
+| Capability | dx-doc delivers it as | Requirement |
+|---|---|---|
+| **Data Layer overview** — what the data layer is and how it must be populated, with implementation guidance varying by web / native app / Flutter | Free page; the platform-specific variation is carried by the project's `platform` attribute | [REQ-AUTH-003](requirements/REQ-AUTH.md), [REQ-FDN-003](requirements/REQ-FDN.md) |
+| **Script/SDK integration instructions** — naming the tag-manager profile and the per-product tracking IDs for the analytics, survey and session-replay tools | Free page in R1; company-level template with per-project placeholders in R2 | [REQ-AUTH-003](requirements/REQ-AUTH.md) → [REQ-AUTH-013](requirements/REQ-AUTH.md) |
+| **Tracking list** — the documentation proper, as a page tree | Page hierarchy driving a navigable sidebar | [REQ-NAV-001](requirements/REQ-NAV.md) |
+| **Changelog** — full history of changes with references to the elements updated | Generated from the diff, per publication | [REQ-VER-005](requirements/REQ-VER.md), [REQ-VER-006](requirements/REQ-VER.md) |
+| **References** — a service page visible only to the documentation team: development contacts, wireframe and functional-analysis links, test URLs, test app links, test credentials | Free page marked non-publishable, enforced across every index and output channel | [REQ-AUTH-003](requirements/REQ-AUTH.md), [REQ-SEC-012](requirements/REQ-SEC.md) |
+
+## The structured tables
+
+| Capability | dx-doc delivers it as | Requirement |
+|---|---|---|
+| **Pages / Screens**, with CMS-driven content catalogued as generic page templates rather than instances | Page entity, same rule | [REQ-DOM-001](requirements/REQ-DOM.md) |
+| A short behavioural description per page, with supporting screenshots | Page description and image upload | [REQ-DOM-001](requirements/REQ-DOM.md), [REQ-AUTH-001](requirements/REQ-AUTH.md), [REQ-AUTH-002](requirements/REQ-AUTH.md) |
+| **Trackings**, each with a speaking name | Tracking entity | [REQ-DOM-002](requirements/REQ-DOM.md) |
+| — attached to a page, creatable inline while editing the tracking | Page attachment | [REQ-DOM-002](requirements/REQ-DOM.md) |
+| — a navigation event: screen view, popup view, element click, form submission, user error | Navigation event, held as data rather than a hard-coded enum so the list can grow | [REQ-DOM-002](requirements/REQ-DOM.md) |
+| — a list of modules | Module attachment | [REQ-DOM-006](requirements/REQ-DOM.md) |
+| — specific values | Specific values, placeholders preserved verbatim | [REQ-DOM-010](requirements/REQ-DOM.md) |
+| **Modules** — reusable bundles of data layer properties | Module entity, project-scoped, not nestable | [REQ-DOM-006](requirements/REQ-DOM.md) |
+| **Data Layer Properties**, with standard ones present by default and custom ones added with name, an exhaustive description of content and data source, and example values | DataLayerProperty with the full attribute set, seeded from the catalogue | [REQ-DOM-003](requirements/REQ-DOM.md), [REQ-DOM-019](requirements/REQ-DOM.md) |
+| **Specific valorisations** | SpecificValue entity | [REQ-DOM-010](requirements/REQ-DOM.md) |
+| **Analytics variables** and **analytics events** as two separate tables, mapped to properties | A single Destination entity with N:N mapping and a per-mapping name override — covering Adobe, CJA, GA4 and PostHog rather than one platform | [REQ-DOM-015](requirements/REQ-DOM.md), [REQ-DOM-016](requirements/REQ-DOM.md) |
+| A note field on each variable for analysis guidance | `analysis_notes`, plus a per-destination note | [REQ-DOM-003](requirements/REQ-DOM.md), [REQ-DOM-015](requirements/REQ-DOM.md) |
+| The property's description shown automatically in the variable table | Rendered from the relationship, never copied | [REQ-DOM-015](requirements/REQ-DOM.md) |
+| Tag-manager processing recorded per variable — which extensions manipulate the value, and under what conditions | Per-destination note in R1; Extension entity from R3 | [REQ-DOM-015](requirements/REQ-DOM.md) → [REQ-DOM-025](requirements/REQ-DOM.md) |
+
+## Authoring behaviours
+
+| Capability | dx-doc delivers it as | Requirement |
+|---|---|---|
+| Creating a tracking pre-seeded with defaults, separately for a page load and for a user action | Tracking Template, editor-configurable with no software release | [REQ-DOM-009](requirements/REQ-DOM.md) |
+| Specific values auto-proposed on creation — `page_name` for page views; `action_effect`, `action_detail`, `action_name` for user actions | Template default specific values — expressible as instances of this mechanism, with no hard-coded behaviour left | [REQ-DOM-009](requirements/REQ-DOM.md) |
+| Duplicating an existing tracking | Tracking duplication, fully independent copy | [REQ-AUTH-006](requirements/REQ-AUTH.md) |
+| Grouping multi-page processes under a container page with an overall description and a flow diagram | R1: page hierarchy plus hand-written Mermaid. R2: Flow entity with a diagram generated from the graph | [REQ-AUTH-004](requirements/REQ-AUTH.md) → [REQ-NAV-003](requirements/REQ-NAV.md) … [REQ-NAV-006](requirements/REQ-NAV.md) |
+
+## Data layer conventions
+
+These are conventions a human had to remember and apply by hand. In R1 they are documented and machine-readable; enforcement as non-blocking warnings arrives in R2.
+
+| Convention | dx-doc | Requirement |
+|---|---|---|
+| Property names lowercase, underscore-separated | R1: retrievable by agents as an MCP resource. R2: non-blocking warning | [REQ-API-006](requirements/REQ-API.md) → [REQ-DOM-023](requirements/REQ-DOM.md) |
+| Booleans as `si`/`no`; timestamps ISO 8601; environment `dev`/`qa`/`prod`; `,` as macro separator and `\|` for sub-properties | as above | [REQ-API-006](requirements/REQ-API.md) → [REQ-DOM-023](requirements/REQ-DOM.md) |
+| Speaking names; generic properties qualified by context preferred over scope-specific ones; names like *category* or *type* avoided | **Deliberately not automated** — recorded as a human review responsibility | [REQ-DOM-023](requirements/REQ-DOM.md) |
+| Identifiers documented precisely: who produces them, how they are used, collected in clear text, hashed downstream by the tag manager with a per-destination algorithm | `hashing_policy` plus the description and `data_source` attributes | [REQ-DOM-003](requirements/REQ-DOM.md) |
+| Data layer and analytics mapping kept coherent between a product's web and app versions | Manual through R3; advisory, read-only alignment report in R4 | [REQ-DOM-021](requirements/REQ-DOM.md) |
+
+## What R1 adds beyond the minimum
+
+Everything above is the baseline. These are the capabilities that make R1 a genuinely modern replacement rather than a like-for-like port:
+
+- Draft → published versioning, selective publication, and an automatically generated diff and changelog ([REQ-VER-001](requirements/REQ-VER.md) … [REQ-VER-007](requirements/REQ-VER.md))
+- Search over specific values, so *"which tracking sets this value?"* is answerable ([REQ-AUTH-007](requirements/REQ-AUTH.md))
+- Analyst/Business and Development audience views ([REQ-VIEW-002](requirements/REQ-VIEW.md))
+- A complete API and MCP surface — anything doable in the UI is doable by a machine ([REQ-API-001](requirements/REQ-API.md) … [REQ-API-004](requirements/REQ-API.md))
+- Read access without a licensed account, via project shared passwords ([REQ-SEC-005](requirements/REQ-SEC.md))
+- An append-only audit log ([REQ-SEC-006](requirements/REQ-SEC.md))
+- CDP audiences and feedback surveys as first-class entities ([REQ-DOM-017](requirements/REQ-DOM.md), [REQ-DOM-018](requirements/REQ-DOM.md))
+
+## What R1 deliberately does not include
+
+- **Conditional valorisations in any form.** R1 has no mechanism at all; the structured form arrives in R2 ([REQ-DOM-011](requirements/REQ-DOM.md) rejected, [REQ-DOM-012](requirements/REQ-DOM.md)).
+- **Flows and process diagrams are not imported** — they are catalogued by hand after import ([REQ-IMP-009](requirements/REQ-IMP.md)).
+- **History is not imported.** Every imported project starts at version 1.
+- **Internal cross-links are not imported.**
+
+> **Two rows are worth checking against a real product before R1 planning is locked.** CDP audiences and surveys are listed above as *beyond* the minimum, because the baseline documentation structure does not describe a table for either — yet [REQ-DOM-017](requirements/REQ-DOM.md) and [REQ-DOM-018](requirements/REQ-DOM.md) are `Must` in R1 on the grounds that an import losing them would fail the pilot. Both cannot be true. Either they belong in the minimum set, or their `Must` justification needs restating.

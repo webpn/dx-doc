@@ -51,6 +51,6 @@ Rejected: the Platform is a single application with modest scale requirements (�
 ## Consequences
 - Every new developer (and AI agent) knows exactly where to put code: domain rules in `src/domain/`, use cases in `src/application/`, API calls in `src/infrastructure/api-client/`.
 - Testing domain logic requires no infrastructure setup — just pure TypeScript tests.
-- Swapping an infrastructure implementation (e.g., Algolia → self-hosted search) requires changing only the adapter in `src/infrastructure/`.
+- Swapping an infrastructure implementation (e.g., the search adapter, as ADR-0009 in fact did) requires changing only the adapter in `src/infrastructure/`.
 - The UI can be developed against mock application services before the API is ready.
 - The layering adds some boilerplate (port interfaces, dependency wiring). This is accepted as the cost of long-term maintainability.

@@ -1,6 +1,14 @@
 # Product Scope
 
-Defines what is in scope, out of scope, and deferred. References: [`functional-specification.md`](functional-specification.md), [`vision.md`](vision.md).
+Defines what is in scope, out of scope, and deferred. References: [`functional-specification.md`](functional-specification.md), [`vision.md`](vision.md), [`user-stories.md`](user-stories.md).
+
+**If you are looking for what R1 must do**, read the [R1 minimum requirements](minimum-requirements.md) rather than this page's feature lists. That checklist is the enumerated definition; everything else here is scope boundary.
+
+## What R1 must do
+
+R1 is the MVP: a complete, usable platform for authoring, versioning, and publishing tracking documentation. The enumerated definition of what R1 must deliver — the minimum set of capabilities the platform must provide — lives in the [R1 minimum requirements](minimum-requirements.md). R1 is complete when every row of that checklist is satisfied, and not before.
+
+On top of that minimum, R1 adds the capabilities that make it a genuinely modern replacement: draft → published versioning with an automatically generated diff and changelog, search over specific values, audience-specific views, a complete API and MCP surface, read access without a licensed account, and an append-only audit log.
 
 ## In Scope
 
@@ -13,7 +21,7 @@ The documentation of tracking plans for websites and mobile applications:
 - Reusable property modules.
 - Tracking templates for standardised creation.
 - Specific values (including placeholders) for each property within a tracking.
-- Conditional valorisations of properties (structured in R2, prose in R1).
+- Conditional valorisations of properties — structured only, from R2. Not expressible in R1 in any form.
 - Destinations (analytics variables/events/schema paths) with many-to-many mapping to properties.
 - CDP audiences.
 - Feedback surveys.
@@ -37,7 +45,7 @@ The documentation of tracking plans for websites and mobile applications:
 - Flow entity with directed graph (R2).
 - Trigger nodes distinct from visual page transitions (R2).
 - Auto-generated Mermaid diagrams from the graph (R2).
-- Full-text and fuzzy search within a project, indexing specific values.
+- Full-text search within a project, indexing specific values. Prefix and stem matching; typo tolerance deliberately deferred to an optional adapter (R3).
 
 ### Versioning and Publication
 
@@ -67,28 +75,32 @@ The documentation of tracking plans for websites and mobile applications:
 ### API and MCP
 
 - Internal REST API (R0), the single entry point for all operations.
-- Documented public API (R3).
-- MCP read and write tools (R3), as a layer above the REST API.
+- Documented public API (R1) — the basis for importing content from other systems.
+- MCP read and write tools (R1), as a layer above the REST API.
+- Service-account API tokens (R1) for scripted clients.
+- OAuth with user consent for interactive agent clients (R3).
 
-### Migration
+### Import
 
-- Importer from the legacy wiki's "Markdown & CSV" export.
-- Idempotent, re-runnable.
-- 1:1 mapping of all structured tables.
-- Asset migration into object storage.
-- Legacy-wiki block conversion into supported Markdown.
+- **No source-format-specific code in the Platform.** Content is imported by an AI agent driving the public API, producing a committed re-runnable script ([ADR-0021](../adr/0021-agent-driven-migration.md)).
+- API surface complete enough to construct any project without opening the UI.
+- Idempotent upsert keyed on `external_ref`, so an import can be corrected and re-run.
+- Asset upload through the API into object storage.
+- Batch write endpoints and a reconciliation report.
+- General-purpose: the same capability serves any bulk ingestion, from any source system.
 
 ### Foundation
 
 - Multi-company tenancy on a single instance.
 - Immutable internal IDs on every entity.
-- MariaDB persistence behind an interface.
+- Persistence behind repository ports: SQLite by default, MariaDB and PostgreSQL adapters in R2. Schema constrained to a portable SQL subset.
 - S3-compatible storage behind an interface.
-- Algolia search behind an interface.
+- Search behind an interface: Pagefind by default, with no hosted dependency and no documentation content leaving the instance. A hosted adapter is optional and additive (R3).
 - Environment-variable configuration.
 - Versioned schema migrations.
 - Server-side validation shared by UI, API, and MCP.
-- Four global roles: Admin, Project Manager, Editor, Viewer.
+- Four company-scoped roles: Admin, Project Manager, Editor, Viewer.
+- An instance-administration capability above the companies, held by whoever runs the deployment: creates companies, grants company-admin access, reaches no documentation content.
 - Per-project access grants.
 - Append-only audit log of write events.
 - Email + password login.
@@ -109,8 +121,9 @@ The documentation of tracking plans for websites and mobile applications:
 - No field-level permissions — views are presentation filters, not security boundaries.
 - No cross-project search.
 - No cross-project references — entities may only reference entities in their own project.
-- No flow or graph reconstruction from the legacy wiki — flows are catalogued manually after migration.
-- No history migration from the legacy wiki — each migrated project starts at version 1.
+- No flow or graph reconstruction from a source system — flows are catalogued manually after import.
+- No history import — each imported project starts at version 1.
+- No importer UI and no import endpoint accepting an export archive — the Platform holds no knowledge of any source format.
 
 ## Deferred (with target release)
 
@@ -133,6 +146,7 @@ These ship as containers in R3 and gain substance with the semantic layer in R5.
 ## Explicitly Rejected
 
 - **Event variants** — a tracking that behaves differently across contexts is expressed through structured property conditions, not through a second inheritance axis.
+- **Prose conditional valorisations** — rejected rather than shipped as an R1 stopgap. The structured form (R2) is the only mechanism, which means no conversion exercise across ~30 imported products.
 - **Parallel branches and merge workflows** for versioning — single draft stream only.
 - **Approval workflow** — editors publish autonomously.
 - **Scheduled deprecation** — properties are deprecated manually.

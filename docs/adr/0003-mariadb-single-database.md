@@ -1,7 +1,9 @@
 # ADR-0003: MariaDB as Single Database
 
 ## Status
-Accepted
+**Superseded by [ADR-0020](0020-database-portability.md)** (2026-08-12)
+
+> Persistence now sits behind repository ports with multiple adapters: SQLite is the default through R1, with MariaDB and PostgreSQL adapters in R2. The two alternatives this ADR rejected below — "SQLite for development" and "multiple database support behind an abstraction" — are the ones now adopted. ADR-0020 records why the trade-off was re-weighed. The content below is retained as the record of the original decision.
 
 ## Date
 2026-08-11

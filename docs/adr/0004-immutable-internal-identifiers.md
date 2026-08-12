@@ -35,6 +35,6 @@ Rejected: even within a project, names can change. The property name is a user-c
 ## Consequences
 - Every entity table has both an `id` (UUID, immutable) and a `slug` (derived from name, mutable).
 - API responses include both `id` and `slug`. Clients use `id` for reliable references.
-- The idempotent importer uses internal IDs to match existing entities across runs.
+- Idempotent import ([ADR-0021](0021-agent-driven-migration.md)) needs a second, orthogonal key: entities also carry an optional `external_ref` recording the source system and source identifier, unique per project. The internal `id` is what dx-doc references; the `external_ref` is what lets a re-run recognise an entity it created on a previous pass. Neither substitutes for the other.
 - When the semantic layer is built (R5), stable IRIs are minted from the immutable IDs — no data migration needed.
 - UUIDs are larger than integers (16 bytes vs 4-8 bytes). At the projected scale (thousands of entities per project), this is negligible.

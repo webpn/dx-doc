@@ -32,7 +32,7 @@ Multi-tenancy is implemented at the **database level** using a `company_id` fore
 Rejected: simplifies isolation but complicates operations (n × databases, n × migration runs, n × connection pools). The projected scale (a handful of companies per instance) does not justify the operational overhead.
 
 ### Separate schema per company (PostgreSQL schemas)
-Rejected: MariaDB-specific. The spec mandates MariaDB only.
+Rejected: not portable. Since [ADR-0020](0020-database-portability.md) the Platform must run on SQLite, MariaDB and PostgreSQL alike, and per-tenant schemas have no SQLite equivalent at all. The `company_id` discriminator column works identically on every supported dialect.
 
 ### Application-level tenancy (no DB enforcement, rely on code)
 Rejected: too fragile. A single missing WHERE clause leaks data across companies. Database-level enforcement through foreign keys and disciplined query building is safer.

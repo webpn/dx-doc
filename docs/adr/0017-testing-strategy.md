@@ -17,7 +17,7 @@ The Platform needs a testing strategy that covers domain logic, application use 
 |---|---|---|---|
 | Domain (unit) | Vitest | Business rules, invariants, value objects, Result types | Pure TypeScript, no I/O |
 | Application (unit/integration) | Vitest | Use cases with mocked ports | Mocked infrastructure |
-| Infrastructure (integration) | Vitest | Repository implementations, search adapter, storage adapter | Test database (MariaDB), test S3 (MinIO), test search (Algolia sandbox or mock) |
+| Infrastructure (integration) | Vitest | Repository implementations, search adapter, storage adapter | Test database (SQLite; MariaDB and PostgreSQL from R2 — see dialect matrix below), test S3 (MinIO), real search adapter (Pagefind needs no external service) |
 | API (integration) | Vitest + supertest | Endpoint behavior, validation, auth | Test database, mocked external services |
 | UI (component) | Vitest + React Testing Library | Component behavior: interactions, states, accessibility | JSDOM |
 | E2E | Playwright | Critical user journeys: create project, edit tracking, publish, view | Full stack (test database, test S3, etc.) |
@@ -25,7 +25,20 @@ The Platform needs a testing strategy that covers domain logic, application use 
 ### Principles
 - Test behavior, not implementation. A test titled "calls the repository" is about implementation. A test titled "returns the tracking with the added property" is about behavior.
 - Domain tests have the highest volume; E2E tests have the lowest.
-- Infrastructure tests run against real services (test MariaDB instance, test S3 bucket, Algolia test index). No mocking at the infrastructure level — it defeats the purpose.
+- Infrastructure tests run against real services (a real database, test S3 bucket, a real search index). No mocking at the infrastructure level — it defeats the purpose.
+
+### Database dialect matrix
+
+Since [ADR-0020](0020-database-portability.md) the Platform supports multiple database adapters, so "a real database" means more than one from R2 onward.
+
+| When | Dialects | Rationale |
+|---|---|---|
+| Every pull request | SQLite | Fast, no service container, catches everything that is not dialect-specific |
+| Nightly, and before every release | SQLite + MariaDB + PostgreSQL | The only thing that actually verifies portability |
+
+The full repository and migration suite runs unchanged against each dialect — no dialect-specific test variants, and no test skipped on a dialect. A test that cannot pass on all supported dialects is evidence that the schema left the portable subset (REQ-FDN-020), and the schema is what gets fixed.
+
+Through R0 and R1 there is exactly one adapter, so this matrix costs nothing until the MariaDB and PostgreSQL adapters land in R2.
 - Every bug fix includes a regression test.
 - Coverage targets are not a goal. Meaningful coverage is.
 
@@ -37,7 +50,7 @@ The Platform needs a testing strategy that covers domain logic, application use 
 ### CI Requirements
 - All tests must pass before merge.
 - Test database is ephemeral (created at start of CI run, destroyed at end).
-- Algolia tests use a dedicated test index (or are skipped if Algolia credentials are not configured in CI — at the cost of reduced search coverage).
+- Search tests run the default adapter for real: Pagefind needs no account and no network, so search coverage is never skipped in CI ([ADR-0009](0009-search-abstraction.md)). A hosted adapter (R3) would reintroduce a credential-gated suite, and that is a cost to weigh when it is added.
 
 ## Alternatives Considered
 

@@ -56,7 +56,7 @@ No persistence, no network, no React. Domain types are independent of API DTOs �
 
 Orchestrates domain entities to implement use cases. Depends on Domain and on port interfaces (defined here) that Infrastructure implements.
 
-- **Use cases / application services:** createProject, publishVersion, addTrackingProperty, removeTrackingProperty, applyModuleToTracking, bulkAddModule, duplicateTracking, generateDiff, generateChangelog, exportStaticSite, runMigrationImporter.
+- **Use cases / application services:** createProject, publishVersion, addTrackingProperty, removeTrackingProperty, applyModuleToTracking, bulkAddModule, duplicateTracking, generateDiff, generateChangelog, exportStaticSite, generateReconciliationReport.
 - **Commands and queries:** CQRS-lite — separate command and query paths where they have different requirements, but without the overhead of separate buses unless the complexity warrants it.
 - **Ports (interfaces):** `ProjectRepository`, `PropertyRepository`, `TrackingRepository`, `VersionRepository`, `SearchIndex`, `ObjectStorage`, `AuditLogger`, `EmailSender`, etc. Defined in `src/application/ports/`.
 - **Policies:** module-propagation policy (opt-in, default no propagation), catalogue-inheritance policy (copy at project creation, no live link).
@@ -65,8 +65,8 @@ Orchestrates domain entities to implement use cases. Depends on Domain and on po
 
 Implements the ports defined by Application. Contains all framework, network, persistence, and third-party-library code.
 
-- **Persistence:** MariaDB adapter implementing repository interfaces. Query builders, migrations, connection pooling.
-- **Search:** Algolia adapter implementing `SearchIndex`. Index design with `project_id` facet, server-side scoped keys.
+- **Persistence:** database adapters implementing repository interfaces — SQLite through R1, MariaDB and PostgreSQL from R2, selected by `DB_DRIVER` ([ADR-0020](docs/adr/0020-database-portability.md)). Query builders, dialect-portable migrations, connection pooling.
+- **Search:** Pagefind adapter implementing `SearchIndex`, selected by `SEARCH_DRIVER` ([ADR-0009](docs/adr/0009-search-abstraction.md)). One index per project, served only through an authorised route. A hosted adapter is optional and additive (R3).
 - **Storage:** S3-compatible adapter implementing `ObjectStorage`. Image upload, resize, serve.
 - **Authentication:** OIDC, SAML, email+password, project shared-password adapters. Session management.
 - **External services:** email (SMTP), error tracking (Sentry), analytics-platform APIs (R4).
@@ -170,9 +170,12 @@ Tests assert behavior, not internal structure. Avoid tests that merely confirm R
 
 | Integration | Release | Status |
 |---|---|---|
-| MariaDB | R0 | Primary database |
+| SQLite | R0 | Default database adapter |
+| MariaDB | R2 | Database adapter |
+| PostgreSQL | R2 | Database adapter |
 | S3-compatible storage | R0 | Asset storage |
-| Algolia | R0 | Search |
+| Pagefind (in-process) | R0 | Search — default, no external service |
+| Hosted search adapter | R3 | Search — optional, opt-in |
 | OIDC SSO | R1 | Authentication |
 | Project shared password | R1 | Unauthenticated read access |
 | SMTP | R1 | Email notifications |
