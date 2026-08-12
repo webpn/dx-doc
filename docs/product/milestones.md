@@ -36,11 +36,17 @@ Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that sli
 
 **Delivers:** REQ-FDN-001
 
-Accept or supersede the pending ADRs: [0011 UI library](../adr/0011-ui-library-selection.md), [0012 data fetching](../adr/0012-data-fetching-strategy.md), [0013 state management](../adr/0013-state-management.md), [0015 schema migrations](../adr/0015-schema-migration-strategy.md), [0017 testing](../adr/0017-testing-strategy.md). [0014 configuration split](../adr/0014-configuration-split.md) is already Accepted. Replace the placeholder `package.json` scripts with real ones.
+**Settled on 2026-08-12:** [0022 framework](../adr/0022-application-framework.md) (Vite SPA, React Router, Fastify), [0011 UI library](../adr/0011-ui-library-selection.md) (shadcn/ui, kept close to upstream), [0012 data fetching](../adr/0012-data-fetching-strategy.md) (TanStack Query), [0015 schema migrations](../adr/0015-schema-migration-strategy.md) (as proposed, closing O7), [0017 testing](../adr/0017-testing-strategy.md) (Vitest, React Testing Library, Playwright, plus the test-data model). [0014 configuration split](../adr/0014-configuration-split.md) was already Accepted. ADR-0022 filled the hole in this milestone: the framework was the one choice nothing recorded, while the exit criterion demands every choice needed to write the first line of production code.
 
-**Gated by:** O7 (upgrade and migration strategy for third-party installs)
+**One decision remains open, and it is the smallest:** [0013 state management](../adr/0013-state-management.md), now reduced to UI state alone since TanStack Query owns server state. It may resolve to "no library", which is a legitimate outcome rather than a deferral.
 
-**Exit:** `npm run dev`, `npm run build`, `npm run test` and `npm run typecheck` all execute real work. Decisions D1–D6 in [decisions](../decisions/README.md) are marked Accepted with their ADRs.
+Then replace the placeholder `package.json` scripts with real ones.
+
+Two things decided here land later and are worth naming now: the editor engine is a **separate** decision ([ADR-0023](../adr/0023-rich-text-editor.md)) whose verification spike must land **before** [M1.5](#m15--authoring), not inside it; and [ADR-0017](../adr/0017-testing-strategy.md)'s demo dataset is loaded through the public API, so it does not become useful until [M1.2](#m12--import-grade-api).
+
+**Gated by:** ~~O7~~ — **closed 2026-08-12** by [ADR-0015](../adr/0015-schema-migration-strategy.md)
+
+**Exit:** `npm run dev`, `npm run build`, `npm run test` and `npm run typecheck` all execute real work. Every decision in [decisions](../decisions/README.md) that a first line of production code depends on is Accepted with its ADR — D1, D2, D5, D6 and D13, plus D3 either decided or explicitly recorded as "no library until a demonstrated need", which is a decision and not a deferral.
 
 ### M0.2 — Persistence foundation
 
@@ -68,7 +74,7 @@ S3-compatible object storage behind a port. Search behind a port with **Pagefind
 
 **Exit:** the application refuses to start with a missing required variable and names it; an integration test substitutes an in-memory storage adapter without touching application-layer code; a stock instance makes no network call to any search service; a client requesting another project's index artefact receives a 403.
 
-> The search default changed from a hosted service to a self-contained one, which closes O12 outright and shortens [REQ-FDN-021](requirements/REQ-FDN.md)'s data-flow statement to almost nothing. Two things were traded for it: **typo tolerance, given up deliberately** until a capable adapter is adopted (REQ-FDN-022), and **draft-index freshness**, which is open decision O14 and needs settling before M1.7.
+> The search default changed from a hosted service to a self-contained one, which closes O12 outright and shortens [REQ-FDN-021](requirements/REQ-FDN.md)'s data-flow statement to almost nothing. Two things were traded for it: **typo tolerance, given up deliberately** until a capable adapter is adopted (REQ-FDN-022), and **draft-index freshness**, which was open decision O14 and is now settled: two indices per project, the draft one rebuilt asynchronously after each save with a 30-second freshness target ([ADR-0009](../adr/0009-search-abstraction.md)).
 
 ### M0.4 — Authentication and authorisation
 
@@ -132,7 +138,7 @@ Page, Tracking, DataLayerProperty (full attribute set including `business_label`
 
 **Depends on:** M0.5
 
-**Gated by:** O11 (whether *manage company catalogue* is a permission flag or a fifth role)
+**Gated by:** ~~O11~~ — **closed 2026-08-12**: catalogue management is an Admin-role power, not a flag and not a fifth role ([REQ-SEC-010](requirements/REQ-SEC.md))
 
 **Exit:** the composition rules hold under test — removing the last module-supplied property from a tracking detaches the module and warns; a module edit does not reach existing trackings unless propagation is explicitly requested; no entity can reference an entity in another project.
 
@@ -188,9 +194,11 @@ Claude reads the pilot product's legacy export from the filesystem, explores its
 
 **Goal:** an editor can write everything the legacy wiki held.
 
-**Delivers:** REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006
+**Delivers:** REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-005, REQ-AUTH-006
 
-Markdown editor with the full block set and Mermaid live preview. Image upload by drag-and-drop and clipboard paste, 10 MB cap, resize to 2000 px. Free pages with the publishable flag. Optimistic concurrency with stale-write rejection. Tracking duplication.
+Markdown editor with the full block set. Image upload by drag-and-drop and clipboard paste, 10 MB cap, resize to 2000 px. Free pages with the publishable flag. Optimistic concurrency with stale-write rejection. Tracking duplication.
+
+**Mermaid rendering is no longer here** — REQ-AUTH-004 moved to [M2.2](#m22--flows) on 2026-08-12, where REQ-NAV-006 needs a renderer anyway. A ` ```mermaid ` block is still authorable and stored verbatim in R1, as the fenced code block it is; it displays as source rather than as a diagram until R2.
 
 **Depends on:** M1.1
 
@@ -216,9 +224,11 @@ Page hierarchy driving a navigable sidebar. Automatic per-page recap of every at
 
 Project-scoped full-text search. Property and tracking names ranked above other text. Specific values indexed. Non-publishable free pages excluded from the index.
 
-**Depends on:** M0.3, M1.1 · **Gated by:** O14 (draft-index rebuild trigger under the Pagefind default)
+Two indices per project ([ADR-0009](../adr/0009-search-abstraction.md)): the **published** index rebuilt on publication, the **draft** index rebuilt asynchronously after each save with rebuilds coalesced, never blocking the write.
 
-**Exit:** searching a literal specific value returns the trackings that set it; prefix and stem matching work; a page marked non-publishable is provably absent from the index, queried directly; a user without a grant on a project gets no hits from it and cannot fetch its index artefact; an edit made in the draft is findable within the lag O14 settles on. Typo tolerance is **not** an exit criterion — see REQ-AUTH-007.
+**Depends on:** M0.3, M1.1 · **Gated by:** ~~O14~~ — **closed 2026-08-12**
+
+**Exit:** searching a literal specific value returns the trackings that set it; prefix and stem matching work; a page marked non-publishable is provably absent from the published index, queried directly — and absent by construction, since that index is built from published content alone; a user without a grant on a project gets no hits from it and cannot fetch either index artefact; an edit made in the draft is findable within **30 seconds** of the save at pilot scale; a rebuild failure is surfaced rather than leaving a silently stale index. Typo tolerance is **not** an exit criterion — see REQ-AUTH-007.
 
 ### M1.8 — Versioning and publication
 
@@ -283,13 +293,13 @@ Structured property conditions (four operators plus note), conditions on nested 
 
 ### M2.2 — Flows
 
-**Delivers:** REQ-NAV-003 … REQ-NAV-007
+**Delivers:** REQ-NAV-003 … REQ-NAV-007, REQ-AUTH-004
 
-Flow entity; Trigger nodes distinct from purely visual Page→Page connections; directed graph with labels and descriptive conditions; automatic Mermaid generation; sidebar exposing flows alongside the hierarchy.
+Flow entity; Trigger nodes distinct from purely visual Page→Page connections; directed graph with labels and descriptive conditions; automatic Mermaid generation; sidebar exposing flows alongside the hierarchy. **Mermaid rendering and live preview** (REQ-AUTH-004, moved here from M1.5 on 2026-08-12) — one renderer serves both the generated diagrams and the hand-written blocks R1 authors have been storing as source.
 
 **Depends on:** M1.6
 
-**Exit:** a navigation-bar action with five source pages and no destination is modelled without a special case; the diagram is generated, not written.
+**Exit:** a navigation-bar action with five source pages and no destination is modelled without a special case; the diagram is generated, not written; a ` ```mermaid ` block written by hand in R1 renders without being re-authored, and a syntax error in one shows a legible message without discarding the source.
 
 ### M2.3 — Image annotations
 
@@ -355,9 +365,21 @@ SAML SSO; audit log UI as a paginated list with CSV export; project archive and 
 
 > This is where the portable-SQL constraint (REQ-FDN-020) stops being free. A dialect-specific shortcut taken in M0.2 surfaces here as a migration that has to be rewritten and a schema that has to be changed under existing data. The constraint is cheap to hold in R0 and expensive to recover in R2.
 
+### M5.0 — Ontology definition
+
+**Goal:** close O1 and O2.
+
+**Scheduled in R2 despite its R5 number.** Milestone IDs are stable ([how to read this](#how-to-read-this)), so this one keeps the ID it was assigned when it was assumed to belong to the semantic-layer release. It does not: **it must complete before the end of R2.** Everything in R5 is unscopeable until it does, and the R0/R1 precautions (immutable IDs, `business_label`, custom fields) only defer the cost of getting it wrong — they do not remove it. It was listed under R5 until 2026-08-12, where reading order put it nine months after its own deadline.
+
+It is a workshop, not a build: the deliverable is the ontology's classes, its IRI scheme, the export formats, and the business glossary's structure — enough for M5.1 to be scopeable at all.
+
+**Depends on:** nothing in R2. It can start any time, and the reason to start it early is that its output is a decision, not code.
+
+**Exit:** O1 and O2 are closed with an ADR or a decision record, and [REQ-DQ-004](requirements/REQ-DQ.md)–[REQ-DQ-006](requirements/REQ-DQ.md) have acceptance criteria that someone could implement against.
+
 > **R2 gate.** External stakeholders consult the documentation without an account in the application.
 >
-> **Before R2 closes:** hold the semantic-layer workshop and close O1 and O2. They are the last responsible moment, and R5 cannot be scoped without them.
+> **Before R2 closes:** M5.0 is complete. It is the last responsible moment for O1 and O2, and R5 cannot be scoped without them.
 
 ---
 
@@ -445,9 +467,7 @@ Outbound webhooks on publication; Figma frame import with design refresh; option
 
 *Target: months 9+. Scope pending.*
 
-### M5.0 — Ontology definition
-
-**Goal:** close O1 and O2. **This milestone must complete before the end of R2**, not at the start of R5 — everything in R5 is unscopeable until it does, and the R0/R1 precautions (immutable IDs, `business_label`, custom fields) only defer the cost, they do not remove it.
+> **M5.0 is not here.** It is scheduled in [R2](#m50--ontology-definition), where its deadline actually falls. It keeps its R5 number because milestone IDs are stable, and it is the reason anything below can be scoped at all.
 
 ### M5.1 — Semantic exports
 
@@ -491,9 +511,6 @@ Four things sit on the critical path and are worth protecting:
 
 | Decision | Gates | Last responsible moment |
 |---|---|---|
-| O7 — upgrade and schema-migration strategy | M0.1 | End of R0 |
-| O11 — *manage company catalogue* permission vs role | M1.1 | Start of R1 |
-| **O14 — draft-index rebuild trigger and acceptable lag under Pagefind** | M1.7 | Start of R1 |
 | O13 — bulk-operation list completeness | M1.10, M2.4 | End of R1 |
 | O8 — developer-handoff reference patterns | M1.10 | End of R1 |
 | O3 — structured "how to read this in the analytics platform" | M2.1 | Start of R2 |
@@ -502,6 +519,10 @@ Four things sit on the critical path and are worth protecting:
 | O9 — container entity attributes | M3.5 | Start of R3 |
 | O4 — data quality vs unstructured placeholders | M4.2 | Start of R4 |
 | O5 — verification module scope | M4.1 | Start of R4 |
+
+**O7 is closed** — see [ADR-0015](../adr/0015-schema-migration-strategy.md), accepted 2026-08-12 as proposed: forward-only versioned migrations run at start-up, a production guard that refuses to start rather than auto-apply, no downgrade path, and backup as the operator's documented responsibility. M0.1 is no longer gated by anything.
+
+**O11 and O14 are closed**, both on 2026-08-12, which leaves R1 ungated end to end. O11: managing the company catalogue is an Admin-role power, not a flag and not a fifth role — the instance administrator's remit is companies as entities, the Admin's is everything inside one ([REQ-SEC-010](requirements/REQ-SEC.md)). O14: two indices per project, the published one rebuilt on publication and the draft one rebuilt asynchronously after each save, with a 30-second freshness target ([ADR-0009](../adr/0009-search-abstraction.md)).
 
 **O12 is closed.** It asked whether a self-hostable search adapter was needed before the public release — a release R0 had already performed, which made the question unanswerable in the order it was scheduled. Choosing a self-contained default ([REQ-FDN-007](requirements/REQ-FDN.md)) removes the question rather than answering it, and retires [REQ-FDN-016](requirements/REQ-FDN.md) with it.
 
@@ -517,7 +538,7 @@ Four things sit on the critical path and are worth protecting:
 | R4 — bus factor of one | M2.6 | Git export as human-readable backup; second maintainer before R3 |
 | R5 — semantic layer undefined | M5.0 | Workshop before the end of R2; immutable IDs and `business_label` already shipped |
 | R6 — adoption | M1.8, M1.10 | Invest in the pre-publication diff; onboard on the pilot before extending |
-| R7 — ~~hosted search dependency~~ **search adapter capability gap** | M0.3, M1.7 | Risk replaced rather than mitigated: the default adapter has no hosted dependency, so nothing leaks off-instance and nothing needs procurement. What remains is reduced capability — typo tolerance given up until REQ-FDN-022, index built rather than updated (O14) |
+| R7 — ~~hosted search dependency~~ **search adapter capability gap** | M0.3, M1.7 | Risk replaced rather than mitigated: the default adapter has no hosted dependency, so nothing leaks off-instance and nothing needs procurement. What remains is reduced capability — typo tolerance given up until REQ-FDN-022. The rebuild cost of a built-not-updated index is bounded by the O14 model: coalesced async rebuilds on the draft, publication-triggered rebuilds for readers |
 | R8 — analytics API access not provisioned in time | M4.1 | Start provisioning during R2 |
 | **R9 — agent import produces plausible-looking wrong data** | M1.4, M1.10 | Script reviewed before it runs at scale; reconciliation counts checked against source; first product verified item-by-item before the remaining ~29 |
 | **R10 — pilot content lives in one unbacked SQLite file** | M0.6 | File-level snapshot demonstrated in the reference stack; README states backup is the operator's job; git export closes it properly in R2 |
@@ -528,9 +549,10 @@ Four things sit on the critical path and are worth protecting:
 |---|---|---|---|
 | 1 | [REQ-FDN-014](requirements/REQ-FDN.md) error tracking | Should, M1.9 | Troubleshooting during the pilot is by log reading. Cheapest to lose, easiest to add back |
 | 2 | [REQ-API-006](requirements/REQ-API.md) naming guidelines as MCP resources | Should, M1.3 | The agent writes without house conventions in context; imported content needs an editorial pass it would otherwise not need. Costs editor time across ~30 products, so prefer 1 first |
-| 3 | [REQ-AUTH-004](requirements/REQ-AUTH.md) Mermaid **live** preview | Must, M1.5 | Partial demotion only: keep the block and render on save, drop render-as-you-type. The block itself is not negotiable — R2's generated diagrams need it |
-| 4 | [REQ-DOM-009](requirements/REQ-DOM.md) tracking templates | Must, M1.1 | Editors create trackings by duplication ([REQ-AUTH-006](requirements/REQ-AUTH.md)) instead. Slower per tracking and less consistent, but nothing becomes impossible |
-| 5 | [REQ-DOM-007](requirements/REQ-DOM.md) opt-in module propagation | Must → Should | A module correction has to be reapplied by hand to existing trackings. Painful at pilot scale — this is the last resort, not the first |
+| 3 | [REQ-DOM-009](requirements/REQ-DOM.md) tracking templates | Must, M1.1 | Editors create trackings by duplication ([REQ-AUTH-006](requirements/REQ-AUTH.md)) instead. Slower per tracking and less consistent, but nothing becomes impossible |
+| 4 | [REQ-DOM-007](requirements/REQ-DOM.md) opt-in module propagation | Must → Should | A module correction has to be reapplied by hand to existing trackings. Painful at pilot scale — this is the last resort, not the first |
+
+> **[REQ-AUTH-004](requirements/REQ-AUTH.md) left this list on 2026-08-12 by being demoted outright** rather than held in reserve: Mermaid rendering moved to [M2.2](#m22--flows). The list is one item shorter, and the relief is taken rather than optional.
 
 **Do not demote** the import chain (M1.2–M1.4), the diff, selective publication, or the reconciliation report ([REQ-IMP-006](requirements/REQ-IMP.md)) — the first three are load-bearing for the release criterion, and the fourth is the only mechanical check on agent-written content (risk R9).
 

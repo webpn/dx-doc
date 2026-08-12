@@ -15,7 +15,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-SEC-007 | SAML SSO | Should | R2 | M2.8 | Not Started |
 | REQ-SEC-008 | Audit log UI, paginated list and CSV export | Should | R2 | M2.8 | Not Started |
 | REQ-SEC-009 | Project archive and restore; no hard delete | Should | R2 | M2.8 | Not Started |
-| REQ-SEC-010 | "Manage company catalogue" capability | Must | R1 | M1.1 | Not Started |
+| REQ-SEC-010 | Company catalogue managed by the Admin role | Must | R1 | M1.1 | Not Started |
 | REQ-SEC-011 | Permission matrix enforced server-side | Must | R0 | M0.4 | Not Started |
 | REQ-SEC-012 | Non-publishable content never leaves the instance | Must | R1 | M1.7 → standing | Not Started |
 | REQ-SEC-013 | Account lifecycle and first-run bootstrap | Must | R0 | M0.4 | Not Started |
@@ -46,7 +46,7 @@ Admin, Project Manager, Editor, Viewer. A user belongs to **one company**, and t
 **Acceptance**
 - Holding Project Manager alone confers no editing rights.
 - No provisioning path copies identity-provider group membership into a role.
-- The role set is exactly four; new capabilities are added as discrete flags (see REQ-SEC-010 and REQ-SEC-014), not as new roles.
+- The role set is exactly four. A capability that genuinely does not belong to a role is added as a discrete flag (REQ-SEC-014), never as a fifth role — and the first test is whether an existing role already owns the job, which is how O11 resolved (REQ-SEC-010).
 - An Admin cannot create a company, cannot see that other companies exist, and cannot reach any entity belonging to one — tested as the negative case, since this is the tenancy boundary (REQ-FDN-002) expressed in the permission model.
 
 > "Global" in the original wording meant *not per-project*. It has been reworded to *company-scoped* because with multi-company tenancy the two readings diverge, and the wrong one hands every tenant's documentation to whoever administers any one of them.
@@ -124,18 +124,22 @@ Projects cannot be hard-deleted. An Admin archives a project, which unpublishes 
 - No application path issues a destructive delete of a project or its content.
 - An archived project disappears from listings and published artefacts, and restores with its content and version history intact.
 
-### REQ-SEC-010 — "Manage company catalogue" capability
+### REQ-SEC-010 — Company catalogue is managed by the Admin role
 
 **Must** · R1 · [M1.1](../milestones.md) · spec §4.2, §6.3 · **Not Started** · Issue: — · PR: —
 
-The ability to create and modify the company-level catalogue (standard properties, modules, templates, free-page templates), granted individually to selected users rather than implied by a role.
+Creating and modifying the company-level catalogue (standard properties, modules, templates, free-page templates) is a power of the **Admin** role within the company. There is no fifth role and no separate flag.
 
 **Acceptance**
-- The capability is a discrete flag on the user, independent of the four roles.
-- An Editor without the flag can consume catalogue content at project creation but cannot modify the catalogue.
-- Appendix B's ⚠️ row for catalogue management resolves to this flag.
+- An Admin can modify their own company's catalogue; nobody else can.
+- An Editor can consume catalogue content at project creation and cannot modify the catalogue.
+- The role set stays at exactly four (REQ-SEC-002).
+- An `instance_admin` who is not an Admin of the company cannot modify its catalogue — the flag creates companies, it does not reach inside them (REQ-SEC-014).
+- Appendix B's ⚠️ row for catalogue management resolves to the Admin role.
 
-**Blocked by:** open decision O11 — permission flag versus a fifth role. The interim position is a flag; roles stay at four.
+**Resolved 2026-08-12 — O11 is closed.** The question was whether catalogue management should be a discrete flag or a fifth role. It is neither: the company already has an administrator, and administering a company includes its catalogue. The division that matters was drawn by REQ-SEC-014 and is unchanged — **the instance administrator's remit is companies as entities, the Admin's remit is everything inside one.**
+
+> This resolves a contradiction the record already contained rather than introducing a new position. [REQ-SEC-014](#req-sec-014--instance-administration-capability) states that *"everything else an Admin does — projects, integrations, **catalogue**, branding, audit log — stays with the Admin role"*, and [personas.md](../personas.md) describes the Admin as managing the company's catalogue. Only this entry said otherwise. The earlier interim position — a discrete flag — would have meant an Admin who cannot administer part of their own company, which is a distinction without a job behind it.
 
 ### REQ-SEC-011 — Permission matrix enforced server-side
 
@@ -208,7 +212,7 @@ Three rules make it safe:
 - **No implied content access.** The flag confers no read or write access to any project's documentation. Reaching content still requires a role and a grant (REQ-SEC-002, REQ-SEC-003), and that grant is auditable like anyone else's.
 
 **Acceptance**
-- The flag is a discrete capability, not a fifth role — the role set stays at exactly four (REQ-SEC-002), the same pattern as REQ-SEC-010.
+- The flag is a discrete capability, not a fifth role — the role set stays at exactly four (REQ-SEC-002). It is the **only** such flag: REQ-SEC-010 resolved the other candidate to an existing role instead.
 - A user with the flag and no project grants can administer the instance and read no documentation, verified by test.
 - Disabling local password in a company's supported-login-methods setting does not lock out its `instance_admin` flag holders; a test asserts this, since it is the recovery path.
 - Granting or revoking the flag is itself audited, and cannot be performed by an agent through MCP (REQ-API-004).

@@ -43,7 +43,7 @@ dx-doc is **not** an analytics tool (it documents, it doesn't report), **not** a
 R1 is the MVP: a complete, usable platform for authoring, versioning, and publishing tracking documentation. Concretely, R1 delivers:
 
 - The full structured data model (pages, trackings, data-layer properties, modules, destinations, and more).
-- A rich authoring editor with Markdown, Mermaid, and image upload.
+- A rich authoring editor with Markdown and image upload. Mermaid blocks are stored from R1 and rendered as diagrams from R2.
 - **Draft → published versioning** with an automatically generated diff and changelog.
 - Search over specific values — *"which tracking sets this value?"* is answerable.
 - Audience-specific views (Analyst/Business and Development).
@@ -140,15 +140,15 @@ The Platform follows a modular architecture with clear separation between:
 - **Domain** — business logic independent of UI and infrastructure
 - **Application** — use cases, orchestration, commands/queries
 - **Infrastructure** — persistence, search, storage, authentication, third-party services
-- **API** — REST API consumed by the web client, MCP server, and export generators
-- **Design System** — internal component library for consistent UX
-- **App / UI** — React-based web application
+- **API** — REST API consumed by the web client, MCP server, and export generators; served by Fastify
+- **Design System** — internal component library built on shadcn/ui, kept close to upstream
+- **App / UI** — React single-page application built with Vite, routed by React Router, with TanStack Query owning server state
 
 **Key architectural constraints:**
 - Persistence behind repository ports; SQLite by default, MariaDB and PostgreSQL adapters in R2. The schema stays within a portable SQL subset.
 - S3-compatible object storage behind an interface
 - Search behind an interface; Pagefind by default, so a stock instance sends no documentation content anywhere
-- Internal REST API consumed by all clients; MCP server is a layer above it
+- Internal REST API consumed by all clients; MCP server is a layer above it. In production one process serves both the API and the client assets — one container plus object storage.
 - Content can be imported from other platforms through the public API — no source-format-specific import code ships in the product. Bulk ingestion is idempotent, keyed on an external reference.
 - Multi-company tenancy on a single instance
 - Single draft stream per project; no branches or merge workflows

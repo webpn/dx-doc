@@ -77,7 +77,7 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 [REQ-FDN-009](requirements/REQ-FDN.md)
 
-**Done when** — migrations are forward-only and idempotent, and the application refuses to start against a database ahead of its schema rather than proceeding. **Blocked by O7** — the upgrade strategy for third-party installations, due by the end of R0.
+**Done when** — migrations are forward-only and idempotent, and the application refuses to start against a database ahead of its schema rather than proceeding. **Unblocked** — O7 closed on 2026-08-12 by [ADR-0015](../adr/0015-schema-migration-strategy.md), which also settles that no migration ever inserts data, so an upgrade never delivers someone else's fixtures.
 
 ## M0.3 — Ports and adapters
 
@@ -99,7 +99,7 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 > **This story used to be an R3 `Could` waiting on a decision that could not arrive in time** — O12 asked for it "before public release", scheduled six weeks *after* the repository went public. Making Pagefind the default ([ADR-0009](../adr/0009-search-abstraction.md)) moved the story to R0 and closed O12.
 >
-> It was paid for twice, and both costs land on [US-ANL-01](#us-anl-01--find-which-tracking-sets-a-value--analyst--e2): **typo tolerance, given up deliberately** until a capable adapter is adopted, and **draft-index freshness**, still open as O14.
+> It was paid for twice, and both costs land on [US-ANL-01](#us-anl-01--find-which-tracking-sets-a-value--analyst--e2): **typo tolerance, given up deliberately** until a capable adapter is adopted, and **draft-index freshness**, now settled as a 30-second target rather than an open question (O14, closed 2026-08-12).
 
 ## M0.4 — Authentication and authorisation
 
@@ -343,13 +343,13 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 #### US-EDT-12 — Write rich descriptions with diagrams · *Editor* · E1
 
-**As a** tracking specialist **I want** headings, tables, code blocks, callouts and Mermaid diagrams that render as I type **so that** the prose half of the documentation is as good as the structured half.
+**As a** tracking specialist **I want** headings, tables, code blocks and callouts that render as I type **so that** the prose half of the documentation is as good as the structured half.
 
-[REQ-AUTH-001](requirements/REQ-AUTH.md), [REQ-AUTH-004](requirements/REQ-AUTH.md)
+[REQ-AUTH-001](requirements/REQ-AUTH.md) · diagrams: [REQ-AUTH-004](requirements/REQ-AUTH.md) (R2)
 
-**Done when** — content is stored as Markdown, every block round-trips without lossy re-serialisation, and a broken Mermaid block shows an error without discarding my source.
+**Done when** — content is stored as Markdown and every block round-trips without lossy re-serialisation.
 
-> If R1 overruns, the *live* preview is demotion candidate 3 — render on save instead. The block itself stays: R2's generated diagrams need it.
+> **The diagram half of this story is R2.** REQ-AUTH-004 was demoted from R1 on 2026-08-12. In R1 a Mermaid block can be written and is stored verbatim, but it shows as source rather than as a picture; rendering — and *"a broken block shows an error without discarding my source"* — arrives at M2.2 with the generated flow diagrams. This is a real reduction for the container-page use case, not a technicality: an R1 reader of a hand-written diagram is reading Mermaid syntax.
 
 #### US-EDT-13 — Duplicate a tracking instead of retyping it · *Editor* · E1
 
@@ -405,7 +405,7 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 > **Typo tolerance is not part of this story.** The default adapter does prefix matching and stemming, not typo correction, and that is an accepted first-phase trade — searching `page_nam` finds `page_name`, searching `pgae_name` does not. It returns when a capable adapter is adopted ([REQ-FDN-022](requirements/REQ-FDN.md)). What is bought instead — no documentation content leaving the instance ([US-OPS-05](#us-ops-05--run-without-a-hosted-search-dependency--operator--e8)) — is the half an operator cannot add later.
 >
-> **Still blocked by O14** on one point: the index is built rather than updated per record, so how quickly a draft edit becomes findable needs deciding before M1.7.
+> **O14 is closed** (2026-08-12): the draft index is rebuilt asynchronously after each save, with rebuilds coalesced so a burst of typing costs one rebuild, and an edit is findable within 30 seconds of the save. Readers are on a separate index rebuilt at publication, so what they search is exactly what was published.
 
 ## M1.8 — Versioning and publication
 
@@ -841,7 +841,7 @@ Recorded so each is visibly a decision rather than an oversight. Each maps to a 
 | *"Import our wiki through an upload screen."* | The Platform holds no knowledge of any source format | [REQ-IMP-009](requirements/REQ-IMP.md) |
 | *"Schedule this property to be deprecated next quarter."* | Deprecation is manual | [REQ-VER-012](requirements/REQ-VER.md) |
 | *"Tell me how to analyse this tracking."* | A product direction, deliberately carrying no requirement until there is a clear idea of what it is | [vision](vision.md) |
-| *"Make it screen-reader compliant."* | No WCAG requirement — a known position, worth revisiting if public-sector deployers appear | [REQ-NFR-013](requirements/REQ-NFR.md) |
+| *"Make it screen-reader compliant."* | Built to WCAG AA as a design principle, but not verified and not claimed — what is missing is verification, not intent | [REQ-NFR-013](requirements/REQ-NFR.md) |
 
 ## Keeping this current
 

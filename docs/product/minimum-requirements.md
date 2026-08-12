@@ -48,7 +48,7 @@ The list is the minimum set of capabilities a tracking-documentation platform mu
 | Creating a tracking pre-seeded with defaults, separately for a page load and for a user action | Tracking Template, editor-configurable with no software release | [REQ-DOM-009](requirements/REQ-DOM.md) |
 | Specific values auto-proposed on creation — `page_name` for page views; `action_effect`, `action_detail`, `action_name` for user actions | Template default specific values — expressible as instances of this mechanism, with no hard-coded behaviour left | [REQ-DOM-009](requirements/REQ-DOM.md) |
 | Duplicating an existing tracking | Tracking duplication, fully independent copy | [REQ-AUTH-006](requirements/REQ-AUTH.md) |
-| Grouping multi-page processes under a container page with an overall description and a flow diagram | R1: page hierarchy plus hand-written Mermaid. R2: Flow entity with a diagram generated from the graph | [REQ-AUTH-004](requirements/REQ-AUTH.md) → [REQ-NAV-003](requirements/REQ-NAV.md) … [REQ-NAV-006](requirements/REQ-NAV.md) |
+| Grouping multi-page processes under a container page with an overall description and a flow diagram | R1: page hierarchy and description; a hand-written Mermaid block is stored but **displays as source, not as a diagram** ([REQ-AUTH-004](requirements/REQ-AUTH.md) demoted to R2 on 2026-08-12). R2: rendering, plus the Flow entity with a diagram generated from the graph | [REQ-AUTH-001](requirements/REQ-AUTH.md) → [REQ-AUTH-004](requirements/REQ-AUTH.md), [REQ-NAV-003](requirements/REQ-NAV.md) … [REQ-NAV-006](requirements/REQ-NAV.md) |
 
 ## Data layer conventions
 

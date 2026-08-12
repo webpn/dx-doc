@@ -25,7 +25,7 @@ Four roles, held **within a single company** and combined with per-project acces
 - **Editor** — creates and modifies content, publishes versions on granted projects.
 - **Viewer** — reads, exports, uses MCP read tools on granted projects.
 
-A fifth capability, *manage company catalogue*, is granted individually (open decision O11).
+There is no fifth role and no separate catalogue capability: managing the company catalogue is part of being that company's Admin ([REQ-SEC-010](requirements/REQ-SEC.md), closing O11 on 2026-08-12).
 
 For the complete permission matrix, see the specification Appendix B.
 
@@ -48,6 +48,6 @@ These are two different jobs and the distinction is load-bearing. Conflating the
 
 ### Why the system administrator is listed at all
 
-They are the persona the white-label distribution model exists for, and several requirements are addressed to them and nobody else — backup is theirs (REQ-NFR-006), the instance starts from their README (REQ-FDN-011, REQ-FDN-012), configuration and database choice are theirs (REQ-FDN-013, REQ-FDN-018, REQ-FDN-019), the availability of any given instance is their commitment (REQ-NFR-005), and open decision O7 is about how they upgrade.
+They are the persona the white-label distribution model exists for, and several requirements are addressed to them and nobody else — backup is theirs (REQ-NFR-006), the instance starts from their README (REQ-FDN-011, REQ-FDN-012), configuration and database choice are theirs (REQ-FDN-013, REQ-FDN-018, REQ-FDN-019), the availability of any given instance is their commitment (REQ-NFR-005), and how they upgrade was open decision O7, closed by [ADR-0015](../adr/0015-schema-migration-strategy.md).
 
 A requirement addressed to an unnamed persona is the one that gets cut first.

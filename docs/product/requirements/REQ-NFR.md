@@ -20,7 +20,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-NFR-010 | English by default, with translation support | — | M1.5 | Not Started |
 | REQ-NFR-011 | Content is single-language | — | M1.1 | Not Started |
 | REQ-NFR-012 | Localised date and number formats | — | M1.5 | Not Started |
-| REQ-NFR-013 | No WCAG compliance required | — | — | Accepted |
+| REQ-NFR-013 | WCAG AA as a design principle, not a gate | — | — (review only) | Accepted |
 | REQ-NFR-014 | Observability sufficient for troubleshooting | — | M1.9 | Not Started |
 
 ---
@@ -107,11 +107,15 @@ The documentation itself is not multilingual. The data model carries no per-lang
 
 Formats derive from the user profile locale, independently of content language.
 
-### REQ-NFR-013 — No WCAG compliance required
+### REQ-NFR-013 — WCAG AA as a design principle, not a gate
 
-**Won't** · spec §15.4 · **Accepted**
+**Should** · R1 · spec §15.4 · [ADR-0011](../../adr/0011-ui-library-selection.md) · **Accepted** · Issue: — · PR: —
 
-No WCAG or public-sector accessibility compliance is required. Recorded explicitly so it is a known position rather than an unexamined gap — relevant to reconsider if the open-source distribution reaches public-sector deployers.
+**Reversed on 2026-08-12.** This entry previously read *"No WCAG compliance required"* and was a `Won't`. The interface is now built to WCAG AA: semantic HTML, keyboard operability for every interactive element, focus management, accessible names, AA contrast carried by the design tokens, and `prefers-reduced-motion`. The rules are in [ENGINEERING_GUIDE.md](../../../ENGINEERING_GUIDE.md#accessibility) and the [ADR-0011](../../adr/0011-ui-library-selection.md) choice is what makes them cheap — Radix supplies the keyboard and ARIA behaviour, and keeping the copied components close to upstream is what keeps it.
+
+**What this deliberately is not.** There is no automated accessibility check in CI, no audit, and no conformance claim. Nothing in the build fails when the principle is broken, so it holds exactly as long as review holds it. That is the accepted position, recorded plainly so a later *"are we WCAG AA?"* gets the honest answer — **built to it, not verified against it** — instead of an inherited assumption.
+
+Revisit if a public-sector deployer or a customer requiring a conformance statement appears. The work would then be axe-core in the component and E2E suites, manual criteria including screen-reader passes, and a published statement. None of it is in any current milestone, and the estimate is not free.
 
 ### REQ-NFR-014 — Observability sufficient for troubleshooting
 

@@ -8,7 +8,7 @@ Describes the deployable containers/services that compose the dx-doc Platform.
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Web Browser (Desktop)                        │
 │  ┌───────────────────────────────────────────────────────────┐  │
-│  │              Single-Page Application (React)               │  │
+│  │           Single-Page Application (React + Vite)           │  │
 │  │  Pages │ Components │ Design System │ State Management    │  │
 │  └───────────────────────────┬───────────────────────────────┘  │
 └──────────────────────────────┼──────────────────────────────────┘
@@ -19,8 +19,8 @@ Describes the deployable containers/services that compose the dx-doc Platform.
 │                                                                  │
 │  ┌─────────────────┐  ┌──────────────────┐  ┌───────────────┐  │
 │  │   REST API      │  │   MCP Server     │  │  Static File  │  │
-│  │   (Express/     │  │   (HTTP/SSE)     │  │  Serving      │  │
-│  │    Fastify)     │  │                  │  │  (SPA assets)  │  │
+│  │   (Fastify)     │  │   (HTTP/SSE)     │  │  Serving      │  │
+│  │                 │  │                  │  │  (SPA assets)  │  │
 │  └────────┬────────┘  └────────┬─────────┘  └───────────────┘  │
 │           │                    │                                  │
 │           └────────────────────┘                                  │
@@ -78,7 +78,8 @@ Describes the deployable containers/services that compose the dx-doc Platform.
 - **Index design:** one index per project, built by the application and stored on local disk — not a separate service and not an external one
 - **Access control:** index artefacts are served only through a route applying the caller's project grants; a request for an unauthorised project's index returns 403
 - **Exclusions:** non-publishable free pages are excluded from the index
-- **Known gaps (O14):** no typo tolerance; the index is rebuilt rather than updated per record, so draft-search freshness depends on the rebuild trigger
+- **Two indices per project:** the published index rebuilt on publication, the draft index rebuilt asynchronously after each save with rebuilds coalesced (O14, closed 2026-08-12)
+- **Known gap:** no typo tolerance — an accepted first-phase trade, not an open question
 - **Optional hosted adapter (R3):** selected by `SEARCH_DRIVER`; reintroduces admin-key-server-side-only and per-request scoped search keys
 - **Abstraction:** behind an interface (`SearchIndex`) in the application layer ([ADR-0009](../adr/0009-search-abstraction.md))
 

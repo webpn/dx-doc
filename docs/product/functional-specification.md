@@ -101,10 +101,11 @@ See §21 of the full specification. Critically open items:
 - **O4:** Data quality interaction with unstructured placeholders — blocks R4
 - **O5:** Verification/QA module scope — blocks R4
 - **O6:** Complete environment variable matrix — **closed**, see [ADR-0014](../adr/0014-configuration-split.md); matrix reproduced in [README.md](../../README.md#environment-variables)
-- **O7:** Schema migration strategy for third-party installs — blocks R1
+- **O7:** Schema migration strategy for third-party installs — **closed**, see [ADR-0015](../adr/0015-schema-migration-strategy.md); forward-only versioned migrations at start-up, production guard, backup as the operator's responsibility. It gated M0.1, not R1.
 - **O8:** Design patterns from reference products — partly closed; developer-handoff ref remains
 - **O9:** Extension/Segment/CalculatedMetric attributes before R5 — blocks R3
 - **O10:** Config key split (environment vs database) — **closed**, see [ADR-0014](../adr/0014-configuration-split.md); SSO details, supported login methods and supported locales are company-level, not environment variables
-- **O11:** "Manage company catalogue" permission model — blocks R1
+- **O11:** "Manage company catalogue" permission model — **closed**, see [REQ-SEC-010](requirements/REQ-SEC.md); it is a power of the Admin role, not a discrete flag and not a fifth role
+- **O14:** Draft-index rebuild trigger and acceptable lag under Pagefind — opened by [ADR-0009](../adr/0009-search-abstraction.md)'s amendment when O12 closed, and **closed** by the same ADR on 2026-08-12: two indices per project, published rebuilt on publication, draft rebuilt asynchronously after each save
 - **O12:** Self-hostable search adapter before public release — blocks R1 public release
 - **O13:** Bulk operations list completeness — blocks R2

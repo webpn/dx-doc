@@ -81,10 +81,13 @@ The REST API is the single entry point for all operations. The web client, MCP s
 - **Authentication/authorization middleware:** project-scoped grants enforced at the API layer.
 - **MCP server:** a layer above the REST API — not a parallel entry point. MCP tools call the same use cases through the same validation path.
 - **Documented public API delivered in R3.** Until then the API is internal but structured as if it will be public.
+- **Served by Fastify** (ADR-0022), which in production also serves the built client assets from the same process. A route is transport only: it translates HTTP to an application-service call and back. No business rule lives in a route file, and **validation does not move into Fastify's JSON-schema layer** — a route schema may describe the wire format, never own a rule (REQ-FDN-010).
 
 ### Design System (`src/design-system/`)
 
-An internal component library that wraps the chosen external UI library. The rest of the application imports from `@project/design-system`, never directly from the external library.
+An internal component library built on **shadcn/ui** (Radix primitives + Tailwind CSS), chosen in ADR-0011. The rest of the application imports from `@project/design-system`, never from a component path directly.
+
+Because shadcn/ui is copy-paste source rather than a runtime dependency, its components live here as project source files. They are kept **close to upstream**: taking a component as published is the default, and each divergence is deliberate and reviewable. This is what keeps agent-generated code and upstream documentation applicable to the code actually in the repository, and it is the reason the library was chosen.
 
 - **Primitives:** Button, Input, Dialog, Select, DataTable, FormField, Notification, Layout components.
 - **Design tokens:** colors, typography, spacing, radii, shadows, breakpoints, z-index, motion. Single source of truth for all visual values.
@@ -139,7 +142,7 @@ Optimistic concurrency: every mutable entity carries a version token. A save is 
 
 Three categories of state:
 
-1. **Server/remote state:** fetched from the REST API. Managed through a dedicated data-fetching/caching layer (not manually copied into global state). The choice of library is recorded in an ADR.
+1. **Server/remote state:** fetched from the REST API through **TanStack Query** (ADR-0012), never manually copied into global state. Every read is a query; every write is a mutation that invalidates the queries it affects. Query keys are project-scoped by convention, so cache entries cannot cross a project boundary.
 2. **Local UI state:** component-local `useState`/`useReducer`. Not shared across components unless genuinely needed.
 3. **URL state:** route parameters, query strings. The URL is the source of truth for navigation state.
 

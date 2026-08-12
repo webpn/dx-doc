@@ -44,8 +44,10 @@ Never claim a command passed without running it.
 
 - **Do not import `react` or any UI-library into `src/domain/` or `src/application/`.**
 - **Do not import infrastructure implementations into domain or application code.** Use the interfaces defined in the layer.
-- **Do not import design-system primitives directly from the external UI library outside `src/design-system/`.** Use `@project/design-system` imports.
-- **Do not scatter raw `fetch` or `axios` calls in React components.** Data access goes through the API client layer.
+- **Do not put a business rule in a Fastify route or a route schema.** Routes are transport: HTTP in, application-service call, HTTP out. Validation is defined once in the domain and application layers and invoked by every entry point (REQ-FDN-010, ADR-0007) — a rule enforced only by a route schema is a rule the MCP server does not have.
+- **Do not import design-system primitives from a component path outside `src/design-system/`.** Use `@project/design-system` imports. The design system is built on shadcn/ui (ADR-0011), so its components are source files in this repository — that makes reaching into them easy, and it is still forbidden.
+- **Do not rewrite a shadcn/ui component to taste.** Components are kept close to upstream and each divergence is deliberate and justified in review. The library was chosen precisely so that what you know about it is true of this codebase; casual edits destroy that.
+- **Do not scatter raw `fetch` or `axios` calls in React components.** Data access goes through the API client layer, and server state belongs to TanStack Query (ADR-0012): every read is a query, every write a mutation that invalidates what it affects. Never copy server data into client state to keep it in sync by hand.
 - **Do not introduce dependencies without explicit justification.** See [`ENGINEERING_GUIDE.md` §Dependency Policy](ENGINEERING_GUIDE.md).
 - **Do not use `any`** except where explicitly justified and documented with a comment explaining why `unknown` + narrowing is not practical.
 - **Do not create a second solution when an approved pattern already exists.** Reuse.

@@ -16,7 +16,8 @@
     "test:watch": "echo 'Watch mode not yet configured'",
     "test:e2e": "echo 'E2E tests not yet configured'",
     "test:coverage": "echo 'Coverage not yet configured'",
-    "db:migrate": "echo 'Migrations not yet configured'"
+    "db:migrate": "echo 'Migrations not yet configured'",
+    "db:seed:demo": "echo 'Demo seed not yet configured'"
   },
   "engines": {
     "node": ">=20.0.0"

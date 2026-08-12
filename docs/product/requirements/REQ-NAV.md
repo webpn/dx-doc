@@ -77,7 +77,7 @@ Edges are authored through a form-based list within the flow page in R2. Nodes a
 
 **Should** · R2 · [M2.2](../milestones.md) · spec §8.4 · **Not Started** · Issue: — · PR: —
 
-The diagram is generated from the structured graph, not written. Hand-written Mermaid remains available inside any rich-text content for free-form diagrams not derived from the graph (REQ-AUTH-004).
+The diagram is generated from the structured graph, not written. Hand-written Mermaid remains available inside any rich-text content for free-form diagrams not derived from the graph. Both rely on the renderer delivered by [REQ-AUTH-004](REQ-AUTH.md) in the same milestone — it is built once and serves both.
 
 > Closes pain point 3: journeys drawn by hand with no relationship to the documented pages.
 

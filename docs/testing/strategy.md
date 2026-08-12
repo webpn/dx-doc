@@ -87,6 +87,16 @@ Integration tests that touch the database use an ephemeral database:
 
 Tests are responsible for their own data setup and cleanup. Use transactions where possible for isolation.
 
+## Test data
+
+Two mechanisms, and they do not mix ([ADR-0017](../adr/0017-testing-strategy.md)). Neither is a migration — migrations create structure and never insert data ([ADR-0015](../adr/0015-schema-migration-strategy.md)), so a third-party operator upgrading their instance never receives our fixtures.
+
+**Builders** (`tests/support/builders/`) for unit, integration and API tests. A factory produces a valid entity with sensible defaults and a fluent override for the field under test — `aProject().withGroupingLabel('pilot').build()`. Each test creates what it needs and nothing else, so its precondition is readable inside the test rather than in a shared file.
+
+**The demo dataset** (`seed/demo/`, loaded by `npm run db:seed:demo`) for E2E tests and local development: a company, two projects, users at every role, a page hierarchy, trackings with modules, properties and specific values, destinations, a published version and a dirty draft. It is loaded **through the public API**, which makes every seed run an exercise of `external_ref` idempotency — running it twice must change nothing.
+
+Two rules keep them apart: unit, integration and API tests never read the demo dataset, and the seed command refuses to run against a non-empty database and is unreachable in a production configuration.
+
 ## E2E Tests
 
 Critical user journeys covered by Playwright:

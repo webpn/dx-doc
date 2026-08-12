@@ -131,7 +131,7 @@ Search is reached through a port. **Pagefind is the default and the only adapter
 
 > Supersedes the Algolia-first position in [ADR-0009](../../adr/0009-search-abstraction.md). The database is not the hardest dependency for a deployer to satisfy — a SaaS account that corporate procurement must approve is, and search was the only remaining one. Choosing a self-contained default closes open decision **O12** rather than deferring it, and makes REQ-FDN-016 unnecessary.
 >
-> **One consequence is open, one is accepted.** Pagefind builds an index rather than updating it per record, so draft-search freshness needs a rebuild strategy — open decision **O14**. The absence of typo tolerance is not open: it is an accepted first-phase trade, and REQ-AUTH-007 no longer asks for it.
+> **Both consequences are now settled.** Pagefind builds an index rather than updating it per record, which needed a rebuild strategy — **O14, closed 2026-08-12**: two indices per project, the published one rebuilt on publication and the draft one rebuilt asynchronously after each save ([ADR-0009](../../adr/0009-search-abstraction.md)). The absence of typo tolerance was never open: it is an accepted first-phase trade, and REQ-AUTH-007 no longer asks for it.
 
 ### REQ-FDN-008 — Search scoping enforced server-side
 
@@ -160,7 +160,7 @@ Schema migrations are versioned, applied at application start-up, and forward-on
 - The README documents the backup step as mandatory before upgrading.
 - Migrations run unchanged on every supported dialect (REQ-FDN-020). Because SQLite has no general `ALTER COLUMN` and no `DROP CONSTRAINT`, column and constraint changes use the create-copy-drop-rename table rebuild — which is valid on all three dialects, so it is used everywhere rather than branching per dialect.
 
-**Blocked by:** open decision O7 — the upgrade strategy for third-party installations.
+**Unblocked 2026-08-12.** O7 — the upgrade strategy for third-party installations — is closed by [ADR-0015](../../adr/0015-schema-migration-strategy.md), accepted as proposed. One consequence is worth carrying into the acceptance criteria above: **no migration inserts demo, sample or test data.** Seeding for tests and local development is a separate mechanism with its own entry point ([ADR-0017](../../adr/0017-testing-strategy.md)), so that an operator upgrading their instance never receives our fixtures.
 
 ### REQ-FDN-010 — Server-side validation shared by UI, API and MCP
 

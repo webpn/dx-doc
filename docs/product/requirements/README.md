@@ -30,15 +30,15 @@ Traceable requirements derived from the [functional specification](../functional
 | Release | Requirements | Focus |
 |---|---|---|
 | R0 | 23 | Foundations, auth and account lifecycle, API, public repository, data-flow statement |
-| R1 | 65 | Full data model, editor, versioning, import API + MCP, SSO |
-| R2 | 36 | Flows, bulk operations, distribution channels, MariaDB/Postgres adapters, instance portal |
+| R1 | 64 | Full data model, editor, versioning, import API + MCP, SSO |
+| R2 | 37 | Flows, bulk operations, distribution channels, MariaDB/Postgres adapters, instance portal |
 | R3 | 16 | Snippets, Confluence, interactive agent access, hosted search adapter |
 | R4 | 6 | Data quality, Figma import, webhooks |
 | R5 | 3 | Semantic layer — blocked on O1/O2 |
 | R6 | 2 | Lifecycle status, insights |
 | — | 8 | Explicitly rejected (recorded, not gaps) |
 
-R1 carries 65 requirements in six weeks. That concentration is risk R1 in the register, and it is why the [milestones](../milestones.md) name demotion candidates in advance rather than improvising under pressure.
+R1 carries 64 requirements in six weeks — one fewer since [REQ-AUTH-004](REQ-AUTH.md) (Mermaid rendering) moved to R2 on 2026-08-12, where a renderer was already being built for [REQ-NAV-006](REQ-NAV.md). That concentration is risk R1 in the register, and it is why the [milestones](../milestones.md) name demotion candidates in advance rather than improvising under pressure.
 
 > **Two decisions moved requirements after the first draft.** [ADR-0020](../../adr/0020-database-portability.md) replaced the MariaDB-only stance with repository ports and a SQLite default, adding three REQ-FDN entries and moving two database adapters into R2. [ADR-0021](../../adr/0021-agent-driven-migration.md) replaced the bespoke Notion importer with an agent driving a complete API, which rewrote REQ-IMP and pulled the documented public API, MCP read tools, MCP write tools and MCP resources from R3 into R1. Net effect on R1: six requirements out, ten in.
 
@@ -88,9 +88,6 @@ The requirement files are the live status record. [scope.md](../scope.md) stays 
 
 | Decision | Blocks | Last responsible moment |
 |---|---|---|
-| O7 — upgrade and schema-migration strategy | REQ-FDN-009 | End of R0 |
-| O11 — catalogue permission flag vs fifth role | REQ-SEC-010 | Start of R1 |
-| **O14 — draft-index rebuild trigger and acceptable lag under Pagefind** | REQ-AUTH-007 | Start of R1 |
 | O13 — bulk-operation list completeness | REQ-AUTH-010, REQ-API-008 | End of R1 |
 | O8 — developer-handoff reference patterns | REQ-DEV-002 | End of R1 |
 | O3 — structured analytics-reading guidance | REQ-DOM-014, REQ-VIEW-002 | Start of R2 |
@@ -101,6 +98,10 @@ The requirement files are the live status record. [scope.md](../scope.md) stays 
 | O5 — verification module scope | REQ-DQ-001 | Start of R4 |
 
 Full text of each in [functional specification §21](../functional-specification.md#open-decisions).
+
+**O11 and O14 are closed**, both on 2026-08-12, which leaves no open decision blocking any R1 requirement. O11 resolves to the Admin role rather than a flag or a fifth role, unblocking [REQ-SEC-010](REQ-SEC.md) — see the note there, which records that the rest of the requirement set had already assumed this. O14 is closed by the two-index rebuild model in [ADR-0009](../../adr/0009-search-abstraction.md), unblocking [REQ-AUTH-007](REQ-AUTH.md) and giving it two new acceptance criteria.
+
+**O7 is closed** — see [ADR-0015](../../adr/0015-schema-migration-strategy.md), accepted 2026-08-12 as proposed. [REQ-FDN-009](REQ-FDN.md) is unblocked, and it gains one constraint from the decision: no migration inserts data, so test and demo seeding is a separate mechanism ([ADR-0017](../../adr/0017-testing-strategy.md)).
 
 **O12 is closed** — see [ADR-0009](../../adr/0009-search-abstraction.md). It asked whether a self-hostable search adapter was needed before the public release, a release R0 had already performed. Making the default self-contained ([REQ-FDN-007](REQ-FDN.md)) removed the question and retired [REQ-FDN-016](REQ-FDN.md), at the cost of opening O14.
 

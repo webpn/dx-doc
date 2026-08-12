@@ -11,7 +11,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-AUTH-001 | Markdown editor with the full block set | Must | R1 | M1.5 | Not Started |
 | REQ-AUTH-002 | Image upload, 10 MB cap, resize to 2000 px | Must | R1 | M1.5 | Not Started |
 | REQ-AUTH-003 | Free wiki pages with publishable flag | Must | R1 | M1.5 | Not Started |
-| REQ-AUTH-004 | Mermaid blocks with live preview | Must | R1 | M1.5 | Not Started |
+| REQ-AUTH-004 | Mermaid rendering and live preview | Should | R2 | M2.2 | Not Started |
 | REQ-AUTH-005 | Optimistic concurrency with stale-write rejection | Must | R1 | M1.5 | Not Started |
 | REQ-AUTH-006 | Tracking duplication within a project | Must | R1 | M1.5 | Not Started |
 | REQ-AUTH-007 | Project-scoped full-text search | Must | R1 | M1.7 | Not Started |
@@ -30,7 +30,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 **Must** · R1 · [M1.5](../milestones.md) · spec §7.1, §16.1 · **Not Started** · Issue: — · PR: —
 
-Content is stored as Markdown. Required blocks: headings, ordered and unordered lists, bold and italic, links, tables, code blocks, images, quotes and callouts, Mermaid (REQ-AUTH-004).
+Content is stored as Markdown. Required blocks: headings, ordered and unordered lists, bold and italic, links, tables, code blocks, images, quotes and callouts. A ` ```mermaid ` fenced block is authorable and stored verbatim from R1 as a code block; **rendering** it as a diagram is REQ-AUTH-004, in R2.
 
 Applies to tracking descriptions, page descriptions, flow descriptions, property descriptions and free pages.
 
@@ -61,15 +61,21 @@ Hierarchically organised unstructured pages covering what the legacy template he
 - The flag's enforcement is REQ-SEC-012 — index exclusion and artefact omission, tested per path.
 - Free pages have their own hierarchy, independent of the Page/Screen hierarchy.
 
-### REQ-AUTH-004 — Mermaid blocks with live preview
+### REQ-AUTH-004 — Mermaid rendering and live preview
 
-**Must** · R1 · [M1.5](../milestones.md) · spec §7.1, §8.4 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.2](../milestones.md) · spec §7.1, §8.4 · **Not Started** · Issue: — · PR: —
 
-Mermaid code blocks render live while editing. This is both the format used for hand-written diagrams and the format auto-generated from the flow graph in R2 (REQ-NAV-006).
+Mermaid code blocks render, and render live while editing. This is both the format used for hand-written diagrams and the format auto-generated from the flow graph in R2 (REQ-NAV-006).
 
 **Acceptance**
 - A syntax error shows a legible message and leaves the source editable — it never discards the block.
 - Hand-written Mermaid remains available inside any rich-text content after REQ-NAV-006 lands.
+
+**Demoted from Must · R1 · M1.5 on 2026-08-12**, and the demotion is close to free because of what it does *not* move. A ` ```mermaid ` block is a fenced code block, and content is stored as Markdown ([REQ-AUTH-001](#req-auth-001--markdown-editor-with-the-full-block-set)) — so from R1 an author can write one, it is stored verbatim, it survives export and re-import, and it is searchable. What moves to R2 is **rendering it as a diagram** instead of showing it as code.
+
+This is why the requirement lands on [M2.2](../milestones.md) rather than anywhere else: [REQ-NAV-006](REQ-NAV.md) generates Mermaid from the flow graph in that same milestone and needs a renderer regardless. The two are now built once, together, rather than built in R1 and extended in R2.
+
+> The cost is real and worth naming: in R1 a hand-written diagram is legible only to someone who reads Mermaid source. That falls on the container-page use case in the [R1 minimum requirements](../minimum-requirements.md), where a multi-page process is described with a flow diagram. The description and hierarchy carry it in R1; the picture arrives in R2.
 
 ### REQ-AUTH-005 — Optimistic concurrency with stale-write rejection
 
@@ -108,7 +114,14 @@ Full-text search, scoped to a single project. Property names and tracking names 
 
 **Typo tolerance is deliberately not in scope.** The original criterion — "a fuzzy match on a misspelled property name still returns it" — is **withdrawn**, not deferred to a decision. The default adapter (Pagefind, REQ-FDN-007) does prefix matching and stemming, not typo correction, and that is accepted: it arrives when a search tool that supports it is adopted (REQ-FDN-022), and no requirement is written against it before then.
 
-**Blocked by:** open decision **O14**, now reduced to a single question — **draft-index freshness**. Pagefind builds an index rather than updating it per record, and editors search the draft, so the rebuild trigger and its acceptable lag must be decided before [M1.7](../milestones.md): per save, debounced, or on demand.
+**Unblocked 2026-08-12.** O14 is closed by the rebuild model in [ADR-0009](../../adr/0009-search-abstraction.md): **two indices per project**. The published index is rebuilt on publication, so a reader searches exactly what is published and staleness is structurally impossible. The draft index is rebuilt asynchronously after each save, coalescing bursts, never blocking the write.
+
+Two acceptance criteria follow from it:
+
+- A draft edit is findable within **30 seconds** of the save that contained it, at pilot scale.
+- A rebuild failure is surfaced and retried, never silent. A stale index returns plausible-looking empty results, which is the one search failure a user cannot distinguish from a correct answer.
+
+The published index also makes the criterion above stronger than a filter: built from published content only, a non-publishable free page is absent by construction rather than by remembering to exclude it (REQ-SEC-012).
 
 > Sacrificing typo tolerance is the deliberate first-phase trade for a search stack with no external dependency. The property being bought — no documentation content leaving the instance (REQ-FDN-021) — is the one an operator cannot add later; typo tolerance is one an organisation can buy whenever it wants it, by selecting a different adapter.
 

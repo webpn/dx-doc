@@ -1,13 +1,15 @@
 # ADR-0013: Client-Side State Management
 
 ## Status
-Proposed
+Proposed — **narrowed 2026-08-12** by [ADR-0012](0012-data-fetching-strategy.md)
 
 ## Date
 2026-08-11
 
 ## Context
 The React application has several categories of state beyond server-fetched data: local UI state (form values, open/closed toggles), URL state (current page, filters), and potentially cross-feature state (current project context, view mode selection). The choice of state-management approach affects component architecture and complexity.
+
+> **This decision got smaller on 2026-08-12.** With [ADR-0012](0012-data-fetching-strategy.md) accepted, TanStack Query owns all server state — entities, lists, search results, and their caching and invalidation. What is left for this ADR is UI state alone: current project context, view mode, panel and dialog state, editor draft buffers. Criterion 1 below (*does the actual need justify a library?*) is therefore the one that decides it, and the honest answer may well be no. The candidates are kept for the case where it turns out to be yes.
 
 ## Decision (to be made)
 

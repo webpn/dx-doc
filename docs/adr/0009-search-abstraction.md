@@ -1,7 +1,7 @@
 # ADR-0009: Search Index Abstraction
 
 ## Status
-Accepted — **amended 2026-08-12**: the default adapter is Pagefind, not Algolia. The port and its guarantees are unchanged; the shipped implementation and the risk profile behind it are not.
+Accepted — **amended twice on 2026-08-12**: (1) the default adapter is Pagefind, not Algolia — the port and its guarantees are unchanged, the shipped implementation and the risk profile behind it are not; (2) the index rebuild model is specified, **closing O14**.
 
 ## Date
 2026-08-11 (amended 2026-08-12)
@@ -58,5 +58,27 @@ Rejected as the default, though it is the closest alternative. Both are more cap
 - **Open decision O12 is closed** — not answered, removed. REQ-FDN-016 (self-hostable adapter) is retired with it, because the default now has the property that requirement was asking for.
 - **Risk R7 is replaced rather than mitigated.** The old risk was cross-tenant leakage through a hosted index; the new exposure is bounded by the instance, and the failure mode is an unauthorised route rather than an unscoped key.
 - **Typo tolerance is given up for the first phase.** Pagefind does prefix matching and stemming, not typo correction. REQ-AUTH-007's fuzzy criterion is **withdrawn** rather than deferred to a decision: the capability returns when an adapter that supports it is adopted (REQ-FDN-022), and nothing in R1–R2 is written against it. This is the deliberate cost of a stack with no external dependency — the property gained cannot be added later, the one given up can be bought at any time.
-  - **One capability gap remains open, as decision O14**, gating M1.7: the index is built, not updated per record. Editors search the draft, so the rebuild trigger and its acceptable lag must be decided — per save, debounced, or on demand.
+  - **O14 is closed — see the rebuild model below.**
 - Testing gets simpler: infrastructure search tests need no external credentials and no sandbox index, so the coverage carve-out in [ADR-0017](0017-testing-strategy.md) ("skipped if Algolia credentials are not configured") no longer applies to the default path.
+
+## Index rebuild model — closes O14 (2026-08-12)
+
+Pagefind builds an index rather than updating it per record, which left one question open: what triggers a rebuild, and how stale may a draft search be. The answer is **two indices per project, with two different triggers**, because the two readers have different needs.
+
+**Published index — rebuilt on publication.** Publishing a new version rebuilds the project's published index as part of the publication ([REQ-VER](../product/requirements/REQ-VER.md)). Readers search exactly what is published, and staleness is not merely bounded but structurally impossible: between publications there is nothing new to find.
+
+This also strengthens [REQ-SEC-012](../product/requirements/REQ-SEC.md). The published index is built from published content only, so a non-publishable free page is absent by construction rather than by remembering to filter it — the difference between a guarantee and a rule someone must not forget.
+
+**Draft index — rebuilt asynchronously after each save.** An editor's save returns as soon as the content is persisted. The rebuild is queued behind it and never blocks the write, never fails it, and never holds a transaction.
+
+Three rules make that safe:
+
+- **Rebuilds coalesce.** Saves arrive in bursts while someone is typing. A rebuild already in flight is not queued twice; the pending request collapses into one, so the cost is bounded by rebuild duration and not by save frequency.
+- **Freshness is a target, not a guarantee, and it is measured.** A draft edit is findable within **30 seconds** of the save that contained it, at pilot scale (thousands of trackings, ~200 properties). This number is what makes [M1.7](../product/milestones.md)'s exit criterion testable; it is not sacred, and if measured rebuild times at pilot scale make it wrong it should be corrected against evidence rather than defended.
+- **A failed rebuild is visible.** The consequence of a silent failure is a search index that is quietly wrong — the worst failure mode search has, because it looks like an empty result rather than an error. Rebuild failures are logged to the error-tracking integration ([REQ-FDN-014](../product/requirements/REQ-FDN.md)) and retried; a persistently stale draft index is surfaced to the editor rather than left to be inferred.
+
+**Publication is not blocked by indexing.** If a published-index rebuild fails, the version is still published — search freshness is not a correctness property of publication — and the failure is surfaced and retried like any other.
+
+**Both indices remain per project and served only through an authorised route** ([REQ-FDN-008](../product/requirements/REQ-FDN.md)). Two indices per project means two artefacts to scope, and under [ADR-0022](0022-application-framework.md) neither may be served from a location that bypasses the grant check.
+
+> **What this rules out, deliberately:** rebuilding on a timer, which spends work when nobody is editing and is stale exactly when someone is; and rebuilding on demand at query time, which puts the whole rebuild in the editor's search latency and breaks [REQ-NFR-002](../product/requirements/REQ-NFR.md). Should incremental indexing become available in the adapter, this model is where it plugs in — the trigger stays, the cost drops.

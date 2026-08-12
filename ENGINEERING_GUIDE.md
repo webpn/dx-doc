@@ -125,7 +125,9 @@ The project uses strict TypeScript:
 - **Color contrast:** meets WCAG AA minimum. Enforced through design tokens.
 - **Reduced motion:** respect `prefers-reduced-motion`.
 - **Screen-reader announcements** for dynamic content changes (live regions for status updates, toast messages).
-- The Design System centralizes accessibility behavior so individual features don't need to re-implement it.
+- The Design System centralizes accessibility behavior so individual features don't need to re-implement it. Radix, via shadcn/ui (ADR-0011), supplies most of it; hand-editing a copied component is the usual way it gets lost.
+
+These rules are checked in review, not in CI. There is no automated accessibility gate and no conformance claim — see REQ-NFR-013 for the accepted position and what it would take to change it.
 
 ## Security
 

@@ -30,7 +30,7 @@ The documentation of tracking plans for websites and mobile applications:
 
 ### Authoring
 
-- Rich text (Markdown) editor with the full block set including Mermaid with live preview.
+- Rich text (Markdown) editor with the full block set. Mermaid blocks are authorable and stored from R1; rendering them as diagrams is R2.
 - Image upload (drag & drop, clipboard paste), resize, S3 storage.
 - Structural image annotations (R2).
 - Duplication of trackings, pages, flows, and projects.
@@ -116,7 +116,7 @@ The documentation of tracking plans for websites and mobile applications:
 - It is not a data catalogue for the whole enterprise data estate.
 - No mobile/responsive layout — desktop only.
 - No offline mode.
-- No WCAG or public-sector accessibility compliance.
+- No certified WCAG or public-sector accessibility conformance. The interface is built to WCAG AA as a design principle; nothing verifies it and no conformance is claimed.
 - No dedicated Design view — designers use the Analyst/Business view.
 - No field-level permissions — views are presentation filters, not security boundaries.
 - No cross-project search.

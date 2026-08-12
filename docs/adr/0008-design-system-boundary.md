@@ -1,7 +1,7 @@
 # ADR-0008: Internal Design System Boundary
 
 ## Status
-Accepted
+Accepted — **amended 2026-08-12**: the library it insulates against is now chosen ([ADR-0011](0011-ui-library-selection.md), shadcn/ui). The boundary and its purpose are unchanged; what the boundary contains is not.
 
 ## Date
 2026-08-11
@@ -24,7 +24,7 @@ An **internal design-system boundary** (`src/design-system/`) wraps the chosen e
 
 **Wrapping policy:** A component is wrapped when the wrapper establishes project-level API, styling, accessibility, behavior, or replacement value. Components that are used exactly as-is from the library, in one place, with no added semantics, do not need wrappers.
 
-**The external UI library choice is a separate, open decision** — it is not yet made. Candidates include shadcn/ui (code ownership + AI-friendly), MUI (comprehensive), Radix UI (headless primitives), Mantine, and Ant Design. The design-system boundary makes the choice deferrable and reversible.
+**The external UI library choice is a separate decision.** It was made on 2026-08-12: [ADR-0011](0011-ui-library-selection.md) selects shadcn/ui, kept close to upstream. This boundary is what made the choice deferrable, and it survives the choice — but its character changes. shadcn/ui is copy-paste source rather than a runtime dependency, so the copied components *are* this layer's internals rather than something it wraps. Application code still imports from `@project/design-system` and never from a component path; the wrapping policy above now reads as "the copied component plus whatever project-level API it needs", and for a good number of components that addition is nothing at all. Tailwind CSS arrives with the choice, and the design tokens listed above live in its theme.
 
 ## Alternatives Considered
 

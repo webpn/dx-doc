@@ -1,10 +1,10 @@
 # ADR-0015: Schema Migration Strategy for Third-Party Installations
 
 ## Status
-Proposed
+Accepted (2026-08-12) — as proposed, unchanged. Closes open decision **O7**.
 
 ## Date
-2026-08-11
+2026-08-11 (decided 2026-08-12)
 
 ## Context
 The Platform is an open-source product deployed by third parties. Each installation runs its own database. When the Platform is upgraded (new release), schema migrations must be applied. The migration strategy must work for:
@@ -14,7 +14,7 @@ The Platform is an open-source product deployed by third parties. Each installat
 
 The spec's open decision O7 asks: "Upgrade and schema-migration strategy for third-party installations."
 
-## Proposal
+## Decision
 
 **Forward-only, versioned SQL migrations executed at application start-up.**
 
@@ -35,6 +35,10 @@ Where a migration genuinely cannot be expressed portably, the escape hatch is a 
 
 Adapters must be verified against the same migration sequence: the R2 dialect test matrix (ADR-0017) runs migrations from empty to current on every supported dialect.
 
+**Data is not schema.** A migration creates and alters structure. It never inserts demo, sample or test content, and there is no numbered migration whose purpose is to populate a database — a third-party operator upgrading their instance must not receive our fixtures. Where a release genuinely requires data (a reference row a new constraint depends on, a backfill of a new column from existing rows), that is part of the migration that introduced the structural change and is written to be idempotent, like the rest.
+
+Seeding for tests and for local development is a separate mechanism with a separate entry point, specified in [ADR-0017](0017-testing-strategy.md). Keeping the two apart is what allows the seed to change freely — it has no version history to honour and no third-party installation depending on it.
+
 **Rationale:**
 - Forward-only migrations are simpler to write, test, and maintain than reversible migrations.
 - Start-up execution means there is no separate migration command to forget.
@@ -54,8 +58,9 @@ Rejected: rollback scripts are rarely tested and often fail. The backup+restore 
 
 ## Related Decisions
 - [ADR-0020](0020-database-portability.md): Database Portability — migrations must be dialect-portable. Supersedes ADR-0003, which had scoped migrations to MariaDB DDL only.
-- [ADR-0017](0017-testing-strategy.md): the dialect test matrix that verifies portability.
-- O7 (spec): This ADR directly addresses it.
+- [ADR-0017](0017-testing-strategy.md): the dialect test matrix that verifies portability, and the test/demo seeding mechanism that this ADR deliberately keeps out of migrations.
+- O7 (spec): **closed by this ADR.** It gated [M0.1](../product/milestones.md).
+- D5 in [decisions](../decisions/README.md).
 
 ## Last Responsible Moment
-End of R0 (before the public repository is released with runnable code).
+End of R0 (before the public repository is released with runnable code) — met.
