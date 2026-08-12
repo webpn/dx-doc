@@ -2,7 +2,7 @@
 
 Breaks the release roadmap ([functional specification §20](functional-specification.md)) into numbered, individually verifiable milestones. Each milestone names the requirements it delivers, what it depends on, which open decisions gate it, and how it is judged complete.
 
-**Related:** [requirements index](requirements/README.md) · [user stories](user-stories.md) · [requirements review](requirements-review.md) · [scope](scope.md) · [vision](vision.md) · [ADRs](../adr/) · [testing strategy](../testing/strategy.md)
+**Related:** [requirements index](requirements/README.md) · [user stories](user-stories.md) · [scope](scope.md) · [vision](vision.md) · [ADRs](../adr/) · [testing strategy](../testing/strategy.md)
 
 ## How to read this
 
