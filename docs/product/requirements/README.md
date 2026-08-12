@@ -88,8 +88,6 @@ The requirement files are the live status record. [scope.md](../scope.md) stays 
 
 | Decision | Blocks | Last responsible moment |
 |---|---|---|
-| O6 — environment variable matrix | REQ-FDN-013 | Immediately |
-| O10 — instance vs company configuration split | REQ-FDN-013 | Immediately |
 | O7 — upgrade and schema-migration strategy | REQ-FDN-009 | End of R0 |
 | O11 — catalogue permission flag vs fifth role | REQ-SEC-010 | Start of R1 |
 | **O14 — draft-index rebuild trigger and acceptable lag under Pagefind** | REQ-AUTH-007 | Start of R1 |
@@ -102,9 +100,11 @@ The requirement files are the live status record. [scope.md](../scope.md) stays 
 | O4 — conformance vs unstructured placeholders | REQ-DQ-003 | Start of R4 |
 | O5 — verification module scope | REQ-DQ-001 | Start of R4 |
 
-Full text of each in [functional specification §21](../functional-specification.md#open-decisions). Two are marked *immediately* and gate the first milestone.
+Full text of each in [functional specification §21](../functional-specification.md#open-decisions).
 
 **O12 is closed** — see [ADR-0009](../../adr/0009-search-abstraction.md). It asked whether a self-hostable search adapter was needed before the public release, a release R0 had already performed. Making the default self-contained ([REQ-FDN-007](REQ-FDN.md)) removed the question and retired [REQ-FDN-016](REQ-FDN.md), at the cost of opening O14.
+
+**O6 and O10 are closed** — see [ADR-0014](../../adr/0014-configuration-split.md). O6 (complete environment variable matrix) is closed by the matrix now reproduced in [README.md](../../../README.md#environment-variables) and [.env.example](../../../.env.example). O10 (allocation of the disputed keys) is closed by moving SSO connection details, supported login methods and supported locales to company-level database configuration instead of instance-wide environment variables — the split REQ-SEC-014's recovery-path wording already implied. [REQ-FDN-013](REQ-FDN.md) is unblocked; see also updated [REQ-SEC-001/004/007/014](REQ-SEC.md) and [REQ-NFR-010](REQ-NFR.md).
 
 ## Known inconsistencies
 

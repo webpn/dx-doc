@@ -83,11 +83,11 @@ Epics cut across releases; the delivery grouping below cuts across epics. Both v
 
 #### US-OPS-06 — Configure an instance without touching code · *Operator* · E8
 
-**As a** system administrator **I want** infrastructure and credentials in environment variables, validated at boot, with company-level settings in the database **so that** a misconfiguration fails immediately and by name rather than at 3am.
+**As a** system administrator **I want** infrastructure and credentials in environment variables, validated at boot, with company-level settings (including each company's own SSO connection and login methods) in the database **so that** a misconfiguration fails immediately and by name rather than at 3am.
 
 [REQ-FDN-013](requirements/REQ-FDN.md)
 
-**Done when** — start-up stops on a missing required variable and names it, no secret is stored in the database, and the documented variable reference matches the loader — verified by a test that fails when they diverge. **Blocked by O6 and O10.**
+**Done when** — start-up stops on a missing required variable and names it, no infrastructure secret is stored in the database, company-level secrets that are stored are encrypted at rest, and the documented variable reference matches the loader — verified by a test that fails when they diverge. Unblocked: O6 and O10 are closed, see [ADR-0014](../adr/0014-configuration-split.md).
 
 #### US-OPS-05 — Run without a hosted search dependency · *Operator* · E8
 

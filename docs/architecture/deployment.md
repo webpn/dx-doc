@@ -25,7 +25,7 @@ The Platform is a **white-label, open-source product**. Each organisation deploy
 ┌────────────────────────────────────────────────────────┐
 │              Application Server (Node.js)               │
 │              Single process or replicated               │
-│              Env vars: DB, S3, SEARCH, OIDC, SMTP      │
+│              Env vars: DB, S3, SEARCH, SMTP fallback    │
 └──────┬──────────────────────┬────────────────┬─────────┘
        │                      │                │
        ▼                      ▼                ▼
@@ -59,7 +59,7 @@ The Platform targets roughly **99% availability, achievable on a single instance
 
 ### Environment Variables
 
-All instance-level configuration is through environment variables. See the full specification Appendix C for the complete reference.
+Instance-level configuration only — infrastructure and operator secrets. See the complete reference in [README.md](../../README.md#environment-variables) and [.env.example](../../.env.example) (ADR-0014).
 
 Critical variables for R0:
 
@@ -71,12 +71,13 @@ Critical variables for R0:
 | `STORAGE_S3_*` | S3-compatible object storage |
 | `SEARCH_DRIVER`, `SEARCH_INDEX_PATH` | Search adapter (`pagefind` default) and index location |
 | `APP_URL`, `APP_SECRET` | Application base URL and signing key |
-| `AUTH_PASSWORD_ENABLED` | Email+password authentication |
-| `AUTH_OIDC_*` | OIDC SSO (R1) |
+| `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD` | First-run administrator, read once |
+
+Authentication is **not** instance-level: each company connects its own SSO provider and chooses its supported login methods and locales through the Admin UI, stored encrypted in the database — see below.
 
 ### Database Configuration
 
-Company-level configuration (branding, SMTP, catalogue defaults) is stored in the database and managed through the Admin interface. See O10 for the split between environment variables and database settings.
+Company-level configuration — branding, SMTP override, catalogue defaults, SSO connection details (OIDC/SAML), supported login methods, and supported locales — is stored in the database and managed through the Admin interface ([ADR-0014](../adr/0014-configuration-split.md), which closes O10). Company-level secrets are encrypted at rest and never returned in plaintext.
 
 ## Schema Migrations
 

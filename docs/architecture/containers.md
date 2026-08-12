@@ -111,9 +111,9 @@ Describes the deployable containers/services that compose the dx-doc Platform.
 
 ### Configuration
 
-- **Instance-level:** environment variables for infrastructure credentials (database, S3, search, identity providers, SMTP fallback, analytics service accounts). Set by the operator.
-- **Company-level:** branding, SMTP overrides, catalogue defaults. Stored in the database, editable by Admins. (O10 — split to be confirmed.)
-- See `docs/product/functional-specification.md` Appendix C for the full variable reference.
+- **Instance-level:** environment variables for infrastructure credentials (database, S3, search, SMTP fallback, analytics service accounts). Set by the operator.
+- **Company-level:** branding, SMTP overrides, catalogue defaults, identity-provider connections, supported login methods, supported locales. Stored in the database, editable by Admins, secrets encrypted at rest ([ADR-0014](../adr/0014-configuration-split.md), closes O10).
+- See [README.md](../../README.md#environment-variables) for the full instance-level variable reference.
 
 ## Deployment
 

@@ -110,8 +110,8 @@ Legacy Wiki Export (Markdown & CSV ZIP) → AI agent → committed migration scr
 - **Database:** repository ports with a SQLite adapter by default; MariaDB and PostgreSQL from R2. Schema must support multi-tenancy natively and stay within a portable SQL subset.
 - **Search:** Pagefind by default — in-process, no account, no egress ([ADR-0009](../adr/0009-search-abstraction.md)). Indices must exclude non-publishable free pages, and index artefacts must be served only through a route applying the caller's project grants. Two capability gaps are open decision O14: no typo tolerance, and the index is built rather than updated per record. An optional hosted adapter (R3) reintroduces the scoped-key obligation and changes the data-flow statement (REQ-FDN-021).
 - **S3:** any S3-compatible provider. Path-style access must be supported. Public base URL for CDN is optional.
-- **OIDC:** must work with the corporate identity provider. SAML is added in R2 for generality.
-- **SMTP:** instance-level fallback; per-company SMTP settings in the database override it (O10).
+- **OIDC:** each company connects its own identity provider; connection details are company-level, stored encrypted in the database, not an instance-wide credential ([ADR-0014](../adr/0014-configuration-split.md)). SAML is added in R2 for generality, same model.
+- **SMTP:** instance-level fallback; per-company SMTP settings in the database override it ([ADR-0014](../adr/0014-configuration-split.md)).
 
 ## Security Boundaries
 

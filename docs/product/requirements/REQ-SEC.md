@@ -28,11 +28,11 @@ Entry format and status legend: [requirements index](README.md).
 
 **Must** · R0 · [M0.4](../milestones.md) · spec §17.1 · **Not Started** · Issue: — · PR: —
 
-Local authentication, required so the Platform is not tied to a single identity provider. Controlled by `AUTH_PASSWORD_ENABLED`; sessions expire per `AUTH_SESSION_TTL` (default 8h).
+Local authentication, required so the Platform is not tied to a single identity provider. Whether a company accepts local password login is part of its **supported login methods** setting (company-level, database — [ADR-0014](../../adr/0014-configuration-split.md)); sessions expire per `AUTH_SESSION_TTL` (instance-level, default 8h).
 
 **Acceptance**
 - Passwords are stored with a modern adaptive hash; no reversible storage anywhere.
-- Local login can be disabled by configuration once SSO is in place, without disabling the Admin's ability to recover access.
+- Local login can be disabled per company once that company's SSO is in place, without disabling the instance administrator's ability to recover access (REQ-SEC-014).
 - Failed attempts do not disclose whether the address exists.
 
 ### REQ-SEC-002 — Four company-scoped roles
@@ -68,12 +68,13 @@ A user sees only the projects explicitly granted to them. Every permission is ad
 
 **Must** · R1 · [M1.9](../milestones.md) · spec §17.1 · **Not Started** · Issue: — · PR: —
 
-OIDC is the primary corporate authentication method, configured through `AUTH_OIDC_*`. Role and grant assignment remain manual inside the Platform.
+OIDC is the primary corporate authentication method. Each company connects its own identity provider: issuer, client ID, client secret and scopes are company-level configuration, set by the company Admin and stored encrypted at rest ([ADR-0014](../../adr/0014-configuration-split.md)) — not an instance-wide `AUTH_OIDC_*` environment variable, since different companies on the same instance may use different providers. Role and grant assignment remain manual inside the Platform.
 
 **Acceptance**
 - A first-time SSO login creates a user with no role and no grants — access is granted deliberately, never inferred from a successful authentication.
 - The redirect URI derives from `APP_URL`, so a misconfigured instance fails loudly rather than redirecting elsewhere.
-- Local and SSO login can coexist for the same instance.
+- Local and SSO login can coexist for the same company, per its configured supported login methods.
+- A stored client secret is never returned in plaintext by any read path; the Admin UI shows it masked after entry.
 
 ### REQ-SEC-005 — Project shared-password access with expiry
 
@@ -103,7 +104,7 @@ Recorded: login and logout; entity creation, modification and deletion; publicat
 
 **Should** · R2 · [M2.8](../milestones.md) · spec §17.1 · **Not Started** · Issue: — · PR: —
 
-SAML for generality of the white-label product, configured through `AUTH_SAML_*`.
+SAML for generality of the white-label product. Configured per company (entity ID, SSO URL, certificate), stored encrypted at rest — the same company-level model as OIDC (REQ-SEC-004, [ADR-0014](../../adr/0014-configuration-split.md)).
 
 ### REQ-SEC-008 — Audit log UI, paginated list and CSV export
 
@@ -203,13 +204,13 @@ A discrete `instance_admin` flag on a user, independent of the four company-scop
 Three rules make it safe:
 
 - **Step-up re-authentication.** Entering the instance-administration surface requires re-authenticating, so an ordinary session that is hijacked or left open does not reach it.
-- **A guaranteed local-password path.** A user holding this flag always retains a working email + password login, even where the company has SSO enforced and `AUTH_PASSWORD_ENABLED` is off for everyone else. The instance must stay recoverable when an identity provider is down, misconfigured, or has just been pointed at the wrong tenant.
+- **A guaranteed local-password path.** A user holding this flag always retains a working email + password login, even where their own company's supported-login-methods setting has local password disabled for everyone else ([ADR-0014](../../adr/0014-configuration-split.md)). The instance must stay recoverable when an identity provider is down, misconfigured, or has just been pointed at the wrong tenant.
 - **No implied content access.** The flag confers no read or write access to any project's documentation. Reaching content still requires a role and a grant (REQ-SEC-002, REQ-SEC-003), and that grant is auditable like anyone else's.
 
 **Acceptance**
 - The flag is a discrete capability, not a fifth role — the role set stays at exactly four (REQ-SEC-002), the same pattern as REQ-SEC-010.
 - A user with the flag and no project grants can administer the instance and read no documentation, verified by test.
-- Removing `AUTH_PASSWORD_ENABLED` does not lock out flag holders; a test asserts this, since it is the recovery path.
+- Disabling local password in a company's supported-login-methods setting does not lock out its `instance_admin` flag holders; a test asserts this, since it is the recovery path.
 - Granting or revoking the flag is itself audited, and cannot be performed by an agent through MCP (REQ-API-004).
 - Entering the administration surface without a recent re-authentication is refused, including through the API.
 

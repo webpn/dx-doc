@@ -36,9 +36,9 @@ Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that sli
 
 **Delivers:** REQ-FDN-001
 
-Accept or supersede the pending ADRs: [0011 UI library](../adr/0011-ui-library-selection.md), [0012 data fetching](../adr/0012-data-fetching-strategy.md), [0013 state management](../adr/0013-state-management.md), [0014 configuration split](../adr/0014-configuration-split.md), [0015 schema migrations](../adr/0015-schema-migration-strategy.md), [0017 testing](../adr/0017-testing-strategy.md). Replace the placeholder `package.json` scripts with real ones.
+Accept or supersede the pending ADRs: [0011 UI library](../adr/0011-ui-library-selection.md), [0012 data fetching](../adr/0012-data-fetching-strategy.md), [0013 state management](../adr/0013-state-management.md), [0015 schema migrations](../adr/0015-schema-migration-strategy.md), [0017 testing](../adr/0017-testing-strategy.md). [0014 configuration split](../adr/0014-configuration-split.md) is already Accepted. Replace the placeholder `package.json` scripts with real ones.
 
-**Gated by:** O6 (environment variable matrix), O10 (instance vs company configuration split), O7 (upgrade and migration strategy for third-party installs)
+**Gated by:** O7 (upgrade and migration strategy for third-party installs)
 
 **Exit:** `npm run dev`, `npm run build`, `npm run test` and `npm run typecheck` all execute real work. Decisions D1–D6 in [decisions](../decisions/README.md) are marked Accepted with their ADRs.
 
@@ -62,11 +62,9 @@ Repository ports owned by the domain, with a **SQLite adapter** as the default a
 
 **Delivers:** REQ-FDN-006, REQ-FDN-007, REQ-FDN-008, REQ-FDN-013
 
-S3-compatible object storage behind a port. Search behind a port with **Pagefind as the default adapter** ([ADR-0009](../adr/0009-search-abstraction.md)), one index per project, served only through an authorised route. Environment-variable configuration loader with validation at boot.
+S3-compatible object storage behind a port. Search behind a port with **Pagefind as the default adapter** ([ADR-0009](../adr/0009-search-abstraction.md)), one index per project, served only through an authorised route. Environment-variable configuration loader with validation at boot, per [ADR-0014](../adr/0014-configuration-split.md).
 
 **Depends on:** M0.1
-
-**Gated by:** O6, O10
 
 **Exit:** the application refuses to start with a missing required variable and names it; an integration test substitutes an in-memory storage adapter without touching application-layer code; a stock instance makes no network call to any search service; a client requesting another project's index artefact receives a 403.
 
@@ -493,8 +491,6 @@ Four things sit on the critical path and are worth protecting:
 
 | Decision | Gates | Last responsible moment |
 |---|---|---|
-| O6 — environment variable matrix | M0.1, M0.3 | Immediately |
-| O10 — instance vs company configuration split | M0.1, M0.3 | Immediately |
 | O7 — upgrade and schema-migration strategy | M0.1 | End of R0 |
 | O11 — *manage company catalogue* permission vs role | M1.1 | Start of R1 |
 | **O14 — draft-index rebuild trigger and acceptable lag under Pagefind** | M1.7 | Start of R1 |
@@ -508,6 +504,8 @@ Four things sit on the critical path and are worth protecting:
 | O5 — verification module scope | M4.1 | Start of R4 |
 
 **O12 is closed.** It asked whether a self-hostable search adapter was needed before the public release — a release R0 had already performed, which made the question unanswerable in the order it was scheduled. Choosing a self-contained default ([REQ-FDN-007](requirements/REQ-FDN.md)) removes the question rather than answering it, and retires [REQ-FDN-016](requirements/REQ-FDN.md) with it.
+
+**O6 and O10 are closed**, see [ADR-0014](../adr/0014-configuration-split.md): the environment variable matrix is complete ([README.md](../../README.md#environment-variables)), and the disputed keys (SSO connection details, supported login methods, supported locales) are company-level database configuration rather than instance environment variables.
 
 ## Risk mitigations owned by milestones
 

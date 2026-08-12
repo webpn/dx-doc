@@ -198,14 +198,15 @@ A reference stack (application, S3-compatible storage) is supplied as an example
 
 **Must** · R0 · [M0.3](../milestones.md) · spec §18, Appendix C · [ADR-0014](../../adr/0014-configuration-split.md) · **Not Started** · Issue: — · PR: —
 
-Infrastructure and credentials come from environment variables at instance level. Branding, SMTP and catalogue defaults are stored per company in the database and edited by an Admin.
+Infrastructure and credentials come from environment variables at instance level. Branding, SMTP, catalogue defaults, identity-provider connections, supported login methods and supported locales are stored per company in the database and edited by an Admin.
 
 **Acceptance**
 - Configuration is validated at boot; a missing required variable stops start-up with a message naming the variable.
-- No secret is stored in the database; no company-editable setting is read from the environment at request time.
-- Appendix C is reproduced in the README and matches the loader, verified by a test that fails when they diverge.
+- No infrastructure secret is stored in the database; no company-editable setting is read from the environment at request time.
+- Company-level secrets (OIDC/SAML client secret, SMTP password) are encrypted at rest and never returned in plaintext by a read path.
+- The environment variable matrix in the README is reproduced from the loader, verified by a test that fails when they diverge.
 
-**Blocked by:** open decisions O6 (complete variable matrix) and O10 (allocation of the disputed keys).
+**Resolved:** open decisions O6 (complete variable matrix) and O10 (allocation of the disputed keys) are closed by [ADR-0014](../../adr/0014-configuration-split.md), which also carries the full environment variable matrix (reproduced in [README.md](../../../README.md#environment-variables)).
 
 ### REQ-FDN-014 — Error-tracking integration
 

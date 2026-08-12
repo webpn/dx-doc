@@ -100,11 +100,11 @@ See §21 of the full specification. Critically open items:
 - **O3:** "How to read this in the analytics platform" — structured field design — blocks R2 Analyst view
 - **O4:** Data quality interaction with unstructured placeholders — blocks R4
 - **O5:** Verification/QA module scope — blocks R4
-- **O6:** Complete environment variable matrix — blocks R0 (immediately)
+- **O6:** Complete environment variable matrix — **closed**, see [ADR-0014](../adr/0014-configuration-split.md); matrix reproduced in [README.md](../../README.md#environment-variables)
 - **O7:** Schema migration strategy for third-party installs — blocks R1
 - **O8:** Design patterns from reference products — partly closed; developer-handoff ref remains
 - **O9:** Extension/Segment/CalculatedMetric attributes before R5 — blocks R3
-- **O10:** Config key split (environment vs database) — blocks R0 (immediately)
+- **O10:** Config key split (environment vs database) — **closed**, see [ADR-0014](../adr/0014-configuration-split.md); SSO details, supported login methods and supported locales are company-level, not environment variables
 - **O11:** "Manage company catalogue" permission model — blocks R1
 - **O12:** Self-hostable search adapter before public release — blocks R1 public release
 - **O13:** Bulk operations list completeness — blocks R2

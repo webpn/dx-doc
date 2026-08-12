@@ -89,10 +89,11 @@ PDF export (REQ-VIEW-006) covers disconnected consultation.
 
 **Must** · R1 · spec §15.4 · **Not Started**
 
-Interface language is English by default (`APP_DEFAULT_LOCALE`), with translation support; the language is set in the user profile.
+Interface language is English by default (`APP_DEFAULT_LOCALE`, used before any company context exists), with translation support. Each company sets which locales it supports and its default among them ([ADR-0014](../../adr/0014-configuration-split.md)); the user profile then picks a language from the company's supported set.
 
 **Acceptance**
 - No user-facing string is hard-coded outside the translation mechanism, including error messages surfaced from the API.
+- A user's profile locale is restricted to their company's supported-locales list; narrowing that list does not silently reassign users already set to a locale being removed.
 
 ### REQ-NFR-011 — Content is single-language
 
