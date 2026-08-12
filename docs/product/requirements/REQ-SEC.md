@@ -7,7 +7,7 @@ Entry format and status legend: [requirements index](README.md).
 | ID | Requirement | MoSCoW | Rel. | Milestone | Status |
 |---|---|---|---|---|---|
 | REQ-SEC-001 | Email + password login | Must | R0 | M0.4 | Not Started |
-| REQ-SEC-002 | Four global roles | Must | R0 | M0.4 | Not Started |
+| REQ-SEC-002 | Four company-scoped roles | Must | R0 | M0.4 | Not Started |
 | REQ-SEC-003 | Per-project access grants | Must | R0 | M0.4 | Not Started |
 | REQ-SEC-004 | OIDC SSO | Must | R1 | M1.9 | Not Started |
 | REQ-SEC-005 | Project shared-password access with expiry | Must | R1 | M1.9 | Not Started |
@@ -35,16 +35,21 @@ Local authentication, required so the Platform is not tied to a single identity 
 - Local login can be disabled by configuration once SSO is in place, without disabling the Admin's ability to recover access.
 - Failed attempts do not disclose whether the address exists.
 
-### REQ-SEC-002 — Four global roles
+### REQ-SEC-002 — Four company-scoped roles
 
 **Must** · R0 · [M0.4](../milestones.md) · spec §4.2, §17.2 · **Not Started** · Issue: — · PR: —
 
-Admin, Project Manager, Editor, Viewer. The role is global to the user; roles compose (a Project Manager who must also edit additionally holds Editor). Roles are assigned inside the Platform and are never derived from identity-provider groups.
+Admin, Project Manager, Editor, Viewer. A user belongs to **one company**, and their role applies across that company, narrowed further by their per-project grants (REQ-SEC-003). Roles compose (a Project Manager who must also edit additionally holds Editor). Roles are assigned inside the Platform and are never derived from identity-provider groups.
+
+**Admin is company-scoped, not instance-wide.** An Admin creates and configures projects within their own company, its integrations, its catalogue, its branding, its audit log, and archives and restores its projects. **Creating a company is not an Admin action** — that belongs to the instance-administration capability (REQ-SEC-014), which is a different job held by a different person.
 
 **Acceptance**
 - Holding Project Manager alone confers no editing rights.
 - No provisioning path copies identity-provider group membership into a role.
-- The role set is exactly four; new capabilities are added as discrete flags (see REQ-SEC-010), not as new roles.
+- The role set is exactly four; new capabilities are added as discrete flags (see REQ-SEC-010 and REQ-SEC-014), not as new roles.
+- An Admin cannot create a company, cannot see that other companies exist, and cannot reach any entity belonging to one — tested as the negative case, since this is the tenancy boundary (REQ-FDN-002) expressed in the permission model.
+
+> "Global" in the original wording meant *not per-project*. It has been reworded to *company-scoped* because with multi-company tenancy the two readings diverge, and the wrong one hands every tenant's documentation to whoever administers any one of them.
 
 ### REQ-SEC-003 — Per-project access grants
 
@@ -53,7 +58,7 @@ Admin, Project Manager, Editor, Viewer. The role is global to the user; roles co
 A user sees only the projects explicitly granted to them. Every permission is additionally scoped by the grant: no role confers access to an ungranted project.
 
 **Acceptance**
-- An Admin without a grant still administers the instance but is subject to the same read scoping in project content listings.
+- An Admin without a grant still administers their company but is subject to the same read scoping in project content listings.
 - Grant checks live in one place, invoked by API, MCP, search and export paths alike.
 - A test asserts the negative case for every entry point, not only the HTTP API.
 
@@ -191,7 +196,9 @@ How identities come into being, and how they leave. Four parts:
 
 **Must** · R0 · [M0.4](../milestones.md) · **Not Started** · Issue: — · PR: —
 
-A discrete `instance_admin` flag on a user, independent of the four global roles, marking the person who administers the **deployment** rather than a tenant within it. It is what gates the instance-administration portal (REQ-SEC-015) and it is held by the bootstrap administrator (REQ-SEC-013).
+A discrete `instance_admin` flag on a user, independent of the four company-scoped roles (REQ-SEC-002), marking the person who administers the **deployment** rather than a tenant within it. It is what gates the instance-administration portal (REQ-SEC-015) and it is held by the bootstrap administrator (REQ-SEC-013).
+
+**It carries exactly two powers the Admin role does not have:** creating companies, and granting or revoking the `instance_admin` flag itself. Everything else an Admin does — projects, integrations, catalogue, branding, audit log — stays with the Admin role, inside one company.
 
 Three rules make it safe:
 
@@ -212,8 +219,10 @@ Three rules make it safe:
 
 **Should** · R2 · [M2.8](../milestones.md) · **Not Started** · Issue: — · PR: —
 
-An instance-wide console, reachable only by holders of the REQ-SEC-014 capability: list companies, create and configure them, grant and revoke the instance-administration capability, and see instance-level health and configuration.
+An instance-wide console, reachable only by holders of the REQ-SEC-014 capability: list companies, create and configure them, appoint each company's first Admin, grant and revoke the instance-administration capability, and see instance-level health and configuration.
 
-Deliberately **not** a way into documentation content: the portal shows companies, their configuration and their administrators, never their trackings, properties or pages.
+Deliberately **not** a way into documentation content: the portal shows companies, their configuration and their administrators, never their trackings, properties or pages. A holder who wants to read a project asks for a grant in that company like anyone else, and it is audited like anyone else's.
 
-**R0 provides the capability and its authentication rules; this is the surface built on top.** Until it exists, company creation happens through the existing Admin screens and the API (REQ-API-001) — which is sufficient for one deployment with a handful of companies, and is why the portal is a `Should` in R2 rather than a `Must` in R0.
+**R0 provides the capability and its authentication rules; this is the surface built on top.** Until it exists, company creation happens through the API (REQ-API-001) authenticated as an `instance_admin` — sufficient for one deployment with a handful of companies, and why the portal is a `Should` in R2 rather than a `Must` in R0.
+
+> The portal is what makes the instance administrator a real user of the Platform rather than only a person with shell access. It is also the natural place for anything else that is genuinely instance-wide and content-free — which, deliberately, is a very short list.

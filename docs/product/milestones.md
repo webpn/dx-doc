@@ -70,7 +70,7 @@ S3-compatible object storage behind a port. Search behind a port with **Pagefind
 
 **Exit:** the application refuses to start with a missing required variable and names it; an integration test substitutes an in-memory storage adapter without touching application-layer code; a stock instance makes no network call to any search service; a client requesting another project's index artefact receives a 403.
 
-> The search default changed from a hosted service to a self-contained one, which closes O12 outright and shortens [REQ-FDN-021](requirements/REQ-FDN.md)'s data-flow statement to almost nothing. It opens **O14** in exchange: Pagefind offers no typo tolerance and builds its index rather than updating it per record, and [REQ-AUTH-007](requirements/REQ-AUTH.md) needs both settled before M1.7.
+> The search default changed from a hosted service to a self-contained one, which closes O12 outright and shortens [REQ-FDN-021](requirements/REQ-FDN.md)'s data-flow statement to almost nothing. Two things were traded for it: **typo tolerance, given up deliberately** until a capable adapter is adopted (REQ-FDN-022), and **draft-index freshness**, which is open decision O14 and needs settling before M1.7.
 
 ### M0.4 — Authentication and authorisation
 
@@ -119,6 +119,8 @@ MIT licence, README with setup instructions, reference deployment stack (compose
 ## R1 — MVP: parity plus versioning
 
 *Target: weeks 3–8. The entire Must set except [REQ-VIEW-003](requirements/REQ-VIEW.md), which stays a Must but has no consumer until R2. This is the release that retires the legacy wiki for the pilot product.*
+
+> **"Parity" means the checklist, not the legacy wiki.** [What R1 parity means](scope.md#what-r1-parity-means) enumerates every capability the legacy template provided and the requirement replacing it. R1 is at parity when every row is satisfied — which is what makes the M1.10 exit criterion falsifiable rather than a matter of opinion.
 
 ### M1.1 — Tracking data model
 
@@ -216,9 +218,9 @@ Page hierarchy driving a navigable sidebar. Automatic per-page recap of every at
 
 Project-scoped full-text search. Property and tracking names ranked above other text. Specific values indexed. Non-publishable free pages excluded from the index.
 
-**Depends on:** M0.3, M1.1 · **Gated by:** O14 (typo tolerance and draft-index freshness under the Pagefind default)
+**Depends on:** M0.3, M1.1 · **Gated by:** O14 (draft-index rebuild trigger under the Pagefind default)
 
-**Exit:** searching a literal specific value returns the trackings that set it; a page marked non-publishable is provably absent from the index, queried directly; a user without a grant on a project gets no hits from it and cannot fetch its index artefact; an edit made in the draft is findable within the lag O14 settles on.
+**Exit:** searching a literal specific value returns the trackings that set it; prefix and stem matching work; a page marked non-publishable is provably absent from the index, queried directly; a user without a grant on a project gets no hits from it and cannot fetch its index artefact; an edit made in the draft is findable within the lag O14 settles on. Typo tolerance is **not** an exit criterion — see REQ-AUTH-007.
 
 ### M1.8 — Versioning and publication
 
@@ -256,7 +258,9 @@ Final migration run, **item-by-item editorial verification of the first product*
 
 **Gated by:** O13 (confirm the bulk-operation list from what was actually done by hand during migration), O8 (developer-handoff reference review)
 
-**Exit:** the pilot product's documentation is fully migrated and verified item-by-item; an editor works a full week without returning to the legacy wiki; version 1 is published with an automatically generated changelog.
+**Exit:** every row of the [parity checklist](scope.md#what-r1-parity-means) is satisfied; the pilot product's documentation is fully migrated and verified item-by-item; an editor works a full week without returning to the legacy wiki; version 1 is published with an automatically generated changelog.
+
+> The item-by-item verification is also the only chance to correct the parity checklist itself. It was derived from the legacy template's authoring guidelines, and the template drifted over years — anything found in the real product that the checklist does not name belongs in it.
 
 > **R1 gate.** The pilot is migrated and live. Two things must be recorded here and are not recoverable later:
 >
@@ -493,7 +497,7 @@ Four things sit on the critical path and are worth protecting:
 | O10 — instance vs company configuration split | M0.1, M0.3 | Immediately |
 | O7 — upgrade and schema-migration strategy | M0.1 | End of R0 |
 | O11 — *manage company catalogue* permission vs role | M1.1 | Start of R1 |
-| **O14 — typo tolerance and draft-index freshness under Pagefind** | M1.7 | Start of R1 |
+| **O14 — draft-index rebuild trigger and acceptable lag under Pagefind** | M1.7 | Start of R1 |
 | O13 — bulk-operation list completeness | M1.10, M2.4 | End of R1 |
 | O8 — developer-handoff reference patterns | M1.10 | End of R1 |
 | O3 — structured "how to read this in the analytics platform" | M2.1 | Start of R2 |
@@ -515,7 +519,7 @@ Four things sit on the critical path and are worth protecting:
 | R4 — bus factor of one | M2.6 | Git export as human-readable backup; second maintainer before R3 |
 | R5 — semantic layer undefined | M5.0 | Workshop before the end of R2; immutable IDs and `business_label` already shipped |
 | R6 — adoption | M1.8, M1.10 | Invest in the pre-publication diff; onboard on the pilot before extending |
-| R7 — ~~hosted search dependency~~ **search adapter capability gap** | M0.3, M1.7 | Risk replaced rather than mitigated: the default adapter has no hosted dependency, so nothing leaks off-instance and nothing needs procurement. What remains is that the default is less capable — no typo tolerance, index built rather than updated (O14) |
+| R7 — ~~hosted search dependency~~ **search adapter capability gap** | M0.3, M1.7 | Risk replaced rather than mitigated: the default adapter has no hosted dependency, so nothing leaks off-instance and nothing needs procurement. What remains is reduced capability — typo tolerance given up until REQ-FDN-022, index built rather than updated (O14) |
 | R8 — analytics API access not provisioned in time | M4.1 | Start provisioning during R2 |
 | **R9 — agent migration produces plausible-looking wrong data** | M1.4, M1.10 | Script reviewed before it runs at scale; reconciliation counts checked against source; first product verified item-by-item before the remaining ~29 |
 | **R10 — pilot content lives in one unbacked SQLite file** | M0.6 | File-level snapshot demonstrated in the reference stack; README states backup is the operator's job; git export closes it properly in R2 |

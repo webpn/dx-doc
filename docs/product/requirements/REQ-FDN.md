@@ -131,7 +131,7 @@ Search is reached through a port. **Pagefind is the default and the only adapter
 
 > Supersedes the Algolia-first position in [ADR-0009](../../adr/0009-search-abstraction.md). The database is not the hardest dependency for a deployer to satisfy — a SaaS account that corporate procurement must approve is, and search was the only remaining one. Choosing a self-contained default closes open decision **O12** rather than deferring it, and makes REQ-FDN-016 unnecessary.
 >
-> **Two consequences are open, not solved.** Pagefind builds an index rather than updating it per record, so draft-search freshness needs a rebuild strategy; and Pagefind does prefix matching and stemming, not typo tolerance, which REQ-AUTH-007 currently requires. Both are open decision **O14**.
+> **One consequence is open, one is accepted.** Pagefind builds an index rather than updating it per record, so draft-search freshness needs a rebuild strategy — open decision **O14**. The absence of typo tolerance is not open: it is an accepted first-phase trade, and REQ-AUTH-007 no longer asks for it.
 
 ### REQ-FDN-008 — Search scoping enforced server-side
 
@@ -271,7 +271,9 @@ The README enumerates every external service a running instance may contact, wha
 
 **Could** · R3 · **Not Started** · Issue: — · PR: —
 
-An adapter for a hosted search service — Algolia being the obvious candidate — for organisations that would rather buy typo tolerance and relevance tuning than run with the default. The port (REQ-FDN-007) keeps this purely additive.
+An adapter for a search service that offers what the default does not — **typo tolerance** above all, plus relevance tuning — for organisations that would rather buy it than run with the default. Algolia is the obvious hosted candidate; a self-hosted engine such as Meilisearch or Typesense would serve equally and keep the no-egress property. The port (REQ-FDN-007) keeps this purely additive.
+
+This is where the fuzzy-matching capability withdrawn from REQ-AUTH-007 returns. Nothing in R1–R2 depends on it.
 
 Selecting it changes what leaves the instance, so it changes REQ-FDN-021's statement, and it reintroduces the scoped-key obligation in REQ-FDN-008.
 

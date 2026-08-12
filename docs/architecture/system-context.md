@@ -43,7 +43,8 @@ Describes the dx-doc Platform in its environment: who uses it, what external sys
 | Web/App developer | Read (Viewer) | SSO (OIDC), email+password, project shared password |
 | Designer | Read (Viewer) | SSO (OIDC), email+password, project shared password |
 | Product manager / Owner | Read + user management on own projects (Project Manager) | SSO (OIDC), email+password |
-| Admin | Full (Admin) | SSO (OIDC), email+password |
+| Company admin | Full within one company (Admin) | SSO (OIDC), email+password |
+| System administrator | Instance-wide, no content access (`instance_admin`) | email+password, always available |
 | AI Agent (MCP) | Per consenting user's permissions | OAuth (user consent) |
 | Unauthenticated viewer | Read (Viewer) on projects with shared password | Project-level shared password |
 

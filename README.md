@@ -12,6 +12,12 @@ An open-source, white-label platform that replaces legacy wiki-based tracking do
 - Architecture and engineering foundation documents in progress
 - No application code yet; the repository is being scaffolded for R0
 
+## What the first release must do
+
+The MVP (R1) is described as *"parity plus versioning"*. **Parity is defined explicitly, not by reference to the legacy system it replaces** — see [What R1 parity means](docs/product/scope.md#what-r1-parity-means), which enumerates every capability the legacy documentation template provided and the requirement that replaces it. R1 is at parity when every row in that table is satisfied.
+
+On top of parity, R1 adds what the legacy wiki never had: draft-to-published versioning with an automatically generated changelog, search over specific values, audience-specific views, a complete API and MCP surface, read access without a licensed account, and an append-only audit log.
+
 ## Prerequisites
 
 - Node.js 20 LTS or later
@@ -90,7 +96,7 @@ The Platform follows a modular architecture with clear separation between:
 | [`SECURITY.md`](SECURITY.md) | Security policy and vulnerability reporting |
 | [`docs/product/functional-specification.md`](docs/product/functional-specification.md) | Complete functional specification |
 | [`docs/product/vision.md`](docs/product/vision.md) | Product vision and strategic context |
-| [`docs/product/scope.md`](docs/product/scope.md) | In-scope, out-of-scope, and deferred |
+| [`docs/product/scope.md`](docs/product/scope.md) | In-scope, out-of-scope, deferred — and the explicit R1 parity checklist |
 | [`docs/product/glossary.md`](docs/product/glossary.md) | Domain terminology |
 | [`docs/product/personas.md`](docs/product/personas.md) | Personas and system roles |
 | [`docs/product/user-stories.md`](docs/product/user-stories.md) | What each persona needs to get done, traced to requirements |

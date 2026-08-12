@@ -49,7 +49,7 @@ Rejected, and the amendment vindicates the rejection: the default implementation
 Rejected. Weaker than Pagefind for this content, and it would put search back inside the schema that [ADR-0020](0020-database-portability.md) constrains to a portable SQL subset.
 
 ### Self-hosted search service (Meilisearch, Typesense)
-Rejected as the default, though it is the closest alternative. Both are more capable than Pagefind — real typo tolerance, incremental updates — but each is another service to run, which is the operational burden the reference stack is trying not to have. Reconsider if O14 resolves badly: the port makes either a drop-in.
+Rejected as the default, though it is the closest alternative. Both are more capable than Pagefind — real typo tolerance, incremental updates — but each is another service to run, which is the operational burden the reference stack is trying not to have. Either is the natural home for REQ-FDN-022 when typo tolerance is wanted back, and either would keep the no-egress property that the hosted option gives up. Reconsider as the default if O14 resolves badly: the port makes them drop-in.
 
 ## Consequences
 
@@ -57,7 +57,6 @@ Rejected as the default, though it is the closest alternative. Both are more cap
 - **A stock instance transmits no documentation content anywhere.** This is what makes REQ-FDN-021's data-flow statement short enough to be worth writing, and it is the property an operator cannot add after the fact.
 - **Open decision O12 is closed** — not answered, removed. REQ-FDN-016 (self-hostable adapter) is retired with it, because the default now has the property that requirement was asking for.
 - **Risk R7 is replaced rather than mitigated.** The old risk was cross-tenant leakage through a hosted index; the new exposure is bounded by the instance, and the failure mode is an unauthorised route rather than an unscoped key.
-- **Two capability gaps are opened, tracked as open decision O14** and gating M1.7:
-  - **No typo tolerance.** Pagefind does prefix matching and stemming, not typo correction. REQ-AUTH-007 currently requires that "a fuzzy match on a misspelled property name still returns it". Either the criterion is relaxed, or it is met application-side — a match over the project's property-name list is cheap at ~200 properties.
-  - **The index is built, not updated per record.** Editors search the draft, so the rebuild trigger and its acceptable lag must be decided: per save, debounced, or on demand.
+- **Typo tolerance is given up for the first phase.** Pagefind does prefix matching and stemming, not typo correction. REQ-AUTH-007's fuzzy criterion is **withdrawn** rather than deferred to a decision: the capability returns when an adapter that supports it is adopted (REQ-FDN-022), and nothing in R1–R2 is written against it. This is the deliberate cost of a stack with no external dependency — the property gained cannot be added later, the one given up can be bought at any time.
+  - **One capability gap remains open, as decision O14**, gating M1.7: the index is built, not updated per record. Editors search the draft, so the rebuild trigger and its acceptable lag must be decided — per save, debounced, or on demand.
 - Testing gets simpler: infrastructure search tests need no external credentials and no sandbox index, so the coverage carve-out in [ADR-0017](0017-testing-strategy.md) ("skipped if Algolia credentials are not configured") no longer applies to the default path.

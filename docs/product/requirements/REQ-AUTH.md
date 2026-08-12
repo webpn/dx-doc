@@ -14,7 +14,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-AUTH-004 | Mermaid blocks with live preview | Must | R1 | M1.5 | Not Started |
 | REQ-AUTH-005 | Optimistic concurrency with stale-write rejection | Must | R1 | M1.5 | Not Started |
 | REQ-AUTH-006 | Tracking duplication within a project | Must | R1 | M1.5 | Not Started |
-| REQ-AUTH-007 | Project-scoped full-text and fuzzy search | Must | R1 | M1.7 | Not Started |
+| REQ-AUTH-007 | Project-scoped full-text search | Must | R1 | M1.7 | Not Started |
 | REQ-AUTH-008 | Page and flow duplication | Should | R2 | M2.7 | Not Started |
 | REQ-AUTH-009 | Cross-project tracking copy with guided mapping | Should | R2 | M2.7 | Not Started |
 | REQ-AUTH-010 | Bulk operations on a multi-selection, with preview | Should | R2 | M2.4 | Not Started |
@@ -93,25 +93,24 @@ A duplicated tracking inherits everything: properties, modules, specific values,
 - Images are copied into new storage objects, not referenced (REQ-AUTH-002).
 - The copy receives its own immutable identifier.
 
-### REQ-AUTH-007 — Project-scoped full-text and fuzzy search
+### REQ-AUTH-007 — Project-scoped full-text search
 
 **Must** · R1 · [M1.7](../milestones.md) · spec §7.8, §16.4 · **Not Started** · Issue: — · PR: —
 
-Full-text and fuzzy search, scoped to a single project. Property names and tracking names rank above other text. **Specific values are indexed.** All textual content is indexed except non-publishable free pages.
+Full-text search, scoped to a single project. Property names and tracking names rank above other text. **Specific values are indexed.** All textual content is indexed except non-publishable free pages.
 
 **Acceptance**
 - Searching a literal specific value answers "which tracking sets `page_name` to this?" — the most frequent lookup for analysts and developers alike.
-- A fuzzy match on a misspelled property name still returns it.
+- Prefix and stem matching work: `page_nam` and `tracked` find `page_name` and `tracking`.
 - Search reflects the draft for an editor and the published version for a reader, consistently with REQ-NAV-002.
 - Scope filtering is server-side from project grants (REQ-FDN-008); there is no cross-project search.
 - Non-publishable content is absent from the index, verified against the index itself (REQ-SEC-012).
 
-**Blocked by:** open decision **O14**. The default adapter (Pagefind, REQ-FDN-007) does not satisfy two of the criteria above as written, and both need an answer before [M1.7](../milestones.md):
+**Typo tolerance is deliberately not in scope.** The original criterion — "a fuzzy match on a misspelled property name still returns it" — is **withdrawn**, not deferred to a decision. The default adapter (Pagefind, REQ-FDN-007) does prefix matching and stemming, not typo correction, and that is accepted: it arrives when a search tool that supports it is adopted (REQ-FDN-022), and no requirement is written against it before then.
 
-- **Typo tolerance.** Pagefind does prefix matching and stemming, not typo correction. Either the fuzzy criterion is relaxed to "prefix and stem matching", or it is met another way — an application-side match over the property-name list is cheap at ~200 properties per project and would cover the case the criterion actually describes.
-- **Draft freshness.** Pagefind builds an index rather than updating it per record. Editors search the draft, so the rebuild trigger and its acceptable lag must be decided — per save, debounced, or on demand.
+**Blocked by:** open decision **O14**, now reduced to a single question — **draft-index freshness**. Pagefind builds an index rather than updating it per record, and editors search the draft, so the rebuild trigger and its acceptable lag must be decided before [M1.7](../milestones.md): per save, debounced, or on demand.
 
-> Neither is a reason to reconsider the adapter: both are bounded, and the property being bought — no documentation content leaving the instance — is the one an operator cannot add later (REQ-FDN-021). But they are real, and search is a Must in R1.
+> Sacrificing typo tolerance is the deliberate first-phase trade for a search stack with no external dependency. The property being bought — no documentation content leaving the instance (REQ-FDN-021) — is the one an operator cannot add later; typo tolerance is one an organisation can buy whenever it wants it, by selecting a different adapter.
 
 ### REQ-AUTH-008 — Page and flow duplication
 

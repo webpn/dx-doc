@@ -92,7 +92,7 @@ The requirement files are the live status record. [scope.md](../scope.md) stays 
 | O10 — instance vs company configuration split | REQ-FDN-013 | Immediately |
 | O7 — upgrade and schema-migration strategy | REQ-FDN-009 | End of R0 |
 | O11 — catalogue permission flag vs fifth role | REQ-SEC-010 | Start of R1 |
-| **O14 — typo tolerance and draft-index freshness under Pagefind** | REQ-AUTH-007 | Start of R1 |
+| **O14 — draft-index rebuild trigger and acceptable lag under Pagefind** | REQ-AUTH-007 | Start of R1 |
 | O13 — bulk-operation list completeness | REQ-AUTH-010, REQ-API-008 | End of R1 |
 | O8 — developer-handoff reference patterns | REQ-DEV-002 | End of R1 |
 | O3 — structured analytics-reading guidance | REQ-DOM-014, REQ-VIEW-002 | Start of R2 |
