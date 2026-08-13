@@ -4,14 +4,14 @@ See [ADR-0017: Testing Strategy](../adr/0017-testing-strategy.md) for the formal
 
 ## Test Layers
 
-| Layer | Tool | Focus | Directory |
-|---|---|---|---|
-| Domain (unit) | Vitest | Business rules, invariants, value objects | Co-located with source |
-| Application (unit/integration) | Vitest | Use cases with mocked ports | Co-located |
-| Infrastructure (integration) | Vitest | Repositories, search, storage | `tests/integration/` |
-| API (integration) | Vitest + supertest | Endpoints, validation, auth | `tests/integration/api/` |
-| UI (component) | Vitest + React Testing Library | Component behavior | Co-located |
-| E2E | Playwright | Critical user journeys | `e2e/` |
+| Layer                          | Tool                           | Focus                                     | Directory                |
+| ------------------------------ | ------------------------------ | ----------------------------------------- | ------------------------ |
+| Domain (unit)                  | Vitest                         | Business rules, invariants, value objects | Co-located with source   |
+| Application (unit/integration) | Vitest                         | Use cases with mocked ports               | Co-located               |
+| Infrastructure (integration)   | Vitest                         | Repositories, search, storage             | `tests/integration/`     |
+| API (integration)              | Vitest + supertest             | Endpoints, validation, auth               | `tests/integration/api/` |
+| UI (component)                 | Vitest + React Testing Library | Component behavior                        | Co-located               |
+| E2E                            | Playwright                     | Critical user journeys                    | `e2e/`                   |
 
 ## Running Tests
 
@@ -37,7 +37,10 @@ npm run test:coverage
 describe('Tracking', () => {
   it('detaches module when all its properties are individually removed', () => {
     const tracking = createTracking({ name: 'Test' });
-    const module = createModule({ name: 'Standard Actions', properties: ['action_name', 'action_type'] });
+    const module = createModule({
+      name: 'Standard Actions',
+      properties: ['action_name', 'action_type'],
+    });
 
     tracking.addModule(module);
     tracking.removeProperty('action_name');
@@ -82,6 +85,7 @@ describe('POST /projects/:id/trackings', () => {
 ## Test Database
 
 Integration tests that touch the database use an ephemeral database:
+
 - CI: SQLite (no service container). MariaDB and PostgreSQL join the nightly matrix from R2 — see [ADR-0017](../adr/0017-testing-strategy.md).
 - Local: a separate test database (`dxdoc_test`) — run migrations before tests
 
@@ -123,6 +127,7 @@ All tests run on every PR and push to `main`. See `.github/workflows/ci.yml`.
 ## Coverage
 
 Coverage is measured but no arbitrary threshold is enforced. Focus coverage on:
+
 - Domain logic (high value, easy to test)
 - Application use cases (orchestration and policies)
 - API validation (catches regressions)

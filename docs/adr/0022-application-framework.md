@@ -1,16 +1,18 @@
 # ADR-0022: Application Framework and Build Tool
 
 ## Status
+
 Accepted (2026-08-12)
 
 ## Date
+
 2026-08-12
 
 ## Context
 
 No decision record stated which React framework and build tool the Platform uses. [ADR-0017](0017-testing-strategy.md) assumed Vite in a parenthesis, [milestones](../product/milestones.md) recorded plainly that no framework was chosen, and [M0.1](../product/milestones.md)'s exit criterion — every technology choice needed to write the first line of production code is recorded and accepted — could not be met while the most consequential one was unrecorded.
 
-The constraint that decides it is not React's. It is [ADR-0007](0007-api-as-single-entry-point.md): the REST API is the single entry point for every consumer, and *"the web UI is just another client."* That sentence describes a single-page application talking to an HTTP API, and it was accepted long before this ADR existed.
+The constraint that decides it is not React's. It is [ADR-0007](0007-api-as-single-entry-point.md): the REST API is the single entry point for every consumer, and _"the web UI is just another client."_ That sentence describes a single-page application talking to an HTTP API, and it was accepted long before this ADR existed.
 
 ## Decision
 
@@ -34,11 +36,11 @@ Next.js earns its keep through Server Components fetching data directly and Serv
 
 Three things settled it:
 
-1. **A restriction nobody can see is a restriction that erodes.** Every Next.js tutorial, every example, and every model's prior about Next.js says *fetch in the Server Component*. Under [ADR-0019](0019-ai-coding-agent-model.md) this codebase is written largely by agents, and a rule contradicted by the entire published corpus of the framework is one that gets violated in a PR that looks idiomatic and reviews clean. With Vite the rule does not need to exist: there is no server-rendering path to reach for, so the architecture is enforced by the absence of the temptation rather than by vigilance.
+1. **A restriction nobody can see is a restriction that erodes.** Every Next.js tutorial, every example, and every model's prior about Next.js says _fetch in the Server Component_. Under [ADR-0019](0019-ai-coding-agent-model.md) this codebase is written largely by agents, and a rule contradicted by the entire published corpus of the framework is one that gets violated in a PR that looks idiomatic and reviews clean. With Vite the rule does not need to exist: there is no server-rendering path to reach for, so the architecture is enforced by the absence of the temptation rather than by vigilance.
 2. **Nothing in the product needs what was being restrained.** The application is desktop-only ([REQ-NFR-007](../product/requirements/REQ-NFR.md)), behind authentication, with no SEO surface and no public landing pages. The published documentation site is a **generated artefact** (R2 distribution channels), not a server-rendered route. First-paint on an internal tool used all day by the same people is not where the performance budget lives — [REQ-NFR-001](../product/requirements/REQ-NFR.md)'s two seconds is about opening a tracking page, which is an API call either way.
 3. **It restores [ADR-0017](0017-testing-strategy.md)'s reasoning instead of patching it.** Vitest was chosen for Vite integration, that rationale died with Next.js and had to be replaced with weaker ones, and it is now true again. Vitest shares the Vite config and transform pipeline, and no async Server Components exist to be untestable.
 
-**When Next.js would have been right:** deploying to Vercel, needing SSR or SEO for a public surface, or wanting RSC reads badly enough to weaken ADR-0007 from *single entry point* to *single validation pipeline*. That last one is a coherent position — it is just not the one already accepted.
+**When Next.js would have been right:** deploying to Vercel, needing SSR or SEO for a public surface, or wanting RSC reads badly enough to weaken ADR-0007 from _single entry point_ to _single validation pipeline_. That last one is a coherent position — it is just not the one already accepted.
 
 ## Consequences
 
@@ -61,6 +63,7 @@ Three things settled it:
 **Vite with a separate API service in its own process and container** — a defensible split, rejected for R1 as premature: it doubles the deployment surface that [M0.6](../product/milestones.md) promises to keep to one command. The layering already makes the separation possible later; nothing in the code assumes co-location beyond the process boundary.
 
 ## Related Decisions
+
 - [ADR-0007](0007-api-as-single-entry-point.md): REST API as Single Entry Point — the constraint that decided this.
 - [ADR-0006](0006-layered-architecture.md): Layered Architecture — Fastify routes live in `src/api/`.
 - [ADR-0012](0012-data-fetching-strategy.md): TanStack Query owns server state in the browser.
@@ -69,4 +72,5 @@ Three things settled it:
 - D13 in [decisions](../decisions/README.md).
 
 ## Last Responsible Moment
+
 M0.1 — met, and it was the milestone's missing piece.

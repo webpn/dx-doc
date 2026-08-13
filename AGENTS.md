@@ -64,6 +64,7 @@ Stop and present the alternatives with their trade-offs. Do not make an arbitrar
 ## Documentation
 
 When behavior or architecture changes:
+
 - Update the relevant documentation in the same PR.
 - If the change affects architectural rules, update [`ARCHITECTURE.md`](ARCHITECTURE.md).
 - If the change introduces a new pattern, update [`ENGINEERING_GUIDE.md`](ENGINEERING_GUIDE.md).

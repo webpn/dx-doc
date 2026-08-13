@@ -4,23 +4,23 @@ Identity, roles, grants, audit and data sensitivity. Source: [functional specifi
 
 Entry format and status legend: [requirements index](README.md).
 
-| ID | Requirement | MoSCoW | Rel. | Milestone | Status |
-|---|---|---|---|---|---|
-| REQ-SEC-001 | Email + password login | Must | R0 | M0.4 | Not Started |
-| REQ-SEC-002 | Four company-scoped roles | Must | R0 | M0.4 | Not Started |
-| REQ-SEC-003 | Per-project access grants | Must | R0 | M0.4 | Not Started |
-| REQ-SEC-004 | OIDC SSO | Must | R1 | M1.9 | Not Started |
-| REQ-SEC-005 | Project shared-password access with expiry | Must | R1 | M1.9 | Not Started |
-| REQ-SEC-006 | Append-only audit log, 24-month retention | Must | R1 | M1.9 | Not Started |
-| REQ-SEC-007 | SAML SSO | Should | R2 | M2.8 | Not Started |
-| REQ-SEC-008 | Audit log UI, paginated list and CSV export | Should | R2 | M2.8 | Not Started |
-| REQ-SEC-009 | Project archive and restore; no hard delete | Should | R2 | M2.8 | Not Started |
-| REQ-SEC-010 | Company catalogue managed by the Admin role | Must | R1 | M1.1 | Not Started |
-| REQ-SEC-011 | Permission matrix enforced server-side | Must | R0 | M0.4 | Not Started |
-| REQ-SEC-012 | Non-publishable content never leaves the instance | Must | R1 | M1.7 → standing | Not Started |
-| REQ-SEC-013 | Account lifecycle and first-run bootstrap | Must | R0 | M0.4 | Not Started |
-| REQ-SEC-014 | Instance-administration capability | Must | R0 | M0.4 | Not Started |
-| REQ-SEC-015 | Instance-administration portal | Should | R2 | M2.8 | Not Started |
+| ID          | Requirement                                       | MoSCoW | Rel. | Milestone       | Status      |
+| ----------- | ------------------------------------------------- | ------ | ---- | --------------- | ----------- |
+| REQ-SEC-001 | Email + password login                            | Must   | R0   | M0.4            | Not Started |
+| REQ-SEC-002 | Four company-scoped roles                         | Must   | R0   | M0.4            | Not Started |
+| REQ-SEC-003 | Per-project access grants                         | Must   | R0   | M0.4            | Not Started |
+| REQ-SEC-004 | OIDC SSO                                          | Must   | R1   | M1.9            | Not Started |
+| REQ-SEC-005 | Project shared-password access with expiry        | Must   | R1   | M1.9            | Not Started |
+| REQ-SEC-006 | Append-only audit log, 24-month retention         | Must   | R1   | M1.9            | Not Started |
+| REQ-SEC-007 | SAML SSO                                          | Should | R2   | M2.8            | Not Started |
+| REQ-SEC-008 | Audit log UI, paginated list and CSV export       | Should | R2   | M2.8            | Not Started |
+| REQ-SEC-009 | Project archive and restore; no hard delete       | Should | R2   | M2.8            | Not Started |
+| REQ-SEC-010 | Company catalogue managed by the Admin role       | Must   | R1   | M1.1            | Not Started |
+| REQ-SEC-011 | Permission matrix enforced server-side            | Must   | R0   | M0.4            | Not Started |
+| REQ-SEC-012 | Non-publishable content never leaves the instance | Must   | R1   | M1.7 → standing | Not Started |
+| REQ-SEC-013 | Account lifecycle and first-run bootstrap         | Must   | R0   | M0.4            | Not Started |
+| REQ-SEC-014 | Instance-administration capability                | Must   | R0   | M0.4            | Not Started |
+| REQ-SEC-015 | Instance-administration portal                    | Should | R2   | M2.8            | Not Started |
 
 ---
 
@@ -31,6 +31,7 @@ Entry format and status legend: [requirements index](README.md).
 Local authentication, required so the Platform is not tied to a single identity provider. Whether a company accepts local password login is part of its **supported login methods** setting (company-level, database — [ADR-0014](../../adr/0014-configuration-split.md)); sessions expire per `AUTH_SESSION_TTL` (instance-level, default 8h).
 
 **Acceptance**
+
 - Passwords are stored with a modern adaptive hash; no reversible storage anywhere.
 - Local login can be disabled per company once that company's SSO is in place, without disabling the instance administrator's ability to recover access (REQ-SEC-014).
 - Failed attempts do not disclose whether the address exists.
@@ -44,12 +45,13 @@ Admin, Project Manager, Editor, Viewer. A user belongs to **one company**, and t
 **Admin is company-scoped, not instance-wide.** An Admin creates and configures projects within their own company, its integrations, its catalogue, its branding, its audit log, and archives and restores its projects. **Creating a company is not an Admin action** — that belongs to the instance-administration capability (REQ-SEC-014), which is a different job held by a different person.
 
 **Acceptance**
+
 - Holding Project Manager alone confers no editing rights.
 - No provisioning path copies identity-provider group membership into a role.
 - The role set is exactly four. A capability that genuinely does not belong to a role is added as a discrete flag (REQ-SEC-014), never as a fifth role — and the first test is whether an existing role already owns the job, which is how O11 resolved (REQ-SEC-010).
 - An Admin cannot create a company, cannot see that other companies exist, and cannot reach any entity belonging to one — tested as the negative case, since this is the tenancy boundary (REQ-FDN-002) expressed in the permission model.
 
-> "Global" in the original wording meant *not per-project*. It has been reworded to *company-scoped* because with multi-company tenancy the two readings diverge, and the wrong one hands every tenant's documentation to whoever administers any one of them.
+> "Global" in the original wording meant _not per-project_. It has been reworded to _company-scoped_ because with multi-company tenancy the two readings diverge, and the wrong one hands every tenant's documentation to whoever administers any one of them.
 
 ### REQ-SEC-003 — Per-project access grants
 
@@ -58,6 +60,7 @@ Admin, Project Manager, Editor, Viewer. A user belongs to **one company**, and t
 A user sees only the projects explicitly granted to them. Every permission is additionally scoped by the grant: no role confers access to an ungranted project.
 
 **Acceptance**
+
 - An Admin without a grant still administers their company but is subject to the same read scoping in project content listings.
 - Grant checks live in one place, invoked by API, MCP, search and export paths alike.
 - A test asserts the negative case for every entry point, not only the HTTP API.
@@ -71,6 +74,7 @@ A user sees only the projects explicitly granted to them. Every permission is ad
 OIDC is the primary corporate authentication method. Each company connects its own identity provider: issuer, client ID, client secret and scopes are company-level configuration, set by the company Admin and stored encrypted at rest ([ADR-0014](../../adr/0014-configuration-split.md)) — not an instance-wide `AUTH_OIDC_*` environment variable, since different companies on the same instance may use different providers. Role and grant assignment remain manual inside the Platform.
 
 **Acceptance**
+
 - A first-time SSO login creates a user with no role and no grants — access is granted deliberately, never inferred from a successful authentication.
 - The redirect URI derives from `APP_URL`, so a misconfigured instance fails loudly rather than redirecting elsewhere.
 - Local and SSO login can coexist for the same company, per its configured supported login methods.
@@ -83,6 +87,7 @@ OIDC is the primary corporate authentication method. Each company connects its o
 A project may be exposed read-only behind a shared password. Multiple passwords per project, each with an optional expiry. Granularity is the whole project. No per-reader audit is required for this mode.
 
 **Acceptance**
+
 - An expired password stops working without an administrative action.
 - Shared-password access is read-only through every path, including export endpoints.
 - Non-publishable free pages are invisible in this mode (REQ-SEC-012).
@@ -95,6 +100,7 @@ A project may be exposed read-only behind a shared password. Multiple passwords 
 Recorded: login and logout; entity creation, modification and deletion; publication; rollback; export; guest access; MCP calls; permission changes; integration configuration changes. Read events are deliberately not recorded. Retention is `AUDIT_RETENTION_MONTHS`, default 24.
 
 **Acceptance**
+
 - Entries cannot be updated or deleted through any application path.
 - Every event class named above has a test proving an entry is written.
 - A bulk operation produces one entry recording the operation, the selection size and the actor — not one entry per affected item (see REQ-AUTH-010).
@@ -121,6 +127,7 @@ Admin-only consultation interface: a paginated list with CSV export and delibera
 Projects cannot be hard-deleted. An Admin archives a project, which unpublishes it and makes it restorable.
 
 **Acceptance**
+
 - No application path issues a destructive delete of a project or its content.
 - An archived project disappears from listings and published artefacts, and restores with its content and version history intact.
 
@@ -131,6 +138,7 @@ Projects cannot be hard-deleted. An Admin archives a project, which unpublishes 
 Creating and modifying the company-level catalogue (standard properties, modules, templates, free-page templates) is a power of the **Admin** role within the company. There is no fifth role and no separate flag.
 
 **Acceptance**
+
 - An Admin can modify their own company's catalogue; nobody else can.
 - An Editor can consume catalogue content at project creation and cannot modify the catalogue.
 - The role set stays at exactly four (REQ-SEC-002).
@@ -139,7 +147,7 @@ Creating and modifying the company-level catalogue (standard properties, modules
 
 **Resolved 2026-08-12 — O11 is closed.** The question was whether catalogue management should be a discrete flag or a fifth role. It is neither: the company already has an administrator, and administering a company includes its catalogue. The division that matters was drawn by REQ-SEC-014 and is unchanged — **the instance administrator's remit is companies as entities, the Admin's remit is everything inside one.**
 
-> This resolves a contradiction the record already contained rather than introducing a new position. [REQ-SEC-014](#req-sec-014--instance-administration-capability) states that *"everything else an Admin does — projects, integrations, **catalogue**, branding, audit log — stays with the Admin role"*, and [personas.md](../personas.md) describes the Admin as managing the company's catalogue. Only this entry said otherwise. The earlier interim position — a discrete flag — would have meant an Admin who cannot administer part of their own company, which is a distinction without a job behind it.
+> This resolves a contradiction the record already contained rather than introducing a new position. [REQ-SEC-014](#req-sec-014--instance-administration-capability) states that _"everything else an Admin does — projects, integrations, **catalogue**, branding, audit log — stays with the Admin role"_, and [personas.md](../personas.md) describes the Admin as managing the company's catalogue. Only this entry said otherwise. The earlier interim position — a discrete flag — would have meant an Admin who cannot administer part of their own company, which is a distinction without a job behind it.
 
 ### REQ-SEC-011 — Permission matrix enforced server-side
 
@@ -148,6 +156,7 @@ Creating and modifying the company-level catalogue (standard properties, modules
 Every action in Appendix B is authorised in the backend. The UI hides what a user cannot do as a convenience; hiding is never the enforcement.
 
 **Acceptance**
+
 - Every row of Appendix B has a passing test, positive and negative, exercised through the API rather than the UI.
 - An agent acting through MCP is bound by the consenting user's permissions, and additionally cannot publish, delete users or change permissions (see REQ-API-004).
 - Removing a UI control does not change the outcome of the equivalent direct API call.
@@ -161,6 +170,7 @@ The documentation contains no personal data, but it does contain test credential
 **This is a standing requirement, not a one-milestone deliverable.** Four of the channels it names do not exist at M1.7 and Confluence not until R3, so it cannot be satisfied once and closed. It is first enforced at M1.7 against the search index and the in-app paths, and is **re-verified at every later milestone that adds an output channel** — M2.5, M2.6 and M3.2 each carry it. It reaches `Verified` only when the last channel does.
 
 **Acceptance**
+
 - A non-publishable page is provably absent from the search index, verified by querying the index directly rather than the application.
 - Each output channel has a test asserting the page's content does not appear in generated output, **added in the same milestone as the channel**. A channel merged without one fails review.
 - Flipping a page to non-publishable removes it from the index and from the next generated artefact without a manual reindex.
@@ -185,6 +195,7 @@ How identities come into being, and how they leave. Four parts:
 **Deactivation.** A user can be deactivated, which ends their sessions and revokes their access without deleting them — distinct from removing individual grants (REQ-SEC-003), and required because the audit log (REQ-SEC-006) references actors that must remain resolvable.
 
 **Acceptance**
+
 - On a database that already has a user, the bootstrap variables are ignored: setting them cannot create a second administrator, reset an existing one, or change any password. This is tested explicitly, because it is the whole security property of the mechanism.
 - The bootstrap password must be changed at first login, and the instance refuses to start if the variables are set but malformed rather than starting without an administrator.
 - Start-up against an empty database with the variables **unset** fails with a message naming them — an instance nobody can log into is a configuration error, not a valid state.
@@ -212,6 +223,7 @@ Three rules make it safe:
 - **No implied content access.** The flag confers no read or write access to any project's documentation. Reaching content still requires a role and a grant (REQ-SEC-002, REQ-SEC-003), and that grant is auditable like anyone else's.
 
 **Acceptance**
+
 - The flag is a discrete capability, not a fifth role — the role set stays at exactly four (REQ-SEC-002). It is the **only** such flag: REQ-SEC-010 resolved the other candidate to an existing role instead.
 - A user with the flag and no project grants can administer the instance and read no documentation, verified by test.
 - Disabling local password in a company's supported-login-methods setting does not lock out its `instance_admin` flag holders; a test asserts this, since it is the recovery path.

@@ -127,13 +127,13 @@ The documentation of tracking plans for websites and mobile applications:
 
 ## Deferred (with target release)
 
-| Module | Release | Notes |
-|---|---|---|
-| Data quality and pre-release verification | R4 | Analytics platform integrations; data-quality signals; conformance reports (reports only, no persisted state) |
-| Semantic layer | R5 | OWL/RDF/SKOS exports; business metrics, dimensions, certified segments; business glossary (pending O1, O2) |
-| Tracking implementation status | R6 | Lifecycle state on each tracking |
-| Figma frame import | R4 | Design-refresh of screenshots |
-| Insights repository | R6+ | Separate product on the same foundation |
+| Module                                    | Release | Notes                                                                                                         |
+| ----------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
+| Data quality and pre-release verification | R4      | Analytics platform integrations; data-quality signals; conformance reports (reports only, no persisted state) |
+| Semantic layer                            | R5      | OWL/RDF/SKOS exports; business metrics, dimensions, certified segments; business glossary (pending O1, O2)    |
+| Tracking implementation status            | R6      | Lifecycle state on each tracking                                                                              |
+| Figma frame import                        | R4      | Design-refresh of screenshots                                                                                 |
+| Insights repository                       | R6+     | Separate product on the same foundation                                                                       |
 
 ## Deferred Entities (containers only until semantic layer)
 

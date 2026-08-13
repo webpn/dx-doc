@@ -1,22 +1,24 @@
 # ADR-0020: Database Portability Behind a Repository Port
 
 ## Status
+
 Accepted — supersedes [ADR-0003](0003-mariadb-single-database.md)
 
 ## Date
+
 2026-08-12
 
 ## Context
 
-ADR-0003 chose MariaDB as the single database target and explicitly rejected both "SQLite for development" and "multiple database support behind an abstraction". That decision inherited the specification's rationale (§16.1): *"a single target keeps the schema, migrations and test surface small."*
+ADR-0003 chose MariaDB as the single database target and explicitly rejected both "SQLite for development" and "multiple database support behind an abstraction". That decision inherited the specification's rationale (§16.1): _"a single target keeps the schema, migrations and test surface small."_
 
 Two things weigh against it, and they were underweighted at the time.
 
-**The white-label promise.** The Platform is distributed as open source under MIT and is meant to be *deployable by any organisation* (spec §3.5). Storage and search already sit behind ports for exactly this reason (ADR-0009: "what makes the open-source product deployable by organisations that cannot use a hosted search service"). Mandating one specific database while abstracting storage and search is inconsistent: the database is the *hardest* dependency for a third party to satisfy, not the easiest.
+**The white-label promise.** The Platform is distributed as open source under MIT and is meant to be _deployable by any organisation_ (spec §3.5). Storage and search already sit behind ports for exactly this reason (ADR-0009: "what makes the open-source product deployable by organisations that cannot use a hosted search service"). Mandating one specific database while abstracting storage and search is inconsistent: the database is the _hardest_ dependency for a third party to satisfy, not the easiest.
 
 **Setup cost falls on a maintainer of one.** Risk R4 in the register is bus factor of one. A MariaDB-only stance means every contributor, every CI run, and every casual evaluator needs a running database service before anything works. For a project whose adoption story is "clone it and try it", that is a real barrier paid on every single run.
 
-Against those: a portability abstraction is speculative generality if no second implementation ever ships. The deciding factor is that a second and third implementation *are* planned, not hypothetical.
+Against those: a portability abstraction is speculative generality if no second implementation ever ships. The deciding factor is that a second and third implementation _are_ planned, not hypothetical.
 
 ## Decision
 
@@ -45,15 +47,19 @@ Specifically, from the first migration onward:
 ## Alternatives Considered
 
 ### Keep MariaDB only (ADR-0003)
+
 Rejected. The rationale it rested on — small schema, migration and test surface — is real but is bought at the cost of the deployability promise the product is built around, and it is the one dependency a third-party deployer is least able to substitute.
 
 ### SQLite for development, MariaDB for production
+
 Rejected, and this is the alternative ADR-0003 named explicitly. Its objection stands: testing against a database you do not run in production invites dialect surprises. The answer is not to avoid the second dialect but to **test every supported dialect**, which the port makes possible — full suite against SQLite on every PR, full suite against MariaDB and PostgreSQL nightly and before release.
 
 ### An ORM providing dialect abstraction for free
-Not chosen as the *reason* for portability, though an ORM or query builder may well implement the adapters. Dialect portability that emerges as a side effect of a library is not a guarantee: the constraint has to be stated and tested, or it decays the first time someone reaches for a convenient dialect-specific feature.
+
+Not chosen as the _reason_ for portability, though an ORM or query builder may well implement the adapters. Dialect portability that emerges as a side effect of a library is not a guarantee: the constraint has to be stated and tested, or it decays the first time someone reaches for a convenient dialect-specific feature.
 
 ### PostgreSQL first instead of SQLite
+
 Rejected for R0/R1. It re-imposes the service dependency on every contributor and CI run, which is precisely the cost being removed. PostgreSQL arrives in R2 as a peer adapter.
 
 ## Consequences

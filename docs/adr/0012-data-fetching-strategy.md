@@ -1,12 +1,15 @@
 # ADR-0012: Data-Fetching and Server-State Strategy
 
 ## Status
+
 Accepted (2026-08-12)
 
 ## Date
+
 2026-08-11 (decided 2026-08-12)
 
 ## Context
+
 The React web application fetches data from the REST API. Server state (entities, lists, search results) must be cached, kept fresh, and shared across components without manual management. The choice of data-fetching library affects component design, loading/error state patterns, and cache invalidation strategy.
 
 ## Decision
@@ -44,6 +47,7 @@ Every read of API data goes through a query; every write goes through a mutation
 Server state (TanStack Query) and client state ([ADR-0013](0013-state-management.md)) are separate concerns. This decision covers server state only and is not a client-state strategy.
 
 ## Related Decisions
+
 - [ADR-0007](0007-api-as-single-entry-point.md): REST API as Single Entry Point — the API being consumed.
 - [ADR-0013](0013-state-management.md): State Management — still open, and narrowed by this decision.
 - [ADR-0016](0016-concurrency-model.md): Concurrency Model — constrains how optimistic updates may behave.
@@ -51,4 +55,5 @@ Server state (TanStack Query) and client state ([ADR-0013](0013-state-management
 - D2 in [decisions](../decisions/README.md).
 
 ## Last Responsible Moment
+
 Start of R1 (before UI components are built) — met.

@@ -1,9 +1,11 @@
 # ADR-0021: Agent-Driven Migration Instead of a Bespoke Importer
 
 ## Status
+
 Accepted
 
 ## Date
+
 2026-08-12
 
 ## Context
@@ -39,15 +41,19 @@ Four parts:
 ## Alternatives Considered
 
 ### Build the bespoke importer as specified (§13)
+
 Rejected for the three reasons above. Its one genuine advantage — determinism — is preserved by the committed script, which is equally deterministic once written.
 
 ### Agent performs the migration interactively, no script
-Rejected. It is unreproducible, unreviewable, and cannot be re-run after a correction — which forfeits the idempotency the specification correctly demanded (§13.3). It would also make thirty products thirty separate manual efforts. The agent's work is the *authoring* of the script; the script does the migration.
+
+Rejected. It is unreproducible, unreviewable, and cannot be re-run after a correction — which forfeits the idempotency the specification correctly demanded (§13.3). It would also make thirty products thirty separate manual efforts. The agent's work is the _authoring_ of the script; the script does the migration.
 
 ### Importer as a separate repository, still hand-written
+
 Rejected. It solves the "throwaway code in the product" problem but neither of the other two, and still requires the complete API in order to write against. Once the API exists, the hand-written parser is the part adding least value.
 
 ### Ship an import endpoint that accepts the Notion ZIP
+
 Rejected — this is the bespoke importer with a different entry point, and it puts the source-format knowledge back in the product.
 
 ## Consequences
@@ -65,5 +71,5 @@ Rejected — this is the bespoke importer with a different entry point, and it p
 - [ADR-0007](0007-api-as-single-entry-point.md) — the API-first constraint this leans on entirely
 - [ADR-0019](0019-ai-coding-agent-model.md) — agent write model, draft-only, no publication
 - [ADR-0004](0004-immutable-internal-identifiers.md) — identity basis for idempotent upserts
-- Supersedes specification §13's importer approach; §13's *scope* decisions (no flow reconstruction, no history migration, no internal links) are unchanged
+- Supersedes specification §13's importer approach; §13's _scope_ decisions (no flow reconstruction, no history migration, no internal links) are unchanged
 - Requirements: REQ-IMP-001 … REQ-IMP-009, REQ-API-002, REQ-API-003, REQ-API-004, REQ-API-009, REQ-VER-010

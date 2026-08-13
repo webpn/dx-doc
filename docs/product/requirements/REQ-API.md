@@ -6,18 +6,18 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 > **Resequenced.** The documented public API and the MCP read and write tools moved **R3 → R1**. They are no longer a late-release convenience: since [ADR-0021](../../adr/0021-agent-driven-migration.md) replaced the bespoke importer with an agent driving the API, they are the mechanism by which ~30 products get imported. OAuth with user consent (REQ-API-005) stays in R3 — the import authenticates with a service-account token (REQ-API-009), not an interactive consent flow.
 
-| ID | Requirement | MoSCoW | Rel. | Milestone | Status |
-|---|---|---|---|---|---|
-| REQ-API-001 | Internal REST API as the single entry point | Must | R0 | M0.5 | Not Started |
-| REQ-API-002 | Documented public API | Must | R1 | M1.2 | Not Started |
-| REQ-API-003 | MCP read tools | Must | R1 | M1.3 | Not Started |
-| REQ-API-004 | MCP write tools, draft only | Must | R1 | M1.3 | Not Started |
-| REQ-API-005 | OAuth with user consent for MCP clients | Should | R3 | M3.4 | Not Started |
-| REQ-API-006 | MCP resources exposing naming guidelines | Should | R1 | M1.3 | Not Started |
-| REQ-API-007 | Outbound webhooks on publication | Could | R4 | M4.3 | Not Started |
-| REQ-API-008 | Bulk operations restricted to explicit identifier lists | Should | R2 | M2.4 | Not Started |
-| REQ-API-009 | Service-account API tokens | Must | R1 | M1.2 | Not Started |
-| REQ-API-010 | Richer MCP read tools | Should | R3 | M3.4 | Not Started |
+| ID          | Requirement                                             | MoSCoW | Rel. | Milestone | Status      |
+| ----------- | ------------------------------------------------------- | ------ | ---- | --------- | ----------- |
+| REQ-API-001 | Internal REST API as the single entry point             | Must   | R0   | M0.5      | Not Started |
+| REQ-API-002 | Documented public API                                   | Must   | R1   | M1.2      | Not Started |
+| REQ-API-003 | MCP read tools                                          | Must   | R1   | M1.3      | Not Started |
+| REQ-API-004 | MCP write tools, draft only                             | Must   | R1   | M1.3      | Not Started |
+| REQ-API-005 | OAuth with user consent for MCP clients                 | Should | R3   | M3.4      | Not Started |
+| REQ-API-006 | MCP resources exposing naming guidelines                | Should | R1   | M1.3      | Not Started |
+| REQ-API-007 | Outbound webhooks on publication                        | Could  | R4   | M4.3      | Not Started |
+| REQ-API-008 | Bulk operations restricted to explicit identifier lists | Should | R2   | M2.4      | Not Started |
+| REQ-API-009 | Service-account API tokens                              | Must   | R1   | M1.2      | Not Started |
+| REQ-API-010 | Richer MCP read tools                                   | Should | R3   | M3.4      | Not Started |
 
 ---
 
@@ -28,6 +28,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 The REST API is the foundation of the system, not a feature. The web client, the MCP server, the export generators, the static-site builder and the import scripts all consume it. All validation lives behind it (REQ-FDN-010).
 
 **Acceptance**
+
 - No consumer — including the web client and the export generators — reaches the database or an application service by any route other than the API contract.
 - A rule enforced through the UI is demonstrably enforced through the API by the same code path, not a parallel implementation.
 - Authorisation (REQ-SEC-011) is applied in the API layer for every route, with no route opting out.
@@ -42,6 +43,7 @@ The REST API is the foundation of the system, not a feature. The web client, the
 A documented, stable public surface. The contract is generated from the implementation rather than maintained alongside it, so it cannot drift.
 
 **Acceptance**
+
 - The import script (REQ-IMP-007) is written against the published documentation alone, with no reading of Platform source. If that is not possible, the documentation is incomplete.
 - Generated contract and implementation cannot diverge — a test fails if they do.
 - Error responses are documented with their machine-readable shape, not only their prose meaning.
@@ -57,6 +59,7 @@ A layer above the REST API. Clients are analysts' and editors' AI assistants, de
 R1 set, chosen for what import and verification need: list projects; retrieve a project's page structure; retrieve a page's trackings; search properties; retrieve property detail; retrieve the reconciliation report (REQ-IMP-006). The richer analytical tools are REQ-API-010.
 
 **Acceptance**
+
 - Every read tool is scoped by the caller's project grants (REQ-SEC-003), with the negative case tested.
 - An agent can verify what it wrote by reading it back through these tools, which is what makes an import self-checking rather than blind.
 
@@ -69,6 +72,7 @@ Write tools covering the R1 entity set (REQ-IMP-002) — not only the narrower l
 Writes always land in the draft. Agents may **not** publish versions, delete users, or change permissions. There is deliberately no agent-review queue: human review happens at publication, where the diff is inspected and items can be excluded.
 
 **Acceptance**
+
 - Every write tool has a test proving it cannot reach a published version.
 - Publication, user deletion and permission changes have no MCP tool at all — they are absent, not merely permission-checked.
 - Agent writes are attributed (REQ-VER-010), so the publication diff can distinguish them.
@@ -90,6 +94,7 @@ Stays in R3: this is the interactive-assistant path. Import authenticates with a
 Naming and documentation guidelines exposed as MCP resources and prompts, so they are automatically available as context to agents rather than restated per conversation.
 
 **Acceptance**
+
 - The conventions in REQ-DOM-023 (lowercase underscores, `si`/`no` booleans, ISO 8601, `dev`/`qa`/`prod`, separator rules) are retrievable as a resource.
 - The import agent consumes them, so imported content follows house conventions from the first product rather than being corrected afterwards.
 
@@ -116,6 +121,7 @@ Bulk operations (REQ-AUTH-010) and batch writes (REQ-IMP-005) are exposed throug
 Non-interactive authentication for scripted clients: a token bound to a user identity, with the same role and project grants, revocable independently of that user's session.
 
 **Acceptance**
+
 - A token carries no privilege its owner lacks, and is bound by the same permission matrix (REQ-SEC-011).
 - Token use is attributed in the audit log as a distinct actor kind, distinguishable from an interactive session (REQ-SEC-006).
 - Tokens are revocable individually and expire.

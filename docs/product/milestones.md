@@ -6,13 +6,13 @@ Breaks the release roadmap ([functional specification §20](functional-specifica
 
 ## How to read this
 
-| Field | Meaning |
-|---|---|
-| **Goal** | The one thing this milestone makes true. |
-| **Delivers** | Requirement IDs completed by this milestone. See [requirements](requirements/README.md). |
-| **Depends on** | Milestones that must be complete first. |
-| **Gated by** | Open decisions (spec §21) that must be closed before the milestone starts. |
-| **Exit** | Observable, testable condition. A milestone is not done until this is demonstrated. |
+| Field          | Meaning                                                                                  |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| **Goal**       | The one thing this milestone makes true.                                                 |
+| **Delivers**   | Requirement IDs completed by this milestone. See [requirements](requirements/README.md). |
+| **Depends on** | Milestones that must be complete first.                                                  |
+| **Gated by**   | Open decisions (spec §21) that must be closed before the milestone starts.               |
+| **Exit**       | Observable, testable condition. A milestone is not done until this is demonstrated.      |
 
 Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that slips keeps its ID and moves release, it is never renumbered.
 
@@ -28,7 +28,7 @@ Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that sli
 
 ## R0 — Foundations
 
-*Target: weeks 1–2. No user-visible value; determines the cost of everything after it.*
+_Target: weeks 1–2. No user-visible value; determines the cost of everything after it._
 
 ### M0.1 — Close the stack decisions
 
@@ -122,7 +122,7 @@ MIT licence, README with setup instructions, reference deployment stack (compose
 
 ## R1 — MVP
 
-*Target: weeks 3–8. The entire Must set except [REQ-VIEW-003](requirements/REQ-VIEW.md), which stays a Must but has no consumer until R2. This is the release that retires the legacy wiki for the pilot product.*
+_Target: weeks 3–8. The entire Must set except [REQ-VIEW-003](requirements/REQ-VIEW.md), which stays a Must but has no consumer until R2. This is the release that retires the legacy wiki for the pilot product._
 
 > **The [R1 minimum requirements](minimum-requirements.md) are the checklist, not a matter of opinion.** They enumerate what R1 must deliver. R1 is complete when every row is satisfied — which is what makes the M1.10 exit criterion falsifiable rather than a matter of opinion.
 
@@ -144,7 +144,7 @@ Page, Tracking, DataLayerProperty (full attribute set including `business_label`
 
 ### M1.2 — Import-grade API
 
-*Target: week 4.*
+_Target: week 4._
 
 **Goal:** everything in the product is reachable and idempotently writable by a machine.
 
@@ -160,7 +160,7 @@ Every R1 entity creatable, readable and updatable through the API. Idempotent up
 
 ### M1.3 — MCP server
 
-*Target: week 5.*
+_Target: week 5._
 
 **Goal:** an agent can inspect the Platform, write into it, and verify its own work.
 
@@ -174,7 +174,7 @@ Read tools over the R1 entity set plus the reconciliation report. Write tools co
 
 ### M1.4 — Agent-driven pilot import
 
-*Target: weeks 5–6.*
+_Target: weeks 5–6._
 
 **Goal:** the data model is validated against years of accumulated real usage, while there is still time to change it.
 
@@ -279,7 +279,7 @@ Final import run, **item-by-item editorial verification of the first product**, 
 
 ## R2 — Navigation and distribution
 
-*Target: months 3–4. The release that lets people outside the tool consume the documentation.*
+_Target: months 3–4. The release that lets people outside the tool consume the documentation._
 
 ### M2.1 — Structured expression
 
@@ -385,7 +385,7 @@ It is a workshop, not a build: the deliverable is the ontology's classes, its IR
 
 ## R3 — Developer handoff, API and MCP
 
-*Target: months 5–6.*
+_Target: months 5–6._
 
 ### M3.1 — Code snippet generation
 
@@ -407,7 +407,7 @@ Confluence Cloud via API to a configurable space, development view only, full ov
 
 **Exit:** a manual edit made in Confluence is overwritten on the next publication — by design and documented as such.
 
-### M3.3 — Public API — *moved to [M1.2](#m12--import-grade-api)*
+### M3.3 — Public API — _moved to [M1.2](#m12--import-grade-api)_
 
 The documented public API is no longer an R3 deliverable. Import is written against it, so it ships in R1. The ID is retained rather than reused, so that anything referring to "M3.3" resolves to this note instead of silently pointing at different work.
 
@@ -437,7 +437,7 @@ Extension, Segment and Calculated Metric as containers; recurring-custom-propert
 
 ## R4 — Data quality and verification
 
-*Target: months 7–8.*
+_Target: months 7–8._
 
 ### M4.1 — Analytics platform integrations
 
@@ -465,7 +465,7 @@ Outbound webhooks on publication; Figma frame import with design refresh; option
 
 ## R5 — Semantic layer
 
-*Target: months 9+. Scope pending.*
+_Target: months 9+. Scope pending._
 
 > **M5.0 is not here.** It is scheduled in [R2](#m50--ontology-definition), where its deadline actually falls. It keeps its R5 number because milestone IDs are stable, and it is the reason anything below can be scoped at all.
 
@@ -509,16 +509,16 @@ Four things sit on the critical path and are worth protecting:
 
 ## Open decisions, by the milestone they gate
 
-| Decision | Gates | Last responsible moment |
-|---|---|---|
-| O13 — bulk-operation list completeness | M1.10, M2.4 | End of R1 |
-| O8 — developer-handoff reference patterns | M1.10 | End of R1 |
-| O3 — structured "how to read this in the analytics platform" | M2.1 | Start of R2 |
-| O1 — semantic layer ontology, IRIs, export formats | M5.0 | End of R2 |
-| O2 — business glossary | M5.0 | End of R2 |
-| O9 — container entity attributes | M3.5 | Start of R3 |
-| O4 — data quality vs unstructured placeholders | M4.2 | Start of R4 |
-| O5 — verification module scope | M4.1 | Start of R4 |
+| Decision                                                     | Gates       | Last responsible moment |
+| ------------------------------------------------------------ | ----------- | ----------------------- |
+| O13 — bulk-operation list completeness                       | M1.10, M2.4 | End of R1               |
+| O8 — developer-handoff reference patterns                    | M1.10       | End of R1               |
+| O3 — structured "how to read this in the analytics platform" | M2.1        | Start of R2             |
+| O1 — semantic layer ontology, IRIs, export formats           | M5.0        | End of R2               |
+| O2 — business glossary                                       | M5.0        | End of R2               |
+| O9 — container entity attributes                             | M3.5        | Start of R3             |
+| O4 — data quality vs unstructured placeholders               | M4.2        | Start of R4             |
+| O5 — verification module scope                               | M4.1        | Start of R4             |
 
 **O7 is closed** — see [ADR-0015](../adr/0015-schema-migration-strategy.md), accepted 2026-08-12 as proposed: forward-only versioned migrations run at start-up, a production guard that refuses to start rather than auto-apply, no downgrade path, and backup as the operator's documented responsibility. M0.1 is no longer gated by anything.
 
@@ -530,27 +530,27 @@ Four things sit on the critical path and are worth protecting:
 
 ## Risk mitigations owned by milestones
 
-| Risk (spec §22) | Owning milestone | Mitigation |
-|---|---|---|
-| R1 — Must set exceeds the R1 budget | M1.4, M1.10 | Week 5–6 import checkpoint; named demotion candidates below |
-| R2 — pilot import exposes model ambiguities | M1.4 | Front-load the import ahead of the UI |
-| R3 — open-source work competes with features | M0.6 | One database adapter, one search implementation, one deployment path at launch |
-| R4 — bus factor of one | M2.6 | Git export as human-readable backup; second maintainer before R3 |
-| R5 — semantic layer undefined | M5.0 | Workshop before the end of R2; immutable IDs and `business_label` already shipped |
-| R6 — adoption | M1.8, M1.10 | Invest in the pre-publication diff; onboard on the pilot before extending |
-| R7 — ~~hosted search dependency~~ **search adapter capability gap** | M0.3, M1.7 | Risk replaced rather than mitigated: the default adapter has no hosted dependency, so nothing leaks off-instance and nothing needs procurement. What remains is reduced capability — typo tolerance given up until REQ-FDN-022. The rebuild cost of a built-not-updated index is bounded by the O14 model: coalesced async rebuilds on the draft, publication-triggered rebuilds for readers |
-| R8 — analytics API access not provisioned in time | M4.1 | Start provisioning during R2 |
-| **R9 — agent import produces plausible-looking wrong data** | M1.4, M1.10 | Script reviewed before it runs at scale; reconciliation counts checked against source; first product verified item-by-item before the remaining ~29 |
-| **R10 — pilot content lives in one unbacked SQLite file** | M0.6 | File-level snapshot demonstrated in the reference stack; README states backup is the operator's job; git export closes it properly in R2 |
+| Risk (spec §22)                                                     | Owning milestone | Mitigation                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1 — Must set exceeds the R1 budget                                 | M1.4, M1.10      | Week 5–6 import checkpoint; named demotion candidates below                                                                                                                                                                                                                                                                                                                                  |
+| R2 — pilot import exposes model ambiguities                         | M1.4             | Front-load the import ahead of the UI                                                                                                                                                                                                                                                                                                                                                        |
+| R3 — open-source work competes with features                        | M0.6             | One database adapter, one search implementation, one deployment path at launch                                                                                                                                                                                                                                                                                                               |
+| R4 — bus factor of one                                              | M2.6             | Git export as human-readable backup; second maintainer before R3                                                                                                                                                                                                                                                                                                                             |
+| R5 — semantic layer undefined                                       | M5.0             | Workshop before the end of R2; immutable IDs and `business_label` already shipped                                                                                                                                                                                                                                                                                                            |
+| R6 — adoption                                                       | M1.8, M1.10      | Invest in the pre-publication diff; onboard on the pilot before extending                                                                                                                                                                                                                                                                                                                    |
+| R7 — ~~hosted search dependency~~ **search adapter capability gap** | M0.3, M1.7       | Risk replaced rather than mitigated: the default adapter has no hosted dependency, so nothing leaks off-instance and nothing needs procurement. What remains is reduced capability — typo tolerance given up until REQ-FDN-022. The rebuild cost of a built-not-updated index is bounded by the O14 model: coalesced async rebuilds on the draft, publication-triggered rebuilds for readers |
+| R8 — analytics API access not provisioned in time                   | M4.1             | Start provisioning during R2                                                                                                                                                                                                                                                                                                                                                                 |
+| **R9 — agent import produces plausible-looking wrong data**         | M1.4, M1.10      | Script reviewed before it runs at scale; reconciliation counts checked against source; first product verified item-by-item before the remaining ~29                                                                                                                                                                                                                                          |
+| **R10 — pilot content lives in one unbacked SQLite file**           | M0.6             | File-level snapshot demonstrated in the reference stack; README states backup is the operator's job; git export closes it properly in R2                                                                                                                                                                                                                                                     |
 
 **If R1 overruns**, demote in this order and no further. Every item below is genuinely scheduled in R1, so demoting it relieves R1:
 
-| Order | Demote | From | What is lost |
-|---|---|---|---|
-| 1 | [REQ-FDN-014](requirements/REQ-FDN.md) error tracking | Should, M1.9 | Troubleshooting during the pilot is by log reading. Cheapest to lose, easiest to add back |
-| 2 | [REQ-API-006](requirements/REQ-API.md) naming guidelines as MCP resources | Should, M1.3 | The agent writes without house conventions in context; imported content needs an editorial pass it would otherwise not need. Costs editor time across ~30 products, so prefer 1 first |
-| 3 | [REQ-DOM-009](requirements/REQ-DOM.md) tracking templates | Must, M1.1 | Editors create trackings by duplication ([REQ-AUTH-006](requirements/REQ-AUTH.md)) instead. Slower per tracking and less consistent, but nothing becomes impossible |
-| 4 | [REQ-DOM-007](requirements/REQ-DOM.md) opt-in module propagation | Must → Should | A module correction has to be reapplied by hand to existing trackings. Painful at pilot scale — this is the last resort, not the first |
+| Order | Demote                                                                    | From          | What is lost                                                                                                                                                                          |
+| ----- | ------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | [REQ-FDN-014](requirements/REQ-FDN.md) error tracking                     | Should, M1.9  | Troubleshooting during the pilot is by log reading. Cheapest to lose, easiest to add back                                                                                             |
+| 2     | [REQ-API-006](requirements/REQ-API.md) naming guidelines as MCP resources | Should, M1.3  | The agent writes without house conventions in context; imported content needs an editorial pass it would otherwise not need. Costs editor time across ~30 products, so prefer 1 first |
+| 3     | [REQ-DOM-009](requirements/REQ-DOM.md) tracking templates                 | Must, M1.1    | Editors create trackings by duplication ([REQ-AUTH-006](requirements/REQ-AUTH.md)) instead. Slower per tracking and less consistent, but nothing becomes impossible                   |
+| 4     | [REQ-DOM-007](requirements/REQ-DOM.md) opt-in module propagation          | Must → Should | A module correction has to be reapplied by hand to existing trackings. Painful at pilot scale — this is the last resort, not the first                                                |
 
 > **[REQ-AUTH-004](requirements/REQ-AUTH.md) left this list on 2026-08-12 by being demoted outright** rather than held in reserve: Mermaid rendering moved to [M2.2](#m22--flows). The list is one item shorter, and the relief is taken rather than optional.
 

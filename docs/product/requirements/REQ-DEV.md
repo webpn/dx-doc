@@ -4,15 +4,15 @@ Code snippets and external design/dashboard links. Source: [functional specifica
 
 Entry format and status legend: [requirements index](README.md). These requirements are R2 and later; acceptance criteria are elaborated when the release is planned.
 
-| ID | Requirement | MoSCoW | Rel. | Milestone | Status |
-|---|---|---|---|---|---|
-| REQ-DEV-001 | Figma frame links stored as file_id + node_id | Should | R2 | M2.7 | Not Started |
-| REQ-DEV-002 | Code snippet generation per platform × tag manager | Should | R3 | M3.1 | Not Started |
-| REQ-DEV-003 | Snippets in every development-facing artefact | Should | R3 | M3.1 | Not Started |
-| REQ-DEV-004 | Changed-tracking snippets in the developer PDF | Should | R3 | M3.1 | Not Started |
-| REQ-DEV-005 | Snippets narrowed by structured property conditions | Should | R3 | M3.1 | Not Started |
-| REQ-DEV-006 | Dashboard and KPI links | Should | R3 | M3.5 | Not Started |
-| REQ-DEV-007 | Figma frame import with design refresh | Could | R4 | M4.3 | Not Started |
+| ID          | Requirement                                         | MoSCoW | Rel. | Milestone | Status      |
+| ----------- | --------------------------------------------------- | ------ | ---- | --------- | ----------- |
+| REQ-DEV-001 | Figma frame links stored as file_id + node_id       | Should | R2   | M2.7      | Not Started |
+| REQ-DEV-002 | Code snippet generation per platform × tag manager  | Should | R3   | M3.1      | Not Started |
+| REQ-DEV-003 | Snippets in every development-facing artefact       | Should | R3   | M3.1      | Not Started |
+| REQ-DEV-004 | Changed-tracking snippets in the developer PDF      | Should | R3   | M3.1      | Not Started |
+| REQ-DEV-005 | Snippets narrowed by structured property conditions | Should | R3   | M3.1      | Not Started |
+| REQ-DEV-006 | Dashboard and KPI links                             | Should | R3   | M3.5      | Not Started |
+| REQ-DEV-007 | Figma frame import with design refresh              | Could  | R4   | M4.3      | Not Started |
 
 ---
 
@@ -50,7 +50,7 @@ The PDF of a version's changes (REQ-VIEW-006) includes snippets for the tracking
 
 Where structured conditions exist (REQ-DOM-012), the snippet shows only the allowed values that condition specifies, comments a property as required where its presence is `always` in that scenario, and as forbidden where it is `never`.
 
-> This is the main practical gain over the legacy wiki: the developer sees what applies to *this* scenario rather than the full property set. It is also the reason REQ-DOM-012 exists — with prose conditions alone, this is not implementable.
+> This is the main practical gain over the legacy wiki: the developer sees what applies to _this_ scenario rather than the full property set. It is also the reason REQ-DOM-012 exists — with prose conditions alone, this is not implementable.
 
 ### REQ-DEV-006 — Dashboard and KPI links
 

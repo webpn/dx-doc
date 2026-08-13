@@ -42,7 +42,11 @@ The project uses strict TypeScript:
   // Prefer
   type Presence = 'always' | 'sometimes' | 'never';
   // Over
-  enum Presence { Always = 'always', Sometimes = 'sometimes', Never = 'never' }
+  enum Presence {
+    Always = 'always',
+    Sometimes = 'sometimes',
+    Never = 'never',
+  }
   ```
 - **Never use `any`** except where explicitly justified and documented with a comment explaining why `unknown` + narrowing is not practical.
 - **Use `unknown` at unsafe boundaries** (API responses, localStorage, URL parameters) and validate/narrow it before use.

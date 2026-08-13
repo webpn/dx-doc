@@ -28,13 +28,13 @@ The Platform addresses all five.
 
 The full persona and role definitions live in [personas.md](personas.md). In short, the Platform serves:
 
-| Persona | Need |
-|---|---|
-| **Tracking specialist / analytics engineer** | Owns the documentation. Needs efficient authoring, templates, bulk operations, and a publication workflow. |
-| **Digital analyst** | Needs to understand what data to expect in the analytics platform and how to interpret it. |
-| **Business user / Product manager** | Needs to review flows and trackings at a high level. Needs to know what's in each release. |
-| **Web / app developer** | Needs to know exactly which trackings to implement — which properties, which values, and only what's relevant to code. |
-| **Designer** | Needs to understand which interactions are tracked, anchored to actual screenshots. |
+| Persona                                      | Need                                                                                                                   |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Tracking specialist / analytics engineer** | Owns the documentation. Needs efficient authoring, templates, bulk operations, and a publication workflow.             |
+| **Digital analyst**                          | Needs to understand what data to expect in the analytics platform and how to interpret it.                             |
+| **Business user / Product manager**          | Needs to review flows and trackings at a high level. Needs to know what's in each release.                             |
+| **Web / app developer**                      | Needs to know exactly which trackings to implement — which properties, which values, and only what's relevant to code. |
+| **Designer**                                 | Needs to understand which interactions are tracked, anchored to actual screenshots.                                    |
 
 ## Distribution Model
 

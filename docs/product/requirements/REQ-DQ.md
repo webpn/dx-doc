@@ -4,16 +4,16 @@ Modules defined in principle and deliberately excluded from current release scop
 
 Entry format and status legend: [requirements index](README.md). Nothing here has acceptance criteria yet — for R4 they follow from closing O4 and O5; for R5 and R6 the requirements themselves are placeholders, and assigning IDs to undefined scope would be false precision.
 
-| ID | Requirement | MoSCoW | Rel. | Milestone | Status |
-|---|---|---|---|---|---|
-| REQ-DQ-001 | Analytics platform integrations | Could | R4 | M4.1 | Not Started |
-| REQ-DQ-002 | Data-quality signals | Could | R4 | M4.2 | Not Started |
-| REQ-DQ-003 | Conformance reports, no persisted state | Could | R4 | M4.2 | Not Started |
-| REQ-DQ-004 | Semantic layer exports (OWL / RDF / SKOS) | Won't (this release) | R5 | M5.1 | Blocked |
-| REQ-DQ-005 | Business metrics, dimensions, certified segments | Won't (this release) | R5 | M5.1 | Blocked |
-| REQ-DQ-006 | Business glossary | Won't (this release) | R5 | M5.1 | Blocked |
-| REQ-DQ-007 | Tracking implementation status | Won't (this release) | R6 | M6.1 | Not Started |
-| REQ-DQ-008 | Insights repository | Won't (this release) | R6+ | M6.2 | Not Started |
+| ID         | Requirement                                      | MoSCoW               | Rel. | Milestone | Status      |
+| ---------- | ------------------------------------------------ | -------------------- | ---- | --------- | ----------- |
+| REQ-DQ-001 | Analytics platform integrations                  | Could                | R4   | M4.1      | Not Started |
+| REQ-DQ-002 | Data-quality signals                             | Could                | R4   | M4.2      | Not Started |
+| REQ-DQ-003 | Conformance reports, no persisted state          | Could                | R4   | M4.2      | Not Started |
+| REQ-DQ-004 | Semantic layer exports (OWL / RDF / SKOS)        | Won't (this release) | R5   | M5.1      | Blocked     |
+| REQ-DQ-005 | Business metrics, dimensions, certified segments | Won't (this release) | R5   | M5.1      | Blocked     |
+| REQ-DQ-006 | Business glossary                                | Won't (this release) | R5   | M5.1      | Blocked     |
+| REQ-DQ-007 | Tracking implementation status                   | Won't (this release) | R6   | M6.1      | Not Started |
+| REQ-DQ-008 | Insights repository                              | Won't (this release) | R6+  | M6.2      | Not Started |
 
 ---
 
@@ -59,7 +59,7 @@ Three precautions already ship so that R5 does not force a data-model migration:
 
 **Won't (this release)** · R5 · [M5.1](../milestones.md) · spec §14.2 · **Blocked** · Issue: — · PR: —
 
-Documentation of business metrics and dimensions, not only technical properties. Certified segments and metrics capture *how analyses should be performed*, serving both AI interpretation and analysts. Gains substance together with the container entities (REQ-DOM-025).
+Documentation of business metrics and dimensions, not only technical properties. Certified segments and metrics capture _how analyses should be performed_, serving both AI interpretation and analysts. Gains substance together with the container entities (REQ-DOM-025).
 
 **Blocked by:** O1.
 

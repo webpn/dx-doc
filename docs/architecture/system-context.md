@@ -35,43 +35,43 @@ Describes the dx-doc Platform in its environment: who uses it, what external sys
 
 ## Users
 
-| User type | Access mode | Authentication |
-|---|---|---|
-| Tracking specialist / Analytics engineer | Write (Editor) | SSO (OIDC), email+password |
-| Digital analyst | Read (Viewer) | SSO (OIDC), email+password |
-| Business user | Read (Viewer) | SSO (OIDC), email+password |
-| Web/App developer | Read (Viewer) | SSO (OIDC), email+password, project shared password |
-| Designer | Read (Viewer) | SSO (OIDC), email+password, project shared password |
-| Product manager / Owner | Read + user management on own projects (Project Manager) | SSO (OIDC), email+password |
-| Company admin | Full within one company (Admin) | SSO (OIDC), email+password |
-| System administrator | Instance-wide, no content access (`instance_admin`) | email+password, always available |
-| AI Agent (MCP) | Per consenting user's permissions | OAuth (user consent) |
-| Unauthenticated viewer | Read (Viewer) on projects with shared password | Project-level shared password |
+| User type                                | Access mode                                              | Authentication                                      |
+| ---------------------------------------- | -------------------------------------------------------- | --------------------------------------------------- |
+| Tracking specialist / Analytics engineer | Write (Editor)                                           | SSO (OIDC), email+password                          |
+| Digital analyst                          | Read (Viewer)                                            | SSO (OIDC), email+password                          |
+| Business user                            | Read (Viewer)                                            | SSO (OIDC), email+password                          |
+| Web/App developer                        | Read (Viewer)                                            | SSO (OIDC), email+password, project shared password |
+| Designer                                 | Read (Viewer)                                            | SSO (OIDC), email+password, project shared password |
+| Product manager / Owner                  | Read + user management on own projects (Project Manager) | SSO (OIDC), email+password                          |
+| Company admin                            | Full within one company (Admin)                          | SSO (OIDC), email+password                          |
+| System administrator                     | Instance-wide, no content access (`instance_admin`)      | email+password, always available                    |
+| AI Agent (MCP)                           | Per consenting user's permissions                        | OAuth (user consent)                                |
+| Unauthenticated viewer                   | Read (Viewer) on projects with shared password           | Project-level shared password                       |
 
 ## External Systems — Current (R0–R1)
 
-| System | Purpose | Interface | Direction |
-|---|---|---|---|
-| Database (SQLite default; MariaDB/PostgreSQL R2) | Primary data store | Local file or SQL over TCP | Internal (write/read) |
-| S3-compatible object storage | Asset storage (images) | S3 API (HTTP) | Internal (write/read) |
-| Search index (Pagefind) | Full-text search index | In-process; index artefacts on local disk | **Not external** — no network egress |
-| OIDC Identity Provider | SSO authentication | OpenID Connect | Inbound (auth) |
-| SMTP Server | Email notifications | SMTP | Outbound |
-| Sentry | Error tracking | SDK / HTTP | Outbound |
+| System                                           | Purpose                | Interface                                 | Direction                            |
+| ------------------------------------------------ | ---------------------- | ----------------------------------------- | ------------------------------------ |
+| Database (SQLite default; MariaDB/PostgreSQL R2) | Primary data store     | Local file or SQL over TCP                | Internal (write/read)                |
+| S3-compatible object storage                     | Asset storage (images) | S3 API (HTTP)                             | Internal (write/read)                |
+| Search index (Pagefind)                          | Full-text search index | In-process; index artefacts on local disk | **Not external** — no network egress |
+| OIDC Identity Provider                           | SSO authentication     | OpenID Connect                            | Inbound (auth)                       |
+| SMTP Server                                      | Email notifications    | SMTP                                      | Outbound                             |
+| Sentry                                           | Error tracking         | SDK / HTTP                                | Outbound                             |
 
 ## External Systems — Future
 
-| System | Release | Purpose | Interface |
-|---|---|---|---|
-| SAML Identity Provider | R2 | SSO authentication | SAML 2.0 |
-| Git Repository | R2 | Git export target | Git over HTTPS/SSH |
-| Static Site Host | R2 | Published documentation hosting | File upload / git push |
-| Confluence Cloud | R3 | Published documentation target | Confluence REST API |
-| Adobe Analytics / CJA API | R4 | Data quality signals | Adobe I/O API |
-| GA4 API | R4 | Data quality signals | Google Analytics Data API |
-| PostHog API | R4 | Data quality signals | PostHog REST API |
-| Figma API | R4 | Frame import | Figma REST API |
-| Corporate Data Warehouse | R5 | Semantic layer export | File export (OWL/RDF) |
+| System                    | Release | Purpose                         | Interface                 |
+| ------------------------- | ------- | ------------------------------- | ------------------------- |
+| SAML Identity Provider    | R2      | SSO authentication              | SAML 2.0                  |
+| Git Repository            | R2      | Git export target               | Git over HTTPS/SSH        |
+| Static Site Host          | R2      | Published documentation hosting | File upload / git push    |
+| Confluence Cloud          | R3      | Published documentation target  | Confluence REST API       |
+| Adobe Analytics / CJA API | R4      | Data quality signals            | Adobe I/O API             |
+| GA4 API                   | R4      | Data quality signals            | Google Analytics Data API |
+| PostHog API               | R4      | Data quality signals            | PostHog REST API          |
+| Figma API                 | R4      | Frame import                    | Figma REST API            |
+| Corporate Data Warehouse  | R5      | Semantic layer export           | File export (OWL/RDF)     |
 
 ## Integration Boundaries
 

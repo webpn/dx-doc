@@ -2,23 +2,23 @@
 
 ## Naming
 
-| Element | Convention | Example |
-|---|---|---|
-| Files (components) | PascalCase | `TrackingDetail.tsx` |
-| Files (non-components) | kebab-case | `property-service.ts`, `use-project-search.ts` |
-| Directories | kebab-case | `data-layer-property/` |
-| React components | PascalCase | `TrackingDetail`, `PropertyForm` |
-| Hooks | camelCase, `use` prefix | `useTrackingForm`, `useProjectVersions` |
-| Functions | camelCase | `buildChangeLog`, `validatePropertyName` |
-| Constants | UPPER_SNAKE_CASE | `MAX_IMAGE_DIMENSION`, `DEFAULT_LOCALE` |
-| Types/Interfaces | PascalCase | `DataLayerProperty`, `VersionSnapshot` |
-| Type parameters | PascalCase, single letter where conventional | `T`, `TEntity` |
-| Enums (if used) | PascalCase | — (literal unions preferred) |
-| Branded types | PascalCase, `Id` suffix | `ProjectId`, `PropertyId` |
-| Domain errors | PascalCase, `Error` suffix | `PropertyNameNotUniqueError` |
-| Database tables | snake_case, plural | `data_layer_properties` |
-| API endpoints | kebab-case | `/projects/:id/data-layer-properties` |
-| Environment variables | UPPER_SNAKE_CASE | `DB_HOST`, `SEARCH_DRIVER` |
+| Element                | Convention                                   | Example                                        |
+| ---------------------- | -------------------------------------------- | ---------------------------------------------- |
+| Files (components)     | PascalCase                                   | `TrackingDetail.tsx`                           |
+| Files (non-components) | kebab-case                                   | `property-service.ts`, `use-project-search.ts` |
+| Directories            | kebab-case                                   | `data-layer-property/`                         |
+| React components       | PascalCase                                   | `TrackingDetail`, `PropertyForm`               |
+| Hooks                  | camelCase, `use` prefix                      | `useTrackingForm`, `useProjectVersions`        |
+| Functions              | camelCase                                    | `buildChangeLog`, `validatePropertyName`       |
+| Constants              | UPPER_SNAKE_CASE                             | `MAX_IMAGE_DIMENSION`, `DEFAULT_LOCALE`        |
+| Types/Interfaces       | PascalCase                                   | `DataLayerProperty`, `VersionSnapshot`         |
+| Type parameters        | PascalCase, single letter where conventional | `T`, `TEntity`                                 |
+| Enums (if used)        | PascalCase                                   | — (literal unions preferred)                   |
+| Branded types          | PascalCase, `Id` suffix                      | `ProjectId`, `PropertyId`                      |
+| Domain errors          | PascalCase, `Error` suffix                   | `PropertyNameNotUniqueError`                   |
+| Database tables        | snake_case, plural                           | `data_layer_properties`                        |
+| API endpoints          | kebab-case                                   | `/projects/:id/data-layer-properties`          |
+| Environment variables  | UPPER_SNAKE_CASE                             | `DB_HOST`, `SEARCH_DRIVER`                     |
 
 ## File Naming
 
@@ -43,6 +43,7 @@ Within each group: alphabetical.
 Enforced automatically by Prettier. Project-wide configuration in `prettier.config.*`. No per-file overrides without documented justification.
 
 Key settings:
+
 - Semicolons: always
 - Quotes: single
 - Trailing commas: all
@@ -83,11 +84,7 @@ Key settings:
 - Use fragments (`<>...</>`) when a wrapper div would be semantically meaningless.
 - Props: one prop per line when there are more than two, or when any prop value is multi-line:
   ```tsx
-  <TrackingDetail
-    tracking={tracking}
-    onSave={handleSave}
-    readOnly={isPublished}
-  />
+  <TrackingDetail tracking={tracking} onSave={handleSave} readOnly={isPublished} />
   ```
 - Boolean props: omit the value when true: `<Button disabled>` not `<Button disabled={true}>`
 - String props: use double quotes: `name="homepage"`

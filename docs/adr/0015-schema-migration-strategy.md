@@ -1,13 +1,17 @@
 # ADR-0015: Schema Migration Strategy for Third-Party Installations
 
 ## Status
+
 Accepted (2026-08-12) — as proposed, unchanged. Closes open decision **O7**.
 
 ## Date
+
 2026-08-11 (decided 2026-08-12)
 
 ## Context
+
 The Platform is an open-source product deployed by third parties. Each installation runs its own database. When the Platform is upgraded (new release), schema migrations must be applied. The migration strategy must work for:
+
 - A developer upgrading their local instance.
 - An operator upgrading a production instance.
 - A CI/CD pipeline applying migrations automatically.
@@ -40,6 +44,7 @@ Adapters must be verified against the same migration sequence: the R2 dialect te
 Seeding for tests and for local development is a separate mechanism with a separate entry point, specified in [ADR-0017](0017-testing-strategy.md). Keeping the two apart is what allows the seed to change freely — it has no version history to honour and no third-party installation depending on it.
 
 **Rationale:**
+
 - Forward-only migrations are simpler to write, test, and maintain than reversible migrations.
 - Start-up execution means there is no separate migration command to forget.
 - The production guard (refuse to start rather than auto-apply) prevents accidental schema changes.
@@ -48,19 +53,24 @@ Seeding for tests and for local development is a separate mechanism with a separ
 ## Alternatives Considered
 
 ### Separate migration CLI command (`npm run db:migrate`)
+
 Rejected: operators forget to run it. Start-up execution is self-contained. However, a CLI command is still useful for development and CI; the production guard can emit the command to run.
 
 ### Auto-apply in production
+
 Rejected: a misconfigured deployment or a buggy migration could corrupt the database. The production guard requires an explicit operator action.
 
 ### Down (rollback) migrations
+
 Rejected: rollback scripts are rarely tested and often fail. The backup+restore approach is more reliable. If a migration fails, restore the backup and fix the migration.
 
 ## Related Decisions
+
 - [ADR-0020](0020-database-portability.md): Database Portability — migrations must be dialect-portable. Supersedes ADR-0003, which had scoped migrations to MariaDB DDL only.
 - [ADR-0017](0017-testing-strategy.md): the dialect test matrix that verifies portability, and the test/demo seeding mechanism that this ADR deliberately keeps out of migrations.
 - O7 (spec): **closed by this ADR.** It gated [M0.1](../product/milestones.md).
 - D5 in [decisions](../decisions/README.md).
 
 ## Last Responsible Moment
+
 End of R0 (before the public repository is released with runnable code) — met.

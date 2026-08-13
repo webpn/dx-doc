@@ -1,15 +1,19 @@
 # ADR-0009: Search Index Abstraction
 
 ## Status
+
 Accepted — **amended twice on 2026-08-12**: (1) the default adapter is Pagefind, not Algolia — the port and its guarantees are unchanged, the shipped implementation and the risk profile behind it are not; (2) the index rebuild model is specified, **closing O14**.
 
 ## Date
+
 2026-08-11 (amended 2026-08-12)
 
 ## Context
+
 The Platform requires full-text search within a project, sitting behind an interface so the implementation can be changed without touching application code.
 
 Two search-specific constraints exist:
+
 1. Non-publishable free pages (containing test credentials) must never appear in any index.
 2. Search results must never expose content from projects the user cannot access.
 
@@ -26,12 +30,14 @@ Search is accessed through a `SearchIndex` port interface defined in `src/applic
 **Pagefind is the default and the only adapter through R2.** It runs entirely within the instance: no account, no hosted service, and no documentation content leaving the deployment.
 
 **The `SearchIndex` interface defines operations like:**
+
 - `indexEntity(entity)` — add or update an entity in the index
 - `removeEntity(id)` — remove an entity from the index
 - `search(query, filters)` — full-text search with project-scoping
 - `reindexProject(projectId)` — rebuild the index for a project
 
 **Index design:**
+
 - One index per project.
 - Index artefacts are served only through an authorised route that applies the same grant check as project content. A client requesting another project's index receives a 403.
 - Non-publishable free pages are excluded from the index entirely.
@@ -40,15 +46,19 @@ Search is accessed through a `SearchIndex` port interface defined in `src/applic
 ## Alternatives Considered
 
 ### Algolia as the default (the original decision)
+
 Superseded. Capable and operationally free, but it makes a stock instance depend on a commercial account and transmits every tracking name, property name, description and specific value to a third party. For a product whose distribution model promises deployability by any organisation, the default should be the configuration that needs nobody's approval. Algolia remains available as an opt-in adapter (REQ-FDN-022).
 
 ### Direct Algolia client usage throughout the codebase
+
 Rejected, and the amendment vindicates the rejection: the default implementation changed before a line of it was written, and the port is why that cost nothing.
 
 ### Database full-text search
+
 Rejected. Weaker than Pagefind for this content, and it would put search back inside the schema that [ADR-0020](0020-database-portability.md) constrains to a portable SQL subset.
 
 ### Self-hosted search service (Meilisearch, Typesense)
+
 Rejected as the default, though it is the closest alternative. Both are more capable than Pagefind — real typo tolerance, incremental updates — but each is another service to run, which is the operational burden the reference stack is trying not to have. Either is the natural home for REQ-FDN-022 when typo tolerance is wanted back, and either would keep the no-egress property that the hosted option gives up. Reconsider as the default if O14 resolves badly: the port makes them drop-in.
 
 ## Consequences

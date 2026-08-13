@@ -6,23 +6,23 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 > Naming note: this prefix covers **authoring**. Authentication requirements are in [REQ-SEC](REQ-SEC.md).
 
-| ID | Requirement | MoSCoW | Rel. | Milestone | Status |
-|---|---|---|---|---|---|
-| REQ-AUTH-001 | Markdown editor with the full block set | Must | R1 | M1.5 | Not Started |
-| REQ-AUTH-002 | Image upload, 10 MB cap, resize to 2000 px | Must | R1 | M1.5 | Not Started |
-| REQ-AUTH-003 | Free wiki pages with publishable flag | Must | R1 | M1.5 | Not Started |
-| REQ-AUTH-004 | Mermaid rendering and live preview | Should | R2 | M2.2 | Not Started |
-| REQ-AUTH-005 | Optimistic concurrency with stale-write rejection | Must | R1 | M1.5 | Not Started |
-| REQ-AUTH-006 | Tracking duplication within a project | Must | R1 | M1.5 | Not Started |
-| REQ-AUTH-007 | Project-scoped full-text search | Must | R1 | M1.7 | Not Started |
-| REQ-AUTH-008 | Page and flow duplication | Should | R2 | M2.7 | Not Started |
-| REQ-AUTH-009 | Cross-project tracking copy with guided mapping | Should | R2 | M2.7 | Not Started |
-| REQ-AUTH-010 | Bulk operations on a multi-selection, with preview | Should | R2 | M2.4 | Not Started |
-| REQ-AUTH-011 | Individual item archive and restore | Could | R3 | M3.5 | Not Started |
-| REQ-AUTH-012 | Per-element change history ("blame") | Should | R2 | M2.7 | Not Started |
-| REQ-AUTH-013 | Global script-instruction template with placeholders | Should | R2 | M2.7 | Not Started |
-| REQ-AUTH-014 | Image annotation layer linked to triggers | Should | R2 | M2.3 | Not Started |
-| REQ-AUTH-015 | Whole-project duplication | Could | R3 | M3.5 | Not Started |
+| ID           | Requirement                                          | MoSCoW | Rel. | Milestone | Status      |
+| ------------ | ---------------------------------------------------- | ------ | ---- | --------- | ----------- |
+| REQ-AUTH-001 | Markdown editor with the full block set              | Must   | R1   | M1.5      | Not Started |
+| REQ-AUTH-002 | Image upload, 10 MB cap, resize to 2000 px           | Must   | R1   | M1.5      | Not Started |
+| REQ-AUTH-003 | Free wiki pages with publishable flag                | Must   | R1   | M1.5      | Not Started |
+| REQ-AUTH-004 | Mermaid rendering and live preview                   | Should | R2   | M2.2      | Not Started |
+| REQ-AUTH-005 | Optimistic concurrency with stale-write rejection    | Must   | R1   | M1.5      | Not Started |
+| REQ-AUTH-006 | Tracking duplication within a project                | Must   | R1   | M1.5      | Not Started |
+| REQ-AUTH-007 | Project-scoped full-text search                      | Must   | R1   | M1.7      | Not Started |
+| REQ-AUTH-008 | Page and flow duplication                            | Should | R2   | M2.7      | Not Started |
+| REQ-AUTH-009 | Cross-project tracking copy with guided mapping      | Should | R2   | M2.7      | Not Started |
+| REQ-AUTH-010 | Bulk operations on a multi-selection, with preview   | Should | R2   | M2.4      | Not Started |
+| REQ-AUTH-011 | Individual item archive and restore                  | Could  | R3   | M3.5      | Not Started |
+| REQ-AUTH-012 | Per-element change history ("blame")                 | Should | R2   | M2.7      | Not Started |
+| REQ-AUTH-013 | Global script-instruction template with placeholders | Should | R2   | M2.7      | Not Started |
+| REQ-AUTH-014 | Image annotation layer linked to triggers            | Should | R2   | M2.3      | Not Started |
+| REQ-AUTH-015 | Whole-project duplication                            | Could  | R3   | M3.5      | Not Started |
 
 ---
 
@@ -35,6 +35,7 @@ Content is stored as Markdown. Required blocks: headings, ordered and unordered 
 Applies to tracking descriptions, page descriptions, flow descriptions, property descriptions and free pages.
 
 **Acceptance**
+
 - Stored content is Markdown, readable and diffable as text — this is what makes the git export and text diff possible at all.
 - Every block round-trips through save and reload without lossy re-serialisation.
 - Content authored in the editor renders identically in generated artefacts.
@@ -46,6 +47,7 @@ Applies to tracking descriptions, page descriptions, flow descriptions, property
 Direct upload by drag-and-drop and clipboard paste. Maximum `UPLOAD_MAX_BYTES` (default 10 MB), automatic resize to `IMAGE_MAX_DIMENSION` (default 2000 px per side), stored in object storage (REQ-FDN-006).
 
 **Acceptance**
+
 - Clipboard paste works for a screenshot taken outside the browser — the single most common authoring action for this domain.
 - Assets are **copied, not referenced**, when a tracking or page is duplicated, so deleting one copy cannot break the other.
 - An oversized upload fails with a message naming the limit, before the bytes are stored.
@@ -57,6 +59,7 @@ Direct upload by drag-and-drop and clipboard paste. Maximum `UPLOAD_MAX_BYTES` (
 Hierarchically organised unstructured pages covering what the legacy template held outside the structured tables: data layer overview, script and SDK integration instructions, references, test URLs, test credentials.
 
 **Acceptance**
+
 - Each page carries a publishable flag; non-publishable pages are visible only to users with editing access.
 - The flag's enforcement is REQ-SEC-012 — index exclusion and artefact omission, tested per path.
 - Free pages have their own hierarchy, independent of the Page/Screen hierarchy.
@@ -68,10 +71,11 @@ Hierarchically organised unstructured pages covering what the legacy template he
 Mermaid code blocks render, and render live while editing. This is both the format used for hand-written diagrams and the format auto-generated from the flow graph in R2 (REQ-NAV-006).
 
 **Acceptance**
+
 - A syntax error shows a legible message and leaves the source editable — it never discards the block.
 - Hand-written Mermaid remains available inside any rich-text content after REQ-NAV-006 lands.
 
-**Demoted from Must · R1 · M1.5 on 2026-08-12**, and the demotion is close to free because of what it does *not* move. A ` ```mermaid ` block is a fenced code block, and content is stored as Markdown ([REQ-AUTH-001](#req-auth-001--markdown-editor-with-the-full-block-set)) — so from R1 an author can write one, it is stored verbatim, it survives export and re-import, and it is searchable. What moves to R2 is **rendering it as a diagram** instead of showing it as code.
+**Demoted from Must · R1 · M1.5 on 2026-08-12**, and the demotion is close to free because of what it does _not_ move. A ` ```mermaid ` block is a fenced code block, and content is stored as Markdown ([REQ-AUTH-001](#req-auth-001--markdown-editor-with-the-full-block-set)) — so from R1 an author can write one, it is stored verbatim, it survives export and re-import, and it is searchable. What moves to R2 is **rendering it as a diagram** instead of showing it as code.
 
 This is why the requirement lands on [M2.2](../milestones.md) rather than anywhere else: [REQ-NAV-006](REQ-NAV.md) generates Mermaid from the flow graph in that same milestone and needs a renderer regardless. The two are now built once, together, rather than built in R1 and extended in R2.
 
@@ -84,6 +88,7 @@ This is why the requirement lands on [M2.2](../milestones.md) rather than anywhe
 No pessimistic locking. A notice appears when a record being viewed is modified by someone else. A save is rejected if the record changed after the user opened it.
 
 **Acceptance**
+
 - A rejected save states what happened and does not discard the user's input.
 - The check is server-side and applies to API and MCP writes identically, not only to the UI.
 - No lock can be left held by a departed session, because no lock exists.
@@ -95,6 +100,7 @@ No pessimistic locking. A notice appears when a record being viewed is modified 
 A duplicated tracking inherits everything: properties, modules, specific values, description, images, page attachment and destinations.
 
 **Acceptance**
+
 - The copy is fully independent — there is no "derived tracking" with a live link to a parent.
 - Images are copied into new storage objects, not referenced (REQ-AUTH-002).
 - The copy receives its own immutable identifier.
@@ -106,6 +112,7 @@ A duplicated tracking inherits everything: properties, modules, specific values,
 Full-text search, scoped to a single project. Property names and tracking names rank above other text. **Specific values are indexed.** All textual content is indexed except non-publishable free pages.
 
 **Acceptance**
+
 - Searching a literal specific value answers "which tracking sets `page_name` to this?" — the most frequent lookup for analysts and developers alike.
 - Prefix and stem matching work: `page_nam` and `tracked` find `page_name` and `tracking`.
 - Search reflects the draft for an editor and the published version for a reader, consistently with REQ-NAV-002.

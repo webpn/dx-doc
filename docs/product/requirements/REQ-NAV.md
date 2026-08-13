@@ -4,17 +4,17 @@ Page hierarchy, recap views, flows and the sidebar. Source: [functional specific
 
 Entry format and status legend: [requirements index](README.md). Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
 
-| ID | Requirement | MoSCoW | Rel. | Milestone | Status |
-|---|---|---|---|---|---|
-| REQ-NAV-001 | Page hierarchy with navigable sidebar | Must | R1 | M1.6 | Not Started |
-| REQ-NAV-002 | Automatic per-page tracking recap | Must | R1 | M1.6 | Not Started |
-| REQ-NAV-003 | Flow entity | Should | R2 | M2.2 | Not Started |
-| REQ-NAV-004 | Trigger nodes distinct from visual transitions | Should | R2 | M2.2 | Not Started |
-| REQ-NAV-005 | Directed graph with labels and conditions | Should | R2 | M2.2 | Not Started |
-| REQ-NAV-006 | Automatic Mermaid generation from the graph | Should | R2 | M2.2 | Not Started |
-| REQ-NAV-007 | Sidebar exposing flows alongside the hierarchy | Should | R2 | M2.2 | Not Started |
-| REQ-NAV-008 | Visual drag-and-drop graph editor | Could | R3 | M3.5 | Not Started |
-| REQ-NAV-009 | Cross-project search | Won't | — | — | Rejected |
+| ID          | Requirement                                    | MoSCoW | Rel. | Milestone | Status      |
+| ----------- | ---------------------------------------------- | ------ | ---- | --------- | ----------- |
+| REQ-NAV-001 | Page hierarchy with navigable sidebar          | Must   | R1   | M1.6      | Not Started |
+| REQ-NAV-002 | Automatic per-page tracking recap              | Must   | R1   | M1.6      | Not Started |
+| REQ-NAV-003 | Flow entity                                    | Should | R2   | M2.2      | Not Started |
+| REQ-NAV-004 | Trigger nodes distinct from visual transitions | Should | R2   | M2.2      | Not Started |
+| REQ-NAV-005 | Directed graph with labels and conditions      | Should | R2   | M2.2      | Not Started |
+| REQ-NAV-006 | Automatic Mermaid generation from the graph    | Should | R2   | M2.2      | Not Started |
+| REQ-NAV-007 | Sidebar exposing flows alongside the hierarchy | Should | R2   | M2.2      | Not Started |
+| REQ-NAV-008 | Visual drag-and-drop graph editor              | Could  | R3   | M3.5      | Not Started |
+| REQ-NAV-009 | Cross-project search                           | Won't  | —    | —         | Rejected    |
 
 ---
 
@@ -22,9 +22,10 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 **Must** · R1 · [M1.6](../milestones.md) · spec §8.1, §8.5 · **Not Started** · Issue: — · PR: —
 
-Pages and screens are organised in a hierarchy that drives a navigable sidebar. Where content is CMS-driven, only generic page templates are catalogued (*"single news page"*), not individual instances.
+Pages and screens are organised in a hierarchy that drives a navigable sidebar. Where content is CMS-driven, only generic page templates are catalogued (_"single news page"_), not individual instances.
 
 **Acceptance**
+
 - The pilot product's full hierarchy is navigable end to end without a search.
 - Reordering or reparenting a page changes no identifier (REQ-FDN-004) and breaks no reference.
 - The sidebar remains usable at pilot scale — thousands of trackings across a deep tree.
@@ -38,6 +39,7 @@ Pages and screens are organised in a hierarchy that drives a navigable sidebar. 
 Each page displays an automatic recap of every tracking attached to it — page views, popup views, actions — showing at minimum the tracking name and its specific values.
 
 **Acceptance**
+
 - Opening any page answers "what is tracked here?" with no further navigation.
 - The recap is generated from the model, never maintained by hand.
 - It reflects the draft when viewed by an editor and the published version when viewed by a reader.
@@ -48,7 +50,7 @@ Each page displays an automatic recap of every tracking attached to it — page 
 
 A named user journey: title, rich-text description, and a directed graph over the project's Pages. First-class but **purely representational** — it binds nothing and constrains nothing.
 
-Funnel steps *are* Pages; there is no separate step entity. A Page may belong to several flows. The graph is a graph, not a tree: branching, loops and re-entry are supported.
+Funnel steps _are_ Pages; there is no separate step entity. A Page may belong to several flows. The graph is a graph, not a tree: branching, loops and re-entry are supported.
 
 Because a Flow references Pages and Trackings it does not own, it participates in the publication referential rule (REQ-VER-003): publishing a Flow whose nodes include an excluded Page or Tracking is refused, so no generated diagram (REQ-NAV-006) can contain a node absent from the version.
 
