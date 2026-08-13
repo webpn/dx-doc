@@ -69,7 +69,7 @@ The reason to prefer this over a shared dataset is legibility: the precondition 
 
 It earns its keep three times over: E2E journeys start from a realistic state instead of building one through the UI; anyone who clones the repository sees a working product in a minute rather than an empty instance ([M0.6](../product/milestones.md) exit); and it exercises the write path on every run.
 
-**The demo dataset is loaded through the public API, not by direct SQL.** From [M1.2](../product/milestones.md) the API is complete enough to express it, which makes the seed a second consumer of the same surface the import agent drives ([ADR-0021](0021-agent-driven-migration.md)), and puts `external_ref` idempotency ([REQ-IMP-003](../product/requirements/REQ-IMP.md)) under test on every seed run rather than only in the import suite — re-running the seed must change nothing. Before M1.2 a minimal seed writing through the repository ports is acceptable, and is replaced once the API can carry it.
+**The demo dataset is loaded through the public API, not by direct SQL.** From [M1.2](../product/milestones.md) the API is complete enough to express it, which makes the seed a second consumer of the same surface the import agent drives ([ADR-0021](0021-agent-driven-migration.md)), and puts `custom_id` idempotency ([REQ-IMP-003](../product/requirements/REQ-IMP.md)) under test on every seed run rather than only in the import suite — re-running the seed must change nothing. Before M1.2 a minimal seed writing through the repository ports is acceptable, and is replaced once the API can carry it.
 
 **Two rules that keep the split from eroding:**
 

@@ -108,4 +108,4 @@ See §21 of the full specification. Critically open items:
 - **O11:** "Manage company catalogue" permission model — **closed**, see [REQ-SEC-010](requirements/REQ-SEC.md); it is a power of the Admin role, not a discrete flag and not a fifth role
 - **O14:** Draft-index rebuild trigger and acceptable lag under Pagefind — opened by [ADR-0009](../adr/0009-search-abstraction.md)'s amendment when O12 closed, and **closed** by the same ADR on 2026-08-12: two indices per project, published rebuilt on publication, draft rebuilt asynchronously after each save
 - **O12:** Self-hostable search adapter before public release — **closed**, see [ADR-0009](../adr/0009-search-abstraction.md); resolved by making the default self-contained ([REQ-FDN-007](requirements/REQ-FDN.md)), which retired REQ-FDN-016 and opened O14
-- **O13:** Bulk operations list completeness — blocks R2
+- **O13:** Bulk operations list completeness — **closed** on 2026-08-13: the six bulk operations were confirmed and recorded in [REQ-AUTH-010](requirements/REQ-AUTH.md) (add/remove module, add/remove property, change page attachment, archive)

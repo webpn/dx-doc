@@ -148,13 +148,13 @@ Copying a selection of trackings into another project. Where the target lacks a 
 
 **Should** · R2 · [M2.4](../milestones.md) · spec §7.4 · **Not Started** · Issue: — · PR: —
 
-Applied to a multi-selection of trackings: add module, remove module, swap module, add property, remove property, set presence, change page attachment, archive.
+Applied to a multi-selection of trackings: add module, remove module, add property, remove property, change page attachment, archive.
 
 Every operation previews the affected items and the resulting change before applying. Each produces a **single** audit entry recording the operation, the selection size and the actor. Bulk edits write to the draft like any other edit, so they appear in the publication diff and can be excluded from a version.
 
 Exposure through API and MCP carries the same validation, but agents must target an explicit list of identifiers — never a filter expression (REQ-API-008).
 
-**Blocked by:** open decision O13. The operation list is a considered proposal, not an observed requirement. Confirm or extend it from what editors actually did by hand during the pilot import and its item-by-item verification ([M1.10](../milestones.md)) — that evidence exists only once.
+> The operation list above is the confirmed scope, which closes open decision O13 — bulk operations are no longer blocked.
 
 > This addresses the second-costliest shortcoming of the legacy wiki. The presentation half is already solved by application-controlled layout: changing how trackings render updates every tracking at once, with no data migration.
 

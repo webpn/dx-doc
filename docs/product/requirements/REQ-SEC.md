@@ -84,7 +84,7 @@ OIDC is the primary corporate authentication method. Each company connects its o
 
 **Must** · R1 · [M1.9](../milestones.md) · spec §4.3, §17.1 · **Not Started** · Issue: — · PR: —
 
-A project may be exposed read-only behind a shared password. Multiple passwords per project, each with an optional expiry. Granularity is the whole project. No per-reader audit is required for this mode.
+A project may be exposed read-only behind a shared password. Multiple passwords per project, each with an optional expiry. Granularity is the whole project. No per-reader audit is required for this mode: the access event is recorded in the audit log ([REQ-SEC-006](REQ-SEC.md)), but the reader is not individually identified — only that a shared-password session accessed the project.
 
 **Acceptance**
 
@@ -97,7 +97,7 @@ A project may be exposed read-only behind a shared password. Multiple passwords 
 
 **Must** · R1 · [M1.9](../milestones.md) · spec §17.4 · **Not Started** · Issue: — · PR: —
 
-Recorded: login and logout; entity creation, modification and deletion; publication; rollback; export; guest access; MCP calls; permission changes; integration configuration changes. Read events are deliberately not recorded. Retention is `AUDIT_RETENTION_MONTHS`, default 24.
+Recorded: login and logout; entity creation, modification and deletion; publication; rollback; export; shared-password access; MCP calls; permission changes; integration configuration changes. Read events are deliberately not recorded. Retention is `AUDIT_RETENTION_MONTHS`, default 24.
 
 **Acceptance**
 

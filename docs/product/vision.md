@@ -26,7 +26,7 @@ The Platform addresses all five.
 
 ## Who It's For
 
-The full persona and role definitions live in [personas.md](personas.md). In short, the Platform serves:
+The full set of personas and roles — including company admin, system administrator and the AI agent — lives in [personas.md](personas.md). The primary **content** personas are:
 
 | Persona                                      | Need                                                                                                                   |
 | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |

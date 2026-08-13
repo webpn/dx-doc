@@ -97,7 +97,7 @@ Two mechanisms, and they do not mix ([ADR-0017](../adr/0017-testing-strategy.md)
 
 **Builders** (`tests/support/builders/`) for unit, integration and API tests. A factory produces a valid entity with sensible defaults and a fluent override for the field under test — `aProject().withGroupingLabel('pilot').build()`. Each test creates what it needs and nothing else, so its precondition is readable inside the test rather than in a shared file.
 
-**The demo dataset** (`seed/demo/`, loaded by `npm run db:seed:demo`) for E2E tests and local development: a company, two projects, users at every role, a page hierarchy, trackings with modules, properties and specific values, destinations, a published version and a dirty draft. It is loaded **through the public API**, which makes every seed run an exercise of `external_ref` idempotency — running it twice must change nothing.
+**The demo dataset** (`seed/demo/`, loaded by `npm run db:seed:demo`) for E2E tests and local development: a company, two projects, users at every role, a page hierarchy, trackings with modules, properties and specific values, destinations, a published version and a dirty draft. It is loaded **through the public API**, which makes every seed run an exercise of `custom_id` idempotency — running it twice must change nothing.
 
 Two rules keep them apart: unit, integration and API tests never read the demo dataset, and the seed command refuses to run against a non-empty database and is unreachable in a production configuration.
 

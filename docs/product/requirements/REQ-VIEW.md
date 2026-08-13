@@ -7,7 +7,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | ID           | Requirement                                    | MoSCoW | Rel. | Milestone | Status      |
 | ------------ | ---------------------------------------------- | ------ | ---- | --------- | ----------- |
 | REQ-VIEW-001 | In-app read-only view                          | Must   | R1   | M1.9      | Not Started |
-| REQ-VIEW-002 | View selector as a presentation filter         | Must   | R1   | M1.9      | Not Started |
+| REQ-VIEW-002 | View selector as a presentation filter         | Must   | R2   | M2.5      | Not Started |
 | REQ-VIEW-003 | Profile-aware rendering engine                 | Must   | R2   | M2.5      | Not Started |
 | REQ-VIEW-004 | Per-project static site                        | Should | R2   | M2.6      | Not Started |
 | REQ-VIEW-005 | Git export, one commit per publication         | Should | R2   | M2.6      | Not Started |
@@ -32,13 +32,15 @@ Read-only consultation behind SSO, email + password, or a project shared passwor
 
 ### REQ-VIEW-002 — View selector as a presentation filter
 
-**Must** · R1 · [M1.9](../milestones.md) · spec §10.1, §10.2, §10.3 · **Not Started** · Issue: — · PR: —
+**Must** · R2 · [M2.5](../milestones.md) · spec §10.1, §10.2, §10.3 · **Not Started** · Issue: — · PR: —
 
 Two views: **Analyst/Business** and **Development**. Designers use the Analyst/Business view. Inside the application, the selector is a presentation filter — any authenticated user with project access may switch views and can potentially see everything.
 
 **Analyst/Business** contains all properties (both development-populated and tag-manager-derived), destination mappings, analysis notes, the version each item was introduced in, audiences and surveys.
 
 **Development** excludes destinations and downstream mappings, `tag_manager`-sourced properties, analysis notes, audiences and surveys. It prominently includes the development-filtered changelog and, from R3, generated snippets.
+
+> Moved from R1 (M1.9) to R2 (M2.5) on 2026-08-13 to ship aligned with — and after — open decision O3 (structured analytics-reading guidance, M2.1) rather than before it. It is sequenced after O3, so it is not marked `Blocked`.
 
 **Acceptance**
 

@@ -68,11 +68,13 @@ At publication the editor may exclude individual Trackings and individual Pages/
 
 **Must** · R1 · [M1.8](../milestones.md) · spec §9.3 · **Not Started** · Issue: — · PR: —
 
-Auto-proposed progressive number, publication date, optional title, optional free-text release notes.
+A system-granted progressive number, the publication date, an optional free-form title, and optional free-text release notes.
 
 **Acceptance**
 
-- The proposed number is editable but defaults to the next progressive value.
+- The sequential number is granted at publication as the next progressive value and cannot be edited — uniqueness and ordering are guaranteed by assignment, not by the editor.
+- The title is free-form and fully customisable.
+- The publication date is saved with the version.
 - Product releases are referenced in prose within the notes; there is no product-release entity.
 
 ### REQ-VER-005 — Diff by entity, property and specific value
@@ -105,6 +107,8 @@ The changelog is generated from the diff. The changelog view lists all versions 
 **Must** · R1 · [M1.8](../milestones.md) · spec §9.5 · **Not Started** · Issue: — · PR: —
 
 Any historical version can be consulted in full, not only as a list of changes.
+
+**Owns the asset-retention rule:** a version renders as it was at publication, including its assets, so an asset referenced by any published version is never deleted. This requirement is the single owner of that statement; [REQ-SEC-009](REQ-SEC.md) (archive/restore) builds on it and must not contradict it.
 
 **Acceptance**
 

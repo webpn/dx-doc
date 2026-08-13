@@ -271,7 +271,7 @@ _Weeks 3–8. The release that retires the legacy wiki for the pilot product._
 
 #### US-AGT-02 — Re-run a corrected script safely · _Agent_ · E6
 
-**As an** agent importing a product **I want** writes keyed on an `external_ref` to update rather than duplicate **so that** getting it wrong the first time costs a re-run rather than a cleanup.
+**As an** agent importing a product **I want** writes keyed on a `custom_id` to update rather than duplicate **so that** getting it wrong the first time costs a re-run rather than a cleanup.
 
 [REQ-IMP-003](requirements/REQ-IMP.md)
 
@@ -283,7 +283,7 @@ _Weeks 3–8. The release that retires the legacy wiki for the pilot product._
 
 [REQ-IMP-004](requirements/REQ-IMP.md)
 
-**Done when** — upload obeys the same limits and processing as the UI path, is idempotent by `external_ref`, and anything unresolved is listed in the reconciliation report.
+**Done when** — upload obeys the same limits and processing as the UI path, is idempotent by `custom_id`, and anything unresolved is listed in the reconciliation report.
 
 #### US-AGT-04 — Write thousands of records without thousands of round trips · _Agent_ · E6
 
@@ -431,7 +431,7 @@ _Weeks 3–8. The release that retires the legacy wiki for the pilot product._
 
 [REQ-VER-004](requirements/REQ-VER.md), [REQ-VER-006](requirements/REQ-VER.md)
 
-**Done when** — publishing produces a changelog nobody wrote by hand, with an editable version number, an optional title and optional release notes around it.
+**Done when** — publishing produces a changelog nobody wrote by hand, with a system-granted version number, a customisable title and optional release notes around it.
 
 #### US-BUS-02 — Know what is in this release · _Business_ · E3
 
@@ -477,7 +477,7 @@ _Weeks 3–8. The release that retires the legacy wiki for the pilot product._
 
 #### US-ADM-07 — Show that a change was made by a named actor · _Admin_ · E7
 
-**As an** administrator **I want** an append-only record of writes, publications, exports, guest access and MCP calls **so that** "who changed this and when" is answerable for two years.
+**As an** administrator **I want** an append-only record of writes, publications, exports, shared-password access and MCP calls **so that** "who changed this and when" is answerable for two years.
 
 [REQ-SEC-006](requirements/REQ-SEC.md) → R2: [REQ-SEC-008](requirements/REQ-SEC.md)
 

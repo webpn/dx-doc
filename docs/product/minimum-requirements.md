@@ -68,7 +68,6 @@ Everything above is the baseline. These are the capabilities that make R1 a genu
 
 - Draft → published versioning, selective publication, and an automatically generated diff and changelog ([REQ-VER-001](requirements/REQ-VER.md) … [REQ-VER-007](requirements/REQ-VER.md))
 - Search over specific values, so _"which tracking sets this value?"_ is answerable ([REQ-AUTH-007](requirements/REQ-AUTH.md))
-- Analyst/Business and Development audience views ([REQ-VIEW-002](requirements/REQ-VIEW.md))
 - A complete API and MCP surface — anything doable in the UI is doable by a machine ([REQ-API-001](requirements/REQ-API.md) … [REQ-API-004](requirements/REQ-API.md))
 - Read access without a licensed account, via project shared passwords ([REQ-SEC-005](requirements/REQ-SEC.md))
 - An append-only audit log ([REQ-SEC-006](requirements/REQ-SEC.md))

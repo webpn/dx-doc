@@ -22,7 +22,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-FDN-014 | Error-tracking integration                            | Should | R1   | M1.9      | Not Started |
 | REQ-FDN-015 | Per-company branding                                  | Should | R2   | M2.8      | Not Started |
 | REQ-FDN-016 | Self-hostable search adapter                          | Won't  | —    | —         | Rejected    |
-| REQ-FDN-017 | Kubernetes/Helm packaging                             | Could  | R3+  | —         | Not Started |
+| REQ-FDN-017 | Kubernetes/Helm packaging                             | Could  | Backlog | —         | Not Started |
 | REQ-FDN-018 | MariaDB adapter                                       | Should | R2   | M2.8      | Not Started |
 | REQ-FDN-019 | PostgreSQL adapter                                    | Should | R2   | M2.8      | Not Started |
 | REQ-FDN-020 | Schema constrained to a portable SQL subset           | Must   | R0   | M0.2      | Not Started |
@@ -252,7 +252,7 @@ Rejected because the shipped default now _is_ self-hostable (REQ-FDN-007). A sep
 
 ### REQ-FDN-017 — Kubernetes/Helm packaging
 
-**Could** · R3+ · spec §19.1 · **Not Started** · Issue: — · PR: —
+**Could** · Backlog · spec §19.1 · **Not Started** · Issue: — · PR: —
 
 Helm chart for the reference stack. Deployment remains unprescribed; this is an additional example, not a supported path.
 

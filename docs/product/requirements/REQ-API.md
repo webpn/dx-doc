@@ -32,7 +32,7 @@ The REST API is the foundation of the system, not a feature. The web client, the
 - No consumer — including the web client and the export generators — reaches the database or an application service by any route other than the API contract.
 - A rule enforced through the UI is demonstrably enforced through the API by the same code path, not a parallel implementation.
 - Authorisation (REQ-SEC-011) is applied in the API layer for every route, with no route opting out.
-- Write endpoints accept `external_ref` from the outset (REQ-IMP-003). Retrofitting it later would mean reworking every one of them.
+- Write endpoints accept `custom_id` from the outset (REQ-IMP-003). Retrofitting it later would mean reworking every one of them.
 
 > Weak programmatic access was pain point 6. Making the API the only entry point is what prevents it recurring: a capability that exists in the UI cannot fail to exist for machines. Import (REQ-IMP-002) is the first hard test of that claim, at week 5 rather than R3.
 

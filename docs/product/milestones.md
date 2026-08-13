@@ -54,7 +54,7 @@ Two things decided here land later and are worth naming now: the editor engine i
 
 **Delivers:** REQ-FDN-002, REQ-FDN-003, REQ-FDN-004, REQ-FDN-005, REQ-FDN-009, REQ-FDN-020
 
-Repository ports owned by the domain, with a **SQLite adapter** as the default and only implementation through R1 ([ADR-0020](../adr/0020-database-portability.md)). Schema v1 covering Company, Project (with grouping labels), User, Role, ProjectGrant, and an empty Page, plus the `external_ref` column that makes import idempotent (REQ-IMP-003). Immutable internal identifiers on every entity, distinct from name and slug. Forward-only versioned migrations run at start-up, written in the portable SQL subset from the first file.
+Repository ports owned by the domain, with a **SQLite adapter** as the default and only implementation through R1 ([ADR-0020](../adr/0020-database-portability.md)). Schema v1 covering Company, Project (with grouping labels), User, Role, ProjectGrant, and an empty Page, plus the `custom_id` column that makes import idempotent (REQ-IMP-003). Immutable internal identifiers on every entity, distinct from name and slug. Forward-only versioned migrations run at start-up, written in the portable SQL subset from the first file.
 
 **Depends on:** M0.1
 
@@ -96,13 +96,13 @@ Email + password login. Four global roles. Explicit per-project grants. Permissi
 
 **Delivers:** REQ-API-001, REQ-FDN-010
 
-CRUD for Company, Project and Page. Validation rules defined once in the domain/application layers and invoked by every entry point. Write endpoints accept `external_ref` from the outset.
+CRUD for Company, Project and Page. Validation rules defined once in the domain/application layers and invoked by every entry point. Write endpoints accept `custom_id` from the outset.
 
 **Depends on:** M0.3, M0.4
 
-**Exit:** creating a Project with an invalid payload fails identically through the HTTP API and through a direct application-service call; no validation rule is implemented in a UI component; a write repeated with the same `external_ref` updates rather than duplicates.
+**Exit:** creating a Project with an invalid payload fails identically through the HTTP API and through a direct application-service call; no validation rule is implemented in a UI component; a write repeated with the same `custom_id` updates rather than duplicates.
 
-> `external_ref` is here rather than in R1 because retrofitting it means reworking every write endpoint — and from M1.2 onward every endpoint is one an agent will drive.
+> `custom_id` is here rather than in R1 because retrofitting it means reworking every write endpoint — and from M1.2 onward every endpoint is one an agent will drive.
 
 ### M0.6 — Public repository readiness
 
@@ -150,7 +150,7 @@ _Target: week 4._
 
 **Delivers:** REQ-IMP-001, REQ-IMP-002, REQ-IMP-003, REQ-IMP-004, REQ-IMP-005, REQ-IMP-006, REQ-API-002, REQ-API-009
 
-Every R1 entity creatable, readable and updatable through the API. Idempotent upsert on `external_ref`. Asset upload. Batch write endpoints. Reconciliation report. Documented public API contract, generated from the implementation. Service-account tokens.
+Every R1 entity creatable, readable and updatable through the API. Idempotent upsert on `custom_id`. Asset upload. Batch write endpoints. Reconciliation report. Documented public API contract, generated from the implementation. Service-account tokens.
 
 **Depends on:** M1.1
 
@@ -246,13 +246,13 @@ Single draft stream. Unpublished-changes indicator. Selective publication exclud
 
 **Goal:** readers can use the Platform, and writes are accountable.
 
-**Delivers:** REQ-SEC-004, REQ-SEC-005, REQ-SEC-006, REQ-VIEW-001, REQ-VIEW-002, REQ-FDN-014
+**Delivers:** REQ-SEC-004, REQ-SEC-005, REQ-SEC-006, REQ-VIEW-001, REQ-FDN-014
 
-OIDC SSO. Project shared-password access with optional expiry. Append-only audit log of write events with 24-month retention. In-app read-only view. Analyst/Business and Development view selector as a presentation filter. Error-tracking integration.
+OIDC SSO. Project shared-password access with optional expiry. Append-only audit log of write events with 24-month retention. In-app read-only view. Error-tracking integration.
 
 **Depends on:** M0.4, M1.8
 
-**Exit:** a reader reaches a project through SSO and through a shared password; every write event named in spec §17.4 produces an audit entry; the view selector changes presentation only — it is documented and tested as not being a security boundary.
+**Exit:** a reader reaches a project through SSO and through a shared password; every write event named in spec §17.4 produces an audit entry.
 
 ### M1.10 — Pilot cutover
 
@@ -323,9 +323,11 @@ Add/remove/swap module, add/remove property, set presence, change page attachmen
 
 ### M2.5 — Profile-aware rendering
 
-**Delivers:** REQ-VIEW-003
+**Delivers:** REQ-VIEW-002, REQ-VIEW-003
 
 The rendering engine that physically omits excluded content from generated artefacts, with a non-leakage guarantee. **Prerequisite for every export milestone below** — build it first.
+
+Also ships the Analyst/Business and Development view selector ([REQ-VIEW-002](../product/requirements/REQ-VIEW.md)), moved here from R1 (M1.9) on 2026-08-13 so it aligns with — and follows — open decision O3.
 
 **Depends on:** M1.8
 

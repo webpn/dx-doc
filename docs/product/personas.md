@@ -21,7 +21,7 @@ Defined in the functional specification §4.1. Summarized here for convenience.
 Four roles, held **within a single company** and combined with per-project access grants. A user belongs to one company; their role applies across that company and is narrowed further by their project grants:
 
 - **Admin** — creates and configures projects _within their company_, configures its integrations, manages its catalogue, reads its audit log, archives and restores its projects. **Creating companies is not an Admin action** — see below.
-- **Project Manager** — manages user access on granted projects, manages guest passwords. Does not imply editing rights (also needs Editor role).
+- **Project Manager** — manages user access on granted projects, manages project shared passwords. Does not imply editing rights (also needs Editor role).
 - **Editor** — creates and modifies content, publishes versions on granted projects.
 - **Viewer** — reads, exports, uses MCP read tools on granted projects.
 

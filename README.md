@@ -46,7 +46,6 @@ R1 is the MVP: a complete, usable platform for authoring, versioning, and publis
 - A rich authoring editor with Markdown and image upload. Mermaid blocks are stored from R1 and rendered as diagrams from R2.
 - **Draft → published versioning** with an automatically generated diff and changelog.
 - Search over specific values — _"which tracking sets this value?"_ is answerable.
-- Audience-specific views (Analyst/Business and Development).
 - A complete REST API and MCP surface — anything doable in the UI is doable by a machine.
 - Read access without a licensed account, via project shared passwords.
 - An append-only audit log.
@@ -150,7 +149,7 @@ The Platform follows a modular architecture with clear separation between:
 - S3-compatible object storage behind an interface
 - Search behind an interface; Pagefind by default, so a stock instance sends no documentation content anywhere
 - Internal REST API consumed by all clients; MCP server is a layer above it. In production one process serves both the API and the client assets — one container plus object storage.
-- Content can be imported from other platforms through the public API — no source-format-specific import code ships in the product. Bulk ingestion is idempotent, keyed on an external reference.
+- Content can be imported from other platforms through the public API — no source-format-specific import code ships in the product. Bulk ingestion is idempotent, keyed on a custom id.
 - Multi-company tenancy on a single instance
 - Single draft stream per project; no branches or merge workflows
 - All validation in the backend, shared by UI, API and MCP

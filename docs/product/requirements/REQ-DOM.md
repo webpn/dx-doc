@@ -19,7 +19,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-DOM-011 | Prose conditional valorisations                       | Won't  | —    | —         | Rejected    |
 | REQ-DOM-012 | Structured property conditions, four operators + note | Should | R2   | M2.1      | Not Started |
 | REQ-DOM-013 | Conditions targeting nested property paths            | Should | R2   | M2.1      | Not Started |
-| REQ-DOM-014 | Company-defined custom fields                         | Should | R2   | M2.1      | Not Started |
+| REQ-DOM-014 | Company-defined custom fields                         | Should | R2   | M2.1      | Blocked     |
 | REQ-DOM-015 | Unified Destination entity, N:N with properties       | Must   | R1   | M1.1      | Not Started |
 | REQ-DOM-016 | Per-destination name override                         | Must   | R1   | M1.1      | Not Started |
 | REQ-DOM-017 | CDP Audience entity                                   | Must   | R1   | M1.1      | Not Started |
@@ -197,9 +197,11 @@ A condition may target a child property by path. A condition on a child is indep
 
 ### REQ-DOM-014 — Company-defined custom fields
 
-**Should** · R2 · [M2.1](../milestones.md) · spec §6.4, §14.2 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.1](../milestones.md) · spec §6.4, §14.2 · **Blocked** · Issue: — · PR: —
 
 Additional typed fields defined at company level and attachable to properties, trackings and pages. This is how semantic-layer attributes are modelled until the ontology is defined — replacing the previously reserved `owl_details` placeholder.
+
+**Blocked by:** open decision O3 — structured analytics-reading guidance (last responsible moment M2.1, the same milestone as this requirement), which shapes which structured fields exist. The view selector ([REQ-VIEW-002](REQ-VIEW.md)) is sequenced after O3 too, but at M2.5 it is not blocked by it.
 
 ### REQ-DOM-015 — Unified Destination entity, N:N with properties
 

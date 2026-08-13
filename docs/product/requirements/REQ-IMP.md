@@ -12,7 +12,7 @@ Entry format and status legend: [requirements index](README.md).
 | ----------- | ---------------------------------------------- | ------ | ---- | --------- | ----------- |
 | REQ-IMP-001 | No source-format-specific code in the Platform | Must   | R1   | M1.2      | Not Started |
 | REQ-IMP-002 | API surface complete for every R1 entity       | Must   | R1   | M1.2      | Not Started |
-| REQ-IMP-003 | Idempotent upsert keyed on `external_ref`      | Must   | R1   | M1.2      | Not Started |
+| REQ-IMP-003 | Idempotent upsert keyed on `custom_id`      | Must   | R1   | M1.2      | Not Started |
 | REQ-IMP-004 | Asset upload through the API                   | Must   | R1   | M1.2      | Not Started |
 | REQ-IMP-005 | Batch write endpoints                          | Should | R1   | M1.2      | Not Started |
 | REQ-IMP-006 | Reconciliation report                          | Should | R1   | M1.2      | Not Started |
@@ -49,17 +49,19 @@ Every entity in the R1 data model is creatable, readable and updatable through t
 - Relationships are settable in either order, or the API documents its required ordering — an agent should not have to infer a creation sequence by trial and error.
 - Validation errors identify the offending field and rule in a form a script can branch on, not only prose for a human.
 
-### REQ-IMP-003 — Idempotent upsert keyed on `external_ref`
+### REQ-IMP-003 — Idempotent upsert keyed on `custom_id`
 
 **Must** · R1 · [M1.2](../milestones.md) · spec §13.3 · [ADR-0004](../../adr/0004-immutable-internal-identifiers.md) · **Not Started** · Issue: — · PR: —
 
-Every entity accepts an optional `external_ref` — source system plus source identifier — unique within its project. A write carrying an `external_ref` that already exists updates that entity rather than creating a second one.
+Every entity accepts an optional `custom_id` — source system plus source identifier — unique within its project. A write carrying a `custom_id` that already exists updates that entity rather than creating a second one.
+
+**Duplication does not inherit `custom_id`:** any operation that copies an entity (duplicate tracking, cross-project copy, whole-project duplication) starts with a blank `custom_id`. Otherwise a re-run of the original import could match the copy instead of the source entity.
 
 **Acceptance**
 
 - Running the same import script twice produces no duplicates and no orphans.
 - A corrected script re-run over a partial import converges to the correct state without a manual cleanup.
-- `external_ref` is orthogonal to the immutable `id`: it never becomes a foreign key, and dx-doc's own references always use `id`.
+- `custom_id` is orthogonal to the immutable `id`: it never becomes a foreign key, and dx-doc's own references always use `id`.
 - The field is nullable and unused by entities created through the UI — it carries no meaning for them.
 
 > This lands in R1 rather than when first needed because retrofitting it means reworking every write endpoint. It is also not import scaffolding: it is what makes any future bulk ingestion idempotent.
@@ -73,7 +75,7 @@ Images are uploadable through the API with the same limits and processing as the
 **Acceptance**
 
 - A script can upload an image from a local export folder and reference it from Markdown content in the same run.
-- Asset upload is idempotent by `external_ref` (REQ-IMP-003) — a re-run does not duplicate assets.
+- Asset upload is idempotent by `custom_id` (REQ-IMP-003) — a re-run does not duplicate assets.
 - Every image referenced by imported content resolves after import; the reconciliation report (REQ-IMP-006) lists any that do not.
 
 ### REQ-IMP-005 — Batch write endpoints
@@ -93,7 +95,7 @@ Endpoints accepting an array of entities in one call, so that thousands of track
 
 **Should** · R1 · [M1.2](../milestones.md) · spec §13.3 · **Not Started** · Issue: — · PR: —
 
-A per-project report of what exists in dx-doc: counts per entity type, entities carrying an `external_ref`, unresolved asset references, and properties not referenced by any tracking. Comparable by a human against the source.
+A per-project report of what exists in dx-doc: counts per entity type, entities carrying a `custom_id`, unresolved asset references, and properties not referenced by any tracking. Comparable by a human against the source.
 
 **Acceptance**
 

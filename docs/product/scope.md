@@ -84,7 +84,7 @@ The documentation of tracking plans for websites and mobile applications:
 
 - **No source-format-specific code in the Platform.** Content is imported by an AI agent driving the public API, producing a committed re-runnable script ([ADR-0021](../adr/0021-agent-driven-migration.md)).
 - API surface complete enough to construct any project without opening the UI.
-- Idempotent upsert keyed on `external_ref`, so an import can be corrected and re-run.
+- Idempotent upsert keyed on `custom_id`, so an import can be corrected and re-run.
 - Asset upload through the API into object storage.
 - Batch write endpoints and a reconciliation report.
 - General-purpose: the same capability serves any bulk ingestion, from any source system.
