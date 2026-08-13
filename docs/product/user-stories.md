@@ -43,17 +43,17 @@ Requirements that satisfy it
 
 Epics cut across releases; the delivery grouping below cuts across epics. Both views are useful, so the epic is named on each story rather than used as the structure.
 
-| Epic                                         | The job                                                                   | Releases |
-| -------------------------------------------- | ------------------------------------------------------------------------- | -------- |
-| **E1 — Author the plan**                     | Get what is in an editor's head into the Platform, accurately and quickly | R1 → R2  |
-| **E2 — Find and understand**                 | Answer a question about the data without asking a person                  | R1 → R4  |
-| **E3 — Publish and communicate change**      | Turn a stream of edits into a release other people can act on             | R1 → R2  |
-| **E4 — Hand off to development**             | Give a developer exactly what to implement, and nothing else              | R1 → R3  |
-| **E5 — Navigate the journey**                | Move through the plan by structure and by journey, not by search alone    | R1 → R2  |
-| **E6 — Import content from other platforms** | Move ~30 products across without a bespoke importer                       | R1       |
-| **E7 — Govern access**                       | Let the right people in, keep the record of what they did                 | R0 → R2  |
-| **E8 — Operate and deploy**                  | Run the Platform, anywhere, without asking its authors                    | R0 → R2  |
-| **E9 — Trust the data**                      | Know whether what is documented is what is actually collected             | R4 → R6  |
+| Epic                                         | The job                                                                   | Releases     |
+| -------------------------------------------- | ------------------------------------------------------------------------- | ------------ |
+| **E1 — Author the plan**                     | Get what is in an editor's head into the Platform, accurately and quickly | R1 → R2      |
+| **E2 — Find and understand**                 | Answer a question about the data without asking a person                  | R1 → R4      |
+| **E3 — Publish and communicate change**      | Turn a stream of edits into a release other people can act on             | R1 → R2      |
+| **E4 — Hand off to development**             | Give a developer exactly what to implement, and nothing else              | R1 → R3      |
+| **E5 — Navigate the journey**                | Move through the plan by structure and by journey, not by search alone    | R1 → R2      |
+| **E6 — Import content from other platforms** | Move ~30 products across without a bespoke importer                       | R1           |
+| **E7 — Govern access**                       | Let the right people in, keep the record of what they did                 | R0 → R2      |
+| **E8 — Operate and deploy**                  | Run the Platform, anywhere, without asking its authors                    | R0 → R2      |
+| **E9 — Trust the data**                      | Know whether what is documented is what is actually collected             | R4 → Backlog |
 
 ---
 
@@ -779,7 +779,7 @@ _Months 5–6._
 
 # R4 and beyond
 
-_R4's scope waits on open decisions O4 and O5; R5's on O1 and O2, which the [milestones](milestones.md) place before the end of R2. Stories are written when those close._
+_R4's scope waits on open decisions O4 and O5; the backlog's on O1 and O2, which the [milestones](milestones.md) place before the end of R2. Stories are written when those close._
 
 #### US-ANL-08 — Judge whether the data is trustworthy · _Analyst_ · E9
 
@@ -787,7 +787,7 @@ _R4's scope waits on open decisions O4 and O5; R5's on O1 and O2, which the [mil
 
 R4 · [M4.2](milestones.md) · [REQ-DQ-002](requirements/REQ-DQ.md), [REQ-DQ-003](requirements/REQ-DQ.md)
 
-**Done when** — signals are segmented by environment and platform, and the conformance check produces a report rather than a state. Persisting the state waits for R6.
+**Done when** — signals are segmented by environment and platform, and the conformance check produces a report rather than a state. Persisting the state waits for the backlog.
 
 #### US-DSG-03 — Refresh screenshots when the design changes · _Designer_ · E5
 

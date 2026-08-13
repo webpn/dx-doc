@@ -12,7 +12,7 @@ Entry format and status legend: [requirements index](README.md).
 | ----------- | ---------------------------------------------- | ------ | ---- | --------- | ----------- |
 | REQ-IMP-001 | No source-format-specific code in the Platform | Must   | R1   | M1.2      | Not Started |
 | REQ-IMP-002 | API surface complete for every R1 entity       | Must   | R1   | M1.2      | Not Started |
-| REQ-IMP-003 | Idempotent upsert keyed on `custom_id`      | Must   | R1   | M1.2      | Not Started |
+| REQ-IMP-003 | Idempotent upsert keyed on `custom_id`         | Must   | R1   | M1.2      | Not Started |
 | REQ-IMP-004 | Asset upload through the API                   | Must   | R1   | M1.2      | Not Started |
 | REQ-IMP-005 | Batch write endpoints                          | Should | R1   | M1.2      | Not Started |
 | REQ-IMP-006 | Reconciliation report                          | Should | R1   | M1.2      | Not Started |

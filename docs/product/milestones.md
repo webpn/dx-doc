@@ -465,29 +465,15 @@ Outbound webhooks on publication; Figma frame import with design refresh; option
 
 ---
 
-## R5 — Semantic layer
+## Backlog
 
-_Target: months 9+. Scope pending._
+_Target: none scheduled. Everything beyond R4 moved here on 2026-08-13; scope pending O1/O2._
 
-> **M5.0 is not here.** It is scheduled in [R2](#m50--ontology-definition), where its deadline actually falls. It keeps its R5 number because milestone IDs are stable, and it is the reason anything below can be scoped at all.
+> **M5.0 is not here.** It is scheduled in [R2](#m50--ontology-definition), where its deadline actually falls, and it is the prerequisite for anything in this backlog to be scoped at all.
 
-### M5.1 — Semantic exports
-
-OWL, RDF and ISO 25964/SKOS exports; business metrics and dimensions; certified segments; business glossary.
-
-**Depends on:** M5.0 — scope undefined until then. No requirement IDs are assigned yet, deliberately.
-
----
-
-## R6 — Lifecycle and insights
-
-### M6.1 — Tracking implementation status
-
-Lifecycle state per tracking (documented → in development → released → verified → deprecated), giving R4's conformance results somewhere to persist.
-
-### M6.2 — Insights repository
-
-Treated as a separate product on the same foundation. Not scoped here.
+- **Semantic exports** (was M5.1) — OWL, RDF and ISO 25964/SKOS exports; business metrics and dimensions; certified segments; business glossary. **Depends on M5.0** — scope undefined until then. No requirement IDs are assigned yet, deliberately.
+- **Tracking implementation status** (was M6.1) — lifecycle state per tracking (documented → in development → released → verified → deprecated), giving R4's conformance results somewhere to persist.
+- **Insights repository** (was M6.2) — treated as a separate product on the same foundation. Not scoped here.
 
 ---
 
@@ -511,16 +497,15 @@ Four things sit on the critical path and are worth protecting:
 
 ## Open decisions, by the milestone they gate
 
-| Decision                                                     | Gates       | Last responsible moment |
-| ------------------------------------------------------------ | ----------- | ----------------------- |
-| O13 — bulk-operation list completeness                       | M1.10, M2.4 | End of R1               |
-| O8 — developer-handoff reference patterns                    | M1.10       | End of R1               |
-| O3 — structured "how to read this in the analytics platform" | M2.1        | Start of R2             |
-| O1 — semantic layer ontology, IRIs, export formats           | M5.0        | End of R2               |
-| O2 — business glossary                                       | M5.0        | End of R2               |
-| O9 — container entity attributes                             | M3.5        | Start of R3             |
-| O4 — data quality vs unstructured placeholders               | M4.2        | Start of R4             |
-| O5 — verification module scope                               | M4.1        | Start of R4             |
+| Decision                                                     | Gates | Last responsible moment |
+| ------------------------------------------------------------ | ----- | ----------------------- |
+| O8 — developer-handoff reference patterns                    | M1.10 | End of R1               |
+| O3 — structured "how to read this in the analytics platform" | M2.1  | Start of R2             |
+| O1 — semantic layer ontology, IRIs, export formats           | M5.0  | End of R2               |
+| O2 — business glossary                                       | M5.0  | End of R2               |
+| O9 — container entity attributes                             | M3.5  | Start of R3             |
+| O4 — data quality vs unstructured placeholders               | M4.2  | Start of R4             |
+| O5 — verification module scope                               | M4.1  | Start of R4             |
 
 **O7 is closed** — see [ADR-0015](../adr/0015-schema-migration-strategy.md), accepted 2026-08-12 as proposed: forward-only versioned migrations run at start-up, a production guard that refuses to start rather than auto-apply, no downgrade path, and backup as the operator's documented responsibility. M0.1 is no longer gated by anything.
 

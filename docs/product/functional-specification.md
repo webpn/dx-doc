@@ -67,7 +67,7 @@ The domain model defines ~25 entities. See `docs/product/glossary.md` for defini
 
 ### Deferred Entities
 
-- Extension, Segment, CalculatedMetric (containers in R3, substance in R5)
+- Extension, Segment, CalculatedMetric (containers in R3, substance in the backlog)
 
 ## Critical Business Rules
 
@@ -81,29 +81,28 @@ The domain model defines ~25 entities. See `docs/product/glossary.md` for defini
 
 ## Delivery Roadmap Summary
 
-| Release | Content                                                                      | Timeline   |
-| ------- | ---------------------------------------------------------------------------- | ---------- |
-| R0      | Foundations: stack, schema, auth, API, CI, public repo                       | Weeks 1–2  |
-| R1      | MVP: full data model, editor, versioning, import API + MCP, SSO              | Weeks 3–8  |
-| R2      | Navigation: flows, bulk ops, exports, email, SAML, MariaDB/Postgres adapters | Months 3–4 |
-| R3      | Developer handoff: snippets, Confluence, interactive agent access            | Months 5–6 |
-| R4      | Data quality: analytics integrations, conformance reports, Figma import      | Months 7–8 |
-| R5      | Semantic layer: OWL/RDF/SKOS, business glossary                              | Months 9+  |
-| R6      | Lifecycle: tracking implementation status, insights                          | Beyond R5  |
+| Release | Content                                                                      | Timeline              |
+| ------- | ---------------------------------------------------------------------------- | --------------------- |
+| R0      | Foundations: stack, schema, auth, API, CI, public repo                       | Weeks 1–2             |
+| R1      | MVP: full data model, editor, versioning, import API + MCP, SSO              | Weeks 3–8             |
+| R2      | Navigation: flows, bulk ops, exports, email, SAML, MariaDB/Postgres adapters | Months 3–4            |
+| R3      | Developer handoff: snippets, Confluence, interactive agent access            | Months 5–6            |
+| R4      | Data quality: analytics integrations, conformance reports, Figma import      | Months 7–8            |
+| Backlog | Semantic layer (OWL/RDF/SKOS, business glossary), lifecycle, insights        | No committed timeline |
 
 ## Open Decisions
 
 See §21 of the full specification. Critically open items:
 
-- **O1:** Semantic layer ontology classes, IRI scheme, export formats — blocks R5
-- **O2:** Business glossary details — blocks R5
+- **O1:** Semantic layer ontology classes, IRI scheme, export formats — blocks the backlog
+- **O2:** Business glossary details — blocks the backlog
 - **O3:** "How to read this in the analytics platform" — structured field design — blocks R2 Analyst view
 - **O4:** Data quality interaction with unstructured placeholders — blocks R4
 - **O5:** Verification/QA module scope — blocks R4
 - **O6:** Complete environment variable matrix — **closed**, see [ADR-0014](../adr/0014-configuration-split.md); matrix reproduced in [README.md](../../README.md#environment-variables)
 - **O7:** Schema migration strategy for third-party installs — **closed**, see [ADR-0015](../adr/0015-schema-migration-strategy.md); forward-only versioned migrations at start-up, production guard, backup as the operator's responsibility. It gated M0.1, not R1.
 - **O8:** Design patterns from reference products — partly closed; developer-handoff ref remains
-- **O9:** Extension/Segment/CalculatedMetric attributes before R5 — blocks R3
+- **O9:** Extension/Segment/CalculatedMetric attributes before the semantic layer — blocks the backlog
 - **O10:** Config key split (environment vs database) — **closed**, see [ADR-0014](../adr/0014-configuration-split.md); SSO details, supported login methods and supported locales are company-level, not environment variables
 - **O11:** "Manage company catalogue" permission model — **closed**, see [REQ-SEC-010](requirements/REQ-SEC.md); it is a power of the Admin role, not a discrete flag and not a fifth role
 - **O14:** Draft-index rebuild trigger and acceptable lag under Pagefind — opened by [ADR-0009](../adr/0009-search-abstraction.md)'s amendment when O12 closed, and **closed** by the same ADR on 2026-08-12: two indices per project, published rebuilt on publication, draft rebuilt asynchronously after each save

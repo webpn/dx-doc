@@ -101,7 +101,7 @@ A human-readable label alongside the technical name, reserved for the future bus
 - The field exists, is editable, and is exported wherever properties are exported.
 - No feature depends on it being populated.
 
-> One column now avoids a migration in R5. Deliberate cost, taken while it is cheap. See open decision O2.
+> One column now avoids a migration if the semantic layer is ever built (backlog). Deliberate cost, taken while it is cheap. See open decision O2.
 
 ### REQ-DOM-006 — Module entity, project-scoped, inheritable
 
@@ -311,9 +311,9 @@ Correspondence between a project module and a catalogue module is established by
 
 **Should** · R3 · [M3.5](../milestones.md) · spec §6.9, §14.2 · **Not Started** · Issue: — · PR: —
 
-Ship as containers with their relationships modelled; they gain substance with the semantic layer in R5.
+Ship as containers with their relationships modelled; they gain substance with the semantic layer in the backlog.
 
-**Blocked by:** open decision O9 — whether they need real attributes before R5.
+**Blocked by:** open decision O9 — whether they need real attributes before the semantic layer (backlog).
 
 ### REQ-DOM-026 — Recurring custom property standardisation hint
 

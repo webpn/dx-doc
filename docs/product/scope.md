@@ -125,15 +125,15 @@ The documentation of tracking plans for websites and mobile applications:
 - No history import — each imported project starts at version 1.
 - No importer UI and no import endpoint accepting an export archive — the Platform holds no knowledge of any source format.
 
-## Deferred (with target release)
+## Deferred
 
 | Module                                    | Release | Notes                                                                                                         |
 | ----------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
 | Data quality and pre-release verification | R4      | Analytics platform integrations; data-quality signals; conformance reports (reports only, no persisted state) |
-| Semantic layer                            | R5      | OWL/RDF/SKOS exports; business metrics, dimensions, certified segments; business glossary (pending O1, O2)    |
-| Tracking implementation status            | R6      | Lifecycle state on each tracking                                                                              |
+| Semantic layer                            | Backlog | OWL/RDF/SKOS exports; business metrics, dimensions, certified segments; business glossary (pending O1, O2)    |
+| Tracking implementation status            | Backlog | Lifecycle state on each tracking                                                                              |
 | Figma frame import                        | R4      | Design-refresh of screenshots                                                                                 |
-| Insights repository                       | R6+     | Separate product on the same foundation                                                                       |
+| Insights repository                       | Backlog | Separate product on the same foundation                                                                       |
 
 ## Deferred Entities (containers only until semantic layer)
 
@@ -141,7 +141,7 @@ The documentation of tracking plans for websites and mobile applications:
 - Segment (certified analytics segment)
 - Calculated Metric
 
-These ship as containers in R3 and gain substance with the semantic layer in R5.
+These ship as containers in R3 and gain substance with the semantic layer in the backlog.
 
 ## Explicitly Rejected
 

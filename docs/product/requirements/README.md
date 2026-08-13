@@ -27,17 +27,15 @@ Traceable requirements derived from the [functional specification](../functional
 
 ## Distribution by release
 
-| Release | Requirements | Focus                                                                                     |
-| ------- | ------------ | ----------------------------------------------------------------------------------------- |
-| R0      | 23           | Foundations, auth and account lifecycle, API, public repository, data-flow statement      |
-| R1      | 63           | Full data model, editor, versioning, import API + MCP, SSO                                |
-| R2      | 38           | Flows, bulk operations, distribution channels, MariaDB/Postgres adapters, instance portal |
-| R3      | 15           | Snippets, Confluence, interactive agent access, hosted search adapter                     |
-| R4      | 6            | Data quality, Figma import, webhooks                                                      |
-| R5      | 3            | Semantic layer — blocked on O1/O2                                                         |
-| R6      | 2            | Lifecycle status, insights                                                                |
-| Backlog | 1            | Kubernetes/Helm packaging (deferred, no scheduled release)                                |
-| —       | 8            | Explicitly rejected (recorded, not gaps)                                                  |
+| Release | Requirements | Focus                                                                                        |
+| ------- | ------------ | -------------------------------------------------------------------------------------------- |
+| R0      | 23           | Foundations, auth and account lifecycle, API, public repository, data-flow statement         |
+| R1      | 63           | Full data model, editor, versioning, import API + MCP, SSO                                   |
+| R2      | 38           | Flows, bulk operations, distribution channels, MariaDB/Postgres adapters, instance portal    |
+| R3      | 15           | Snippets, Confluence, interactive agent access, hosted search adapter                        |
+| R4      | 6            | Data quality, Figma import, webhooks                                                         |
+| Backlog | 6            | Kubernetes/Helm packaging, semantic layer, lifecycle status, insights (no scheduled release) |
+| —       | 8            | Explicitly rejected (recorded, not gaps)                                                     |
 
 R1 carries 63 requirements in six weeks — two fewer than the draft: [REQ-AUTH-004](REQ-AUTH.md) (Mermaid rendering) moved to R2 on 2026-08-12, where a renderer was already being built for [REQ-NAV-006](REQ-NAV.md), and [REQ-VIEW-002](REQ-VIEW.md) (view selector) moved to R2 on 2026-08-13 to align with open decision O3. That concentration is risk R1 in the register, and it is why the [milestones](../milestones.md) name demotion candidates in advance rather than improvising under pressure.
 
@@ -107,12 +105,3 @@ The requirement files are the live status record. [scope.md](../scope.md) stays 
 **O12 is closed** — see [ADR-0009](../../adr/0009-search-abstraction.md). It asked whether a self-hostable search adapter was needed before the public release, a release R0 had already performed. Making the default self-contained ([REQ-FDN-007](REQ-FDN.md)) removed the question and retired [REQ-FDN-016](REQ-FDN.md), at the cost of opening O14.
 
 **O6 and O10 are closed** — see [ADR-0014](../../adr/0014-configuration-split.md). O6 (complete environment variable matrix) is closed by the matrix now reproduced in [README.md](../../../README.md#environment-variables) and [.env.example](../../../.env.example). O10 (allocation of the disputed keys) is closed by moving SSO connection details, supported login methods and supported locales to company-level database configuration instead of instance-wide environment variables — the split REQ-SEC-014's recovery-path wording already implied. [REQ-FDN-013](REQ-FDN.md) is unblocked; see also updated [REQ-SEC-001/004/007/014](REQ-SEC.md) and [REQ-NFR-010](REQ-NFR.md).
-
-## Known inconsistencies
-
-Carried forward from the requirements review of 2026-08-12, which found seventeen issues; fifteen were resolved and applied into the requirement files, and these are the two that were consciously left. They are defects in the record rather than open product questions — none blocks a milestone. Fix one by editing the requirement in place and deleting its line here.
-
-### Minor
-
-1. **[vision.md](../vision.md)'s persona table has five rows; [personas.md](../personas.md) has nine.** Align them, or have the vision defer to the persona document rather than restating it.
-2. **R5 and R6 milestones list no deliverables** while [REQ-DQ-004](REQ-DQ.md)–[REQ-DQ-008](REQ-DQ.md) name M5.1, M6.1 and M6.2 as their milestones. Deliberate — those milestones are unscopeable until O1 and O2 close — but it is the one place the requirement↔milestone mapping does not resolve in both directions.

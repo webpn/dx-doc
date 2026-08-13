@@ -10,7 +10,7 @@ Accepted
 
 ## Context
 
-Every entity in the domain model needs an identifier. The identifiers are used in URLs, API responses, git export paths, and (eventually) as the basis for stable IRIs in the semantic layer (R5). If identifiers can change, every system that references them breaks.
+Every entity in the domain model needs an identifier. The identifiers are used in URLs, API responses, git export paths, and (eventually) as the basis for stable IRIs in the semantic layer (backlog). If identifiers can change, every system that references them breaks.
 
 ## Decision
 
@@ -44,5 +44,5 @@ Rejected: even within a project, names can change. The property name is a user-c
 - Every entity table has both an `id` (UUID, immutable) and a `slug` (derived from name, mutable).
 - API responses include both `id` and `slug`. Clients use `id` for reliable references.
 - Idempotent import ([ADR-0021](0021-agent-driven-migration.md)) needs a second, orthogonal key: entities also carry an optional `custom_id` recording the source system and source identifier, unique per project. The internal `id` is what dx-doc references; the `custom_id` is what lets a re-run recognise an entity it created on a previous pass. Neither substitutes for the other.
-- When the semantic layer is built (R5), stable IRIs are minted from the immutable IDs — no data migration needed.
+- When the semantic layer is built (backlog), stable IRIs are minted from the immutable IDs — no data migration needed.
 - UUIDs are larger than integers (16 bytes vs 4-8 bytes). At the projected scale (thousands of entities per project), this is negligible.

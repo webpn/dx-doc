@@ -4,30 +4,30 @@ Platform, persistence, abstractions, configuration and distribution. Source: [fu
 
 Entry format and status legend: [requirements index](README.md). Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
 
-| ID          | Requirement                                           | MoSCoW | Rel. | Milestone | Status      |
-| ----------- | ----------------------------------------------------- | ------ | ---- | --------- | ----------- |
-| REQ-FDN-001 | Layered architecture with enforced boundaries         | Must   | R0   | M0.1      | Not Started |
-| REQ-FDN-002 | Multi-company tenancy on a single instance            | Must   | R0   | M0.2      | Not Started |
-| REQ-FDN-003 | Projects with flat grouping labels                    | Must   | R0   | M0.2      | Not Started |
-| REQ-FDN-004 | Immutable internal identifiers                        | Must   | R0   | M0.2      | Not Started |
-| REQ-FDN-005 | Persistence behind repository ports; SQLite default   | Must   | R0   | M0.2      | Not Started |
-| REQ-FDN-006 | S3-compatible object storage behind an interface      | Must   | R0   | M0.3      | Not Started |
-| REQ-FDN-007 | Search behind a port; Pagefind is the default adapter | Must   | R0   | M0.3      | Not Started |
-| REQ-FDN-008 | Search scoping enforced server-side                   | Must   | R0   | M0.3      | Not Started |
-| REQ-FDN-009 | Versioned, idempotent, forward-only migrations        | Must   | R0   | M0.2      | Not Started |
-| REQ-FDN-010 | Server-side validation shared by UI, API and MCP      | Must   | R0   | M0.5      | Not Started |
-| REQ-FDN-011 | Public MIT repository with README                     | Must   | R0   | M0.6      | Not Started |
-| REQ-FDN-012 | Reference deployment stack and CI                     | Must   | R0   | M0.6      | Not Started |
-| REQ-FDN-013 | Two-level configuration, environment and company      | Must   | R0   | M0.3      | Not Started |
-| REQ-FDN-014 | Error-tracking integration                            | Should | R1   | M1.9      | Not Started |
-| REQ-FDN-015 | Per-company branding                                  | Should | R2   | M2.8      | Not Started |
-| REQ-FDN-016 | Self-hostable search adapter                          | Won't  | —    | —         | Rejected    |
+| ID          | Requirement                                           | MoSCoW | Rel.    | Milestone | Status      |
+| ----------- | ----------------------------------------------------- | ------ | ------- | --------- | ----------- |
+| REQ-FDN-001 | Layered architecture with enforced boundaries         | Must   | R0      | M0.1      | Not Started |
+| REQ-FDN-002 | Multi-company tenancy on a single instance            | Must   | R0      | M0.2      | Not Started |
+| REQ-FDN-003 | Projects with flat grouping labels                    | Must   | R0      | M0.2      | Not Started |
+| REQ-FDN-004 | Immutable internal identifiers                        | Must   | R0      | M0.2      | Not Started |
+| REQ-FDN-005 | Persistence behind repository ports; SQLite default   | Must   | R0      | M0.2      | Not Started |
+| REQ-FDN-006 | S3-compatible object storage behind an interface      | Must   | R0      | M0.3      | Not Started |
+| REQ-FDN-007 | Search behind a port; Pagefind is the default adapter | Must   | R0      | M0.3      | Not Started |
+| REQ-FDN-008 | Search scoping enforced server-side                   | Must   | R0      | M0.3      | Not Started |
+| REQ-FDN-009 | Versioned, idempotent, forward-only migrations        | Must   | R0      | M0.2      | Not Started |
+| REQ-FDN-010 | Server-side validation shared by UI, API and MCP      | Must   | R0      | M0.5      | Not Started |
+| REQ-FDN-011 | Public MIT repository with README                     | Must   | R0      | M0.6      | Not Started |
+| REQ-FDN-012 | Reference deployment stack and CI                     | Must   | R0      | M0.6      | Not Started |
+| REQ-FDN-013 | Two-level configuration, environment and company      | Must   | R0      | M0.3      | Not Started |
+| REQ-FDN-014 | Error-tracking integration                            | Should | R1      | M1.9      | Not Started |
+| REQ-FDN-015 | Per-company branding                                  | Should | R2      | M2.8      | Not Started |
+| REQ-FDN-016 | Self-hostable search adapter                          | Won't  | —       | —         | Rejected    |
 | REQ-FDN-017 | Kubernetes/Helm packaging                             | Could  | Backlog | —         | Not Started |
-| REQ-FDN-018 | MariaDB adapter                                       | Should | R2   | M2.8      | Not Started |
-| REQ-FDN-019 | PostgreSQL adapter                                    | Should | R2   | M2.8      | Not Started |
-| REQ-FDN-020 | Schema constrained to a portable SQL subset           | Must   | R0   | M0.2      | Not Started |
-| REQ-FDN-021 | Third-party data-flow statement                       | Must   | R0   | M0.6      | Not Started |
-| REQ-FDN-022 | Hosted search adapter                                 | Could  | R3   | —         | Not Started |
+| REQ-FDN-018 | MariaDB adapter                                       | Should | R2      | M2.8      | Not Started |
+| REQ-FDN-019 | PostgreSQL adapter                                    | Should | R2      | M2.8      | Not Started |
+| REQ-FDN-020 | Schema constrained to a portable SQL subset           | Must   | R0      | M0.2      | Not Started |
+| REQ-FDN-021 | Third-party data-flow statement                       | Must   | R0      | M0.6      | Not Started |
+| REQ-FDN-022 | Hosted search adapter                                 | Could  | R3      | —         | Not Started |
 
 ---
 

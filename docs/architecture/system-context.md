@@ -71,7 +71,7 @@ Describes the dx-doc Platform in its environment: who uses it, what external sys
 | GA4 API                   | R4      | Data quality signals            | Google Analytics Data API |
 | PostHog API               | R4      | Data quality signals            | PostHog REST API          |
 | Figma API                 | R4      | Frame import                    | Figma REST API            |
-| Corporate Data Warehouse  | R5      | Semantic layer export           | File export (OWL/RDF)     |
+| Corporate Data Warehouse  | Backlog | Semantic layer export           | File export (OWL/RDF)     |
 
 ## Integration Boundaries
 
