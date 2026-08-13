@@ -12,8 +12,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "echo 'Tests not yet configured'",
-    "test:watch": "echo 'Watch mode not yet configured'",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:e2e": "echo 'E2E tests not yet configured'",
     "test:coverage": "echo 'Coverage not yet configured'",
     "db:migrate": "echo 'Migrations not yet configured'",
@@ -23,14 +23,15 @@
     "node": ">=20.0.0"
   },
   "devDependencies": {
-    "typescript": "~5.9.3",
     "@typescript-eslint/eslint-plugin": "~8.66.0",
     "@typescript-eslint/parser": "~8.66.0",
     "eslint": "~9.39.5",
+    "eslint-plugin-import": "~2.32.0",
     "eslint-plugin-react": "~7.37.0",
     "eslint-plugin-react-hooks": "~7.1.1",
-    "eslint-plugin-import": "~2.32.0",
     "prettier": "~3.9.6",
-    "typescript-eslint": "~8.66.0"
+    "typescript": "~5.9.3",
+    "typescript-eslint": "~8.66.0",
+    "vitest": "^4.1.10"
   }
 }

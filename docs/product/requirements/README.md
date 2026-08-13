@@ -48,7 +48,7 @@ Each requirement appears twice in its file: once as a row in the file's summary 
 ```markdown
 ### REQ-XXX-NNN — Short description
 
-**MoSCoW** · Release · [Milestone](../milestones.md) · spec §N · [ADR-NNNN](...) · **Status** · Issue: #N · PR: #N
+**MoSCoW** · Release · [Milestone](../milestones.md) · spec §N · ADR-NNNN (only where a decision record exists) · **Status** · Issue: #N · PR: #N
 
 What the requirement means, and any rationale that is not obvious from the statement.
 
