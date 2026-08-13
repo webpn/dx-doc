@@ -45,7 +45,7 @@ The architecture is **not** a mechanical implementation of textbook Clean Archit
 
 Contains pure business logic with no external dependencies (no React, no browser APIs, no network, no persistence).
 
-- **Entities:** Company, Project, Page, Flow, FlowEdge, Trigger, Tracking, DataLayerProperty, Module, TrackingTemplate, SpecificValue, Destination, CdpAudience, Survey, FreePage, Version, ChangeEntry, User, AuditEntry. Defined as plain TypeScript types/interfaces.
+- **Entities:** Company, Project, Page, Flow, FlowEdge, Trigger, Tracking, DataLayerProperty, Module, TrackingTemplate, SpecificValue, Destination, CdpAudience, Survey, FreePage, Version, ChangeEntry, User, Role, ProjectGrant, AuditEntry. Defined as plain TypeScript types/interfaces.
 - **Value objects:** SpecificValue, PropertyCondition, Presence (`always` | `sometimes` | `never`), PropertyType, NavigationEvent, ProjectPlatform.
 - **Domain invariants:** property composition rules (module detachment when all properties removed), specific-value placeholder validation (non-blocking warning), property identity isolation per project.
 - **Domain services (only where justified):** for rules that span multiple entities without a natural home on any single one — e.g., impact analysis (which entities reference a given property).
@@ -105,6 +105,7 @@ Truly generic utilities and type helpers with no domain, UI, or infrastructure k
 ### API-first
 
 Every piece of functionality is exposed through the REST API before any UI is built. The web client is one consumer among several. This is non-negotiable because:
+
 - The MCP server must have the same capabilities as the UI.
 - Export generators (static site, Confluence, PDF, Excel, git) consume the same API.
 - The public API (R3) is not a separate implementation.
@@ -150,14 +151,14 @@ Global state is only introduced with a documented reason. Avoid prop drilling on
 
 ## Testing strategy
 
-| Layer | Test type | Focus |
-|---|---|---|
-| Domain | Unit | Pure business logic, invariants, value objects |
-| Application | Unit / Integration | Use cases with mocked ports |
-| Infrastructure | Integration | Repository implementations against a test database |
-| API | Integration | Endpoint behavior, validation, auth |
-| UI | Component | Meaningful behavior, not implementation details |
-| E2E | End-to-end | Critical user journeys |
+| Layer          | Test type          | Focus                                              |
+| -------------- | ------------------ | -------------------------------------------------- |
+| Domain         | Unit               | Pure business logic, invariants, value objects     |
+| Application    | Unit / Integration | Use cases with mocked ports                        |
+| Infrastructure | Integration        | Repository implementations against a test database |
+| API            | Integration        | Endpoint behavior, validation, auth                |
+| UI             | Component          | Meaningful behavior, not implementation details    |
+| E2E            | End-to-end         | Critical user journeys                             |
 
 Tests assert behavior, not internal structure. Avoid tests that merely confirm React rendered a div — test what matters.
 
@@ -171,26 +172,26 @@ Tests assert behavior, not internal structure. Avoid tests that merely confirm R
 
 ## External integrations
 
-| Integration | Release | Status |
-|---|---|---|
-| SQLite | R0 | Default database adapter |
-| MariaDB | R2 | Database adapter |
-| PostgreSQL | R2 | Database adapter |
-| S3-compatible storage | R0 | Asset storage |
-| Pagefind (in-process) | R0 | Search — default, no external service |
-| Hosted search adapter | R3 | Search — optional, opt-in |
-| OIDC SSO | R1 | Authentication |
-| Project shared password | R1 | Unauthenticated read access |
-| SMTP | R1 | Email notifications |
-| SAML SSO | R2 | Authentication |
-| Confluence Cloud API | R3 | Publication target |
-| Git export | R2 | Publication target |
-| Static site hosting | R2 | Publication target |
-| Adobe Analytics/CJA API | R4 | Data quality signals |
-| GA4 API | R4 | Data quality signals |
-| PostHog API | R4 | Data quality signals |
-| Figma API | R4 | Frame import |
-| Sentry | R1 | Error tracking |
+| Integration             | Release | Status                                |
+| ----------------------- | ------- | ------------------------------------- |
+| SQLite                  | R0      | Default database adapter              |
+| MariaDB                 | R2      | Database adapter                      |
+| PostgreSQL              | R2      | Database adapter                      |
+| S3-compatible storage   | R0      | Asset storage                         |
+| Pagefind (in-process)   | R0      | Search — default, no external service |
+| Hosted search adapter   | R3      | Search — optional, opt-in             |
+| OIDC SSO                | R1      | Authentication                        |
+| Project shared password | R1      | Unauthenticated read access           |
+| SMTP                    | R1      | Email notifications                   |
+| SAML SSO                | R2      | Authentication                        |
+| Confluence Cloud API    | R3      | Publication target                    |
+| Git export              | R2      | Publication target                    |
+| Static site hosting     | R2      | Publication target                    |
+| Adobe Analytics/CJA API | R4      | Data quality signals                  |
+| GA4 API                 | R4      | Data quality signals                  |
+| PostHog API             | R4      | Data quality signals                  |
+| Figma API               | R4      | Frame import                          |
+| Sentry                  | R1      | Error tracking                        |
 
 All integrations live in `src/infrastructure/` behind interfaces defined in `src/application/ports/`.
 

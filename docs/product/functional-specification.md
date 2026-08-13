@@ -8,12 +8,12 @@ This is the canonical functional specification for the dx-doc Platform. It is de
 
 Two decisions taken after v1.2 override the specification. Where they conflict, the ADR is authoritative and the specification is stale.
 
-| Spec says | Now | Recorded in |
-|---|---|---|
-| §16.1 — MariaDB only, single database target | Persistence behind repository ports. SQLite is the default and the only adapter through R1; MariaDB and PostgreSQL adapters in R2. Schema constrained to a portable SQL subset. | [ADR-0020](../adr/0020-database-portability.md), supersedes [ADR-0003](../adr/0003-mariadb-single-database.md) |
-| §13 — bespoke importer for the legacy wiki's Markdown & CSV export, built into the Platform | The Platform ships **no source-format-specific code**. Content is imported by an AI agent driving the public API, producing a committed re-runnable script. Pulls the documented public API and MCP read/write tools from R3 into R1. | [ADR-0021](../adr/0021-agent-driven-migration.md) |
+| Spec says                                                                                   | Now                                                                                                                                                                                                                                   | Recorded in                                                                                                    |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| §16.1 — MariaDB only, single database target                                                | Persistence behind repository ports. SQLite is the default and the only adapter through R1; MariaDB and PostgreSQL adapters in R2. Schema constrained to a portable SQL subset.                                                       | [ADR-0020](../adr/0020-database-portability.md), supersedes [ADR-0003](../adr/0003-mariadb-single-database.md) |
+| §13 — bespoke importer for the legacy wiki's Markdown & CSV export, built into the Platform | The Platform ships **no source-format-specific code**. Content is imported by an AI agent driving the public API, producing a committed re-runnable script. Pulls the documented public API and MCP read/write tools from R3 into R1. | [ADR-0021](../adr/0021-agent-driven-migration.md)                                                              |
 
-§13's *scope* decisions are unchanged: no flow reconstruction, no history import, no internal-link import.
+§13's _scope_ decisions are unchanged: no flow reconstruction, no history import, no internal-link import.
 
 ## Current Version
 
@@ -81,15 +81,15 @@ The domain model defines ~25 entities. See `docs/product/glossary.md` for defini
 
 ## Delivery Roadmap Summary
 
-| Release | Content | Timeline |
-|---|---|---|
-| R0 | Foundations: stack, schema, auth, API, CI, public repo | Weeks 1–2 |
-| R1 | MVP: full data model, editor, versioning, import API + MCP, SSO | Weeks 3–8 |
-| R2 | Navigation: flows, bulk ops, exports, email, SAML, MariaDB/Postgres adapters | Months 3–4 |
-| R3 | Developer handoff: snippets, Confluence, interactive agent access | Months 5–6 |
-| R4 | Data quality: analytics integrations, conformance reports, Figma import | Months 7–8 |
-| R5 | Semantic layer: OWL/RDF/SKOS, business glossary | Months 9+ |
-| R6 | Lifecycle: tracking implementation status, insights | Beyond R5 |
+| Release | Content                                                                      | Timeline   |
+| ------- | ---------------------------------------------------------------------------- | ---------- |
+| R0      | Foundations: stack, schema, auth, API, CI, public repo                       | Weeks 1–2  |
+| R1      | MVP: full data model, editor, versioning, import API + MCP, SSO              | Weeks 3–8  |
+| R2      | Navigation: flows, bulk ops, exports, email, SAML, MariaDB/Postgres adapters | Months 3–4 |
+| R3      | Developer handoff: snippets, Confluence, interactive agent access            | Months 5–6 |
+| R4      | Data quality: analytics integrations, conformance reports, Figma import      | Months 7–8 |
+| R5      | Semantic layer: OWL/RDF/SKOS, business glossary                              | Months 9+  |
+| R6      | Lifecycle: tracking implementation status, insights                          | Beyond R5  |
 
 ## Open Decisions
 
@@ -107,5 +107,5 @@ See §21 of the full specification. Critically open items:
 - **O10:** Config key split (environment vs database) — **closed**, see [ADR-0014](../adr/0014-configuration-split.md); SSO details, supported login methods and supported locales are company-level, not environment variables
 - **O11:** "Manage company catalogue" permission model — **closed**, see [REQ-SEC-010](requirements/REQ-SEC.md); it is a power of the Admin role, not a discrete flag and not a fifth role
 - **O14:** Draft-index rebuild trigger and acceptable lag under Pagefind — opened by [ADR-0009](../adr/0009-search-abstraction.md)'s amendment when O12 closed, and **closed** by the same ADR on 2026-08-12: two indices per project, published rebuilt on publication, draft rebuilt asynchronously after each save
-- **O12:** Self-hostable search adapter before public release — blocks R1 public release
+- **O12:** Self-hostable search adapter before public release — **closed**, see [ADR-0009](../adr/0009-search-abstraction.md); resolved by making the default self-contained ([REQ-FDN-007](requirements/REQ-FDN.md)), which retired REQ-FDN-016 and opened O14
 - **O13:** Bulk operations list completeness — blocks R2
