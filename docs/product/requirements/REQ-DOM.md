@@ -32,7 +32,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-DOM-024 | Selective adoption of catalogue module changes        | Should | R2   | M2.7      | Not Started |
 | REQ-DOM-025 | Extension / Segment / Calculated Metric containers    | Should | R3   | M3.5      | Not Started |
 | REQ-DOM-026 | Recurring custom property standardisation hint        | Could  | R3   | M3.5      | Not Started |
-| REQ-DOM-027 | `presence` enum resolved per tracking                 | Must   | R1   | M1.1      | Not Started |
+| REQ-DOM-027 | TrackingProperty entity carrying the `presence` enum  | Must   | R1   | M1.1      | Not Started |
 | REQ-DOM-028 | No cross-project references                           | Must   | R1   | M1.1      | Not Started |
 
 ---
@@ -53,7 +53,7 @@ A page, screen, modal, popup, or page template of the product, organised in a hi
 
 **Must** · R1 · [M1.1](../milestones.md) · spec §6.7 · **Not Started** · Issue: — · PR: —
 
-A single tracked event. Attaches either to a specific Page or to a page template. Carries name, navigation event (screen view / popup view / element click / form submission / user error, extensible), applied modules, resulting property set, specific values, rich-text description, and associated flow edges.
+A single tracked event. Attaches either to a specific Page or to a page template. Carries name, navigation event (screen view / popup view / element click / form submission / user error, extensible), applied modules, resulting property set (a set of TrackingProperty records, REQ-DOM-027), specific values, rich-text description, and associated flow edges.
 
 **Acceptance**
 
@@ -69,7 +69,7 @@ The central entity. Attributes: `id`, `name`, `business_label`, `description`, `
 
 **Acceptance**
 
-- **The property carries no `presence`.** Presence exists only on the tracking↔property relationship (REQ-DOM-027) — there is no default on the property and no second place to read it from.
+- **The property carries no `presence`.** Presence exists only on the TrackingProperty entity (REQ-DOM-027) — there is no default on the property and no second place to read it from.
 - `data_source` drives the development-view filter (REQ-VIEW-003): a `tag_manager` property is physically excluded from development artefacts.
 - `introduced_in_version` is set automatically at first publication and never edited by hand.
 - `status` supports `deprecated` without deletion; deprecation is manual, never scheduled.
@@ -157,7 +157,7 @@ A blueprint for new trackings: preselected modules, preconfigured custom propert
 
 **Must** · R1 · [M1.1](../milestones.md) · spec §6.8 · **Not Started** · Issue: — · PR: —
 
-The concrete value a property must take within a given tracking. Values may contain placeholders written as plain text in square brackets (`article_detail_[slug]`).
+The concrete value a property must take within a given tracking. Attaches to a TrackingProperty (REQ-DOM-027) and is optional on it. Values may contain placeholders written as plain text in square brackets (`article_detail_[slug]`).
 
 **Acceptance**
 
@@ -183,7 +183,7 @@ An editor who needs to express a condition before then does so as ordinary descr
 
 **Should** · R2 · [M2.1](../milestones.md) · spec §6.8 · **Not Started** · Issue: — · PR: —
 
-_property_ + _operator_ + _value_ + optional _note_. Exactly four operators: `is`, `is not`, `is set`, `is not set` — the last available only where the tracking↔property `presence` (REQ-DOM-027) is `sometimes`. The note is the escape hatch for anything the operators cannot express.
+_property_ + _operator_ + _value_ + optional _note_, attached to a TrackingProperty (REQ-DOM-027). Exactly four operators: `is`, `is not`, `is set`, `is not set` — the last available only where that record's `presence` is `sometimes`. The note is the escape hatch for anything the operators cannot express.
 
 **This is the only mechanism for conditional valorisation.** The prose form was rejected rather than deferred (REQ-DOM-011), so conditions do not exist in the product before R2 and no migration path into this field is required.
 
@@ -321,18 +321,24 @@ Ship as containers with their relationships modelled; they gain substance with t
 
 A report highlighting custom properties recurring across many projects as candidates for standardisation. Advisory; mitigates catalogue drift without introducing a live link.
 
-### REQ-DOM-027 — `presence` enum resolved per tracking
+### REQ-DOM-027 — TrackingProperty entity carrying the `presence` enum
 
 **Must** · R1 · [M1.1](../milestones.md) · spec §6.4 · **Not Started** · Issue: — · PR: —
 
-`always` / `sometimes` / `never`, resolved per tracking on the tracking↔property relationship. Replaces a plain boolean.
+**TrackingProperty** is the record of one Data Layer Property being used by one Tracking. It is a first-class entity, not an implicit link: it carries `tracking`, `property`, `source` (`module` / `direct`, per REQ-DOM-008) and `presence`.
+
+`presence` is `always` / `sometimes` / `never`, resolved per tracking on this record. Replaces a plain boolean.
 
 **This is the only place `presence` exists.** The Data Layer Property carries no presence attribute and no default (REQ-DOM-003) — a property has a presence only in the context of a tracking that uses it.
 
+The entity is what the Tracking's "resulting property set" (REQ-DOM-002) is made of, and it is the parent of the two other per-(tracking, property) records: Specific Values (REQ-DOM-010) and Property Conditions (REQ-DOM-012) attach to a TrackingProperty, not to a bare Tracking–Property pair.
+
 **Acceptance**
 
-- The value lives on the relationship, so the same property may be `always` in one tracking and `sometimes` in another.
+- The entity exists in its own right, so presence has exactly one declared home rather than being an attribute of an unmodelled relationship.
+- The value lives on this record, so the same property may be `always` in one tracking and `sometimes` in another.
 - No schema, API payload or export represents presence as an attribute of the property itself.
+- Removing a TrackingProperty removes its Specific Values and Conditions with it; a property cannot hold a specific value in a tracking that does not use it.
 - `never` is expressible, and is what lets a condition state that a property must **not** be present in a scenario.
 - `is not set` (REQ-DOM-012) is offered only where presence is `sometimes`.
 

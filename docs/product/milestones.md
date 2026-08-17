@@ -132,7 +132,7 @@ _Target: weeks 3–8. The entire Must set except [REQ-VIEW-003](requirements/REQ
 
 **Delivers:** REQ-DOM-001 … REQ-DOM-010, REQ-DOM-015 … REQ-DOM-019, REQ-DOM-027, REQ-DOM-028, REQ-SEC-010
 
-Page, Tracking, DataLayerProperty (full attribute set including `business_label` and the `object` type with parent-child paths), Module, TrackingTemplate, SpecificValue, Destination with N:N mapping and `destination_name_override`, CdpAudience, Survey, FreePage, company catalogue with copy-on-creation. `presence` lives on the tracking↔property relationship and nowhere else (REQ-DOM-027).
+Page, Tracking, TrackingProperty, DataLayerProperty (full attribute set including `business_label` and the `object` type with parent-child paths), Module, TrackingTemplate, SpecificValue, Destination with N:N mapping and `destination_name_override`, CdpAudience, Survey, FreePage, company catalogue with copy-on-creation. `presence` lives on TrackingProperty — the record of one property as used by one tracking — and nowhere else (REQ-DOM-027).
 
 **Not in R1:** conditional valorisations in any form. The prose form was rejected outright (REQ-DOM-011) rather than shipped and later converted; the structured form (REQ-DOM-012) arrives in M2.1.
 
@@ -315,9 +315,9 @@ Point and region annotations stored as a separate JSON layer over a preserved or
 
 **Delivers:** REQ-AUTH-010, REQ-API-008
 
-Add/remove/swap module, add/remove property, set presence, change page attachment, archive — applied to a tracking multi-selection with a preview, a single audit entry, and API/MCP exposure restricted to explicit identifier lists.
+Add/remove module, add/remove property, change page attachment, archive — the six operations confirmed by O13 ([REQ-AUTH-010](requirements/REQ-AUTH.md)) — applied to a tracking multi-selection with a preview, a single audit entry, and API/MCP exposure restricted to explicit identifier lists.
 
-**Depends on:** M1.1 · **Gated by:** O13
+**Depends on:** M1.1 · **Gated by:** ~~O13~~ — **closed 2026-08-13**
 
 **Exit:** every operation shows the affected items before applying; no API path accepts a filter expression as the operation target; results appear in the publication diff like any other edit.
 

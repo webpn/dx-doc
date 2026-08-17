@@ -58,6 +58,7 @@ The domain model defines ~25 entities. See `docs/product/glossary.md` for defini
 - Page/Screen, Flow, FlowEdge, Trigger
 - Tracking, TrackingTemplate
 - DataLayerProperty, Module
+- TrackingProperty — one property as used by one tracking; carries `presence`
 - SpecificValue, PropertyCondition
 - Destination
 - CdpAudience, Survey

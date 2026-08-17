@@ -45,9 +45,9 @@ The architecture is **not** a mechanical implementation of textbook Clean Archit
 
 Contains pure business logic with no external dependencies (no React, no browser APIs, no network, no persistence).
 
-- **Entities:** Company, Project, Page, Flow, FlowEdge, Trigger, Tracking, DataLayerProperty, Module, TrackingTemplate, SpecificValue, Destination, CdpAudience, Survey, FreePage, Version, ChangeEntry, User, Role, ProjectGrant, AuditEntry. Defined as plain TypeScript types/interfaces.
-- **Value objects:** SpecificValue, PropertyCondition, Presence (`always` | `sometimes` | `never`), PropertyType, NavigationEvent, ProjectPlatform.
-- **Domain invariants:** property composition rules (module detachment when all properties removed), specific-value placeholder validation (non-blocking warning), property identity isolation per project.
+- **Entities:** Company, Project, Page, Flow, FlowEdge, Trigger, Tracking, TrackingProperty, DataLayerProperty, Module, TrackingTemplate, SpecificValue, Destination, CdpAudience, Survey, FreePage, Version, ChangeEntry, User, Role, ProjectGrant, AuditEntry. Defined as plain TypeScript types/interfaces.
+- **Value objects:** PropertyCondition, Presence (`always` | `sometimes` | `never`), PropertyType, NavigationEvent, ProjectPlatform. `Presence` is carried by TrackingProperty and by nothing else.
+- **Domain invariants:** property composition rules (module detachment when all properties removed), presence carried only by TrackingProperty, specific-value placeholder validation (non-blocking warning), property identity isolation per project.
 - **Domain services (only where justified):** for rules that span multiple entities without a natural home on any single one — e.g., impact analysis (which entities reference a given property).
 
 No persistence, no network, no React. Domain types are independent of API DTOs — the mapping happens at the application/infrastructure boundary.

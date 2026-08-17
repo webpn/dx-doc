@@ -229,7 +229,7 @@ _Weeks 3–8. The release that retires the legacy wiki for the pilot product._
 
 [REQ-DOM-027](requirements/REQ-DOM.md)
 
-**Done when** — presence lives on the tracking↔property relationship **and nowhere else**: the same property is `always` in one tracking and `sometimes` in another, and no schema, payload or export presents it as an attribute of the property itself.
+**Done when** — presence lives on the TrackingProperty record **and nowhere else**: the same property is `always` in one tracking and `sometimes` in another, and no schema, payload or export presents it as an attribute of the property itself.
 
 #### US-EDT-08 — Record the value a property must take · _Editor_ · E1
 
@@ -599,13 +599,13 @@ _Months 3–4. The release that lets people outside the tool consume the documen
 
 #### US-EDT-22 — Apply one change across a multi-selection · _Editor_ · E1
 
-**As a** tracking specialist **I want** to add a module, set a presence or reattach a page across fifty selected trackings at once **so that** a convention change is an afternoon rather than a fortnight.
+**As a** tracking specialist **I want** to add a module, remove a property or reattach a page across fifty selected trackings at once **so that** a convention change is an afternoon rather than a fortnight.
 
 [REQ-AUTH-010](requirements/REQ-AUTH.md), [REQ-API-008](requirements/REQ-API.md)
 
 **Done when** — every operation previews the affected items first, produces a single audit entry, and appears in the publication diff as ordinary per-entity changes.
 
-> **Blocked by O13.** The operation list is a proposal, not an observation — confirm it from what editors actually did by hand during the pilot import and its item-by-item verification at M1.10. That evidence exists exactly once.
+> **O13 closed on 2026-08-13.** The operation list is now an observation rather than a proposal: six operations, confirmed against what editors actually did by hand during the pilot import (REQ-AUTH-010). Bulk-setting presence is not among them.
 
 ## M2.5 / M2.6 — Rendering and distribution
 
