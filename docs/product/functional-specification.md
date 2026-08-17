@@ -93,7 +93,7 @@ The domain model defines ~25 entities. See `docs/product/glossary.md` for defini
 
 ## Open Decisions
 
-See §21 of the full specification. Critically open items:
+See §21 of the full specification (and [requirements index](requirements/README.md#open-decisions)). Critically open items:
 
 - **O1:** Semantic layer ontology classes, IRI scheme, export formats — blocks the backlog
 - **O2:** Business glossary details — blocks the backlog
