@@ -60,6 +60,7 @@
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^13.0.3",
     "fastify": "^5.12.0",
+    "kysely": "^0.29.5",
     "nodemailer": "^9.0.5",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
