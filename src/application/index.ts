@@ -44,3 +44,5 @@ export type {
 } from './ports/reset-token-repository';
 
 export type { CompanyRecord, CompanyRepository } from './ports/company-repository';
+
+export type { EmailMessage, EmailSender } from './ports/email-sender';

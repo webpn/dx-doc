@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { err, ok, type Result } from '@project/shared';
 
 import type { AccountRepository } from '../ports/account-repository';
+import type { EmailSender } from '../ports/email-sender';
 import type { PasswordHasher } from '../ports/password-hasher';
 import type { PasswordResetTokenRepository } from '../ports/reset-token-repository';
 import type { SessionRepository } from '../ports/session-repository';
@@ -32,6 +33,8 @@ export class LifecycleService {
     private readonly resetTokens: PasswordResetTokenRepository,
     private readonly sessions: SessionRepository,
     private readonly permissions: PermissionService,
+    private readonly email: EmailSender,
+    private readonly appUrl: string,
     private readonly resetTtlMs: number,
     private readonly now: () => Date = () => new Date(),
     private readonly newId: () => string = () => randomUUID(),
@@ -125,6 +128,12 @@ export class LifecycleService {
       expiresAt: new Date(this.now().getTime() + this.resetTtlMs).toISOString(),
       usedAt: null,
       createdAt: this.now().toISOString(),
+    });
+    const resetLink = `${this.appUrl.replace(/\/+$/, '')}/reset-password?token=${token}`;
+    await this.email.send({
+      to: user.email,
+      subject: 'dx-doc password reset',
+      text: `Use this link to reset your password (single use, valid for a limited time):\n\n${resetLink}\n\nIf you did not request this, you can ignore this message.`,
     });
   }
 

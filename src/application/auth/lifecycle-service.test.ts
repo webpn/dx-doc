@@ -8,6 +8,7 @@ import type {
   ProjectGrant,
   UserAccount,
 } from '../ports/account-repository';
+import type { EmailMessage, EmailSender } from '../ports/email-sender';
 import type { PasswordHasher } from '../ports/password-hasher';
 import type {
   PasswordResetToken,
@@ -129,11 +130,21 @@ class FakeResetTokens implements PasswordResetTokenRepository {
   }
 }
 
+class FakeEmail implements EmailSender {
+  sent: EmailMessage[] = [];
+
+  send(message: EmailMessage): Promise<void> {
+    this.sent.push(message);
+    return Promise.resolve();
+  }
+}
+
 interface Harness {
   accounts: FakeAccounts;
   hasher: FakeHasher;
   resetTokens: FakeResetTokens;
   sessions: FakeSessions;
+  email: FakeEmail;
   lifecycle: LifecycleService;
   adminId: string;
 }
@@ -143,6 +154,7 @@ function buildHarness(): Harness {
   const hasher = new FakeHasher();
   const resetTokens = new FakeResetTokens();
   const sessions = new FakeSessions();
+  const email = new FakeEmail();
   const permissions = new PermissionService(accounts);
   const lifecycle = new LifecycleService(
     accounts,
@@ -150,6 +162,8 @@ function buildHarness(): Harness {
     resetTokens,
     sessions,
     permissions,
+    email,
+    'https://dx.test',
     TTL_MS,
     () => FIXED_NOW,
   );
@@ -179,7 +193,7 @@ function buildHarness(): Harness {
   addUser('editor', 'editor@acme.test', 'role-editor');
   addUser('pm', 'pm@acme.test', 'role-pm');
 
-  return { accounts, hasher, resetTokens, sessions, lifecycle, adminId: 'admin' };
+  return { accounts, hasher, resetTokens, sessions, email, lifecycle, adminId: 'admin' };
 }
 
 function setEditorWithPassword(accounts: FakeAccounts, passwordHash: string): void {
@@ -329,6 +343,32 @@ describe('LifecycleService — password reset (REQ-SEC-013)', () => {
 
     expect(resetTokens.tokens.size).toBe(1);
     expect([...resetTokens.tokens.values()][0]?.userId).toBe('editor');
+  });
+
+  it('emails a single-use reset link whose token matches the stored hash', async () => {
+    const { accounts, email, resetTokens, lifecycle } = buildHarness();
+    setEditorWithPassword(accounts, 'hash:secret');
+
+    await lifecycle.requestPasswordReset('c1', 'editor@acme.test');
+
+    expect(email.sent).toHaveLength(1);
+    expect(email.sent[0]?.to).toBe('editor@acme.test');
+    const match = email.sent[0]?.text.match(/token=([a-f0-9]+)/);
+    const rawToken = match?.[1];
+    if (rawToken === undefined) {
+      throw new Error('reset link missing token');
+    }
+    // The emailed token is the raw value; the store holds only its hash.
+    expect(resetTokens.tokens.has(hashSessionToken(rawToken))).toBe(true);
+    expect(email.sent[0]?.text).toContain('https://dx.test/reset-password?token=');
+  });
+
+  it('sends no email for an unknown address (no disclosure)', async () => {
+    const { email, lifecycle } = buildHarness();
+
+    await lifecycle.requestPasswordReset('c1', 'nobody@acme.test');
+
+    expect(email.sent).toHaveLength(0);
   });
 
   it('sets the new password and marks the token single-use, then rejects a replay', async () => {

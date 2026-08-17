@@ -24,3 +24,6 @@ export { SqliteAccountRepository } from './persistence/sqlite-account-repository
 export { SqliteSessionRepository } from './persistence/sqlite-session-repository';
 export { SqlitePasswordResetTokenRepository } from './persistence/sqlite-reset-token-repository';
 export { SqliteCompanyRepository } from './persistence/sqlite-company-repository';
+
+export { SmtpEmailSender, createSmtpEmailSender } from './email/smtp-email-sender';
+export { NoopEmailSender } from './email/noop-email-sender';
