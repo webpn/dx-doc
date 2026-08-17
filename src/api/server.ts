@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import fastifyStatic from '@fastify/static';
+import { loadInstanceConfig } from '@project/infrastructure/config/instance-config';
 import Fastify, { type FastifyInstance } from 'fastify';
 
 const PORT = Number(process.env.PORT ?? 3001);
@@ -47,6 +48,15 @@ export function buildApp(): FastifyInstance {
  * Start the server on the configured port.
  */
 export async function start(): Promise<void> {
+  // Validate the instance configuration at boot; refuse to start when a
+  // required variable is missing, naming each one (REQ-FDN-013).
+  try {
+    loadInstanceConfig(process.env);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
+
   const app = buildApp();
   await app.listen({ port: PORT, host: HOST });
   app.log.info(`Server listening on http://${HOST}:${String(PORT)}`);

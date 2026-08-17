@@ -1,12 +1,15 @@
-# Local development services that pair with the app running on the host
-# (`npm run dev`). The application is not containerised in R0 (M0.6 reference
-# stack); these are the external services it talks to:
-#   - mailpit: local SMTP catcher (self-hosted stand-in for Mailtrap). Any mail
-#     the app sends lands here instead of a real inbox. SMTP on :1025, web UI
-#     at http://localhost:8025.
-#   - minio: S3-compatible object storage for local development and the
-#     object-storage integration tests.
-# Start:  docker compose up -d
+# dx-doc reference + local-development stack (M0.6).
+#
+#   - app:     the reference application stack — one container serving the API
+#              and the built client (ADR-0022), with SQLite and Pagefind
+#              self-contained. This is the "one command" reference stack.
+#   - mailpit: local SMTP catcher (self-hosted stand-in for Mailtrap). SMTP on
+#              :1025, web UI at http://localhost:8025. For local dev and tests.
+#   - minio:   S3-compatible object storage (the app's storage port).
+#
+# Start the full reference stack:  docker compose up -d --build
+# For host-side local dev only (mailpit + minio, run the app with npm run dev):
+#   docker compose up -d mailpit minio
 services:
   mailpit:
     image: axllent/mailpit:latest
@@ -23,3 +26,46 @@ services:
     ports:
       - '9000:9000'
       - '9001:9001'
+
+  # Create the object-storage bucket the app expects (one-shot; exits 0).
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 minioadmin minioadmin; do sleep 1; done;
+      mc mb --ignore-existing local/dxdoc-assets
+      "
+
+  # Reference application stack (M0.6): one container serving the API and the
+  # built client, paired with S3-compatible object storage. SQLite and Pagefind
+  # are self-contained, so no database or search container is needed.
+  app:
+    build: .
+    ports:
+      - '3001:3001'
+    environment:
+      APP_URL: http://localhost:3001
+      APP_SECRET: change-me-to-a-long-random-string
+      APP_ENV: production
+      # Bind all interfaces so the published port is reachable.
+      HOST: 0.0.0.0
+      DB_DRIVER: sqlite
+      DB_FILE: /app/var/db/dxdoc.sqlite
+      STORAGE_S3_ENDPOINT: http://minio:9000
+      STORAGE_S3_REGION: us-east-1
+      STORAGE_S3_BUCKET: dxdoc-assets
+      STORAGE_S3_ACCESS_KEY: minioadmin
+      STORAGE_S3_SECRET_KEY: minioadmin
+      STORAGE_S3_FORCE_PATH_STYLE: 'true'
+      BOOTSTRAP_ADMIN_EMAIL: admin@example.com
+      BOOTSTRAP_ADMIN_PASSWORD: change-me-at-first-login
+    depends_on:
+      - minio
+      - minio-init
+    volumes:
+      - dxdoc-data:/app/var/db
+
+volumes:
+  dxdoc-data:
