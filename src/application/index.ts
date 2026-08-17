@@ -17,6 +17,9 @@ export type { LoginResult } from './auth/auth-service';
 export { COMPANY_ACTION_ROLES, PermissionService, PROJECT_ACTION_ROLES } from './auth/permissions';
 export type { CompanyAction, InstanceAction, ProjectAction } from './auth/permissions';
 
+export { LifecycleService } from './auth/lifecycle-service';
+export type { LifecycleError } from './auth/lifecycle-service';
+
 export type { PasswordHasher } from './ports/password-hasher';
 
 export type {
@@ -28,3 +31,8 @@ export type {
 } from './ports/account-repository';
 
 export type { SessionRecord, SessionRepository } from './ports/session-repository';
+
+export type {
+  PasswordResetToken,
+  PasswordResetTokenRepository,
+} from './ports/reset-token-repository';

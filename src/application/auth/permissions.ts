@@ -28,7 +28,11 @@ export type ProjectAction =
   | 'project.manage_integrations'
   | 'project.archive';
 
-export type CompanyAction = 'company.manage_catalogue' | 'company.read_audit_log';
+export type CompanyAction =
+  | 'company.manage_catalogue'
+  | 'company.read_audit_log'
+  | 'company.invite_user'
+  | 'company.deactivate_user';
 
 export type InstanceAction = 'instance.create_company' | 'instance.manage_admin_flag';
 
@@ -47,6 +51,10 @@ export const PROJECT_ACTION_ROLES: Readonly<Record<ProjectAction, readonly Compa
 export const COMPANY_ACTION_ROLES: Readonly<Record<CompanyAction, readonly CompanyRoleName[]>> = {
   'company.manage_catalogue': ['admin'],
   'company.read_audit_log': ['admin'],
+  // REQ-SEC-013: invitation is issued by an Admin, Project Manager or Editor.
+  'company.invite_user': ['admin', 'project_manager', 'editor'],
+  // Deactivation is stronger than invitation and undoes access; fail-closed to Admin.
+  'company.deactivate_user': ['admin'],
 };
 
 export class PermissionService {

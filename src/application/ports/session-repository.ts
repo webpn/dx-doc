@@ -15,6 +15,8 @@ export interface SessionRepository {
   save(session: SessionRecord): Promise<void>;
   findByTokenHash(tokenHash: string): Promise<SessionRecord | null>;
   deleteByTokenHash(tokenHash: string): Promise<void>;
+  /** Remove every session belonging to a user (used on deactivation). */
+  deleteAllForUser(userId: string): Promise<void>;
   /** Remove sessions whose expiry is at or before `nowIso`. */
   deleteExpired(nowIso: string): Promise<void>;
 }

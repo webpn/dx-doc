@@ -43,6 +43,11 @@ export class SqliteSessionRepository implements SessionRepository {
     return Promise.resolve();
   }
 
+  deleteAllForUser(userId: string): Promise<void> {
+    this.db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
+    return Promise.resolve();
+  }
+
   deleteExpired(nowIso: string): Promise<void> {
     this.db.prepare('DELETE FROM sessions WHERE expires_at <= ?').run(nowIso);
     return Promise.resolve();
