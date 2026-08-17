@@ -67,7 +67,7 @@ Rejected: rollback scripts are rarely tested and often fail. The backup+restore 
 
 - [ADR-0020](0020-database-portability.md): Database Portability — migrations must be dialect-portable. Supersedes ADR-0003, which had scoped migrations to MariaDB DDL only.
 - [ADR-0017](0017-testing-strategy.md): the dialect test matrix that verifies portability, and the test/demo seeding mechanism that this ADR deliberately keeps out of migrations.
-- O7 (spec): **closed by this ADR.** It gated [M0.1](../product/milestones.md).
+- O7 (spec): **closed by this ADR.** It gated [M0.1](../product/milestones.md#m01--close-the-stack-decisions).
 - D5 in [decisions](../decisions/README.md).
 
 ## Last Responsible Moment

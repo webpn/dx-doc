@@ -19,7 +19,7 @@ Entry format and status legend: [requirements index](README.md). Nothing here ha
 
 ### REQ-DQ-001 — Analytics platform integrations
 
-**Could** · R4 · [M4.1](../milestones.md) · spec §14.1 · **Not Started** · Issue: — · PR: —
+**Could** · R4 · [M4.1](../milestones.md#m41--analytics-platform-integrations) · spec §14.1 · **Not Started** · Issue: — · PR: —
 
 Read access to Adobe Analytics / CJA, GA4 and PostHog through service accounts injected as environment variables (`ADOBE_*`, `GA4_*`, `POSTHOG_*`).
 
@@ -29,7 +29,7 @@ Read access to Adobe Analytics / CJA, GA4 and PostHog through service accounts i
 
 ### REQ-DQ-002 — Data-quality signals
 
-**Could** · R4 · [M4.2](../milestones.md) · spec §14.1 · **Not Started** · Issue: — · PR: —
+**Could** · R4 · [M4.2](../milestones.md#m42--signals-and-conformance-reports) · spec §14.1 · **Not Started** · Issue: — · PR: —
 
 Top N values over the last 30 days; daily trend of occurrences; percentage of null or non-conformant values. Segmented by environment (dev/qa/prod) and by platform. Daily cache with on-demand refresh when changes concern the development environment.
 
@@ -37,7 +37,7 @@ Not required: proactive alerting; signals from session-replay or feedback tools.
 
 ### REQ-DQ-003 — Conformance reports, no persisted state
 
-**Could** · R4 · [M4.2](../milestones.md) · spec §14.1, §14.4 · **Not Started** · Issue: — · PR: —
+**Could** · R4 · [M4.2](../milestones.md#m42--signals-and-conformance-reports) · spec §14.1, §14.4 · **Not Started** · Issue: — · PR: —
 
 An a posteriori conformance report per tracking, comparing documented expectations against observed data.
 

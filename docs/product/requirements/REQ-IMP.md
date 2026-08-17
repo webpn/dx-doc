@@ -6,7 +6,7 @@ Entry format and status legend: [requirements index](README.md).
 
 > **This area was re-specified.** Specification §13 called for a bespoke importer inside the Platform. [ADR-0021](../../adr/0021-agent-driven-migration.md) replaces it: the Platform ships **no source-format-specific code**, and import is performed by an AI agent driving the public API, producing a committed re-runnable script. The requirements below were renumbered rather than contorted to fit the old IDs — nothing here had an Issue open or a line of code written, so renumbering costs nothing and preserving misleading IDs would have cost clarity. §13's _scope_ decisions are unchanged and survive as REQ-IMP-009.
 >
-> The capability is **general-purpose, not tied to any one source system.** The same API surface that lets an agent import content from an existing platform is what makes any future bulk ingestion — from any other system — idempotent and scriptable. Everything here lands in **[M1.2](../milestones.md), [M1.3](../milestones.md) and [M1.4](../milestones.md)** — weeks 4–6 of R1, deliberately ahead of a complete UI. The week-5 real-data checkpoint is unchanged in logic and now does double duty: it validates the data model against years of accumulated real usage _and_ proves the API is genuinely complete, because a gap in the API surface shows up as something the agent cannot create.
+> The capability is **general-purpose, not tied to any one source system.** The same API surface that lets an agent import content from an existing platform is what makes any future bulk ingestion — from any other system — idempotent and scriptable. Everything here lands in **[M1.2](../milestones.md#m12--import-grade-api), [M1.3](../milestones.md#m13--mcp-server) and [M1.4](../milestones.md#m14--agent-driven-pilot-import)** — weeks 4–6 of R1, deliberately ahead of a complete UI. The week-5 real-data checkpoint is unchanged in logic and now does double duty: it validates the data model against years of accumulated real usage _and_ proves the API is genuinely complete, because a gap in the API surface shows up as something the agent cannot create.
 
 | ID          | Requirement                                    | MoSCoW | Rel. | Milestone | Status      |
 | ----------- | ---------------------------------------------- | ------ | ---- | --------- | ----------- |
@@ -24,7 +24,7 @@ Entry format and status legend: [requirements index](README.md).
 
 ### REQ-IMP-001 — No source-format-specific code in the Platform
 
-**Must** · R1 · [M1.2](../milestones.md) · [ADR-0021](../../adr/0021-agent-driven-migration.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.2](../milestones.md#m12--import-grade-api) · [ADR-0021](../../adr/0021-agent-driven-migration.md) · **Not Started** · Issue: — · PR: —
 
 The Platform contains no parser, block converter, import endpoint or importer UI for any source system. Zero lines of the codebase reference any external platform's format.
 
@@ -38,7 +38,7 @@ The Platform contains no parser, block converter, import endpoint or importer UI
 
 ### REQ-IMP-002 — API surface complete for every R1 entity
 
-**Must** · R1 · [M1.2](../milestones.md) · spec §12.1 · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.2](../milestones.md#m12--import-grade-api) · spec §12.1 · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **Not Started** · Issue: — · PR: —
 
 Every entity in the R1 data model is creatable, readable and updatable through the API: Page, Tracking, DataLayerProperty (including `object` children and `parent_property`), Module, TrackingTemplate, SpecificValue, Destination and its N:N mapping with `destination_name_override`, FreePage, and the company catalogue. CDP Audience and Survey were moved to R2 (M2.7) on 2026-08-17, so they are not part of the R1 surface.
 
@@ -51,7 +51,7 @@ Every entity in the R1 data model is creatable, readable and updatable through t
 
 ### REQ-IMP-003 — Idempotent upsert keyed on `custom_id`
 
-**Must** · R1 · [M1.2](../milestones.md) · spec §13.3 · [ADR-0004](../../adr/0004-immutable-internal-identifiers.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.2](../milestones.md#m12--import-grade-api) · spec §13.3 · [ADR-0004](../../adr/0004-immutable-internal-identifiers.md) · **Not Started** · Issue: — · PR: —
 
 Every entity accepts an optional `custom_id` — source system plus source identifier — unique within its project. A write carrying a `custom_id` that already exists updates that entity rather than creating a second one.
 
@@ -68,7 +68,7 @@ Every entity accepts an optional `custom_id` — source system plus source ident
 
 ### REQ-IMP-004 — Asset upload through the API
 
-**Must** · R1 · [M1.2](../milestones.md) · spec §13.2 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.2](../milestones.md#m12--import-grade-api) · spec §13.2 · **Not Started** · Issue: — · PR: —
 
 Images are uploadable through the API with the same limits and processing as the UI path (REQ-AUTH-002): size cap, resize, object storage.
 
@@ -80,7 +80,7 @@ Images are uploadable through the API with the same limits and processing as the
 
 ### REQ-IMP-005 — Batch write endpoints
 
-**Should** · R1 · [M1.2](../milestones.md) · **Not Started** · Issue: — · PR: —
+**Should** · R1 · [M1.2](../milestones.md#m12--import-grade-api) · **Not Started** · Issue: — · PR: —
 
 Endpoints accepting an array of entities in one call, so that thousands of trackings across the products being imported do not require one round trip each.
 
@@ -93,19 +93,19 @@ Endpoints accepting an array of entities in one call, so that thousands of track
 
 ### REQ-IMP-006 — Reconciliation report
 
-**Should** · R1 · [M1.2](../milestones.md) · spec §13.3 · **Not Started** · Issue: — · PR: —
+**Should** · R1 · [M1.2](../milestones.md#m12--import-grade-api) · spec §13.3 · **Not Started** · Issue: — · PR: —
 
 A per-project report of what exists in dx-doc: counts per entity type, entities carrying a `custom_id`, unresolved asset references, and properties not referenced by any tracking. Comparable by a human against the source.
 
 **Acceptance**
 
 - The report is generated by the Platform from its own state, not by the import script. A process that reports on itself is not verification.
-- It is legible to an editor, not only to a developer — it is the artefact reviewed at the [M1.4](../milestones.md) exit.
+- It is legible to an editor, not only to a developer — it is the artefact reviewed at the [M1.4](../milestones.md#m14--agent-driven-pilot-import) exit.
 - It is available through API and MCP, so the agent can check its own work mid-run.
 
 ### REQ-IMP-007 — Import scripts committed and re-runnable
 
-**Must** · R1 · [M1.4](../milestones.md) · [ADR-0021](../../adr/0021-agent-driven-migration.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.4](../milestones.md#m14--agent-driven-pilot-import) · [ADR-0021](../../adr/0021-agent-driven-migration.md) · **Not Started** · Issue: — · PR: —
 
 An agent explores a source system's export interactively and then **writes a script**. The script is committed to a repository, reviewed before it runs at scale, and re-run per project.
 
@@ -120,7 +120,7 @@ An agent explores a source system's export interactively and then **writes a scr
 
 ### REQ-IMP-008 — Source system frozen, then read-only archive
 
-**Must** · R1 · [M1.10](../milestones.md) · spec §13.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.10](../milestones.md#m110--pilot-cutover) · spec §13.4 · **Not Started** · Issue: — · PR: —
 
 Editing on the source system is frozen during import. Afterwards it remains accessible read-only as an archive.
 

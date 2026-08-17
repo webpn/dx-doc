@@ -17,7 +17,11 @@
     "test:e2e": "echo 'E2E tests not yet configured'",
     "test:coverage": "echo 'Coverage not yet configured'",
     "db:migrate": "echo 'Migrations not yet configured'",
-    "db:seed:demo": "echo 'Demo seed not yet configured'"
+    "db:seed:demo": "echo 'Demo seed not yet configured'",
+    "docs:check-links": "node scripts/docs-links.mjs check",
+    "docs:sync-links": "node scripts/docs-links.mjs sync",
+    "docs:check-index": "node scripts/docs-index.mjs check",
+    "docs:generate-index": "node scripts/docs-index.mjs generate"
   },
   "engines": {
     "node": ">=20.0.0"

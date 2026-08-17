@@ -76,6 +76,7 @@ Reviewers check for:
 - If a domain entity changes, update `docs/product/glossary.md`.
 - If an architectural decision is made, create or update an ADR in `docs/adr/`.
 - Do not duplicate information across documents — cross-reference instead.
+- Cross-references within `docs/` use stable IDs (`ADR-0022`, `REQ-IMP-003`, `M1.2`, `US-ANL-01`, ...), not hand-written relative paths. Run `npm run docs:sync-links` after editing to resolve them; `npm run docs:check-links` runs in CI. See [`docs/README.md`](docs/README.md).
 
 ## Dependency / Change Policy
 

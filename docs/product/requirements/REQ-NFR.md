@@ -38,7 +38,7 @@ Entry format and status legend: [requirements index](README.md).
 
 **Acceptance**
 
-- Targets are measured against **pilot-scale data** — thousands of trackings and ~200 properties in one project — not against a seeded fixture. The import ([M1.4](../milestones.md)) is what makes this possible, and is a second reason to run it early.
+- Targets are measured against **pilot-scale data** — thousands of trackings and ~200 properties in one project — not against a seeded fixture. The import ([M1.4](../milestones.md#m14--agent-driven-pilot-import)) is what makes this possible, and is a second reason to run it early.
 - A regression past a target fails CI or is recorded as an accepted exception with a reason.
 
 > REQ-NFR-004 is measured at M1.6, not earlier: the data arrives at M1.4, but the page hierarchy and sidebar that constitute "loading a project" for a user do not exist until M1.6. Measuring it against an API response before then would be measuring something else and calling it this.

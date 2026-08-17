@@ -16,7 +16,7 @@ Breaks the release roadmap ([functional specification §20](functional-specifica
 
 Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that slips keeps its ID and moves release, it is never renumbered.
 
-**Definition of Done** (applies to every milestone, in addition to its own exit criterion): code merged to `main`; unit and integration tests per the [testing strategy](../testing/strategy.md); requirement rows updated in the relevant `REQ-*.md` file with Issue/PR links and status; any decision taken during the work recorded as an ADR or in [decisions](../decisions/README.md). **Any milestone that adds an output channel also adds its [REQ-SEC-012](requirements/REQ-SEC.md) omission test** — the requirement is standing, not closed at M1.7.
+**Definition of Done** (applies to every milestone, in addition to its own exit criterion): code merged to `main`; unit and integration tests per the [testing strategy](../testing/strategy.md); requirement rows updated in the relevant `REQ-*.md` file with Issue/PR links and status; any decision taken during the work recorded as an ADR or in [decisions](../decisions/README.md). **Any milestone that adds an output channel also adds its [REQ-SEC-012](requirements/REQ-SEC.md#req-sec-012--non-publishable-content-never-leaves-the-instance) omission test** — the requirement is standing, not closed at M1.7.
 
 ---
 
@@ -74,7 +74,7 @@ S3-compatible object storage behind a port. Search behind a port with **Pagefind
 
 **Exit:** the application refuses to start with a missing required variable and names it; an integration test substitutes an in-memory storage adapter without touching application-layer code; a stock instance makes no network call to any search service; a client requesting another project's index artefact receives a 403.
 
-> The search default changed from a hosted service to a self-contained one, which closes O12 outright and shortens [REQ-FDN-021](requirements/REQ-FDN.md)'s data-flow statement to almost nothing. Two things were traded for it: **typo tolerance, given up deliberately** until a capable adapter is adopted (REQ-FDN-022), and **draft-index freshness**, which was open decision O14 and is now settled: two indices per project, the draft one rebuilt asynchronously after each save with a 30-second freshness target ([ADR-0009](../adr/0009-search-abstraction.md)).
+> The search default changed from a hosted service to a self-contained one, which closes O12 outright and shortens [REQ-FDN-021](requirements/REQ-FDN.md#req-fdn-021--third-party-data-flow-statement)'s data-flow statement to almost nothing. Two things were traded for it: **typo tolerance, given up deliberately** until a capable adapter is adopted (REQ-FDN-022), and **draft-index freshness**, which was open decision O14 and is now settled: two indices per project, the draft one rebuilt asynchronously after each save with a 30-second freshness target ([ADR-0009](../adr/0009-search-abstraction.md)).
 
 ### M0.4 — Authentication and authorisation
 
@@ -122,7 +122,7 @@ MIT licence, README with setup instructions, reference deployment stack (compose
 
 ## R1 — MVP
 
-_Target: weeks 3–8. The entire Must set except [REQ-VIEW-003](requirements/REQ-VIEW.md), which stays a Must but has no consumer until R2. This is the release that verifies the first imported product is complete and usable without the source documentation._
+_Target: weeks 3–8. The entire Must set except [REQ-VIEW-003](requirements/REQ-VIEW.md#req-view-003--profile-aware-rendering-engine), which stays a Must but has no consumer until R2. This is the release that verifies the first imported product is complete and usable without the source documentation._
 
 > **The [R1 minimum requirements](minimum-requirements.md) are the checklist, not a matter of opinion.** They enumerate what R1 must deliver. R1 is complete when every row is satisfied — which is what makes the M1.10 exit criterion falsifiable rather than a matter of opinion.
 
@@ -138,7 +138,7 @@ Page, Tracking, TrackingProperty, DataLayerProperty (full attribute set includin
 
 **Depends on:** M0.5
 
-**Gated by:** ~~O11~~ — **closed 2026-08-12**: catalogue management is an Admin-role power, not a flag and not a fifth role ([REQ-SEC-010](requirements/REQ-SEC.md))
+**Gated by:** ~~O11~~ — **closed 2026-08-12**: catalogue management is an Admin-role power, not a flag and not a fifth role ([REQ-SEC-010](requirements/REQ-SEC.md#req-sec-010--company-catalogue-is-managed-by-the-admin-role))
 
 **Exit:** the composition rules hold under test — removing the last module-supplied property from a tracking detaches the module and warns; a module edit does not reach existing trackings unless propagation is explicitly requested; no entity can reference an entity in another project.
 
@@ -311,7 +311,7 @@ Point and region annotations stored as a separate JSON layer over a preserved or
 
 **Delivers:** REQ-AUTH-010, REQ-API-008
 
-Add/remove module, add/remove property, change page attachment, archive — the six operations confirmed by O13 ([REQ-AUTH-010](requirements/REQ-AUTH.md)) — applied to a tracking multi-selection with a preview, a single audit entry, and API/MCP exposure restricted to explicit identifier lists.
+Add/remove module, add/remove property, change page attachment, archive — the six operations confirmed by O13 ([REQ-AUTH-010](requirements/REQ-AUTH.md#req-auth-010--bulk-operations-on-a-multi-selection-with-preview)) — applied to a tracking multi-selection with a preview, a single audit entry, and API/MCP exposure restricted to explicit identifier lists.
 
 **Depends on:** M1.1 · **Gated by:** ~~O13~~ — **closed 2026-08-13**
 
@@ -323,7 +323,7 @@ Add/remove module, add/remove property, change page attachment, archive — the 
 
 The rendering engine that physically omits excluded content from generated artefacts, with a non-leakage guarantee. **Prerequisite for every export milestone below** — build it first.
 
-Also ships the Analyst/Business and Development view selector ([REQ-VIEW-002](../product/requirements/REQ-VIEW.md)), moved here from R1 (M1.9) on 2026-08-13 so it aligns with — and follows — open decision O3.
+Also ships the Analyst/Business and Development view selector ([REQ-VIEW-002](requirements/REQ-VIEW.md#req-view-002--view-selector-as-a-presentation-filter)), moved here from R1 (M1.9) on 2026-08-13 so it aligns with — and follows — open decision O3.
 
 **Depends on:** M1.8
 
@@ -343,7 +343,7 @@ Per-project static site regenerated on publication; git export with one commit p
 
 **Delivers:** REQ-VER-008, REQ-VER-009, REQ-VER-010, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-012, REQ-AUTH-013, REQ-DOM-020, REQ-DOM-024, REQ-DEV-001
 
-**Also delivers (moved from M1.1 on 2026-08-17):** [REQ-DOM-017](requirements/REQ-DOM.md) CDP Audience and [REQ-DOM-018](requirements/REQ-DOM.md) Survey entities — removed from the R1 critical path; the first imported product documents them in free text or adds them post-import.
+**Also delivers (moved from M1.1 on 2026-08-17):** [REQ-DOM-017](requirements/REQ-DOM.md#req-dom-017--cdp-audience-entity) CDP Audience and [REQ-DOM-018](requirements/REQ-DOM.md#req-dom-018--survey-entity) Survey entities — removed from the R1 critical path; the first imported product documents them in free text or adds them post-import.
 
 Full rollback; publication email notifications with per-project subscription; page and flow duplication; cross-project tracking copy with guided mapping; per-element change history; global script-instruction template with project placeholders; project-scoped impact analysis; selective adoption of company-catalogue module changes; **agent-vs-human attribution in the diff**.
 
@@ -375,7 +375,7 @@ It is a workshop, not a build: the deliverable is the ontology's classes, its IR
 
 **Depends on:** nothing in R2. It can start any time, and the reason to start it early is that its output is a decision, not code.
 
-**Exit:** O1 and O2 are closed with an ADR or a decision record, and [REQ-DQ-004](requirements/REQ-DQ.md)–[REQ-DQ-006](requirements/REQ-DQ.md) have acceptance criteria that someone could implement against.
+**Exit:** O1 and O2 are closed with an ADR or a decision record, and [REQ-DQ-004](requirements/REQ-DQ.md#req-dq-004--semantic-layer-exports-owl--rdf--skos)–[REQ-DQ-006](requirements/REQ-DQ.md#req-dq-006--business-glossary) have acceptance criteria that someone could implement against.
 
 > **R2 gate.** External stakeholders consult the documentation without an account in the application.
 >
@@ -507,9 +507,9 @@ Four things sit on the critical path and are worth protecting:
 
 **O7 is closed** — see [ADR-0015](../adr/0015-schema-migration-strategy.md), accepted 2026-08-12 and amended 2026-08-17: forward-only versioned migrations run via an explicit `db:migrate` step (dbmate), no auto-apply at boot, no downgrade path, and backup as the operator's documented responsibility. M0.1 is no longer gated by anything.
 
-**O11 and O14 are closed**, both on 2026-08-12, which leaves R1 ungated end to end. O11: managing the company catalogue is an Admin-role power, not a flag and not a fifth role — the instance administrator's remit is companies as entities, the Admin's is everything inside one ([REQ-SEC-010](requirements/REQ-SEC.md)). O14: two indices per project, the published one rebuilt on publication and the draft one rebuilt asynchronously after each save, with a 30-second freshness target ([ADR-0009](../adr/0009-search-abstraction.md)).
+**O11 and O14 are closed**, both on 2026-08-12, which leaves R1 ungated end to end. O11: managing the company catalogue is an Admin-role power, not a flag and not a fifth role — the instance administrator's remit is companies as entities, the Admin's is everything inside one ([REQ-SEC-010](requirements/REQ-SEC.md#req-sec-010--company-catalogue-is-managed-by-the-admin-role)). O14: two indices per project, the published one rebuilt on publication and the draft one rebuilt asynchronously after each save, with a 30-second freshness target ([ADR-0009](../adr/0009-search-abstraction.md)).
 
-**O12 is closed.** It asked whether a self-hostable search adapter was needed before the public release — a release R0 had already performed, which made the question unanswerable in the order it was scheduled. Choosing a self-contained default ([REQ-FDN-007](requirements/REQ-FDN.md)) removes the question rather than answering it, and retires [REQ-FDN-016](requirements/REQ-FDN.md) with it.
+**O12 is closed.** It asked whether a self-hostable search adapter was needed before the public release — a release R0 had already performed, which made the question unanswerable in the order it was scheduled. Choosing a self-contained default ([REQ-FDN-007](requirements/REQ-FDN.md#req-fdn-007--search-behind-a-port-pagefind-is-the-default-adapter)) removes the question rather than answering it, and retires [REQ-FDN-016](requirements/REQ-FDN.md#req-fdn-016--self-hostable-search-adapter) with it.
 
 **O6 and O10 are closed**, see [ADR-0014](../adr/0014-configuration-split.md): the environment variable matrix is complete ([README.md](../../README.md#environment-variables)), and the disputed keys (SSO connection details, supported login methods, supported locales) are company-level database configuration rather than instance environment variables.
 
@@ -532,16 +532,16 @@ Four things sit on the critical path and are worth protecting:
 
 | Order | Demote                                                                    | From          | What is lost                                                                                                                                                                          |
 | ----- | ------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | [REQ-FDN-014](requirements/REQ-FDN.md) error tracking                     | Should, M1.9  | Troubleshooting early on is by log reading. Cheapest to lose, easiest to add back                                                                                             |
-| 2     | [REQ-API-006](requirements/REQ-API.md) naming guidelines as MCP resources | Should, M1.3  | The agent writes without house conventions in context; imported content needs an editorial pass it would otherwise not need. Costs editor time across products, so prefer 1 first |
-| 3     | [REQ-DOM-009](requirements/REQ-DOM.md) tracking templates                 | Must, M1.1    | Editors create trackings by duplication ([REQ-AUTH-006](requirements/REQ-AUTH.md)) instead. Slower per tracking and less consistent, but nothing becomes impossible                   |
-| 4     | [REQ-DOM-007](requirements/REQ-DOM.md) opt-in module propagation          | Must → Should | A module correction has to be reapplied by hand to existing trackings. Painful at pilot scale — this is the last resort, not the first                                                |
+| 1     | [REQ-FDN-014](requirements/REQ-FDN.md#req-fdn-014--error-tracking-integration) error tracking                     | Should, M1.9  | Troubleshooting early on is by log reading. Cheapest to lose, easiest to add back                                                                                             |
+| 2     | [REQ-API-006](requirements/REQ-API.md#req-api-006--mcp-resources-exposing-naming-guidelines) naming guidelines as MCP resources | Should, M1.3  | The agent writes without house conventions in context; imported content needs an editorial pass it would otherwise not need. Costs editor time across products, so prefer 1 first |
+| 3     | [REQ-DOM-009](requirements/REQ-DOM.md#req-dom-009--tracking-template-editor-configurable) tracking templates                 | Must, M1.1    | Editors create trackings by duplication ([REQ-AUTH-006](requirements/REQ-AUTH.md#req-auth-006--tracking-duplication-within-a-project)) instead. Slower per tracking and less consistent, but nothing becomes impossible                   |
+| 4     | [REQ-DOM-007](requirements/REQ-DOM.md#req-dom-007--opt-in-propagation-of-module-changes) opt-in module propagation          | Must → Should | A module correction has to be reapplied by hand to existing trackings. Painful at pilot scale — this is the last resort, not the first                                                |
 
-> **[REQ-AUTH-004](requirements/REQ-AUTH.md) briefly left this list on 2026-08-12** by being demoted to R2, then **returned to R1/M1.6 on 2026-08-17** when flows (REQ-NAV-003…007) moved into R1 and needed the renderer it delivers. It is again a shipped R1 feature rather than a demotion candidate.
+> **[REQ-AUTH-004](requirements/REQ-AUTH.md#req-auth-004--mermaid-rendering-and-live-preview) briefly left this list on 2026-08-12** by being demoted to R2, then **returned to R1/M1.6 on 2026-08-17** when flows (REQ-NAV-003…007) moved into R1 and needed the renderer it delivers. It is again a shipped R1 feature rather than a demotion candidate.
 
-**Do not demote** the import chain (M1.2–M1.4), the diff, selective publication, or the reconciliation report ([REQ-IMP-006](requirements/REQ-IMP.md)) — the first three are load-bearing for the release criterion, and the fourth is the only mechanical check on agent-written content (risk R9).
+**Do not demote** the import chain (M1.2–M1.4), the diff, selective publication, or the reconciliation report ([REQ-IMP-006](requirements/REQ-IMP.md#req-imp-006--reconciliation-report)) — the first three are load-bearing for the release criterion, and the fourth is the only mechanical check on agent-written content (risk R9).
 
-**Moved on 2026-08-17 (no longer a demotion candidate):** [REQ-DOM-017](requirements/REQ-DOM.md) CDP Audience and [REQ-DOM-018](requirements/REQ-DOM.md) Survey were removed from R1/M1.1 and scheduled for M2.7. They no longer sit on the R1 critical path, so this paragraph's warning about demoting them is moot; keeping them in R1 as a saving is no longer an option because they have already left.
+**Moved on 2026-08-17 (no longer a demotion candidate):** [REQ-DOM-017](requirements/REQ-DOM.md#req-dom-017--cdp-audience-entity) CDP Audience and [REQ-DOM-018](requirements/REQ-DOM.md#req-dom-018--survey-entity) Survey were removed from R1/M1.1 and scheduled for M2.7. They no longer sit on the R1 critical path, so this paragraph's warning about demoting them is moot; keeping them in R1 as a saving is no longer an option because they have already left.
 
 > The previous version of this list named three candidates, two of which were parenthetically noted as already being in R2 — so it read as three options and was one. A demotion list is only useful if every entry is actually in the release it is meant to relieve.
 

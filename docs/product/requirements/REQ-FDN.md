@@ -33,7 +33,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 ### REQ-FDN-001 — Layered architecture with enforced boundaries
 
-**Must** · R0 · [M0.1](../milestones.md) · spec §16 · [ADR-0006](../../adr/0006-layered-architecture.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.1](../milestones.md#m01--close-the-stack-decisions) · spec §16 · [ADR-0006](../../adr/0006-layered-architecture.md) · **Not Started** · Issue: — · PR: —
 
 The six layers described in [ARCHITECTURE.md](../../../ARCHITECTURE.md) — domain, application, infrastructure, api, design-system, shared — have their dependency direction enforced mechanically, not by convention.
 
@@ -45,7 +45,7 @@ The six layers described in [ARCHITECTURE.md](../../../ARCHITECTURE.md) — doma
 
 ### REQ-FDN-002 — Multi-company tenancy on a single instance
 
-**Must** · R0 · [M0.2](../milestones.md) · spec §6.2, §16.1 · [ADR-0002](../../adr/0002-multi-company-tenancy.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.2](../milestones.md#m02--persistence-foundation) · spec §6.2, §16.1 · [ADR-0002](../../adr/0002-multi-company-tenancy.md) · **Not Started** · Issue: — · PR: —
 
 One deployed instance hosts multiple Companies. A Company is the tenant boundary and owns its users, shared catalogue, branding and SMTP configuration.
 
@@ -57,7 +57,7 @@ One deployed instance hosts multiple Companies. A Company is the tenant boundary
 
 ### REQ-FDN-003 — Projects with flat grouping labels
 
-**Must** · R0 · [M0.2](../milestones.md) · spec §5, §6.2 · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.2](../milestones.md#m02--persistence-foundation) · spec §5, §6.2 · **Not Started** · Issue: — · PR: —
 
 A Project is one product on one platform, and is the unit of access control, versioning and publication. Projects carry name, slug, description, icon, platform (Web / iOS / Android / Flutter / React), tag manager, integration settings and lifecycle state. Grouping is by optional labels only.
 
@@ -69,7 +69,7 @@ A Project is one product on one platform, and is the unit of access control, ver
 
 ### REQ-FDN-004 — Immutable internal identifiers
 
-**Must** · R0 · [M0.2](../milestones.md) · spec §6.4, §16.1, §14.2 · [ADR-0004](../../adr/0004-immutable-internal-identifiers.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.2](../milestones.md#m02--persistence-foundation) · spec §6.4, §16.1, §14.2 · [ADR-0004](../../adr/0004-immutable-internal-identifiers.md) · **Not Started** · Issue: — · PR: —
 
 Every entity carries an internal identifier that never changes, distinct from its name and its slug. This is the precondition for stable IRIs in the future semantic layer, for stable git export paths, and for idempotent import.
 
@@ -81,7 +81,7 @@ Every entity carries an internal identifier that never changes, distinct from it
 
 ### REQ-FDN-005 — Persistence behind repository ports; SQLite default
 
-**Must** · R0 · [M0.2](../milestones.md) · spec §16.1 · [ADR-0020](../../adr/0020-database-portability.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.2](../milestones.md#m02--persistence-foundation) · spec §16.1 · [ADR-0020](../../adr/0020-database-portability.md) · **Not Started** · Issue: — · PR: —
 
 Persistence sits behind repository port interfaces owned by the domain. `DB_DRIVER` selects the adapter. **SQLite is the default and the only adapter through R1** — it backs development, CI and the R1 production instance. MariaDB (REQ-FDN-018) and PostgreSQL (REQ-FDN-019) arrive in R2.
 
@@ -97,7 +97,7 @@ Graphs (flows, triggers, page hierarchy) are modelled as relational node and edg
 
 ### REQ-FDN-020 — Schema constrained to a portable SQL subset
 
-**Must** · R0 · [M0.2](../milestones.md) · [ADR-0020](../../adr/0020-database-portability.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.2](../milestones.md#m02--persistence-foundation) · [ADR-0020](../../adr/0020-database-portability.md) · **Not Started** · Issue: — · PR: —
 
 The schema stays within SQL that runs unchanged on SQLite, MariaDB and PostgreSQL. This is the load-bearing half of database portability: a port with dialect-specific DDL behind it is not portable, it merely looks portable.
 
@@ -114,7 +114,7 @@ The schema stays within SQL that runs unchanged on SQLite, MariaDB and PostgreSQ
 
 ### REQ-FDN-006 — S3-compatible object storage behind an interface
 
-**Must** · R0 · [M0.3](../milestones.md) · spec §7.2, §16.1, §16.2 · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.3](../milestones.md#m03--ports-and-adapters) · spec §7.2, §16.1, §16.2 · **Not Started** · Issue: — · PR: —
 
 Assets live in S3-compatible object storage, reached through a port. The interface exists so an organisation that cannot use a given provider can supply its own adapter without touching application code.
 
@@ -126,7 +126,7 @@ Assets live in S3-compatible object storage, reached through a port. The interfa
 
 ### REQ-FDN-007 — Search behind a port; Pagefind is the default adapter
 
-**Must** · R0 · [M0.3](../milestones.md) · spec §16.1, §16.2 · [ADR-0009](../../adr/0009-search-abstraction.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.3](../milestones.md#m03--ports-and-adapters) · spec §16.1, §16.2 · [ADR-0009](../../adr/0009-search-abstraction.md) · **Not Started** · Issue: — · PR: —
 
 Search is reached through a port. **Pagefind is the default and the only adapter through R2** — it has no hosted dependency, no account, and no egress of documentation content, so a stock instance is self-contained. `SEARCH_DRIVER` selects the adapter; a hosted adapter is additive (REQ-FDN-022).
 
@@ -143,7 +143,7 @@ Search is reached through a port. **Pagefind is the default and the only adapter
 
 ### REQ-FDN-008 — Search scoping enforced server-side
 
-**Must** · R0 · [M0.3](../milestones.md) · spec §16.4 · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.3](../milestones.md#m03--ports-and-adapters) · spec §16.4 · **Not Started** · Issue: — · PR: —
 
 One index per project. Scope filtering is applied server-side from the caller's project grants, before any index artefact or result reaches the client.
 
@@ -158,7 +158,7 @@ One index per project. Scope filtering is applied server-side from the caller's 
 
 ### REQ-FDN-009 — Versioned, idempotent, forward-only migrations
 
-**Must** · R0 · [M0.2](../milestones.md) · spec §16.3 · [ADR-0015](../../adr/0015-schema-migration-strategy.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.2](../milestones.md#m02--persistence-foundation) · spec §16.3 · [ADR-0015](../../adr/0015-schema-migration-strategy.md) · **Not Started** · Issue: — · PR: —
 
 Schema migrations are versioned, forward-only, and applied by an explicit `db:migrate` step (dbmate, D28) rather than at application start-up — the operator or CI runs the command against the target database. There is no supported downgrade path; a mandatory backup step is documented instead.
 
@@ -174,7 +174,7 @@ Schema migrations are versioned, forward-only, and applied by an explicit `db:mi
 
 ### REQ-FDN-010 — Server-side validation shared by UI, API and MCP
 
-**Must** · R0 · [M0.5](../milestones.md) · spec §12.1, §16 · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.5](../milestones.md#m05--rest-api-and-shared-validation) · spec §12.1, §16 · **Not Started** · Issue: — · PR: —
 
 Every validation rule lives in the backend and is invoked identically by every entry point. Client-side validation exists only as a convenience echo of a server rule.
 
@@ -186,7 +186,7 @@ Every validation rule lives in the backend and is invoked identically by every e
 
 ### REQ-FDN-011 — Public MIT repository with README
 
-**Must** · R0 · [M0.6](../milestones.md) · spec §3.5, §16.1, §19.1 · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.6](../milestones.md#m06--public-repository-readiness) · spec §3.5, §16.1, §19.1 · **Not Started** · Issue: — · PR: —
 
 The repository is public under the MIT licence from R0, with a README sufficient to stand up an instance. No organisation-specific naming or branding is hard-coded anywhere.
 
@@ -197,7 +197,7 @@ The repository is public under the MIT licence from R0, with a README sufficient
 
 ### REQ-FDN-012 — Reference deployment stack and CI
 
-**Must** · R0 · [M0.6](../milestones.md) · spec §16.1 · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.6](../milestones.md#m06--public-repository-readiness) · spec §16.1 · **Not Started** · Issue: — · PR: —
 
 A reference stack (application, S3-compatible storage) is supplied as an example, not prescribed. With SQLite as the default adapter the stack needs no database container, so the "clone it and try it" path is a single command. CI runs lint, typecheck and tests on every pull request.
 
@@ -209,7 +209,7 @@ A reference stack (application, S3-compatible storage) is supplied as an example
 
 ### REQ-FDN-013 — Two-level configuration, environment and company
 
-**Must** · R0 · [M0.3](../milestones.md) · spec §18, Appendix C · [ADR-0014](../../adr/0014-configuration-split.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.3](../milestones.md#m03--ports-and-adapters) · spec §18, Appendix C · [ADR-0014](../../adr/0014-configuration-split.md) · **Not Started** · Issue: — · PR: —
 
 Infrastructure and credentials come from environment variables at instance level. Branding, SMTP, catalogue defaults, identity-provider connections, supported login methods and supported locales are stored per company in the database and edited by an Admin.
 
@@ -224,7 +224,7 @@ Infrastructure and credentials come from environment variables at instance level
 
 ### REQ-FDN-014 — Error-tracking integration
 
-**Should** · R1 · [M1.9](../milestones.md) · spec §15.5 · **Not Started** · Issue: — · PR: —
+**Should** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) · spec §15.5 · **Not Started** · Issue: — · PR: —
 
 Errors are reported to a configurable error-tracking service (`SENTRY_DSN`). Basic parameters sufficient for troubleshooting; no product analytics is collected on the Platform itself.
 
@@ -236,7 +236,7 @@ Errors are reported to a configurable error-tracking service (`SENTRY_DSN`). Bas
 
 ### REQ-FDN-015 — Per-company branding
 
-**Should** · R2 · [M2.8](../milestones.md) · spec §6.2, §19.1 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.8](../milestones.md#m28--platform-hardening) · spec §6.2, §19.1 · **Not Started** · Issue: — · PR: —
 
 Company name, logo and colours applied across the application and generated artefacts.
 
@@ -258,13 +258,13 @@ Helm chart for the reference stack. Deployment remains unprescribed; this is an 
 
 ### REQ-FDN-018 — MariaDB adapter
 
-**Should** · R2 · [M2.8](../milestones.md) · [ADR-0020](../../adr/0020-database-portability.md) · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.8](../milestones.md#m28--platform-hardening) · [ADR-0020](../../adr/0020-database-portability.md) · **Not Started** · Issue: — · PR: —
 
 A MariaDB implementation of the repository ports, selected by `DB_DRIVER=mariadb`, for deployments that need a managed database with an established backup and scaling story — including, in time, the first production instance.
 
 ### REQ-FDN-019 — PostgreSQL adapter
 
-**Should** · R2 · [M2.8](../milestones.md) · [ADR-0020](../../adr/0020-database-portability.md) · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.8](../milestones.md#m28--platform-hardening) · [ADR-0020](../../adr/0020-database-portability.md) · **Not Started** · Issue: — · PR: —
 
 A PostgreSQL implementation of the repository ports, selected by `DB_DRIVER=postgres`. Broadens the deployability promise to organisations standardised on PostgreSQL.
 
@@ -272,7 +272,7 @@ A PostgreSQL implementation of the repository ports, selected by `DB_DRIVER=post
 
 ### REQ-FDN-021 — Third-party data-flow statement
 
-**Must** · R0 · [M0.6](../milestones.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.6](../milestones.md#m06--public-repository-readiness) · **Not Started** · Issue: — · PR: —
 
 The README enumerates every external service a running instance may contact, what content or metadata is sent to each, and what is never sent. Services that are optional are stated as optional, with the default named.
 

@@ -24,7 +24,7 @@ Requirements that satisfy it
 - **Stories do not replace requirements.** Where a story is satisfied, its requirements are authoritative on detail and acceptance. The story is the reason they exist.
 - **A story spanning two milestones is placed at the one where it first becomes usable**, with the continuation named.
 - **A `Gap` story carries no requirement** — a job a persona plainly needs to do, for which nothing in the requirement set is responsible. There are none at present. When one appears it is a signal to write the requirement, not to quietly drop the story.
-- **Enabling requirements have no story, by design.** Layer boundaries ([REQ-FDN-001](requirements/REQ-FDN.md)), immutable identifiers ([REQ-FDN-004](requirements/REQ-FDN.md)), shared validation ([REQ-FDN-010](requirements/REQ-FDN.md)), portable SQL ([REQ-FDN-020](requirements/REQ-FDN.md)), the API as single entry point ([REQ-API-001](requirements/REQ-API.md)), server-side permission enforcement ([REQ-SEC-011](requirements/REQ-SEC.md)) and the [non-functional set](requirements/REQ-NFR.md) are constraints on how every story is built. A constraint with no story is healthy; a _feature_ with no story is a question.
+- **Enabling requirements have no story, by design.** Layer boundaries ([REQ-FDN-001](requirements/REQ-FDN.md#req-fdn-001--layered-architecture-with-enforced-boundaries)), immutable identifiers ([REQ-FDN-004](requirements/REQ-FDN.md#req-fdn-004--immutable-internal-identifiers)), shared validation ([REQ-FDN-010](requirements/REQ-FDN.md#req-fdn-010--server-side-validation-shared-by-ui-api-and-mcp)), portable SQL ([REQ-FDN-020](requirements/REQ-FDN.md#req-fdn-020--schema-constrained-to-a-portable-sql-subset)), the API as single entry point ([REQ-API-001](requirements/REQ-API.md#req-api-001--internal-rest-api-as-the-single-entry-point)), server-side permission enforcement ([REQ-SEC-011](requirements/REQ-SEC.md#req-sec-011--permission-matrix-enforced-server-side)) and the [non-functional set](requirements/REQ-NFR.md) are constraints on how every story is built. A constraint with no story is healthy; a _feature_ with no story is a question.
 
 ## Personas and their prefixes
 
@@ -67,7 +67,7 @@ _Weeks 1–2. No user-visible value; determines the cost of everything after it.
 
 **As a** system administrator **I want** one deployment to serve several companies in isolation **so that** the white-label promise holds without running an instance per tenant.
 
-[REQ-FDN-002](requirements/REQ-FDN.md), [REQ-SEC-014](requirements/REQ-SEC.md)
+[REQ-FDN-002](requirements/REQ-FDN.md#req-fdn-002--multi-company-tenancy-on-a-single-instance), [REQ-SEC-014](requirements/REQ-SEC.md#req-sec-014--instance-administration-capability)
 
 **Done when** — two companies with identically named projects and properties are demonstrably isolated, enforced in the persistence layer rather than per service. Creating a company is mine to do and nobody else's — no company admin can create one, see that another exists, or reach anything inside it.
 
@@ -75,7 +75,7 @@ _Weeks 1–2. No user-visible value; determines the cost of everything after it.
 
 **As a** system administrator **I want** a defined upgrade path with a mandatory backup step **so that** taking a new release is routine.
 
-[REQ-FDN-009](requirements/REQ-FDN.md)
+[REQ-FDN-009](requirements/REQ-FDN.md#req-fdn-009--versioned-idempotent-forward-only-migrations)
 
 **Done when** — migrations are forward-only and idempotent, applied by an explicit `db:migrate` step that refuses to run against a database ahead of the migration set (ADR-0015, amended 2026-08-17 to dbmate via `npm run db:migrate`). **Unblocked** — O7 closed on 2026-08-12 by [ADR-0015](../adr/0015-schema-migration-strategy.md), which also settles that no migration ever inserts data, so an upgrade never delivers someone else's fixtures.
 
@@ -85,7 +85,7 @@ _Weeks 1–2. No user-visible value; determines the cost of everything after it.
 
 **As a** system administrator **I want** infrastructure and credentials in environment variables, validated at boot, with company-level settings (including each company's own SSO connection and login methods) in the database **so that** a misconfiguration fails immediately and by name rather than at 3am.
 
-[REQ-FDN-013](requirements/REQ-FDN.md)
+[REQ-FDN-013](requirements/REQ-FDN.md#req-fdn-013--two-level-configuration-environment-and-company)
 
 **Done when** — start-up stops on a missing required variable and names it, no infrastructure secret is stored in the database, company-level secrets that are stored are encrypted at rest, and the documented variable reference matches the loader — verified by a test that fails when they diverge. Unblocked: O6 and O10 are closed, see [ADR-0014](../adr/0014-configuration-split.md).
 
@@ -93,7 +93,7 @@ _Weeks 1–2. No user-visible value; determines the cost of everything after it.
 
 **As a** system administrator whose organisation cannot send content to a SaaS **I want** search to work with no external service **so that** "deployable by any organisation" is true rather than aspirational.
 
-[REQ-FDN-007](requirements/REQ-FDN.md), [REQ-FDN-008](requirements/REQ-FDN.md)
+[REQ-FDN-007](requirements/REQ-FDN.md#req-fdn-007--search-behind-a-port-pagefind-is-the-default-adapter), [REQ-FDN-008](requirements/REQ-FDN.md#req-fdn-008--search-scoping-enforced-server-side)
 
 **Done when** — a stock instance makes no network call to any search service, and a client requesting another project's index artefact receives a 403.
 
@@ -107,7 +107,7 @@ _Weeks 1–2. No user-visible value; determines the cost of everything after it.
 
 **As a** company admin **I want** to assign a role within **my company** and explicit per-project grants **so that** a user sees the three products they work on and nothing else.
 
-[REQ-SEC-002](requirements/REQ-SEC.md), [REQ-SEC-003](requirements/REQ-SEC.md), [REQ-SEC-011](requirements/REQ-SEC.md)
+[REQ-SEC-002](requirements/REQ-SEC.md#req-sec-002--four-company-scoped-roles), [REQ-SEC-003](requirements/REQ-SEC.md#req-sec-003--per-project-access-grants), [REQ-SEC-011](requirements/REQ-SEC.md#req-sec-011--permission-matrix-enforced-server-side)
 
 **Done when** — the negative case is tested at every entry point, not only the HTTP API, and holding Project Manager alone confers no editing rights.
 
@@ -117,7 +117,7 @@ _Weeks 1–2. No user-visible value; determines the cost of everything after it.
 
 **As a** system administrator standing up a new instance **I want** to provision the first administrator from configuration **so that** a machine can come up fully administrable without a human at a browser at the right moment.
 
-[REQ-SEC-013](requirements/REQ-SEC.md), [REQ-SEC-014](requirements/REQ-SEC.md)
+[REQ-SEC-013](requirements/REQ-SEC.md#req-sec-013--account-lifecycle-and-first-run-bootstrap), [REQ-SEC-014](requirements/REQ-SEC.md#req-sec-014--instance-administration-capability)
 
 **Done when** — `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` create one administrator, holding the instance-administration capability, the first time the instance starts against a database with no users. Setting them against a populated database does **nothing** — no second administrator, no password reset — and that is tested, because it is the entire security property of the mechanism. Starting empty with the variables unset fails and names them: an instance nobody can log into is a configuration error, not a valid state.
 
@@ -127,7 +127,7 @@ _Weeks 1–2. No user-visible value; determines the cost of everything after it.
 
 **As an** administrator, project manager or editor **I want** to invite a user, and let them reset a forgotten password **so that** onboarding does not require hand-writing database rows.
 
-[REQ-SEC-013](requirements/REQ-SEC.md)
+[REQ-SEC-013](requirements/REQ-SEC.md#req-sec-013--account-lifecycle-and-first-run-bootstrap)
 
 **Done when** — an invitation issued by an Admin, Project Manager or Editor creates a user with **no role and no grants** — access is assigned separately and deliberately, exactly as a first SSO login does. A reset token is single-use, expires, and reveals nothing about whether the address exists. A departed user can be deactivated: sessions and API tokens stop immediately, and their audit entries stay attributed and readable.
 
@@ -135,7 +135,7 @@ _Weeks 1–2. No user-visible value; determines the cost of everything after it.
 
 **As a** system administrator **I want** an instance-wide console listing companies and who administers them, that does not show me their tracking documentation **so that** running the deployment does not require access to its tenants' content.
 
-[REQ-SEC-014](requirements/REQ-SEC.md) (R0, the capability) → [REQ-SEC-015](requirements/REQ-SEC.md) (R2, the portal)
+[REQ-SEC-014](requirements/REQ-SEC.md#req-sec-014--instance-administration-capability) (R0, the capability) → [REQ-SEC-015](requirements/REQ-SEC.md#req-sec-015--instance-administration-portal) (R2, the portal)
 
 **Done when** — the `instance_admin` flag gates the surface and carries **exactly two powers the Admin role does not have**: creating companies, and granting or revoking the flag itself. It confers **no** content access — reaching documentation still needs a role and a grant in that company, audited like anyone else's. Entering the surface requires re-authenticating, so a hijacked ordinary session cannot walk into it. Flag holders always retain a working local password even where company SSO is enforced, because the instance has to stay recoverable when an identity provider is down or pointed at the wrong tenant. The R2 portal is the screen; R0 is the rule.
 
@@ -149,7 +149,7 @@ _Weeks 1–2. No user-visible value; determines the cost of everything after it.
 
 **As a** system administrator evaluating the Platform **I want** to reach a running instance from the README alone **so that** adopting it does not begin with a support conversation.
 
-[REQ-FDN-011](requirements/REQ-FDN.md), [REQ-FDN-012](requirements/REQ-FDN.md)
+[REQ-FDN-011](requirements/REQ-FDN.md#req-fdn-011--public-mit-repository-with-readme), [REQ-FDN-012](requirements/REQ-FDN.md#req-fdn-012--reference-deployment-stack-and-ci)
 
 **Done when** — a clean machine gets there in one command, with no database container and no search container to run; no internal hostname, tenant name or credential appears anywhere in the repository or its history.
 
@@ -157,7 +157,7 @@ _Weeks 1–2. No user-visible value; determines the cost of everything after it.
 
 **As a** system administrator **I want** to be told plainly that backup is mine, and shown how **so that** the imported content does not sit in one unbacked file for six weeks by accident.
 
-[REQ-NFR-006](requirements/REQ-NFR.md), [REQ-FDN-012](requirements/REQ-FDN.md) → R2: [REQ-VIEW-005](requirements/REQ-VIEW.md)
+[REQ-NFR-006](requirements/REQ-NFR.md#req-nfr-006--backup-is-the-operators-responsibility), [REQ-FDN-012](requirements/REQ-FDN.md#req-fdn-012--reference-deployment-stack-and-ci) → R2: [REQ-VIEW-005](requirements/REQ-VIEW.md#req-view-005--git-export-one-commit-per-publication)
 
 **Done when** — the reference stack demonstrates a file-level SQLite snapshot and the README says the Platform backs up nothing. R2's git export then provides the first partial off-site copy the product itself offers.
 
@@ -167,13 +167,13 @@ _Weeks 1–2. No user-visible value; determines the cost of everything after it.
 
 **As a** system administrator in a regulated organisation **I want** a plain statement of which content is transmitted to third-party services **so that** I can get the deployment approved.
 
-[REQ-FDN-021](requirements/REQ-FDN.md)
+[REQ-FDN-021](requirements/REQ-FDN.md#req-fdn-021--third-party-data-flow-statement)
 
 **Done when** — the README enumerates every external service a running instance may contact, what is sent and what is never sent, and a test asserts the stock configuration contacts no search service at all.
 
 > Was a gap; is now a requirement, and a short one to satisfy. With the search default self-contained ([US-OPS-05](#us-ops-05--run-without-a-hosted-search-dependency--operator--e8)), the honest answer for a stock instance is "object storage, and nothing else" — which is only worth having if it is written down.
 
-> **R0 gate.** An operator can stand up an instance, configure it, know what to back up and what leaves it, and log into it — and an administrator can bring other people in. The two account-lifecycle gaps that previously made M0.4's and M0.6's exit criteria undemonstrable are now [REQ-SEC-013](requirements/REQ-SEC.md) and [REQ-SEC-014](requirements/REQ-SEC.md).
+> **R0 gate.** An operator can stand up an instance, configure it, know what to back up and what leaves it, and log into it — and an administrator can bring other people in. The two account-lifecycle gaps that previously made M0.4's and M0.6's exit criteria undemonstrable are now [REQ-SEC-013](requirements/REQ-SEC.md#req-sec-013--account-lifecycle-and-first-run-bootstrap) and [REQ-SEC-014](requirements/REQ-SEC.md#req-sec-014--instance-administration-capability).
 
 ---
 
@@ -187,7 +187,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** a new project to start with the company's standard properties, modules and templates already in it **so that** I am not retyping the same twenty properties for the thirty-first product.
 
-[REQ-DOM-019](requirements/REQ-DOM.md), [REQ-FDN-003](requirements/REQ-FDN.md), [REQ-SEC-010](requirements/REQ-SEC.md)
+[REQ-DOM-019](requirements/REQ-DOM.md#req-dom-019--company-catalogue-copy-on-project-creation), [REQ-FDN-003](requirements/REQ-FDN.md#req-fdn-003--projects-with-flat-grouping-labels), [REQ-SEC-010](requirements/REQ-SEC.md#req-sec-010--company-catalogue-is-managed-by-the-admin-role)
 
 **Done when** — creating a project offers the catalogue's items and copies the selected ones in. Nothing I do afterwards reaches back into the catalogue, and the copy keeps no reference to its source — where a later feature needs to relate the two ([US-EDT-23](#us-edt-23--adopt-a-catalogue-change-i-actually-want--editor--e1)), it matches on name.
 
@@ -195,7 +195,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to create a tracking from a template **so that** every tracking of the same kind starts with the same modules, properties and description sections without me remembering the convention.
 
-[REQ-DOM-009](requirements/REQ-DOM.md), [REQ-DOM-002](requirements/REQ-DOM.md)
+[REQ-DOM-009](requirements/REQ-DOM.md#req-dom-009--tracking-template-editor-configurable), [REQ-DOM-002](requirements/REQ-DOM.md#req-dom-002--tracking-entity-with-navigation-event-and-attachment)
 
 **Done when** — I can create and edit a template myself with no software release, and a template edit leaves trackings already created from it untouched.
 
@@ -203,7 +203,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to attach a module and get its whole property set at once **so that** a common bundle is one decision rather than fifteen.
 
-[REQ-DOM-006](requirements/REQ-DOM.md), [REQ-DOM-008](requirements/REQ-DOM.md)
+[REQ-DOM-006](requirements/REQ-DOM.md#req-dom-006--module-entity-project-scoped-inheritable), [REQ-DOM-008](requirements/REQ-DOM.md#req-dom-008--property-removal-with-automatic-module-detachment)
 
 **Done when** — I can still remove any single property afterwards, and removing the last one detaches the module with a warning rather than leaving a module that does nothing.
 
@@ -211,7 +211,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** a module change to affect existing trackings only when I say so **so that** correcting a module does not silently rewrite two years of documentation.
 
-[REQ-DOM-007](requirements/REQ-DOM.md)
+[REQ-DOM-007](requirements/REQ-DOM.md#req-dom-007--opt-in-propagation-of-module-changes)
 
 **Done when** — the default is no propagation, propagation shows what it will change before it changes it, and the whole propagation is one audit entry.
 
@@ -219,7 +219,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to document `product.characteristics.colour` as a child of an object property **so that** the documentation matches the shape of a real data layer and of the XDM schema it feeds.
 
-[REQ-DOM-004](requirements/REQ-DOM.md)
+[REQ-DOM-004](requirements/REQ-DOM.md#req-dom-004--object-property-type-with-parent-child-hierarchy)
 
 **Done when** — children behave like any other property in search and destinations, and the full path is shown wherever the leaf name alone would be ambiguous.
 
@@ -227,7 +227,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to say that a property is always, sometimes or never sent **for this tracking** **so that** a developer knows what is mandatory and an analyst knows what to expect.
 
-[REQ-DOM-027](requirements/REQ-DOM.md)
+[REQ-DOM-027](requirements/REQ-DOM.md#req-dom-027--trackingproperty-entity-carrying-the-presence-enum)
 
 **Done when** — presence lives on the TrackingProperty record **and nowhere else**: the same property is `always` in one tracking and `sometimes` in another, and no schema, payload or export presents it as an attribute of the property itself.
 
@@ -235,7 +235,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to write the concrete value a property takes in this tracking, including the variable part **so that** the documentation says `article_detail_[slug]` rather than "the page name".
 
-[REQ-DOM-010](requirements/REQ-DOM.md)
+[REQ-DOM-010](requirements/REQ-DOM.md#req-dom-010--specific-values-with-plain-placeholder-strings)
 
 **Done when** — placeholders survive export and re-import verbatim, and specific values are searchable.
 
@@ -243,7 +243,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to record that one property is `eVar12` in Adobe and a differently-named custom dimension in GA4 **so that** an analyst can move between the documentation and the analytics tool without a translation table in their head.
 
-[REQ-DOM-015](requirements/REQ-DOM.md), [REQ-DOM-016](requirements/REQ-DOM.md)
+[REQ-DOM-015](requirements/REQ-DOM.md#req-dom-015--unified-destination-entity-nn-with-properties), [REQ-DOM-016](requirements/REQ-DOM.md#req-dom-016--per-destination-name-override)
 
 **Done when** — one property feeds several destinations, one destination is fed by several properties, and the name override lives on the mapping rather than on either end.
 
@@ -251,7 +251,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** CDP audiences and feedback surveys documented alongside the trackings they are built on **so that** the import's follow-up work (and later products) can record them.
 
-[REQ-DOM-017](requirements/REQ-DOM.md), [REQ-DOM-018](requirements/REQ-DOM.md)
+[REQ-DOM-017](requirements/REQ-DOM.md#req-dom-017--cdp-audience-entity), [REQ-DOM-018](requirements/REQ-DOM.md#req-dom-018--survey-entity)
 
 **Done when** — both appear as consumers in impact analysis and neither appears in the development view.
 
@@ -261,7 +261,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to create a tracking, attach it to a page, and choose which navigation event fires it **so that** every documented interaction has a definite home and type.
 
-[REQ-DOM-002](requirements/REQ-DOM.md)
+[REQ-DOM-002](requirements/REQ-DOM.md#req-dom-002--tracking-entity-with-navigation-event-and-attachment)
 
 **Done when** — creating a tracking requires a target page and a navigation event (screen view, popup view, element click, form submission, user error); when a template applies it starts from that template, otherwise blank; and it accumulates in the draft, not in any published version.
 
@@ -269,7 +269,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to add a data-layer property with its full definition — name, business label, description, data source, type, format pattern, allowed values, example values, PII and hashing policy, and analysis notes **so that** a developer and an analyst read the same single source of truth.
 
-[REQ-DOM-003](requirements/REQ-DOM.md), [REQ-DOM-005](requirements/REQ-DOM.md)
+[REQ-DOM-003](requirements/REQ-DOM.md#req-dom-003--data-layer-property-full-attribute-set), [REQ-DOM-005](requirements/REQ-DOM.md#req-dom-005--business_label-field)
 
 **Done when** — every documented attribute is captured once at the property and shown wherever the property appears, with no second place to keep in sync; `introduced_in_version` is set by the system at first publication and never by hand; and `presence` is not a property attribute (it lives only on the tracking-property record).
 
@@ -277,7 +277,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to add one property to a tracking on its own, without going through a module **so that** a tracking that needs just one extra field is one action rather than a bundle.
 
-[REQ-DOM-027](requirements/REQ-DOM.md), [REQ-DOM-008](requirements/REQ-DOM.md)
+[REQ-DOM-027](requirements/REQ-DOM.md#req-dom-027--trackingproperty-entity-carrying-the-presence-enum), [REQ-DOM-008](requirements/REQ-DOM.md#req-dom-008--property-removal-with-automatic-module-detachment)
 
 **Done when** — adding the property directly makes it a tracking-property on which I can set presence; a directly-added property is removable individually just like a module-supplied one; and later re-adding a module does not duplicate a property I added directly.
 
@@ -285,7 +285,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to remove a property from a tracking **so that** an obsolete field stops being documented without damaging the rest.
 
-[REQ-DOM-008](requirements/REQ-DOM.md)
+[REQ-DOM-008](requirements/REQ-DOM.md#req-dom-008--property-removal-with-automatic-module-detachment)
 
 **Done when** — removing any single property works whether it came from a module or was added directly; removing the last property of a module detaches the module with a warning rather than leaving it doing nothing; and re-adding the module restores its full set without duplicating properties I added directly and kept.
 
@@ -293,7 +293,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to create a module — a named, reusable bundle of data-layer properties — within this project **so that** a common set is defined once and attached many times.
 
-[REQ-DOM-006](requirements/REQ-DOM.md)
+[REQ-DOM-006](requirements/REQ-DOM.md#req-dom-006--module-entity-project-scoped-inheritable)
 
 **Done when** — a module is project-scoped and not nestable; attaching it later brings the whole property set at once (US-EDT-04); and a later change to it reaches existing trackings only through the explicit opt-in propagation (US-EDT-05).
 
@@ -301,7 +301,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to create a tracking template in this project — preset modules, preconfigured properties, default specific values and prefilled description sections **so that** new trackings of a kind start the way I want with no software release.
 
-[REQ-DOM-009](requirements/REQ-DOM.md)
+[REQ-DOM-009](requirements/REQ-DOM.md#req-dom-009--tracking-template-editor-configurable)
 
 **Done when** — any editor can create and edit a template with no release; editing a template leaves trackings already created from it untouched; and templates exist only for trackings, never for pages or flows.
 
@@ -309,7 +309,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to take the standard template the project inherited from the catalogue and adjust it for this project **so that** this project's conventions can differ from the company default without forking anything globally.
 
-[REQ-DOM-009](requirements/REQ-DOM.md), [REQ-DOM-019](requirements/REQ-DOM.md)
+[REQ-DOM-009](requirements/REQ-DOM.md#req-dom-009--tracking-template-editor-configurable), [REQ-DOM-019](requirements/REQ-DOM.md#req-dom-019--company-catalogue-copy-on-project-creation)
 
 **Done when** — the inherited template is a project-scoped copy, editable here; changes affect only this project's future trackings; and later taking a catalogue change is an explicit, separate decision (US-EDT-23), never automatic.
 
@@ -317,7 +317,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to mark a property `deprecated` while keeping it and its history **so that** old versions and imports do not silently lose a field that was once there.
 
-[REQ-DOM-003](requirements/REQ-DOM.md)
+[REQ-DOM-003](requirements/REQ-DOM.md#req-dom-003--data-layer-property-full-attribute-set)
 
 **Done when** — `status` supports `deprecated` without deletion; deprecation is a manual act, never scheduled; and the property stays present in historical versions.
 
@@ -325,7 +325,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to give a project an icon matching the product's logo **so that** the project is recognisable at a glance.
 
-[REQ-FDN-003](requirements/REQ-FDN.md)
+[REQ-FDN-003](requirements/REQ-FDN.md#req-fdn-003--projects-with-flat-grouping-labels)
 
 **Done when** — the project carries an `icon` attribute and it renders wherever the project is listed.
 
@@ -333,7 +333,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to add a destination — an analytics platform that properties map onto (Adobe, CJA, GA4, PostHog) **so that** properties can be mapped onto it (US-EDT-09) rather than only onto platforms that pre-exist.
 
-[REQ-DOM-015](requirements/REQ-DOM.md)
+[REQ-DOM-015](requirements/REQ-DOM.md#req-dom-015--unified-destination-entity-nn-with-properties)
 
 **Done when** — a destination is an entity in the project; a property can map to several destinations and a destination can be fed by several properties (N:N); and any single mapping may carry a per-destination name override.
 
@@ -341,7 +341,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** company admin **I want** to define the catalogue's standard tracking template **so that** every new project starts from a sensible default instead of an empty slate.
 
-[REQ-DOM-019](requirements/REQ-DOM.md), [REQ-DOM-009](requirements/REQ-DOM.md), [REQ-SEC-010](requirements/REQ-SEC.md)
+[REQ-DOM-019](requirements/REQ-DOM.md#req-dom-019--company-catalogue-copy-on-project-creation), [REQ-DOM-009](requirements/REQ-DOM.md#req-dom-009--tracking-template-editor-configurable), [REQ-SEC-010](requirements/REQ-SEC.md#req-sec-010--company-catalogue-is-managed-by-the-admin-role)
 
 **Done when** — the template lives in the company catalogue and is copied into a project at creation (US-EDT-01); a project's copy has no live link back to the catalogue; and a project may replace its own copy without affecting the catalogue.
 
@@ -351,17 +351,17 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As an** agent importing a product **I want** every entity in the R1 model creatable, readable and updatable through a documented API **so that** I can complete the import without a human opening the UI once.
 
-[REQ-IMP-002](requirements/REQ-IMP.md), [REQ-API-002](requirements/REQ-API.md)
+[REQ-IMP-002](requirements/REQ-IMP.md#req-imp-002--api-surface-complete-for-every-r1-entity), [REQ-API-002](requirements/REQ-API.md#req-api-002--documented-public-api)
 
 **Done when** — every attribute writable in the UI is writable through the API, relationships are settable in either order or the ordering is documented, and I can write the script from the published documentation alone without reading Platform source.
 
-> This story is the acceptance test for [M1.2](milestones.md) in its entirety, and the proof that pain point 6 — no machine access — cannot recur.
+> This story is the acceptance test for [M1.2](milestones.md#m12--import-grade-api) in its entirety, and the proof that pain point 6 — no machine access — cannot recur.
 
 #### US-AGT-02 — Re-run a corrected script safely · _Agent_ · E6
 
 **As an** agent importing a product **I want** writes keyed on a `custom_id` to update rather than duplicate **so that** getting it wrong the first time costs a re-run rather than a cleanup.
 
-[REQ-IMP-003](requirements/REQ-IMP.md)
+[REQ-IMP-003](requirements/REQ-IMP.md#req-imp-003--idempotent-upsert-keyed-on-custom_id)
 
 **Done when** — running the same script twice produces no duplicates and no orphans, and a corrected script converges over a partial import without manual repair.
 
@@ -369,7 +369,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As an** agent importing a product **I want** to upload an image from the export folder and reference it from Markdown in the same run **so that** imported content is not a wall of broken images.
 
-[REQ-IMP-004](requirements/REQ-IMP.md)
+[REQ-IMP-004](requirements/REQ-IMP.md#req-imp-004--asset-upload-through-the-api)
 
 **Done when** — upload obeys the same limits and processing as the UI path, is idempotent by `custom_id`, and anything unresolved is listed in the reconciliation report.
 
@@ -377,7 +377,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As an** agent importing the products **I want** batch write endpoints with per-item outcomes **so that** one invalid row does not discard the batch and I know exactly which rows failed.
 
-[REQ-IMP-005](requirements/REQ-IMP.md), [REQ-API-008](requirements/REQ-API.md)
+[REQ-IMP-005](requirements/REQ-IMP.md#req-imp-005--batch-write-endpoints), [REQ-API-008](requirements/REQ-API.md#req-api-008--bulk-operations-restricted-to-explicit-identifier-lists)
 
 **Done when** — batch semantics are documented and consistent, the target is always an explicit list of identifiers rather than a filter, and audit entries are proportionate rather than one per item.
 
@@ -385,7 +385,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As the** editor accountable for the import **I want** the agent to have no tool for publishing, user deletion or permission changes **so that** the boundary is structural rather than a permission check that could be misconfigured.
 
-[REQ-API-009](requirements/REQ-API.md) → M1.3: [REQ-API-004](requirements/REQ-API.md), [REQ-SEC-011](requirements/REQ-SEC.md)
+[REQ-API-009](requirements/REQ-API.md#req-api-009--service-account-api-tokens) → M1.3: [REQ-API-004](requirements/REQ-API.md#req-api-004--mcp-write-tools-draft-only), [REQ-SEC-011](requirements/REQ-SEC.md#req-sec-011--permission-matrix-enforced-server-side)
 
 **Done when** — a service-account token carries no privilege its owner lacks and cannot publish; from M1.3, the corresponding MCP tools are absent rather than denied.
 
@@ -395,7 +395,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As an** agent importing a product **I want** to read back what I wrote and pull the reconciliation report mid-run **so that** the import is self-checking rather than blind.
 
-[REQ-IMP-006](requirements/REQ-IMP.md), [REQ-API-003](requirements/REQ-API.md)
+[REQ-IMP-006](requirements/REQ-IMP.md#req-imp-006--reconciliation-report), [REQ-API-003](requirements/REQ-API.md#req-api-003--mcp-read-tools)
 
 **Done when** — the report is produced by the Platform from its own state, because a process that reports on itself is not verification.
 
@@ -403,7 +403,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As an** agent writing content **I want** the naming and documentation guidelines as a resource I can read **so that** the first product follows house conventions rather than being corrected afterwards.
 
-[REQ-API-006](requirements/REQ-API.md), [REQ-DOM-023](requirements/REQ-DOM.md)
+[REQ-API-006](requirements/REQ-API.md#req-api-006--mcp-resources-exposing-naming-guidelines), [REQ-DOM-023](requirements/REQ-DOM.md#req-dom-023--non-blocking-naming-and-format-warnings)
 
 **Done when** — lowercase underscores, `si`/`no` booleans, ISO 8601, `dev`/`qa`/`prod` and the separator rules are retrievable as an MCP resource rather than restated per conversation.
 
@@ -413,7 +413,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** a report of what actually landed in the Platform, legible to me rather than to a developer **so that** I can check the agent's work against the previous documentation before trusting it.
 
-[REQ-IMP-006](requirements/REQ-IMP.md), [REQ-IMP-007](requirements/REQ-IMP.md)
+[REQ-IMP-006](requirements/REQ-IMP.md#req-imp-006--reconciliation-report), [REQ-IMP-007](requirements/REQ-IMP.md#req-imp-007--import-scripts-committed-and-re-runnable)
 
 **Done when** — the report is generated by the Platform from its own state rather than by the import script, and the first product is verified item by item before the remaining products are attempted.
 
@@ -425,7 +425,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to paste a screenshot from the clipboard **so that** documenting a screen costs one keystroke rather than a save-upload-insert round trip.
 
-[REQ-AUTH-002](requirements/REQ-AUTH.md)
+[REQ-AUTH-002](requirements/REQ-AUTH.md#req-auth-002--image-upload-10-mb-cap-resize-to-2000-px)
 
 **Done when** — clipboard paste works for a screenshot taken outside the browser, oversized files fail with the limit named before any bytes are stored, and duplicating content copies the image rather than referencing it.
 
@@ -433,7 +433,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** headings, tables, code blocks and callouts that render as I type **so that** the prose half of the documentation is as good as the structured half.
 
-[REQ-AUTH-001](requirements/REQ-AUTH.md) · diagrams: [REQ-AUTH-004](requirements/REQ-AUTH.md) (R2)
+[REQ-AUTH-001](requirements/REQ-AUTH.md#req-auth-001--markdown-editor-with-the-full-block-set) · diagrams: [REQ-AUTH-004](requirements/REQ-AUTH.md#req-auth-004--mermaid-rendering-and-live-preview) (R2)
 
 **Done when** — content is stored as Markdown and every block round-trips without lossy re-serialisation.
 
@@ -443,7 +443,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to duplicate a tracking with everything it carries **so that** the twelfth variation of a page view takes seconds.
 
-[REQ-AUTH-006](requirements/REQ-AUTH.md)
+[REQ-AUTH-006](requirements/REQ-AUTH.md#req-auth-006--tracking-duplication-within-a-project)
 
 **Done when** — the copy is fully independent, with its own identifier and its own image objects, and no live link to its parent.
 
@@ -451,7 +451,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to be told when the record I am editing has changed underneath me **so that** two of us working the same morning do not overwrite each other.
 
-[REQ-AUTH-005](requirements/REQ-AUTH.md)
+[REQ-AUTH-005](requirements/REQ-AUTH.md#req-auth-005--optimistic-concurrency-with-stale-write-rejection)
 
 **Done when** — the rejected save explains what happened and keeps my input, and the check applies to API and MCP writes identically, not only to the browser.
 
@@ -459,7 +459,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to mark a free page non-publishable **so that** test URLs and test credentials stay inside the instance no matter which channel we add next.
 
-[REQ-AUTH-003](requirements/REQ-AUTH.md), [REQ-SEC-012](requirements/REQ-SEC.md)
+[REQ-AUTH-003](requirements/REQ-AUTH.md#req-auth-003--free-wiki-pages-with-publishable-flag), [REQ-SEC-012](requirements/REQ-SEC.md#req-sec-012--non-publishable-content-never-leaves-the-instance)
 
 **Done when** — the page is provably absent from the search index when queried directly, invisible to shared-password readers, and absent from every generated artefact. **This is a standing guarantee, not a one-milestone one**: every later milestone that adds an output channel adds its own omission test.
 
@@ -467,7 +467,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to write the standard documentation sections — the data-layer overview and the script/SDK integration instructions — and a references page only the documentation team sees **so that** the documentation is complete to read and safe to distribute.
 
-[REQ-AUTH-003](requirements/REQ-AUTH.md), [REQ-SEC-012](requirements/REQ-SEC.md)
+[REQ-AUTH-003](requirements/REQ-AUTH.md#req-auth-003--free-wiki-pages-with-publishable-flag), [REQ-SEC-012](requirements/REQ-SEC.md#req-sec-012--non-publishable-content-never-leaves-the-instance)
 
 **Done when** — the data-layer overview and the integration-instructions page are free, publishable pages; the references page is a free page marked non-publishable; and non-publishable content stays inside the instance across every index and export channel.
 
@@ -477,7 +477,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to build the product's page and screen tree, including modals, popups and CMS templates **so that** every tracking has somewhere true to hang from.
 
-[REQ-DOM-001](requirements/REQ-DOM.md), [REQ-NAV-001](requirements/REQ-NAV.md)
+[REQ-DOM-001](requirements/REQ-DOM.md#req-dom-001--pagescreen-entity), [REQ-NAV-001](requirements/REQ-NAV.md#req-nav-001--page-hierarchy-with-navigable-sidebar)
 
 **Done when** — the first imported product's full tree exists, is reorderable, and reordering breaks no reference and changes no identifier.
 
@@ -485,15 +485,15 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** digital analyst **I want** a page to list every tracking attached to it with its specific values **so that** "what is tracked here?" is answered without further clicks.
 
-[REQ-NAV-002](requirements/REQ-NAV.md)
+[REQ-NAV-002](requirements/REQ-NAV.md#req-nav-002--automatic-per-page-tracking-recap)
 
-**Done when** — the recap is generated from the model and never maintained by hand, and shows the draft to an editor and the published version to a reader. This is also where [REQ-NFR-004](requirements/REQ-NFR.md) — load a very large project in under 3 s — first becomes measurable, against the imported data that arrived at M1.4.
+**Done when** — the recap is generated from the model and never maintained by hand, and shows the draft to an editor and the published version to a reader. This is also where [REQ-NFR-004](requirements/REQ-NFR.md#req-nfr-001--req-nfr-004--performance-targets) — load a very large project in under 3 s — first becomes measurable, against the imported data that arrived at M1.4.
 
 #### US-BUS-04 — Follow a customer journey end to end · _Business_ · E5
 
 **As a** business user **I want** a named journey drawn over the real pages, with the actions that fire trackings on it **so that** the diagram cannot drift from the documentation the way a hand-drawn one does.
 
-[REQ-NAV-003](requirements/REQ-NAV.md), [REQ-NAV-005](requirements/REQ-NAV.md), [REQ-NAV-006](requirements/REQ-NAV.md), [REQ-NAV-007](requirements/REQ-NAV.md)
+[REQ-NAV-003](requirements/REQ-NAV.md#req-nav-003--flow-entity), [REQ-NAV-005](requirements/REQ-NAV.md#req-nav-005--directed-graph-with-labels-and-conditions), [REQ-NAV-006](requirements/REQ-NAV.md#req-nav-006--automatic-mermaid-generation-from-the-graph), [REQ-NAV-007](requirements/REQ-NAV.md#req-nav-007--sidebar-exposing-flows-alongside-the-hierarchy)
 
 **Done when** — the diagram is generated from the graph rather than written, funnel steps are Pages rather than a separate entity, and the sidebar exposes flows alongside the hierarchy.
 
@@ -503,7 +503,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** a navigation-bar action with five source pages and no destination to be an ordinary case **so that** the model does not need a special "cross-page" attachment mode.
 
-[REQ-NAV-004](requirements/REQ-NAV.md)
+[REQ-NAV-004](requirements/REQ-NAV.md#req-nav-004--trigger-nodes-distinct-from-visual-transitions)
 
 **Done when** — a Trigger carries 0..N sources and 0..N destinations, and the non-navigating action needs no workaround.
 
@@ -513,11 +513,11 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** digital analyst **I want** to search a literal value and get the trackings that set it **so that** the most frequent question I have — "where does this string come from?" — stops requiring a colleague.
 
-[REQ-AUTH-007](requirements/REQ-AUTH.md), [REQ-FDN-008](requirements/REQ-FDN.md)
+[REQ-AUTH-007](requirements/REQ-AUTH.md#req-auth-007--project-scoped-full-text-search), [REQ-FDN-008](requirements/REQ-FDN.md#req-fdn-008--search-scoping-enforced-server-side)
 
 **Done when** — specific values are indexed, property and tracking names rank above other text, search reflects the draft for an editor and the published version for a reader, and search never crosses a project I have no grant on.
 
-> **Typo tolerance is not part of this story.** The default adapter does prefix matching and stemming, not typo correction, and that is an accepted first-phase trade — searching `page_nam` finds `page_name`, searching `pgae_name` does not. It returns when a capable adapter is adopted ([REQ-FDN-022](requirements/REQ-FDN.md)). What is bought instead — no documentation content leaving the instance ([US-OPS-05](#us-ops-05--run-without-a-hosted-search-dependency--operator--e8)) — is the half an operator cannot add later.
+> **Typo tolerance is not part of this story.** The default adapter does prefix matching and stemming, not typo correction, and that is an accepted first-phase trade — searching `page_nam` finds `page_name`, searching `pgae_name` does not. It returns when a capable adapter is adopted ([REQ-FDN-022](requirements/REQ-FDN.md#req-fdn-022--hosted-search-adapter)). What is bought instead — no documentation content leaving the instance ([US-OPS-05](#us-ops-05--run-without-a-hosted-search-dependency--operator--e8)) — is the half an operator cannot add later.
 >
 > **O14 is closed** (2026-08-12): the draft index is rebuilt asynchronously after each save, with rebuilds coalesced so a burst of typing costs one rebuild, and an edit is findable within 30 seconds of the save. Readers are on a separate index rebuilt at publication, so what they search is exactly what was published.
 
@@ -527,7 +527,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to review every change since the last version before I publish **so that** publication is a deliberate act rather than a hopeful one.
 
-[REQ-VER-002](requirements/REQ-VER.md), [REQ-VER-005](requirements/REQ-VER.md)
+[REQ-VER-002](requirements/REQ-VER.md#req-ver-002--unpublished-changes-indicator), [REQ-VER-005](requirements/REQ-VER.md#req-ver-005--diff-by-entity-property-and-specific-value)
 
 **Done when** — the question "what would I publish?" is answerable from the project level, the diff reaches per-property and per-specific-value granularity, and changes by every actor appear, agents included.
 
@@ -535,7 +535,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to exclude individual trackings and pages from a version **so that** a half-documented feature does not force me to delay everything else.
 
-[REQ-VER-003](requirements/REQ-VER.md)
+[REQ-VER-003](requirements/REQ-VER.md#req-ver-003--selective-publication-of-trackings-and-pagesflows)
 
 **Done when** — the excluded item stays in the draft unchanged, the exclusion applies to that publication only, and **no published entity can reference an excluded one**: excluding a page proposes excluding its trackings, and overriding that proposal is refused with the conflicting pair named rather than published as a tracking attached to nothing.
 
@@ -543,7 +543,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** the changelog generated from the diff **so that** the capability the previous documentation never had costs me nothing per release.
 
-[REQ-VER-004](requirements/REQ-VER.md), [REQ-VER-006](requirements/REQ-VER.md)
+[REQ-VER-004](requirements/REQ-VER.md#req-ver-004--version-metadata), [REQ-VER-006](requirements/REQ-VER.md#req-ver-006--automatically-generated-changelog)
 
 **Done when** — publishing produces a changelog nobody wrote by hand, with a system-granted version number, a customisable title and optional release notes around it.
 
@@ -551,7 +551,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** product manager **I want** to read what changed, with a title and release notes **so that** I can tell my stakeholders what tracking a release actually delivers.
 
-[REQ-VER-004](requirements/REQ-VER.md), [REQ-VER-006](requirements/REQ-VER.md)
+[REQ-VER-004](requirements/REQ-VER.md#req-ver-004--version-metadata), [REQ-VER-006](requirements/REQ-VER.md#req-ver-006--automatically-generated-changelog)
 
 **Done when** — product releases are referenced in prose in the notes; there is deliberately no product-release entity.
 
@@ -559,7 +559,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** product manager **I want** to open version 7 as it stood **so that** a question about what we shipped in March has an answer.
 
-[REQ-VER-007](requirements/REQ-VER.md)
+[REQ-VER-007](requirements/REQ-VER.md#req-ver-007--full-historical-version-consultation)
 
 **Done when** — a version renders in full including its assets, which are therefore never deleted while a version references them.
 
@@ -567,7 +567,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** digital analyst **I want** to see which version introduced a property **so that** I know how far back a time series can honestly go.
 
-[REQ-DOM-003](requirements/REQ-DOM.md), [REQ-VER-007](requirements/REQ-VER.md)
+[REQ-DOM-003](requirements/REQ-DOM.md#req-dom-003--data-layer-property-full-attribute-set), [REQ-VER-007](requirements/REQ-VER.md#req-ver-007--full-historical-version-consultation)
 
 **Done when** — `introduced_in_version` is set automatically at first publication and never hand-edited.
 
@@ -575,7 +575,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** to publish the draft as an immutable snapshot **so that** readers see one coherent version and earlier versions stay consultable.
 
-[REQ-VER-001](requirements/REQ-VER.md)
+[REQ-VER-001](requirements/REQ-VER.md#req-ver-001--single-draft--published-model)
 
 **Done when** — all edits accumulate in a single draft per project; publication creates an immutable snapshot of it; there is no branching or merging and no approval workflow; and after publication the draft keeps accumulating new edits for the next version.
 
@@ -585,7 +585,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** project manager **I want** to issue a shared password with an expiry, and revoke one without affecting the others **so that** an agency engagement is bounded by construction.
 
-[REQ-SEC-005](requirements/REQ-SEC.md)
+[REQ-SEC-005](requirements/REQ-SEC.md#req-sec-005--project-shared-password-access-with-expiry)
 
 **Done when** — expiry takes effect without an administrative action, and the mode is read-only through every path including exports.
 
@@ -593,7 +593,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As an** administrator **I want** an append-only record of writes, publications, exports, shared-password access and MCP calls **so that** "who changed this and when" is answerable for two years.
 
-[REQ-SEC-006](requirements/REQ-SEC.md) → R2: [REQ-SEC-008](requirements/REQ-SEC.md)
+[REQ-SEC-006](requirements/REQ-SEC.md#req-sec-006--append-only-audit-log-24-month-retention) → R2: [REQ-SEC-008](requirements/REQ-SEC.md#req-sec-008--audit-log-ui-paginated-list-and-csv-export)
 
 **Done when** — entries cannot be updated or deleted through any application path, and a human actor is distinguishable from an agent acting on their behalf. The consultation UI follows in R2.
 
@@ -601,7 +601,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** business user **I want** to reach a project behind a shared password **so that** an external agency or a colleague outside the licence pool can read it for the weeks they need it.
 
-[REQ-SEC-005](requirements/REQ-SEC.md), [REQ-VIEW-001](requirements/REQ-VIEW.md)
+[REQ-SEC-005](requirements/REQ-SEC.md#req-sec-005--project-shared-password-access-with-expiry), [REQ-VIEW-001](requirements/REQ-VIEW.md#req-view-001--in-app-read-only-view)
 
 **Done when** — access is read-only through every path and non-publishable content is invisible.
 
@@ -611,7 +611,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** web or app developer **I want** a view without destinations, tag-manager-derived properties, analysis notes, audiences or surveys **so that** I am not reading past three-quarters of the page to find my work.
 
-[REQ-VIEW-002](requirements/REQ-VIEW.md)
+[REQ-VIEW-002](requirements/REQ-VIEW.md#req-view-002--view-selector-as-a-presentation-filter)
 
 **Done when** — the selector switches presentation and nothing else, and is documented in the UI and in code as **not** a security boundary.
 
@@ -619,7 +619,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** designer **I want** to use the Analyst/Business view **so that** I can see which interactions carry tracking without a view built specially for me.
 
-[REQ-VIEW-002](requirements/REQ-VIEW.md), [REQ-VIEW-010](requirements/REQ-VIEW.md)
+[REQ-VIEW-002](requirements/REQ-VIEW.md#req-view-002--view-selector-as-a-presentation-filter), [REQ-VIEW-010](requirements/REQ-VIEW.md#req-view-010--dedicated-design-view-field-level-permissions)
 
 **Done when** — there is no dedicated Design view, and that is recorded as a decision rather than a backlog item.
 
@@ -627,7 +627,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** digital analyst **I want** the property's meaning, format, allowed values, examples and analysis notes in one place **so that** I interpret the data the same way as the person who specified it.
 
-[REQ-DOM-003](requirements/REQ-DOM.md), [REQ-DOM-005](requirements/REQ-DOM.md) → R2: [REQ-DOM-014](requirements/REQ-DOM.md)
+[REQ-DOM-003](requirements/REQ-DOM.md#req-dom-003--data-layer-property-full-attribute-set), [REQ-DOM-005](requirements/REQ-DOM.md#req-dom-005--business_label-field) → R2: [REQ-DOM-014](requirements/REQ-DOM.md#req-dom-014--company-defined-custom-fields)
 
 **Done when** — the full attribute set is authored and visible in the Analyst view. Open decision O3 — how "read this in the analytics platform" is structured — is what the R2 half is waiting on.
 
@@ -637,7 +637,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** digital analyst **I want** to know which CDP audiences and surveys are built on a property **so that** I understand the blast radius before I rely on it or ask for it to change.
 
-[REQ-DOM-017](requirements/REQ-DOM.md), [REQ-DOM-018](requirements/REQ-DOM.md) → [REQ-DOM-020](requirements/REQ-DOM.md)
+[REQ-DOM-017](requirements/REQ-DOM.md#req-dom-017--cdp-audience-entity), [REQ-DOM-018](requirements/REQ-DOM.md#req-dom-018--survey-entity) → [REQ-DOM-020](requirements/REQ-DOM.md#req-dom-020--project-scoped-impact-analysis)
 
 **Done when** — audiences and surveys are documented (M2.7) and R2's impact analysis makes the reverse lookup answerable.
 
@@ -649,7 +649,7 @@ _Weeks 3–8. The release that retires the previous documentation for the first 
 
 **As a** tracking specialist **I want** the source documentation frozen per product as it is imported, then kept read-only **so that** no edit is stranded and nothing is destroyed.
 
-[REQ-IMP-008](requirements/REQ-IMP.md)
+[REQ-IMP-008](requirements/REQ-IMP.md#req-imp-008--source-system-frozen-then-read-only-archive)
 
 **Done when** — the freeze is announced and effective before the final import run, applies per product rather than to all at once, and the archive stays reachable.
 
@@ -667,11 +667,11 @@ _Months 3–4. The release that lets people outside the tool consume the documen
 
 **As a** tracking specialist **I want** to say that a property takes one value when the user is logged in and another when they are not **so that** the scenario is documented once rather than as two near-identical trackings.
 
-[REQ-DOM-012](requirements/REQ-DOM.md), [REQ-DOM-013](requirements/REQ-DOM.md)
+[REQ-DOM-012](requirements/REQ-DOM.md#req-dom-012--structured-property-conditions-four-operators--note), [REQ-DOM-013](requirements/REQ-DOM.md#req-dom-013--conditions-targeting-nested-property-paths)
 
 **Done when** — the condition is _property + operator + value + note_, including on nested paths, with `is not set` offered where presence is `sometimes`.
 
-> **This capability does not exist in R1 in any form.** The prose stopgap was rejected rather than shipped ([REQ-DOM-011](requirements/REQ-DOM.md)), which is why there is no conversion exercise across the imported products and why this story appears once, here, rather than spanning two releases. Two later stories depend on it and on nothing else: [US-DEV-04](#us-dev-04--see-only-the-values-that-apply-to-my-scenario--developer--e4) and mechanical conformance checking in R4.
+> **This capability does not exist in R1 in any form.** The prose stopgap was rejected rather than shipped ([REQ-DOM-011](requirements/REQ-DOM.md#req-dom-011--prose-conditional-valorisations)), which is why there is no conversion exercise across the imported products and why this story appears once, here, rather than spanning two releases. Two later stories depend on it and on nothing else: [US-DEV-04](#us-dev-04--see-only-the-values-that-apply-to-my-scenario--developer--e4) and mechanical conformance checking in R4.
 
 
 ## M2.2 — ~~Flows~~ _(moved to M1.6 on 2026-08-17)_
@@ -684,7 +684,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As a** tracking specialist **I want** to mark the exact button or region on a screenshot and link it to a trigger or tracking **so that** implementation ambiguity is resolved by pointing rather than by better prose.
 
-[REQ-AUTH-014](requirements/REQ-AUTH.md)
+[REQ-AUTH-014](requirements/REQ-AUTH.md#req-auth-014--image-annotation-layer-linked-to-triggers)
 
 **Done when** — annotations are a separate layer over a preserved original, regions nest to express container-level and item-level interactions, and an annotation survives re-editing.
 
@@ -692,7 +692,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As a** designer **I want** trackings marked on the screenshot itself **so that** the conversation about what fires where happens on the interface rather than in prose.
 
-[REQ-AUTH-014](requirements/REQ-AUTH.md)
+[REQ-AUTH-014](requirements/REQ-AUTH.md#req-auth-014--image-annotation-layer-linked-to-triggers)
 
 **Done when** — points mark small elements, regions mark areas and nest, and each may link to a trigger or a tracking.
 
@@ -702,7 +702,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As a** tracking specialist **I want** to add a module, remove a property or reattach a page across fifty selected trackings at once **so that** a convention change is an afternoon rather than a fortnight.
 
-[REQ-AUTH-010](requirements/REQ-AUTH.md), [REQ-API-008](requirements/REQ-API.md)
+[REQ-AUTH-010](requirements/REQ-AUTH.md#req-auth-010--bulk-operations-on-a-multi-selection-with-preview), [REQ-API-008](requirements/REQ-API.md#req-api-008--bulk-operations-restricted-to-explicit-identifier-lists)
 
 **Done when** — every operation previews the affected items first, produces a single audit entry, and appears in the publication diff as ordinary per-entity changes.
 
@@ -714,17 +714,17 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As a** business user **I want** a per-project site regenerated on every publication **so that** consulting the documentation does not require the tool or a seat in it.
 
-[REQ-VIEW-003](requirements/REQ-VIEW.md), [REQ-VIEW-004](requirements/REQ-VIEW.md)
+[REQ-VIEW-003](requirements/REQ-VIEW.md#req-view-003--profile-aware-rendering-engine), [REQ-VIEW-004](requirements/REQ-VIEW.md#req-view-004--per-project-static-site)
 
 **Done when** — the site is regenerated on publication and contains no content the selected profile excludes, verified by scanning generated bytes rather than by inspecting the template.
 
-> [REQ-VIEW-003](requirements/REQ-VIEW.md) is the one `Must` outside R0/R1 — it stays a Must because "adding a channel without an omission test fails review" has to be enforceable, and it is R2 because no channel exists before then. Build it before any channel.
+> [REQ-VIEW-003](requirements/REQ-VIEW.md#req-view-003--profile-aware-rendering-engine) is the one `Must` outside R0/R1 — it stays a Must because "adding a channel without an omission test fails review" has to be enforceable, and it is R2 because no channel exists before then. Build it before any channel.
 
 #### US-DEV-02 — Know what changed since the last release · _Developer_ · E4
 
 **As a** web or app developer **I want** the changelog narrowed to what affects code **so that** a release means reading a page rather than diffing the whole plan.
 
-[REQ-VIEW-008](requirements/REQ-VIEW.md), [REQ-VER-006](requirements/REQ-VER.md)
+[REQ-VIEW-008](requirements/REQ-VIEW.md#req-view-008--development-filtered-changelog), [REQ-VER-006](requirements/REQ-VER.md#req-ver-006--automatically-generated-changelog)
 
 **Done when** — the narrowing is prominent in the Development view; the R1 diff data already supports it.
 
@@ -732,7 +732,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As a** web or app developer **I want** a PDF of what changed in this version, with images **so that** the handoff survives leaving the tool.
 
-[REQ-VIEW-006](requirements/REQ-VIEW.md) → R3: [REQ-DEV-004](requirements/REQ-DEV.md)
+[REQ-VIEW-006](requirements/REQ-VIEW.md#req-view-006--pdf-export-of-version-changes) → R3: [REQ-DEV-004](requirements/REQ-DEV.md#req-dev-004--changed-tracking-snippets-in-the-developer-pdf)
 
 **Done when** — the PDF covers disconnected consultation, which is why no offline mode is needed. R3 adds snippets for the changed trackings.
 
@@ -740,7 +740,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As a** digital analyst **I want** every property with every column as an export **so that** I can work the list in the tool I already use for bulk review.
 
-[REQ-VIEW-007](requirements/REQ-VIEW.md)
+[REQ-VIEW-007](requirements/REQ-VIEW.md#req-view-007--excel-export-of-data-layer-properties)
 
 **Done when** — referenced entities resolve to their names rather than to identifiers.
 
@@ -750,7 +750,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As a** tracking specialist **I want** agent-written changes visually distinguished in the publication diff **so that** the review I already do is also the review of the agent.
 
-[REQ-VER-010](requirements/REQ-VER.md)
+[REQ-VER-010](requirements/REQ-VER.md#req-ver-010--agent-vs-human-attribution-in-the-diff)
 
 **Done when** — an agent edit is distinguishable at a glance in the diff, which is the only review gate there is — there is deliberately no separate agent-review queue.
 
@@ -758,7 +758,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As a** tracking specialist **I want** to be shown that a company module has changed since my project copied it, and choose whether to take the change **so that** the catalogue can improve without rewriting my project behind my back.
 
-[REQ-DOM-024](requirements/REQ-DOM.md), [REQ-DOM-007](requirements/REQ-DOM.md)
+[REQ-DOM-024](requirements/REQ-DOM.md#req-dom-024--selective-adoption-of-catalogue-module-changes), [REQ-DOM-007](requirements/REQ-DOM.md#req-dom-007--opt-in-propagation-of-module-changes)
 
 **Done when** — correspondence is established by **name match**, computed when I ask rather than stored at copy time, and the feature is advisory: it proposes, I accept. A renamed module on either side simply produces no match. Adopting the change and propagating it into existing trackings are two separate decisions.
 
@@ -766,7 +766,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As a** tracking specialist **I want** to list every tracking, destination, audience, survey and dashboard that uses a property **so that** deprecating it is an informed decision.
 
-[REQ-DOM-020](requirements/REQ-DOM.md)
+[REQ-DOM-020](requirements/REQ-DOM.md#req-dom-020--project-scoped-impact-analysis)
 
 **Done when** — the question is answerable before the deprecation, within the project — there is no cross-project impact analysis and none is wanted.
 
@@ -774,7 +774,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As a** tracking specialist **I want** to restore the draft to a previous version, and to see per-element history **so that** a bad publication is recoverable and "why does this say that?" has an answer six months later.
 
-[REQ-VER-008](requirements/REQ-VER.md), [REQ-AUTH-012](requirements/REQ-AUTH.md)
+[REQ-VER-008](requirements/REQ-VER.md#req-ver-008--full-rollback), [REQ-AUTH-012](requirements/REQ-AUTH.md#req-auth-012--per-element-change-history-blame)
 
 **Done when** — the restore is complete and recorded in the audit log; history is available on the individual entity, distinct from project versioning and from the audit log.
 
@@ -782,7 +782,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As a** tracking specialist **I want** to copy a selection of trackings into another project, mapping missing modules and properties as I go **so that** the iOS plan starts from the web plan rather than from nothing.
 
-[REQ-AUTH-009](requirements/REQ-AUTH.md), [REQ-AUTH-008](requirements/REQ-AUTH.md)
+[REQ-AUTH-009](requirements/REQ-AUTH.md#req-auth-009--cross-project-tracking-copy-with-guided-mapping), [REQ-AUTH-008](requirements/REQ-AUTH.md#req-auth-008--page-and-flow-duplication)
 
 **Done when** — the copy is independent in the target project; no shared identity is created, because projects are isolated by construction.
 
@@ -790,7 +790,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As a** web or app developer **I want** the page and the tracking to link to the Figma frame **so that** I can see what I am instrumenting.
 
-[REQ-DEV-001](requirements/REQ-DEV.md)
+[REQ-DEV-001](requirements/REQ-DEV.md#req-dev-001--figma-frame-links-stored-as-fileid--nodeid)
 
 **Done when** — the link is stored as `figma_file_id` + `figma_node_id` rather than as an opaque URL, which is what makes frame import in R4 additive rather than a data migration.
 
@@ -798,7 +798,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As a** product manager **I want** an email when a project I follow publishes **so that** I am not polling a tool.
 
-[REQ-VER-009](requirements/REQ-VER.md)
+[REQ-VER-009](requirements/REQ-VER.md#req-ver-009--publication-email-notifications)
 
 **Done when** — subscription is per project, publication is the only notification event, and unsubscribe works from the web interface.
 
@@ -808,7 +808,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As a** system administrator **I want** to select MariaDB or PostgreSQL by configuration **so that** the database is not the reason we cannot deploy.
 
-[REQ-FDN-005](requirements/REQ-FDN.md), [REQ-FDN-018](requirements/REQ-FDN.md), [REQ-FDN-019](requirements/REQ-FDN.md), [REQ-FDN-020](requirements/REQ-FDN.md)
+[REQ-FDN-005](requirements/REQ-FDN.md#req-fdn-005--persistence-behind-repository-ports-sqlite-default), [REQ-FDN-018](requirements/REQ-FDN.md#req-fdn-018--mariadb-adapter), [REQ-FDN-019](requirements/REQ-FDN.md#req-fdn-019--postgresql-adapter), [REQ-FDN-020](requirements/REQ-FDN.md#req-fdn-020--schema-constrained-to-a-portable-sql-subset)
 
 **Done when** — the full repository and migration suite runs unchanged on all three dialects with no test skipped on any of them.
 
@@ -818,7 +818,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As an** administrator **I want** OIDC login **so that** the corporate instance uses the identity provider everyone already has.
 
-[REQ-SEC-004](requirements/REQ-SEC.md)
+[REQ-SEC-004](requirements/REQ-SEC.md#req-sec-004--oidc-sso)
 
 **Done when** — a first SSO login creates a user with no role and no grants, so access is always granted deliberately rather than inferred from a successful authentication; local and SSO login coexist.
 
@@ -828,7 +828,7 @@ The flow stories (US-BUS-04, US-EDT-27) and REQ-NAV-003…007 now live under [M1
 
 **As an** administrator **I want** to archive a finished project rather than delete it **so that** nothing in the product can destroy documentation.
 
-[REQ-SEC-009](requirements/REQ-SEC.md)
+[REQ-SEC-009](requirements/REQ-SEC.md#req-sec-009--project-archive-and-restore-no-hard-delete)
 
 **Done when** — no application path hard-deletes a project, and a restore brings back content and version history intact.
 
@@ -846,7 +846,7 @@ _Months 5–6._
 
 **As a** web or app developer **I want** a ready-to-use snippet for my platform and tag manager **so that** I transcribe nothing by hand.
 
-[REQ-DEV-002](requirements/REQ-DEV.md), [REQ-DEV-003](requirements/REQ-DEV.md)
+[REQ-DEV-002](requirements/REQ-DEV.md#req-dev-002--code-snippet-generation-per-platform--tag-manager), [REQ-DEV-003](requirements/REQ-DEV.md#req-dev-003--snippets-in-every-development-facing-artefact)
 
 **Done when** — snippets appear in the in-app development view, the static site, Confluence and the PDF, are generated on the fly, and preserve placeholders verbatim with explanatory comments.
 
@@ -854,7 +854,7 @@ _Months 5–6._
 
 **As a** web or app developer **I want** the snippet for the logged-in case to show only the logged-in values, marking what is required and what is forbidden **so that** I am not deducing the scenario from a full property table.
 
-[REQ-DEV-005](requirements/REQ-DEV.md), [REQ-DOM-012](requirements/REQ-DOM.md)
+[REQ-DEV-005](requirements/REQ-DEV.md#req-dev-005--snippets-narrowed-by-structured-property-conditions), [REQ-DOM-012](requirements/REQ-DOM.md#req-dom-012--structured-property-conditions-four-operators--note)
 
 **Done when** — narrowing is driven by structured conditions. This is the main practical gain over the previous documentation, and it is why [US-EDT-16](#us-edt-16--express-a-conditional-valorisation--editor--e1) exists.
 
@@ -862,7 +862,7 @@ _Months 5–6._
 
 **As a** web or app developer **I want** the development view published into our Confluence space **so that** I am not asked to adopt another tool for one page a sprint.
 
-[REQ-VIEW-009](requirements/REQ-VIEW.md)
+[REQ-VIEW-009](requirements/REQ-VIEW.md#req-view-009--confluence-cloud-publication)
 
 **Done when** — publication overwrites the space in full, and that a manual Confluence edit is lost is documented as intended rather than as a limitation.
 
@@ -872,7 +872,7 @@ _Months 5–6._
 
 **As a** digital analyst **I want** to query the documentation from my own assistant, authenticated as me **so that** I get answers in the tool I am already working in.
 
-[REQ-API-005](requirements/REQ-API.md), [REQ-API-010](requirements/REQ-API.md)
+[REQ-API-005](requirements/REQ-API.md#req-api-005--oauth-with-user-consent-for-mcp-clients), [REQ-API-010](requirements/REQ-API.md#req-api-010--richer-mcp-read-tools)
 
 **Done when** — access is by user consent rather than a shared token, and the assistant sees neither more nor less than I would.
 
@@ -880,7 +880,7 @@ _Months 5–6._
 
 **As a** web or app developer **I want** to ask the documentation questions from my editor **so that** implementing a tracking does not mean leaving the code.
 
-[REQ-API-005](requirements/REQ-API.md), [REQ-API-010](requirements/REQ-API.md)
+[REQ-API-005](requirements/REQ-API.md#req-api-005--oauth-with-user-consent-for-mcp-clients), [REQ-API-010](requirements/REQ-API.md#req-api-010--richer-mcp-read-tools)
 
 **Done when** — the IDE client authenticates by consent and is bound by my grants.
 
@@ -896,7 +896,7 @@ _R4's scope waits on open decisions O4 and O5; the backlog's on O1 and O2, which
 
 **As a** digital analyst **I want** to see top values, occurrence trend and non-conformance rate against what is documented **so that** I know whether to trust a property before I build on it.
 
-R4 · [M4.2](milestones.md) · [REQ-DQ-002](requirements/REQ-DQ.md), [REQ-DQ-003](requirements/REQ-DQ.md)
+R4 · [M4.2](milestones.md#m42--signals-and-conformance-reports) · [REQ-DQ-002](requirements/REQ-DQ.md#req-dq-002--data-quality-signals), [REQ-DQ-003](requirements/REQ-DQ.md#req-dq-003--conformance-reports-no-persisted-state)
 
 **Done when** — signals are segmented by environment and platform, and the conformance check produces a report rather than a state. Persisting the state waits for the backlog.
 
@@ -904,7 +904,7 @@ R4 · [M4.2](milestones.md) · [REQ-DQ-002](requirements/REQ-DQ.md), [REQ-DQ-003
 
 **As a** designer **I want** a page's screenshot re-pulled from its source frame **so that** who refreshes screenshots after a redesign stops being a question of editorial discipline.
 
-R4 · [M4.3](milestones.md) · [REQ-DEV-007](requirements/REQ-DEV.md), [REQ-DEV-001](requirements/REQ-DEV.md)
+R4 · [M4.3](milestones.md#m43--r4-conveniences) · [REQ-DEV-007](requirements/REQ-DEV.md#req-dev-007--figma-frame-import-with-design-refresh), [REQ-DEV-001](requirements/REQ-DEV.md#req-dev-001--figma-frame-links-stored-as-fileid--nodeid)
 
 **Done when** — the stored `file_id` + `node_id` turns the refresh into a button.
 
@@ -912,7 +912,7 @@ R4 · [M4.3](milestones.md) · [REQ-DEV-007](requirements/REQ-DEV.md), [REQ-DEV-
 
 **As an** administrator **I want** to see and revoke everything one user can reach **so that** offboarding is not thirty separate edits.
 
-**Not planned — accepted design choice**, [REQ-SEC-003](requirements/REQ-SEC.md)
+**Not planned — accepted design choice**, [REQ-SEC-003](requirements/REQ-SEC.md#req-sec-003--per-project-access-grants)
 
 **Done when** — it isn't. Grant administration is deliberately one project at a time: every access decision being explicit and individually made is the property the model is buying, and a bulk tool is the mechanism by which access quietly widens. Recorded as a story so the administrative cost is visible rather than discovered, and so reopening it requires stating the trade.
 
@@ -937,22 +937,22 @@ Recorded so each is visibly a decision rather than an oversight. Each maps to a 
 
 | Story someone will ask for                                               | Why not                                                                                                                | Recorded as                                                                                                        |
 | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| _"Let me approve a change before it publishes."_                         | Editors publish autonomously; review happens at the diff                                                               | [REQ-VER-012](requirements/REQ-VER.md)                                                                             |
-| _"Let me branch the documentation for a big redesign."_                  | Single draft stream; branches imply merges                                                                             | [REQ-VER-012](requirements/REQ-VER.md)                                                                             |
-| _"Search across all our products at once."_                              | Follows from project isolation, not from effort                                                                        | [REQ-NAV-009](requirements/REQ-NAV.md)                                                                             |
-| _"Share one property definition between the web and app projects."_      | Properties are fully isolated per project                                                                              | [REQ-DOM-028](requirements/REQ-DOM.md)                                                                             |
-| _"Write the condition as a sentence for now, we'll structure it later."_ | Rejected rather than deferred — the stopgap is what creates the conversion problem                                     | [REQ-DOM-011](requirements/REQ-DOM.md)                                                                             |
-| _"Hide the destination column from developers as a permission."_         | Views are presentation filters, never security boundaries                                                              | [REQ-VIEW-010](requirements/REQ-VIEW.md)                                                                           |
-| _"Give designers their own view."_                                       | Designers use the Analyst/Business view                                                                                | [REQ-VIEW-010](requirements/REQ-VIEW.md)                                                                           |
-| _"Grant these forty people access to these six projects."_               | Every grant is explicit and individually made                                                                          | [REQ-SEC-003](requirements/REQ-SEC.md), [US-ADM-09](#us-adm-09--offboard-a-leaver-across-every-project--admin--e7) |
-| _"Derive roles from our identity-provider groups."_                      | Authentication never implies authorisation                                                                             | [REQ-SEC-002](requirements/REQ-SEC.md), [REQ-SEC-004](requirements/REQ-SEC.md)                                     |
-| _"Read it on my phone."_                                                 | Desktop only; 99% of usage                                                                                             | [REQ-NFR-007](requirements/REQ-NFR.md)                                                                             |
-| _"Work on it offline."_                                                  | PDF export covers disconnected consultation                                                                            | [REQ-NFR-009](requirements/REQ-NFR.md)                                                                             |
-| _"Edit the git export and sync it back."_                                | One-way by design; no second source of truth                                                                           | [REQ-VIEW-005](requirements/REQ-VIEW.md)                                                                           |
-| _"Import our wiki through an upload screen."_                            | The Platform holds no knowledge of any source format                                                                   | [REQ-IMP-009](requirements/REQ-IMP.md)                                                                             |
-| _"Schedule this property to be deprecated next quarter."_                | Deprecation is manual                                                                                                  | [REQ-VER-012](requirements/REQ-VER.md)                                                                             |
+| _"Let me approve a change before it publishes."_                         | Editors publish autonomously; review happens at the diff                                                               | [REQ-VER-012](requirements/REQ-VER.md#req-ver-012--branches-merges-approval-workflow-scheduled-deprecation)                                                                             |
+| _"Let me branch the documentation for a big redesign."_                  | Single draft stream; branches imply merges                                                                             | [REQ-VER-012](requirements/REQ-VER.md#req-ver-012--branches-merges-approval-workflow-scheduled-deprecation)                                                                             |
+| _"Search across all our products at once."_                              | Follows from project isolation, not from effort                                                                        | [REQ-NAV-009](requirements/REQ-NAV.md#req-nav-009--cross-project-search)                                                                             |
+| _"Share one property definition between the web and app projects."_      | Properties are fully isolated per project                                                                              | [REQ-DOM-028](requirements/REQ-DOM.md#req-dom-028--no-cross-project-references)                                                                             |
+| _"Write the condition as a sentence for now, we'll structure it later."_ | Rejected rather than deferred — the stopgap is what creates the conversion problem                                     | [REQ-DOM-011](requirements/REQ-DOM.md#req-dom-011--prose-conditional-valorisations)                                                                             |
+| _"Hide the destination column from developers as a permission."_         | Views are presentation filters, never security boundaries                                                              | [REQ-VIEW-010](requirements/REQ-VIEW.md#req-view-010--dedicated-design-view-field-level-permissions)                                                                           |
+| _"Give designers their own view."_                                       | Designers use the Analyst/Business view                                                                                | [REQ-VIEW-010](requirements/REQ-VIEW.md#req-view-010--dedicated-design-view-field-level-permissions)                                                                           |
+| _"Grant these forty people access to these six projects."_               | Every grant is explicit and individually made                                                                          | [REQ-SEC-003](requirements/REQ-SEC.md#req-sec-003--per-project-access-grants), [US-ADM-09](#us-adm-09--offboard-a-leaver-across-every-project--admin--e7) |
+| _"Derive roles from our identity-provider groups."_                      | Authentication never implies authorisation                                                                             | [REQ-SEC-002](requirements/REQ-SEC.md#req-sec-002--four-company-scoped-roles), [REQ-SEC-004](requirements/REQ-SEC.md#req-sec-004--oidc-sso)                                     |
+| _"Read it on my phone."_                                                 | Desktop only; 99% of usage                                                                                             | [REQ-NFR-007](requirements/REQ-NFR.md#req-nfr-007--desktop-only-no-responsive-layout)                                                                             |
+| _"Work on it offline."_                                                  | PDF export covers disconnected consultation                                                                            | [REQ-NFR-009](requirements/REQ-NFR.md#req-nfr-009--no-offline-mode)                                                                             |
+| _"Edit the git export and sync it back."_                                | One-way by design; no second source of truth                                                                           | [REQ-VIEW-005](requirements/REQ-VIEW.md#req-view-005--git-export-one-commit-per-publication)                                                                           |
+| _"Import our wiki through an upload screen."_                            | The Platform holds no knowledge of any source format                                                                   | [REQ-IMP-009](requirements/REQ-IMP.md#req-imp-009--flows-history-internal-links-importer-ui)                                                                             |
+| _"Schedule this property to be deprecated next quarter."_                | Deprecation is manual                                                                                                  | [REQ-VER-012](requirements/REQ-VER.md#req-ver-012--branches-merges-approval-workflow-scheduled-deprecation)                                                                             |
 | _"Tell me how to analyse this tracking."_                                | A product direction, deliberately carrying no requirement until there is a clear idea of what it is                    | [vision](vision.md)                                                                                                |
-| _"Make it screen-reader compliant."_                                     | Built to WCAG AA as a design principle, but not verified and not claimed — what is missing is verification, not intent | [REQ-NFR-013](requirements/REQ-NFR.md)                                                                             |
+| _"Make it screen-reader compliant."_                                     | Built to WCAG AA as a design principle, but not verified and not claimed — what is missing is verification, not intent | [REQ-NFR-013](requirements/REQ-NFR.md#req-nfr-013--wcag-aa-as-a-design-principle-not-a-gate)                                                                             |
 
 ## Keeping this current
 

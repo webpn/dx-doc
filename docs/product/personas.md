@@ -25,7 +25,7 @@ Four roles, held **within a single company** and combined with per-project acces
 - **Editor** — creates and modifies content, publishes versions on granted projects.
 - **Viewer** — reads, exports, uses MCP read tools on granted projects.
 
-There is no fifth role and no separate catalogue capability: managing the company catalogue is part of being that company's Admin ([REQ-SEC-010](requirements/REQ-SEC.md), closing O11 on 2026-08-12).
+There is no fifth role and no separate catalogue capability: managing the company catalogue is part of being that company's Admin ([REQ-SEC-010](requirements/REQ-SEC.md#req-sec-010--company-catalogue-is-managed-by-the-admin-role), closing O11 on 2026-08-12).
 
 For the complete permission matrix, see the specification Appendix B.
 

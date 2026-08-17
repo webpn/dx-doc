@@ -26,7 +26,7 @@ Entry format and status legend: [requirements index](README.md).
 
 ### REQ-SEC-001 — Email + password login
 
-**Must** · R0 · [M0.4](../milestones.md) · spec §17.1 · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec §17.1 · **Not Started** · Issue: — · PR: —
 
 Local authentication, required so the Platform is not tied to a single identity provider. Whether a company accepts local password login is part of its **supported login methods** setting (company-level, database — [ADR-0014](../../adr/0014-configuration-split.md)); sessions expire per `AUTH_SESSION_TTL` (instance-level, default 8h).
 
@@ -38,7 +38,7 @@ Local authentication, required so the Platform is not tied to a single identity 
 
 ### REQ-SEC-002 — Four company-scoped roles
 
-**Must** · R0 · [M0.4](../milestones.md) · spec §4.2, §17.2 · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec §4.2, §17.2 · **Not Started** · Issue: — · PR: —
 
 Admin, Project Manager, Editor, Viewer. A user belongs to **one company**, and their role applies across that company, narrowed further by their per-project grants (REQ-SEC-003). Roles compose (a Project Manager who must also edit additionally holds Editor). Roles are assigned inside the Platform and are never derived from identity-provider groups.
 
@@ -55,7 +55,7 @@ Admin, Project Manager, Editor, Viewer. A user belongs to **one company**, and t
 
 ### REQ-SEC-003 — Per-project access grants
 
-**Must** · R0 · [M0.4](../milestones.md) · spec §17.2 · [ADR-0010](../../adr/0010-project-scoped-isolation.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec §17.2 · [ADR-0010](../../adr/0010-project-scoped-isolation.md) · **Not Started** · Issue: — · PR: —
 
 A user sees only the projects explicitly granted to them. Every permission is additionally scoped by the grant: no role confers access to an ungranted project.
 
@@ -69,7 +69,7 @@ A user sees only the projects explicitly granted to them. Every permission is ad
 
 ### REQ-SEC-004 — OIDC SSO
 
-**Should** · R2 · [M2.8](../milestones.md) · spec §17.1 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.8](../milestones.md#m28--platform-hardening) · spec §17.1 · **Not Started** · Issue: — · PR: —
 
 OIDC is the primary corporate authentication method. Each company connects its own identity provider: issuer, client ID, client secret and scopes are company-level configuration, set by the company Admin and stored encrypted at rest ([ADR-0014](../../adr/0014-configuration-split.md)) — not an instance-wide `AUTH_OIDC_*` environment variable, since different companies on the same instance may use different providers. Role and grant assignment remain manual inside the Platform.
 
@@ -84,9 +84,9 @@ OIDC is the primary corporate authentication method. Each company connects its o
 
 ### REQ-SEC-005 — Project shared-password access with expiry
 
-**Must** · R1 · [M1.9](../milestones.md) · spec §4.3, §17.1 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) · spec §4.3, §17.1 · **Not Started** · Issue: — · PR: —
 
-A project may be exposed read-only behind a shared password. Multiple passwords per project, each with an optional expiry. Granularity is the whole project. No per-reader audit is required for this mode: the access event is recorded in the audit log ([REQ-SEC-006](REQ-SEC.md)), but the reader is not individually identified — only that a shared-password session accessed the project.
+A project may be exposed read-only behind a shared password. Multiple passwords per project, each with an optional expiry. Granularity is the whole project. No per-reader audit is required for this mode: the access event is recorded in the audit log ([REQ-SEC-006](#req-sec-006--append-only-audit-log-24-month-retention)), but the reader is not individually identified — only that a shared-password session accessed the project.
 
 **Acceptance**
 
@@ -97,7 +97,7 @@ A project may be exposed read-only behind a shared password. Multiple passwords 
 
 ### REQ-SEC-006 — Append-only audit log, 24-month retention
 
-**Must** · R1 · [M1.9](../milestones.md) · spec §17.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) · spec §17.4 · **Not Started** · Issue: — · PR: —
 
 Recorded: login and logout; entity creation, modification and deletion; publication; rollback; export; shared-password access; MCP calls; permission changes; integration configuration changes. Read events are deliberately not recorded. Retention is `AUDIT_RETENTION_MONTHS`, default 24.
 
@@ -110,13 +110,13 @@ Recorded: login and logout; entity creation, modification and deletion; publicat
 
 ### REQ-SEC-007 — SAML SSO
 
-**Should** · R2 · [M2.8](../milestones.md) · spec §17.1 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.8](../milestones.md#m28--platform-hardening) · spec §17.1 · **Not Started** · Issue: — · PR: —
 
 SAML for generality of the white-label product. Configured per company (entity ID, SSO URL, certificate), stored encrypted at rest — the same company-level model as OIDC (REQ-SEC-004, [ADR-0014](../../adr/0014-configuration-split.md)).
 
 ### REQ-SEC-008 — Audit log UI, paginated list and CSV export
 
-**Should** · R2 · [M2.8](../milestones.md) · spec §17.4 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.8](../milestones.md#m28--platform-hardening) · spec §17.4 · **Not Started** · Issue: — · PR: —
 
 Admin-only consultation interface: a paginated list with CSV export and deliberately no filters.
 
@@ -124,7 +124,7 @@ Admin-only consultation interface: a paginated list with CSV export and delibera
 
 ### REQ-SEC-009 — Project archive and restore; no hard delete
 
-**Should** · R2 · [M2.8](../milestones.md) · spec §17.5 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.8](../milestones.md#m28--platform-hardening) · spec §17.5 · **Not Started** · Issue: — · PR: —
 
 Projects cannot be hard-deleted. An Admin archives a project, which unpublishes it and makes it restorable.
 
@@ -135,7 +135,7 @@ Projects cannot be hard-deleted. An Admin archives a project, which unpublishes 
 
 ### REQ-SEC-010 — Company catalogue is managed by the Admin role
 
-**Must** · R1 · [M1.1](../milestones.md) · spec §4.2, §6.3 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §4.2, §6.3 · **Not Started** · Issue: — · PR: —
 
 Creating and modifying the company-level catalogue (standard properties, modules, templates, free-page templates) is a power of the **Admin** role within the company. There is no fifth role and no separate flag.
 
@@ -153,7 +153,7 @@ Creating and modifying the company-level catalogue (standard properties, modules
 
 ### REQ-SEC-011 — Permission matrix enforced server-side
 
-**Must** · R0 · [M0.4](../milestones.md) · spec Appendix B · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec Appendix B · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **Not Started** · Issue: — · PR: —
 
 Every action in Appendix B is authorised in the backend. The UI hides what a user cannot do as a convenience; hiding is never the enforcement.
 
@@ -165,7 +165,7 @@ Every action in Appendix B is authorised in the backend. The UI hides what a use
 
 ### REQ-SEC-012 — Non-publishable content never leaves the instance
 
-**Must** · R1 · **first enforced [M1.7](../milestones.md), then standing** · spec §7.7, §16.4, §17.3 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · **first enforced [M1.7](../milestones.md#m17--search), then standing** · spec §7.7, §16.4, §17.3 · **Not Started** · Issue: — · PR: —
 
 The documentation contains no personal data, but it does contain test credentials and internal references. These live on free pages flagged non-publishable, which must never appear in any published artefact, static site, Confluence export, git export, PDF, or search index.
 
@@ -184,7 +184,7 @@ The documentation contains no personal data, but it does contain test credential
 
 ### REQ-SEC-013 — Account lifecycle and first-run bootstrap
 
-**Must** · R0 · [M0.4](../milestones.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · **Not Started** · Issue: — · PR: —
 
 How identities come into being, and how they leave. Four parts:
 
@@ -208,11 +208,11 @@ How identities come into being, and how they leave. Four parts:
 
 > **Chosen for the deployment model rather than for elegance.** A setup wizard or a one-time token in the log would avoid putting a password in the environment, but both need a human at a browser at the right moment. Environment-variable bootstrap fits REQ-FDN-013's configuration model, fits the one-command reference stack (REQ-FDN-012), and provisions unattended — which is what an operator automating a deployment actually needs. The cost is that the initial password exists in the environment and in whatever created it, which is why it must be changed at first login and why the read-once rule is tested rather than assumed.
 >
-> This requirement did not exist in the first draft of the specification. Nothing described how the first identity came into being, while [M0.4](../milestones.md) required a passing test for every row of the permission matrix and [M0.6](../milestones.md) promised a clean machine reaching a running instance from the README alone. Neither is demonstrable without it.
+> This requirement did not exist in the first draft of the specification. Nothing described how the first identity came into being, while [M0.4](../milestones.md#m04--authentication-and-authorisation) required a passing test for every row of the permission matrix and [M0.6](../milestones.md#m06--public-repository-readiness) promised a clean machine reaching a running instance from the README alone. Neither is demonstrable without it.
 
 ### REQ-SEC-014 — Instance-administration capability
 
-**Must** · R0 · [M0.4](../milestones.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · **Not Started** · Issue: — · PR: —
 
 A discrete `instance_admin` flag on a user, independent of the four company-scoped roles (REQ-SEC-002), marking the person who administers the **deployment** rather than a tenant within it. It is what gates the instance-administration portal (REQ-SEC-015) and it is held by the bootstrap administrator (REQ-SEC-013).
 
@@ -236,7 +236,7 @@ Three rules make it safe:
 
 ### REQ-SEC-015 — Instance-administration portal
 
-**Should** · R2 · [M2.8](../milestones.md) · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.8](../milestones.md#m28--platform-hardening) · **Not Started** · Issue: — · PR: —
 
 An instance-wide console, reachable only by holders of the REQ-SEC-014 capability: list companies, create and configure them, appoint each company's first Admin, grant and revoke the instance-administration capability, and see instance-level health and configuration.
 

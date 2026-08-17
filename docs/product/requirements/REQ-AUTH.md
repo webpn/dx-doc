@@ -28,7 +28,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 ### REQ-AUTH-001 — Markdown editor with the full block set
 
-**Must** · R1 · [M1.5](../milestones.md) · spec §7.1, §16.1 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md#m15--authoring) · spec §7.1, §16.1 · **Not Started** · Issue: — · PR: —
 
 Content is stored as Markdown. Required blocks: headings, ordered and unordered lists, bold and italic, links, tables, code blocks, images, quotes and callouts. A ` ```mermaid ` fenced block is authorable and stored verbatim from R1 as a code block; **rendering** it as a diagram is REQ-AUTH-004, in R2.
 
@@ -42,7 +42,7 @@ Applies to tracking descriptions, page descriptions, flow descriptions, property
 
 ### REQ-AUTH-002 — Image upload, 10 MB cap, resize to 2000 px
 
-**Must** · R1 · [M1.5](../milestones.md) · spec §7.2 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md#m15--authoring) · spec §7.2 · **Not Started** · Issue: — · PR: —
 
 Direct upload by drag-and-drop and clipboard paste. Maximum `UPLOAD_MAX_BYTES` (default 10 MB), automatic resize to `IMAGE_MAX_DIMENSION` (default 2000 px per side), stored in object storage (REQ-FDN-006).
 
@@ -54,7 +54,7 @@ Direct upload by drag-and-drop and clipboard paste. Maximum `UPLOAD_MAX_BYTES` (
 
 ### REQ-AUTH-003 — Free wiki pages with publishable flag
 
-**Must** · R1 · [M1.5](../milestones.md) · spec §7.7 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md#m15--authoring) · spec §7.7 · **Not Started** · Issue: — · PR: —
 
 Hierarchically organised unstructured pages covering what the previous documentation template held outside the structured tables: data layer overview, script and SDK integration instructions, references, test URLs, test credentials.
 
@@ -66,7 +66,7 @@ Hierarchically organised unstructured pages covering what the previous documenta
 
 ### REQ-AUTH-004 — Mermaid rendering and live preview
 
-**Must** · R1 · [M1.6](../milestones.md) · spec §7.1, §8.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) · spec §7.1, §8.4 · **Not Started** · Issue: — · PR: —
 
 Mermaid code blocks render, and render live while editing. This is both the format used for hand-written diagrams and the format auto-generated from the flow graph (REQ-NAV-006, also R1/M1.6).
 
@@ -80,7 +80,7 @@ Mermaid code blocks render, and render live while editing. This is both the form
 
 ### REQ-AUTH-005 — Optimistic concurrency with stale-write rejection
 
-**Must** · R1 · [M1.5](../milestones.md) · spec §7.5, §16.1 · [ADR-0016](../../adr/0016-concurrency-model.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md#m15--authoring) · spec §7.5, §16.1 · [ADR-0016](../../adr/0016-concurrency-model.md) · **Not Started** · Issue: — · PR: —
 
 No pessimistic locking. A notice appears when a record being viewed is modified by someone else. A save is rejected if the record changed after the user opened it.
 
@@ -92,7 +92,7 @@ No pessimistic locking. A notice appears when a record being viewed is modified 
 
 ### REQ-AUTH-006 — Tracking duplication within a project
 
-**Must** · R1 · [M1.5](../milestones.md) · spec §7.3 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md#m15--authoring) · spec §7.3 · **Not Started** · Issue: — · PR: —
 
 A duplicated tracking inherits everything: properties, modules, specific values, description, images, page attachment and destinations.
 
@@ -104,7 +104,7 @@ A duplicated tracking inherits everything: properties, modules, specific values,
 
 ### REQ-AUTH-007 — Project-scoped full-text search
 
-**Must** · R1 · [M1.7](../milestones.md) · spec §7.8, §16.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.7](../milestones.md#m17--search) · spec §7.8, §16.4 · **Not Started** · Issue: — · PR: —
 
 Full-text search, scoped to a single project. Property names and tracking names rank above other text. **Specific values are indexed.** All textual content is indexed except non-publishable free pages.
 
@@ -131,19 +131,19 @@ The published index also makes the criterion above stronger than a filter: built
 
 ### REQ-AUTH-008 — Page and flow duplication
 
-**Should** · R2 · [M2.7](../milestones.md) · spec §7.3 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.7](../milestones.md#m27--editorial-depth) · spec §7.3 · **Not Started** · Issue: — · PR: —
 
 Duplicating a page or a flow within a project, including contained trackings.
 
 ### REQ-AUTH-009 — Cross-project tracking copy with guided mapping
 
-**Should** · R2 · [M2.7](../milestones.md) · spec §7.3 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.7](../milestones.md#m27--editorial-depth) · spec §7.3 · **Not Started** · Issue: — · PR: —
 
 Copying a selection of trackings into another project. Where the target lacks a source module or property, the user maps each missing item onto an existing one; unmapped items are created. Copies are independent (REQ-DOM-028) — no shared identity results.
 
 ### REQ-AUTH-010 — Bulk operations on a multi-selection, with preview
 
-**Should** · R2 · [M2.4](../milestones.md) · spec §7.4 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.4](../milestones.md#m24--bulk-operations) · spec §7.4 · **Not Started** · Issue: — · PR: —
 
 Applied to a multi-selection of trackings: add module, remove module, add property, remove property, change page attachment, archive.
 
@@ -157,25 +157,25 @@ Exposure through API and MCP carries the same validation, but agents must target
 
 ### REQ-AUTH-011 — Individual item archive and restore
 
-**Could** · R3 · [M3.5](../milestones.md) · spec §19.4 · **Not Started** · Issue: — · PR: —
+**Could** · R3 · [M3.5](../milestones.md#m35--containers-and-conveniences) · spec §19.4 · **Not Started** · Issue: — · PR: —
 
 Archiving individual entities, as distinct from archiving a whole project (REQ-SEC-009).
 
 ### REQ-AUTH-012 — Per-element change history ("blame")
 
-**Should** · R2 · [M2.7](../milestones.md) · spec §7.6 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.7](../milestones.md#m27--editorial-depth) · spec §7.6 · **Not Started** · Issue: — · PR: —
 
 Who changed what and when, on individual entities. Distinct from project-level versioning (REQ-VER-*) and from the audit log (REQ-SEC-006), which records events rather than content.
 
 ### REQ-AUTH-013 — Global script-instruction template with placeholders
 
-**Should** · R2 · [M2.7](../milestones.md) · spec §7.7 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.7](../milestones.md#m27--editorial-depth) · spec §7.7 · **Not Started** · Issue: — · PR: —
 
 Script and SDK integration instructions derive from a company-level template containing placeholders for the identifiers configured per project. In R1 a copied free page suffices.
 
 ### REQ-AUTH-014 — Image annotation layer linked to triggers
 
-**Should** · R2 · [M2.3](../milestones.md) · spec §7.2 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.3](../milestones.md#m23--image-annotations) · spec §7.2 · **Not Started** · Issue: — · PR: —
 
 Annotations are **structural, not decorative**. The original image is preserved; annotations are stored as a separate JSON layer rendered as a canvas overlay, so they stay editable.
 
@@ -187,6 +187,6 @@ Annotations are **structural, not decorative**. The original image is preserved;
 
 ### REQ-AUTH-015 — Whole-project duplication
 
-**Could** · R3 · [M3.5](../milestones.md) · spec §7.3 · **Not Started** · Issue: — · PR: —
+**Could** · R3 · [M3.5](../milestones.md#m35--containers-and-conveniences) · spec §7.3 · **Not Started** · Issue: — · PR: —
 
 Duplicating an entire project, producing a fully independent copy.

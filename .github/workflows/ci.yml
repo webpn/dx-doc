@@ -30,6 +30,12 @@ jobs:
       - name: Format check
         run: npm run format:check
 
+      - name: Documentation links
+        run: npm run docs:check-links
+
+      - name: Documentation index
+        run: npm run docs:check-index
+
       - name: Unit and integration tests
         run: npm test
 

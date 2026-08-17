@@ -23,8 +23,8 @@ The documentation of tracking plans for websites and mobile applications:
 - Specific values (including placeholders) for each property within a tracking.
 - Conditional valorisations of properties — structured only, from R2. Not expressible in R1 in any form.
 - Destinations (analytics variables/events/schema paths) with many-to-many mapping to properties.
-- CDP audiences (R2 — moved from R1 on 2026-08-17, [REQ-DOM-017](requirements/REQ-DOM.md)).
-- Feedback surveys (R2 — moved from R1 on 2026-08-17, [REQ-DOM-018](requirements/REQ-DOM.md)).
+- CDP audiences (R2 — moved from R1 on 2026-08-17, [REQ-DOM-017](requirements/REQ-DOM.md#req-dom-017--cdp-audience-entity)).
+- Feedback surveys (R2 — moved from R1 on 2026-08-17, [REQ-DOM-018](requirements/REQ-DOM.md#req-dom-018--survey-entity)).
 - Free wiki pages for unstructured content (integration instructions, references).
 - User journeys (Flows) as named directed graphs over Pages, with Trigger nodes.
 

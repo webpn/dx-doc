@@ -23,7 +23,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 ### REQ-API-001 — Internal REST API as the single entry point
 
-**Must** · R0 · [M0.5](../milestones.md) · spec §12.1, §16 · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.5](../milestones.md#m05--rest-api-and-shared-validation) · spec §12.1, §16 · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **Not Started** · Issue: — · PR: —
 
 The REST API is the foundation of the system, not a feature. The web client, the MCP server, the export generators, the static-site builder and the import scripts all consume it. All validation lives behind it (REQ-FDN-010).
 
@@ -38,7 +38,7 @@ The REST API is the foundation of the system, not a feature. The web client, the
 
 ### REQ-API-002 — Documented public API
 
-**Must** · R1 · [M1.2](../milestones.md) · spec §12.1 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.2](../milestones.md#m12--import-grade-api) · spec §12.1 · **Not Started** · Issue: — · PR: —
 
 A documented, stable public surface. The contract is generated from the implementation rather than maintained alongside it, so it cannot drift.
 
@@ -52,7 +52,7 @@ A documented, stable public surface. The contract is generated from the implemen
 
 ### REQ-API-003 — MCP read tools
 
-**Must** · R1 · [M1.3](../milestones.md) · spec §12.2 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.3](../milestones.md#m13--mcp-server) · spec §12.2 · **Not Started** · Issue: — · PR: —
 
 A layer above the REST API. Clients are analysts' and editors' AI assistants, developers' IDEs, and — from M1.4 — the import agent.
 
@@ -67,7 +67,7 @@ R1 set, chosen for what import and verification need: list projects; retrieve a 
 
 ### REQ-API-004 — MCP write tools, draft only
 
-**Must** · R1 · [M1.3](../milestones.md) · spec §12.2 · [ADR-0019](../../adr/0019-ai-coding-agent-model.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.3](../milestones.md#m13--mcp-server) · spec §12.2 · [ADR-0019](../../adr/0019-ai-coding-agent-model.md) · **Not Started** · Issue: — · PR: —
 
 Write tools covering the R1 entity set (REQ-IMP-002) — not only the narrower list in specification §12.2, which predates import depending on them.
 
@@ -83,7 +83,7 @@ Writes always land in the draft. Agents may **not** publish versions, delete use
 
 ### REQ-API-005 — OAuth with user consent for MCP clients
 
-**Should** · R3 · [M3.4](../milestones.md) · spec §12.2 · **Not Started** · Issue: — · PR: —
+**Should** · R3 · [M3.4](../milestones.md#m34--interactive-agent-access) · spec §12.2 · **Not Started** · Issue: — · PR: —
 
 The agent acts with the permissions of the consenting user, bounded additionally by REQ-API-004. Enabled by `OAUTH_ISSUER_ENABLED`.
 
@@ -91,7 +91,7 @@ Stays in R3: this is the interactive-assistant path. Import authenticates with a
 
 ### REQ-API-006 — MCP resources exposing naming guidelines
 
-**Should** · R1 · [M1.3](../milestones.md) · spec §12.2 · **Not Started** · Issue: — · PR: —
+**Should** · R1 · [M1.3](../milestones.md#m13--mcp-server) · spec §12.2 · **Not Started** · Issue: — · PR: —
 
 Naming and documentation guidelines exposed as MCP resources and prompts, so they are automatically available as context to agents rather than restated per conversation.
 
@@ -104,13 +104,13 @@ Naming and documentation guidelines exposed as MCP resources and prompts, so the
 
 ### REQ-API-007 — Outbound webhooks on publication
 
-**Could** · R4 · [M4.3](../milestones.md) · spec §12.3 · **Not Started** · Issue: — · PR: —
+**Could** · R4 · [M4.3](../milestones.md#m43--r4-conveniences) · spec §12.3 · **Not Started** · Issue: — · PR: —
 
 Outbound webhooks fired on publication. Low priority: changes are retrievable through the API in the meantime.
 
 ### REQ-API-008 — Bulk operations restricted to explicit identifier lists
 
-**Should** · R2 · [M2.4](../milestones.md) · spec §7.4 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.4](../milestones.md#m24--bulk-operations) · spec §7.4 · **Not Started** · Issue: — · PR: —
 
 Bulk operations (REQ-AUTH-010) and batch writes (REQ-IMP-005) are exposed through the API and MCP with the same validation, but the target must be an explicit list of identifiers. A filter expression is never accepted as an operation target.
 
@@ -118,7 +118,7 @@ Bulk operations (REQ-AUTH-010) and batch writes (REQ-IMP-005) are exposed throug
 
 ### REQ-API-009 — Service-account API tokens
 
-**Must** · R1 · [M1.2](../milestones.md) · [ADR-0021](../../adr/0021-agent-driven-migration.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.2](../milestones.md#m12--import-grade-api) · [ADR-0021](../../adr/0021-agent-driven-migration.md) · **Not Started** · Issue: — · PR: —
 
 Non-interactive authentication for scripted clients: a token bound to a user identity, with the same role and project grants, revocable independently of that user's session.
 
@@ -131,7 +131,7 @@ Non-interactive authentication for scripted clients: a token bound to a user ide
 
 ### REQ-API-010 — Richer MCP read tools
 
-**Should** · R3 · [M3.4](../milestones.md) · spec §12.2 · **Not Started** · Issue: — · PR: —
+**Should** · R3 · [M3.4](../milestones.md#m34--interactive-agent-access) · spec §12.2 · **Not Started** · Issue: — · PR: —
 
 The analytical read tools beyond what import required: retrieve the flow and trigger structure of a project, retrieve the changelog between two versions, impact analysis for a property, and property detail enriched with data-quality status once R4 exists.
 

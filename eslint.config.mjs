@@ -76,6 +76,12 @@ export default tseslint.config(
     // Config and plain JS files: no type-aware rules (no tsconfig project).
     files: ['**/*.{js,mjs,cjs}'],
     extends: [js.configs.recommended],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+      },
+    },
   },
   {
     // Domain and Application layers: no React, no browser APIs

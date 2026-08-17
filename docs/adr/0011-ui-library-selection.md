@@ -24,7 +24,7 @@ Two parts, and the second matters as much as the first:
 
 **2. Components stay close to upstream, and divergence is justified per component.** The default is to take a component as published and change nothing. Customisation is allowed where the application genuinely needs it, but each divergence is a deliberate, reviewable act — not a drive-by edit. This is what makes the AI-interoperability property survive contact with the codebase: an agent that knows shadcn/ui knows _this_ codebase, and upstream documentation stays applicable to the code in front of it. Components rewritten to taste destroy exactly the property the library was chosen for.
 
-**Accessibility.** Radix supplies the keyboard and ARIA behaviour, and the design tokens are defined to meet **WCAG AA contrast**. This is a design principle and a review expectation, not a certified conformance commitment — see [REQ-NFR-013](../product/requirements/REQ-NFR.md). Staying close to upstream is also the cheapest way to keep it: Radix's accessibility is in the components as published, and hand-editing them is the usual way it gets lost.
+**Accessibility.** Radix supplies the keyboard and ARIA behaviour, and the design tokens are defined to meet **WCAG AA contrast**. This is a design principle and a review expectation, not a certified conformance commitment — see [REQ-NFR-013](../product/requirements/REQ-NFR.md#req-nfr-013--wcag-aa-as-a-design-principle-not-a-gate). Staying close to upstream is also the cheapest way to keep it: Radix's accessibility is in the components as published, and hand-editing them is the usual way it gets lost.
 
 ## Rationale against the criteria
 
@@ -44,7 +44,7 @@ Two parts, and the second matters as much as the first:
 - **The design-system boundary changes character but not purpose.** With MUI, `src/design-system/` would wrap an external dependency. With shadcn/ui the copied components _are_ the design system's internals. Application code still imports from `@project/design-system` and never from a component path directly; the wrapping policy in [ADR-0008](0008-design-system-boundary.md) now means "the copied component plus whatever project-level API it needs", and for many components that addition is nothing.
 - **Upstream fixes are a manual pull, not an `npm update`.** This is the price of code ownership. Staying close to upstream is what keeps that pull cheap; every divergence makes it more expensive, which is the practical reason for the "close to upstream" rule, independent of the AI argument.
 - **Complex tables are a separate concern.** shadcn/ui's table is presentational; sorting, filtering and virtualisation for tracking and property lists come from TanStack Table, which pairs with the [ADR-0012](0012-data-fetching-strategy.md) choice.
-- **Open gap: the Markdown editor and Mermaid are not covered by this decision.** [REQ-AUTH-001](../product/requirements/REQ-AUTH.md) (full block set) and [REQ-AUTH-004](../product/requirements/REQ-AUTH.md) (Mermaid live preview) are Must requirements delivered by [M1.5](../product/milestones.md), and no shadcn/ui component addresses them. The editor engine is a distinct choice, still to be made before M1.5. It was folded into D1's criteria and should not have been — a component library and an editor engine are different decisions.
+- **Open gap: the Markdown editor and Mermaid are not covered by this decision.** [REQ-AUTH-001](../product/requirements/REQ-AUTH.md#req-auth-001--markdown-editor-with-the-full-block-set) (full block set) and [REQ-AUTH-004](../product/requirements/REQ-AUTH.md#req-auth-004--mermaid-rendering-and-live-preview) (Mermaid live preview) are Must requirements delivered by [M1.5](../product/milestones.md#m15--authoring), and no shadcn/ui component addresses them. The editor engine is a distinct choice, still to be made before M1.5. It was folded into D1's criteria and should not have been — a component library and an editor engine are different decisions.
 
 ## Alternatives Considered
 
@@ -61,7 +61,7 @@ Two parts, and the second matters as much as the first:
 - [ADR-0008](0008-design-system-boundary.md): Design System Boundary — the wrapper that insulated the application from this choice, and whose character this decision changes.
 - [ADR-0019](0019-ai-coding-agent-model.md): AI Coding Agent Model — why criterion 1 outweighs the rest.
 - [ADR-0012](0012-data-fetching-strategy.md): TanStack Query for server state; TanStack Table is its companion for the table work.
-- [REQ-NFR-013](../product/requirements/REQ-NFR.md): accessibility as a design principle, not a conformance gate.
+- [REQ-NFR-013](../product/requirements/REQ-NFR.md#req-nfr-013--wcag-aa-as-a-design-principle-not-a-gate): accessibility as a design principle, not a conformance gate.
 - D1 in [decisions](../decisions/README.md).
 
 ## Last Responsible Moment

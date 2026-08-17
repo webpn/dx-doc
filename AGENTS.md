@@ -20,6 +20,8 @@ Read [`ARCHITECTURE.md`](ARCHITECTURE.md) for the full architectural model.
 
 ## Before writing any code
 
+**Changing only files under `docs/`?** Skip this list. Read [`docs/INDEX.md`](docs/INDEX.md) — a generated one-line-per-doc map of every ADR, requirement, milestone and user story and where it lives — then open only the specific file(s) you need to change. Steps 1–4 below are about the application codebase and don't apply.
+
 1. Read [`ENGINEERING_GUIDE.md`](ENGINEERING_GUIDE.md) for coding rules.
 2. Read [`STYLE_GUIDE.md`](STYLE_GUIDE.md) for naming and formatting.
 3. Read [`AI_DEVELOPMENT_GUIDE.md`](AI_DEVELOPMENT_GUIDE.md) for agent-specific workflows.
@@ -69,6 +71,7 @@ When behavior or architecture changes:
 - If the change affects architectural rules, update [`ARCHITECTURE.md`](ARCHITECTURE.md).
 - If the change introduces a new pattern, update [`ENGINEERING_GUIDE.md`](ENGINEERING_GUIDE.md).
 - Link the PR to the relevant ADR or create one.
+- **When linking between files in `docs/`, reference the other doc by its stable ID (`ADR-0022`, `REQ-IMP-003`, `M1.2`, `US-ANL-01`, ...) as the link text, then run `npm run docs:sync-links`.** Do not hand-compute relative paths (`../../adr/...`) or read the whole tree to verify them — the script resolves and fixes every ID-based link in one pass. See [`docs/README.md`](docs/README.md) for the full convention.
 
 ## Nested instructions
 

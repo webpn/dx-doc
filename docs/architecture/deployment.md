@@ -46,7 +46,7 @@ A single server running:
 
 ### Availability
 
-The Platform targets roughly **99% availability, achievable on a single instance with no redundancy** ([REQ-NFR-005](../product/requirements/REQ-NFR.md)). That ceiling is a constraint on the architecture, not a promise the software makes: availability is a property of a deployment, so **the SLA of any given instance is its operator's commitment**. The corporate pilot instance targets 99%.
+The Platform targets roughly **99% availability, achievable on a single instance with no redundancy** ([REQ-NFR-005](../product/requirements/REQ-NFR.md#req-nfr-005--architecture-must-not-require-redundancy)). That ceiling is a constraint on the architecture, not a promise the software makes: availability is a property of a deployment, so **the SLA of any given instance is its operator's commitment**. The corporate pilot instance targets 99%.
 
 ### Production Deployment (R1+)
 
@@ -105,7 +105,7 @@ Company-level configuration — branding, SMTP override, catalogue defaults, SSO
 
 ## Scaling
 
-- **Horizontal:** the application server is stateless _except for the search index_, which the default adapter writes to local disk. Replicating the process therefore needs either shared storage for the index directory or a per-instance rebuild — which is why a single instance is the supported shape and why [REQ-NFR-005](../product/requirements/REQ-NFR.md) requires the architecture to work without redundancy. Session state is stored in the database or a shared session store.
+- **Horizontal:** the application server is stateless _except for the search index_, which the default adapter writes to local disk. Replicating the process therefore needs either shared storage for the index directory or a per-instance rebuild — which is why a single instance is the supported shape and why [REQ-NFR-005](../product/requirements/REQ-NFR.md#req-nfr-005--architecture-must-not-require-redundancy) requires the architecture to work without redundancy. Session state is stored in the database or a shared session store.
 - **Database:** a single writer. SQLite serialises writes, which at the projected concurrency is not a bottleneck. Read replicas can be added for read-heavy workloads, though the projected concurrency (≤50 viewers, ≤10 editors) suggests this is unnecessary for the foreseeable scale.
 - **Search:** Pagefind indexes live on the application's disk, so search does **not** scale independently — see the replication caveat above.
 - **Storage:** S3 is a hosted/self-hosted service and scales independently.
