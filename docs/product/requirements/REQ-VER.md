@@ -6,13 +6,13 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 | ID          | Requirement                                        | MoSCoW | Rel. | Milestone | Status      |
 | ----------- | -------------------------------------------------- | ------ | ---- | --------- | ----------- |
-| REQ-VER-001 | Single draft → published model                     | Must   | R1   | M1.8      | Not Started |
-| REQ-VER-002 | Unpublished-changes indicator                      | Must   | R1   | M1.8      | Not Started |
-| REQ-VER-003 | Selective publication of trackings and pages/flows | Must   | R1   | M1.8      | Not Started |
-| REQ-VER-004 | Version metadata                                   | Must   | R1   | M1.8      | Not Started |
-| REQ-VER-005 | Diff by entity, property and specific value        | Must   | R1   | M1.8      | Not Started |
-| REQ-VER-006 | Automatically generated changelog                  | Must   | R1   | M1.8      | Not Started |
-| REQ-VER-007 | Full historical version consultation               | Must   | R1   | M1.8      | Not Started |
+| REQ-VER-001 | Single draft → published model                     | Must   | R1   | M1.8      | Implemented |
+| REQ-VER-002 | Unpublished-changes indicator                      | Must   | R1   | M1.8      | Implemented |
+| REQ-VER-003 | Selective publication of trackings and pages/flows | Must   | R1   | M1.8      | Implemented |
+| REQ-VER-004 | Version metadata                                   | Must   | R1   | M1.8      | Implemented |
+| REQ-VER-005 | Diff by entity, property and specific value        | Must   | R1   | M1.8      | Implemented |
+| REQ-VER-006 | Automatically generated changelog                  | Must   | R1   | M1.8      | Implemented |
+| REQ-VER-007 | Full historical version consultation               | Must   | R1   | M1.8      | Implemented |
 | REQ-VER-008 | Full rollback                                      | Should | R2   | M2.7      | Not Started |
 | REQ-VER-009 | Publication email notifications                    | Should | R2   | M2.7      | Not Started |
 | REQ-VER-010 | Agent-vs-human attribution in the diff             | Should | R2   | M2.7      | Not Started |

@@ -22,6 +22,7 @@ import {
   SqliteTrackingRepository,
   SqliteTrackingTemplateRepository,
   SqliteTriggerRepository,
+  SqliteVersionRepository,
 } from '../../infrastructure/persistence/sqlite-tracking-repositories';
 import { PermissionService } from '../auth/permissions';
 
@@ -155,6 +156,7 @@ describe('TrackingService (M1.1 Application Service)', () => {
     const freePageRepo = new SqliteFreePageRepository(connection.kysely);
     const flowRepo = new SqliteFlowRepository(connection.kysely);
     const triggerRepo = new SqliteTriggerRepository(connection.kysely);
+    const versionRepo = new SqliteVersionRepository(connection.kysely);
 
     trackingService = new TrackingService(
       propRepo,
@@ -166,6 +168,7 @@ describe('TrackingService (M1.1 Application Service)', () => {
       freePageRepo,
       flowRepo,
       triggerRepo,
+      versionRepo,
       projectRepo,
       permissions,
     );
@@ -347,5 +350,50 @@ describe('TrackingService (M1.1 Application Service)', () => {
     expect(flowData.value.edges).toHaveLength(1);
     expect(flowData.value.mermaidDiagram).toContain('graph TD');
     expect(flowData.value.mermaidDiagram).toContain('-->|"User clicks"|');
+  });
+
+  it('publishes project versions, generates changelogs, and supports full history consultation (REQ-VER-001 .. REQ-VER-007)', async () => {
+    // 1. Publish Version 1
+    const v1Res = await trackingService.publishVersion(editorId, companyId, projectId, {
+      title: 'v1.0.0 Release',
+      releaseNotes: 'Initial production tracking rollout',
+    });
+    expect(v1Res.ok).toBe(true);
+    if (!v1Res.ok) throw new Error('v1 publish failed');
+    expect(v1Res.value.versionNumber).toBe(1);
+
+    // 2. Add a new property in draft
+    await trackingService.createProperty(editorId, companyId, projectId, {
+      name: 'cart_value',
+      businessLabel: 'Cart Total Value',
+      type: 'number',
+    });
+
+    // 3. Publish Version 2
+    const v2Res = await trackingService.publishVersion(editorId, companyId, projectId, {
+      title: 'v1.1.0 Release',
+      releaseNotes: 'Added cart value tracking',
+    });
+    expect(v2Res.ok).toBe(true);
+    if (!v2Res.ok) throw new Error('v2 publish failed');
+    expect(v2Res.value.versionNumber).toBe(2);
+
+    // 4. Retrieve Version 2 and verify automated changelog diff
+    const v2Data = await trackingService.getVersion(editorId, v2Res.value.versionId);
+    expect(v2Data.ok).toBe(true);
+    if (!v2Data.ok) throw new Error('v2 get failed');
+    expect(v2Data.value.versionNumber).toBe(2);
+    expect(v2Data.value.changelog).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'added',
+          entityType: 'property',
+          name: 'cart_value',
+        }),
+      ]),
+    );
+
+    // 5. Verify immutable snapshot holds full history (REQ-VER-007)
+    expect(v2Data.value.snapshot.properties.some((p) => p.name === 'cart_value')).toBe(true);
   });
 });

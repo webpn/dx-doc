@@ -179,3 +179,37 @@ export interface FlowEdge {
   conditionDescription: string | null;
   createdAt: string;
 }
+
+export interface ProjectVersionSnapshot {
+  versionNumber: number;
+  title: string | null;
+  releaseNotes: string | null;
+  createdAt: string;
+  createdBy: string;
+  properties: DataLayerProperty[];
+  modules: Module[];
+  destinations: Destination[];
+  freePages: FreePage[];
+  trackings: Tracking[];
+  flows: Flow[];
+}
+
+export interface ChangelogEntry {
+  type: 'added' | 'modified' | 'removed';
+  entityType: 'property' | 'module' | 'destination' | 'page' | 'tracking' | 'flow';
+  entityId: string;
+  name: string;
+  details?: string;
+}
+
+export interface ProjectVersion {
+  id: string;
+  projectId: string;
+  versionNumber: number;
+  title: string | null;
+  releaseNotes: string | null;
+  changelog: ChangelogEntry[];
+  snapshot: ProjectVersionSnapshot;
+  createdBy: string;
+  createdAt: string;
+}

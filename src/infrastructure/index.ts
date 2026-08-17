@@ -40,6 +40,7 @@ export {
   SqliteFreePageRepository,
   SqliteFlowRepository,
   SqliteTriggerRepository,
+  SqliteVersionRepository,
 } from './persistence/sqlite-tracking-repositories';
 
 export { SmtpEmailSender, createSmtpEmailSender } from './email/smtp-email-sender';

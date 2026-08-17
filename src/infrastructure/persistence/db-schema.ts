@@ -59,6 +59,7 @@ export interface Database {
   trigger_trackings: TriggerTrackingsTable;
   flow_nodes: FlowNodesTable;
   flow_edges: FlowEdgesTable;
+  versions: VersionsTable;
 }
 
 /**
@@ -254,6 +255,17 @@ export const SCHEMA_DEFINITIONS: DatabaseSchemaDefinition = {
     'to_node_id',
     'label',
     'condition_description',
+    'created_at',
+  ],
+  versions: [
+    'id',
+    'project_id',
+    'version_number',
+    'title',
+    'release_notes',
+    'changelog_json',
+    'snapshot_json',
+    'created_by',
     'created_at',
   ],
 };
@@ -582,6 +594,18 @@ export interface FlowEdgesTable {
     string | null | undefined,
     string | null | undefined
   >;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface VersionsTable {
+  id: string;
+  project_id: string;
+  version_number: number;
+  title: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  release_notes: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  changelog_json: string;
+  snapshot_json: string;
+  created_by: string;
   created_at: ColumnType<string, string | undefined, string | undefined>;
 }
 

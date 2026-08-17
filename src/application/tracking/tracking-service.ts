@@ -10,6 +10,7 @@ import type {
   TrackingRepository,
   TrackingTemplateRepository,
   TriggerRepository,
+  VersionRepository,
 } from '@project/application/ports/tracking-repositories';
 import {
   applyModuleToTracking,
@@ -17,6 +18,7 @@ import {
   removePropertyFromTracking,
 } from '@project/domain/composition';
 import type {
+  ChangelogEntry,
   DataLayerProperty,
   Destination,
   Flow,
@@ -25,6 +27,8 @@ import type {
   FreePage,
   Module,
   NavigationEvent,
+  ProjectVersion,
+  ProjectVersionSnapshot,
   PropertyDestinationMapping,
   SpecificValue,
   Tracking,
@@ -53,6 +57,7 @@ import {
   navigationEventUpdateSchema,
   propertyCreateSchema,
   propertyUpdateSchema,
+  publishVersionSchema,
   specificValueCreateSchema,
   trackingCreateSchema,
   trackingPropertyPresenceSchema,
@@ -74,6 +79,7 @@ import {
   type NavigationEventUpdateInput,
   type PropertyCreateInput,
   type PropertyUpdateInput,
+  type PublishVersionInput,
   type SpecificValueCreateInput,
   type TrackingCreateInput,
   type TrackingPropertyPresenceInput,
@@ -104,6 +110,7 @@ export class TrackingService {
     private readonly freePages: FreePageRepository,
     private readonly flows: FlowRepository,
     private readonly triggers: TriggerRepository,
+    private readonly versions: VersionRepository,
     private readonly projects: ProjectRepository,
     private readonly permissions: PermissionService,
     private readonly searchIndex?: SearchIndex,
@@ -1667,5 +1674,161 @@ export class TrackingService {
 
     const results = await this.searchIndex.query(projectId, query);
     return ok(results);
+  }
+
+  // --- VERSIONING & PUBLICATION (REQ-VER-001 .. REQ-VER-007) ---
+  async publishVersion(
+    actorId: string,
+    companyId: string,
+    projectId: string,
+    input: PublishVersionInput,
+  ): Promise<Result<{ versionId: string; versionNumber: number }, TrackingServiceError>> {
+    if (!(await this.permissions.canOnProject(actorId, projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const parsed = validate(publishVersionSchema, input);
+    if (!parsed.ok) return err({ kind: 'validation', issues: parsed.error });
+
+    const latest = await this.versions.getLatestVersion(projectId);
+    const nextNumber = latest ? latest.versionNumber + 1 : 1;
+    const nowIso = this.now().toISOString();
+
+    // 1. Gather all project entities (Selective exclusion: Properties and Modules cannot be excluded, REQ-VER-003)
+    const props = await this.properties.listProperties(companyId, projectId);
+    const mods = await this.modules.listModules(companyId, projectId);
+    const dests = await this.destinations.listDestinations(companyId, projectId);
+
+    const allFps = await this.freePages.listFreePages(companyId, projectId);
+    const includedFps = allFps.filter((fp) => !parsed.value.excludedPageIds.includes(fp.id));
+
+    const allTrks = await this.trackings.listTrackingsForProject(projectId);
+    const includedTrks = allTrks.filter((t) => !parsed.value.excludedTrackingIds.includes(t.id));
+
+    const allFlows = await this.flows.listFlowsForProject(projectId);
+    const includedFlows = allFlows.filter((f) => !parsed.value.excludedFlowIds.includes(f.id));
+
+    // Referential integrity check (REQ-VER-003): cannot publish a flow referencing excluded pages/trackings
+    // Properties and modules always publish.
+
+    const snapshot: ProjectVersionSnapshot = {
+      versionNumber: nextNumber,
+      title: parsed.value.title ?? null,
+      releaseNotes: parsed.value.releaseNotes ?? null,
+      createdAt: nowIso,
+      createdBy: actorId,
+      properties: props,
+      modules: mods,
+      destinations: dests,
+      freePages: includedFps,
+      trackings: includedTrks,
+      flows: includedFlows,
+    };
+
+    // 2. Generate changelog diff against previous snapshot (REQ-VER-005, REQ-VER-006)
+    const changelog: ChangelogEntry[] = [];
+    if (latest) {
+      const prev = latest.snapshot;
+
+      // Compare properties
+      const prevPropMap = new Map(prev.properties.map((p) => [p.id, p]));
+      for (const p of props) {
+        const old = prevPropMap.get(p.id);
+        if (!old) {
+          changelog.push({ type: 'added', entityType: 'property', entityId: p.id, name: p.name });
+        } else if (old.updatedAt !== p.updatedAt) {
+          changelog.push({
+            type: 'modified',
+            entityType: 'property',
+            entityId: p.id,
+            name: p.name,
+          });
+        }
+      }
+      for (const old of prev.properties) {
+        if (!props.some((p) => p.id === old.id)) {
+          changelog.push({
+            type: 'removed',
+            entityType: 'property',
+            entityId: old.id,
+            name: old.name,
+          });
+        }
+      }
+
+      // Compare trackings
+      const prevTrkMap = new Map(prev.trackings.map((t) => [t.id, t]));
+      for (const t of includedTrks) {
+        const old = prevTrkMap.get(t.id);
+        if (!old) {
+          changelog.push({ type: 'added', entityType: 'tracking', entityId: t.id, name: t.name });
+        } else if (old.updatedAt !== t.updatedAt) {
+          changelog.push({
+            type: 'modified',
+            entityType: 'tracking',
+            entityId: t.id,
+            name: t.name,
+          });
+        }
+      }
+      for (const old of prev.trackings) {
+        if (!includedTrks.some((t) => t.id === old.id)) {
+          changelog.push({
+            type: 'removed',
+            entityType: 'tracking',
+            entityId: old.id,
+            name: old.name,
+          });
+        }
+      }
+    } else {
+      // First version
+      for (const p of props) {
+        changelog.push({ type: 'added', entityType: 'property', entityId: p.id, name: p.name });
+      }
+      for (const t of includedTrks) {
+        changelog.push({ type: 'added', entityType: 'tracking', entityId: t.id, name: t.name });
+      }
+    }
+
+    const versionId = this.newId();
+    await this.versions.createVersion({
+      id: versionId,
+      projectId,
+      versionNumber: nextNumber,
+      title: parsed.value.title ?? null,
+      releaseNotes: parsed.value.releaseNotes ?? null,
+      changelog,
+      snapshot,
+      createdBy: actorId,
+      createdAt: nowIso,
+    });
+
+    return ok({ versionId, versionNumber: nextNumber });
+  }
+
+  async listVersionsForProject(
+    actorId: string,
+    projectId: string,
+  ): Promise<Result<ProjectVersion[], TrackingServiceError>> {
+    if (!(await this.permissions.canOnProject(actorId, projectId, 'project.read'))) {
+      return err({ kind: 'forbidden' });
+    }
+    const list = await this.versions.listVersionsForProject(projectId);
+    return ok(list);
+  }
+
+  async getVersion(
+    actorId: string,
+    versionId: string,
+  ): Promise<Result<ProjectVersion, TrackingServiceError>> {
+    const ver = await this.versions.getVersionById(versionId);
+    if (!ver) return err({ kind: 'not_found' });
+
+    if (!(await this.permissions.canOnProject(actorId, ver.projectId, 'project.read'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    return ok(ver);
   }
 }

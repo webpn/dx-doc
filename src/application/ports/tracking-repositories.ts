@@ -7,6 +7,7 @@ import type {
   FreePage,
   Module,
   NavigationEvent,
+  ProjectVersion,
   PropertyDestinationMapping,
   SpecificValue,
   Tracking,
@@ -148,4 +149,15 @@ export interface TriggerRepository {
   updateTrigger(trigger: Trigger): Promise<void>;
   setTriggerTrackings(triggerId: string, trackingIds: string[], nowIso: string): Promise<void>;
   getTriggerTrackingIds(triggerId: string): Promise<string[]>;
+}
+
+export interface VersionRepository {
+  createVersion(version: ProjectVersion): Promise<void>;
+  getVersionById(id: string): Promise<ProjectVersion | null>;
+  getVersionByProjectAndNumber(
+    projectId: string,
+    versionNumber: number,
+  ): Promise<ProjectVersion | null>;
+  getLatestVersion(projectId: string): Promise<ProjectVersion | null>;
+  listVersionsForProject(projectId: string): Promise<ProjectVersion[]>;
 }

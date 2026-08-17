@@ -14,6 +14,7 @@ import type {
   NavigationEventUpdateInput,
   PropertyCreateInput,
   PropertyUpdateInput,
+  PublishVersionInput,
   SpecificValueCreateInput,
   TrackingCreateInput,
   TrackingPropertyPresenceInput,
@@ -639,6 +640,45 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     const q = query.q ?? '';
 
     const result = await trackingService.searchProject(userId, projectId, q);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return result.value;
+  });
+
+  // ── VERSIONING & PUBLICATION (REQ-VER-001 .. REQ-VER-007) ──
+  app.post('/api/companies/:companyId/projects/:projectId/versions', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { companyId, projectId } = request.params as {
+      companyId: string;
+      projectId: string;
+    };
+    const result = await trackingService.publishVersion(
+      userId,
+      companyId,
+      projectId,
+      request.body as PublishVersionInput,
+    );
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return reply.code(201).send(result.value);
+  });
+
+  app.get('/api/projects/:projectId/versions', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { projectId } = request.params as { projectId: string };
+    const result = await trackingService.listVersionsForProject(userId, projectId);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return result.value;
+  });
+
+  app.get('/api/versions/:id', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { id } = request.params as { id: string };
+    const result = await trackingService.getVersion(userId, id);
     if (!result.ok) return replyServiceError(reply, result.error);
     return result.value;
   });

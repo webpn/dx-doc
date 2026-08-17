@@ -98,6 +98,7 @@ export {
   flowNodeSchema,
   flowEdgeSchema,
   flowGraphSchema,
+  publishVersionSchema,
   PROPERTY_DATA_SOURCES,
   PROPERTY_DATA_TYPES,
   PROPERTY_STATUSES,
@@ -140,5 +141,7 @@ export type {
   FlowNodeInput,
   FlowEdgeInput,
   FlowGraphInput,
+  PublishVersionInput,
+  PublishVersionOutput,
 } from './validation/schemas';
 export type { ValidationIssue } from './validation/issues';

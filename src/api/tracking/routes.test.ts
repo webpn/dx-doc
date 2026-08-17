@@ -25,6 +25,7 @@ import {
   SqliteTrackingRepository,
   SqliteTrackingTemplateRepository,
   SqliteTriggerRepository,
+  SqliteVersionRepository,
 } from '@project/infrastructure/persistence/sqlite-tracking-repositories';
 import { InMemorySearchIndex } from '@project/infrastructure/search/in-memory-search';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
@@ -144,6 +145,7 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     const freePageRepo = new SqliteFreePageRepository(connection.kysely);
     const flowRepo = new SqliteFlowRepository(connection.kysely);
     const triggerRepo = new SqliteTriggerRepository(connection.kysely);
+    const versionRepo = new SqliteVersionRepository(connection.kysely);
 
     const searchIndex = new InMemorySearchIndex();
 
@@ -157,6 +159,7 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
       freePageRepo,
       flowRepo,
       triggerRepo,
+      versionRepo,
       projectRepo,
       permissions,
       searchIndex,

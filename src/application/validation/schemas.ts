@@ -272,3 +272,13 @@ export const flowGraphSchema = z.object({
   edges: z.array(flowEdgeSchema),
 });
 export type FlowGraphInput = z.infer<typeof flowGraphSchema>;
+
+export const publishVersionSchema = z.object({
+  title: z.string().max(200).optional(),
+  releaseNotes: z.string().max(10000).optional(),
+  excludedTrackingIds: z.array(z.string()).optional().default([]),
+  excludedPageIds: z.array(z.string()).optional().default([]),
+  excludedFlowIds: z.array(z.string()).optional().default([]),
+});
+export type PublishVersionInput = z.input<typeof publishVersionSchema>;
+export type PublishVersionOutput = z.output<typeof publishVersionSchema>;

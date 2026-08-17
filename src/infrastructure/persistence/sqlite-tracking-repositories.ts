@@ -8,8 +8,10 @@ import type {
   TrackingRepository,
   TrackingTemplateRepository,
   TriggerRepository,
+  VersionRepository,
 } from '@project/application/ports/tracking-repositories';
 import type {
+  ChangelogEntry,
   DataLayerProperty,
   Destination,
   Flow,
@@ -18,6 +20,8 @@ import type {
   FreePage,
   Module,
   NavigationEvent,
+  ProjectVersion,
+  ProjectVersionSnapshot,
   PropertyDataSource,
   PropertyDataType,
   PropertyDestinationMapping,
@@ -1342,5 +1346,92 @@ export class SqliteTriggerRepository implements TriggerRepository {
       .where('trigger_id', '=', triggerId)
       .execute();
     return rows.map((r) => r.tracking_id);
+  }
+}
+
+export class SqliteVersionRepository implements VersionRepository {
+  constructor(private readonly db: Db) {}
+
+  async createVersion(version: ProjectVersion): Promise<void> {
+    await this.db
+      .insertInto('versions')
+      .values({
+        id: version.id,
+        project_id: version.projectId,
+        version_number: version.versionNumber,
+        title: version.title,
+        release_notes: version.releaseNotes,
+        changelog_json: JSON.stringify(version.changelog),
+        snapshot_json: JSON.stringify(version.snapshot),
+        created_by: version.createdBy,
+        created_at: version.createdAt,
+      })
+      .execute();
+  }
+
+  async getVersionById(id: string): Promise<ProjectVersion | null> {
+    const row = await this.db
+      .selectFrom('versions')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+    return row ? this.toEntity(row) : null;
+  }
+
+  async getVersionByProjectAndNumber(
+    projectId: string,
+    versionNumber: number,
+  ): Promise<ProjectVersion | null> {
+    const row = await this.db
+      .selectFrom('versions')
+      .selectAll()
+      .where('project_id', '=', projectId)
+      .where('version_number', '=', versionNumber)
+      .executeTakeFirst();
+    return row ? this.toEntity(row) : null;
+  }
+
+  async getLatestVersion(projectId: string): Promise<ProjectVersion | null> {
+    const row = await this.db
+      .selectFrom('versions')
+      .selectAll()
+      .where('project_id', '=', projectId)
+      .orderBy('version_number', 'desc')
+      .executeTakeFirst();
+    return row ? this.toEntity(row) : null;
+  }
+
+  async listVersionsForProject(projectId: string): Promise<ProjectVersion[]> {
+    const rows = await this.db
+      .selectFrom('versions')
+      .selectAll()
+      .where('project_id', '=', projectId)
+      .orderBy('version_number', 'desc')
+      .execute();
+    return rows.map((r) => this.toEntity(r));
+  }
+
+  private toEntity(row: {
+    id: string;
+    project_id: string;
+    version_number: number;
+    title: string | null;
+    release_notes: string | null;
+    changelog_json: string;
+    snapshot_json: string;
+    created_by: string;
+    created_at: string;
+  }): ProjectVersion {
+    return {
+      id: row.id,
+      projectId: row.project_id,
+      versionNumber: row.version_number,
+      title: row.title,
+      releaseNotes: row.release_notes,
+      changelog: JSON.parse(row.changelog_json) as ChangelogEntry[],
+      snapshot: JSON.parse(row.snapshot_json) as ProjectVersionSnapshot,
+      createdBy: row.created_by,
+      createdAt: row.created_at,
+    };
   }
 }
