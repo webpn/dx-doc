@@ -17,3 +17,7 @@ export { createS3ObjectStorage, S3ObjectStorage } from './storage/s3-storage';
 
 export { InMemorySearchIndex } from './search/in-memory-search';
 export { PagefindSearchIndex, PagefindQueryUnsupportedError } from './search/pagefind-search';
+
+export { BcryptPasswordHasher } from './security/bcrypt-password-hasher';
+
+export { SqliteAccountRepository } from './persistence/sqlite-account-repository';
