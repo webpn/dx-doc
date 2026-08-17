@@ -57,6 +57,14 @@ export function replyServiceError(reply: FastifyReply, error: ServiceErrorShape)
       return reply.code(409).send({
         error: { code: 'DUPLICATE_CUSTOM_ID', message: 'custom_id is already in use' },
       });
+    case 'stale_write':
+      return reply.code(409).send({
+        error: {
+          code: 'STALE_WRITE',
+          message: 'Conflict: record has been modified by another edit (REQ-AUTH-005, ADR-0016)',
+          currentUpdatedAt: (error as { currentUpdatedAt?: string }).currentUpdatedAt,
+        },
+      });
     case 'cross_project_parent':
     case 'cross_project_reference':
       return reply.code(400).send({

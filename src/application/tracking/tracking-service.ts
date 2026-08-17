@@ -72,7 +72,8 @@ export type TrackingServiceError =
   | { kind: 'not_found' }
   | { kind: 'validation'; issues: ValidationIssue[] }
   | { kind: 'hierarchy_cycle' }
-  | { kind: 'cross_project_reference' };
+  | { kind: 'cross_project_reference' }
+  | { kind: 'stale_write'; currentUpdatedAt: string };
 
 export class TrackingService {
   constructor(
@@ -941,6 +942,17 @@ export class TrackingService {
       return err({ kind: 'validation', issues: parsed.error });
     }
 
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
+    if (
+      parsed.value.expectedUpdatedAt !== undefined &&
+      parsed.value.expectedUpdatedAt !== tracking.updatedAt
+    ) {
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: tracking.updatedAt,
+      });
+    }
+
     const nowIso = this.now().toISOString();
     await this.trackings.updateTracking({
       ...tracking,
@@ -956,6 +968,84 @@ export class TrackingService {
     });
 
     return ok({ ok: true });
+  }
+
+  // --- TRACKING DUPLICATION (REQ-AUTH-006) ---
+  async duplicateTracking(
+    actorId: string,
+    trackingId: string,
+    nameOverride?: string,
+  ): Promise<Result<{ duplicatedTrackingId: string }, TrackingServiceError>> {
+    const source = await this.trackings.getTrackingById(trackingId);
+    if (!source) return err({ kind: 'not_found' });
+
+    if (!(await this.permissions.canOnProject(actorId, source.projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const newTrkId = this.newId();
+    const nowIso = this.now().toISOString();
+    const newName = nameOverride ?? `${source.name} (Copy)`;
+    const newSlug = `${source.slug}-copy-${this.newId().slice(0, 8)}`;
+
+    // 1. Create duplicate tracking entity (custom_id is reset to blank per REQ-IMP-003, REQ-AUTH-006)
+    await this.trackings.createTracking({
+      id: newTrkId,
+      projectId: source.projectId,
+      pageId: source.pageId,
+      navigationEventId: source.navigationEventId,
+      name: newName,
+      slug: newSlug,
+      description: source.description,
+      customId: null,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    });
+
+    // 2. Duplicate applied modules
+    const modIds = await this.trackings.getTrackingModuleIds(trackingId);
+    if (modIds.length > 0) {
+      await this.trackings.setTrackingModules(newTrkId, modIds, nowIso);
+    }
+
+    // 3. Duplicate tracking properties and their specific values
+    const sourceTps = await this.trackings.getTrackingProperties(trackingId);
+    const newTps: TrackingProperty[] = [];
+    const newSvs: SpecificValue[] = [];
+
+    for (const stp of sourceTps) {
+      const newTpId = this.newId();
+      newTps.push({
+        id: newTpId,
+        trackingId: newTrkId,
+        propertyId: stp.propertyId,
+        source: stp.source,
+        presence: stp.presence,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      });
+
+      const svs = await this.trackings.getSpecificValuesForTrackingProperty(stp.id);
+      for (const sv of svs) {
+        newSvs.push({
+          id: this.newId(),
+          trackingPropertyId: newTpId,
+          value: sv.value,
+          description: sv.description,
+          createdAt: nowIso,
+          updatedAt: nowIso,
+        });
+      }
+    }
+
+    if (newTps.length > 0) {
+      await this.trackings.setTrackingProperties(newTps);
+    }
+    if (newSvs.length > 0) {
+      await this.trackings.setSpecificValues(newSvs);
+    }
+
+    return ok({ duplicatedTrackingId: newTrkId });
   }
 
   async updateTrackingPropertyPresence(

@@ -18,4 +18,7 @@ export { registerMcpRoutes } from './mcp/routes';
 export type { McpRoutesOptions } from './mcp/routes';
 export { McpServerHandler, MCP_TOOLS } from './mcp/server';
 
+export { registerAllRoutes } from './routes';
+export type { ApiRoutesOptions } from './routes';
+
 export { authenticateRequest, replyServiceError, unauthenticated } from './helpers';

@@ -394,6 +394,17 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     return { ok: true };
   });
 
+  app.post('/api/trackings/:id/duplicate', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { id } = request.params as { id: string };
+    const body = (request.body ?? {}) as { nameOverride?: string };
+    const result = await trackingService.duplicateTracking(userId, id, body.nameOverride);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return reply.code(201).send({ id: result.value.duplicatedTrackingId });
+  });
+
   app.post('/api/trackings/:id/modules', async (request, reply) => {
     const userId = await authenticateRequest(request, sessions, cookieName);
     if (!userId) return unauthenticated(reply);

@@ -200,7 +200,9 @@ export const trackingCreateSchema = z.object({
 });
 export type TrackingCreateInput = z.infer<typeof trackingCreateSchema>;
 
-export const trackingUpdateSchema = trackingCreateSchema.partial();
+export const trackingUpdateSchema = trackingCreateSchema.partial().extend({
+  expectedUpdatedAt: z.string().optional(),
+});
 export type TrackingUpdateInput = z.infer<typeof trackingUpdateSchema>;
 
 export const trackingPropertyPresenceSchema = z.object({
