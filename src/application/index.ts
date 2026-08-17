@@ -45,6 +45,15 @@ export type {
 
 export type { CompanyRecord, CompanyRepository } from './ports/company-repository';
 
+export type { ProjectRecord, ProjectRepository } from './ports/project-repository';
+export type { PageRecord, PageRepository } from './ports/page-repository';
+
+export { ProjectService } from './project/project-service';
+export type { ProjectServiceError, ProjectServiceRecord } from './project/project-service';
+
+export { PageService } from './page/page-service';
+export type { PageServiceError } from './page/page-service';
+
 export type { EmailMessage, EmailSender } from './ports/email-sender';
 
 export { validate } from './validation/validate';

@@ -24,12 +24,14 @@ export type ProjectAction =
   | 'project.export'
   | 'project.edit'
   | 'project.publish'
+  | 'project.manage'
   | 'project.manage_access'
   | 'project.manage_integrations'
   | 'project.archive';
 
 export type CompanyAction =
   | 'company.manage_catalogue'
+  | 'company.manage_projects'
   | 'company.read_audit_log'
   | 'company.invite_user'
   | 'company.deactivate_user';
@@ -42,6 +44,7 @@ export const PROJECT_ACTION_ROLES: Readonly<Record<ProjectAction, readonly Compa
   'project.export': ['admin', 'project_manager', 'editor', 'viewer'],
   'project.edit': ['admin', 'editor'],
   'project.publish': ['admin', 'editor'],
+  'project.manage': ['admin'],
   'project.manage_access': ['admin', 'project_manager'],
   'project.manage_integrations': ['admin'],
   'project.archive': ['admin'],
@@ -51,6 +54,8 @@ export const PROJECT_ACTION_ROLES: Readonly<Record<ProjectAction, readonly Compa
 export const COMPANY_ACTION_ROLES: Readonly<Record<CompanyAction, readonly CompanyRoleName[]>> = {
   'company.manage_catalogue': ['admin'],
   'company.read_audit_log': ['admin'],
+  // REQ-SEC-002: an Admin creates and configures projects within their company.
+  'company.manage_projects': ['admin'],
   // REQ-SEC-013: invitation is issued by an Admin, Project Manager or Editor.
   'company.invite_user': ['admin', 'project_manager', 'editor'],
   // Deactivation is stronger than invitation and undoes access; fail-closed to Admin.
