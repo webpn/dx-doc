@@ -88,13 +88,14 @@ The requirement files are the live status record. [scope.md](../scope.md) stays 
 
 | Decision                                      | Blocks                    | Last responsible moment |
 | --------------------------------------------- | ------------------------- | ----------------------- |
-| O8 — developer-handoff reference patterns     | REQ-DEV-002               | End of R1               |
 | O3 — structured analytics-reading guidance    | REQ-DOM-014, REQ-VIEW-002 | Start of R2             |
 | O1 — semantic layer ontology and IRIs         | REQ-DQ-004, REQ-DQ-005    | End of R2               |
 | O2 — business glossary                        | REQ-DQ-006                | End of R2               |
 | O9 — container entity attributes              | REQ-DOM-025               | Start of R3             |
 | O4 — conformance vs unstructured placeholders | REQ-DQ-003                | Start of R4             |
 | O5 — verification module scope                | REQ-DQ-001                | Start of R4             |
+
+**O8 is closed** on 2026-08-17 — developer-handoff code snippets follow a hybrid model configured per project by selecting platform and tag-manager targets, implemented via hard-coded application templates in code. [REQ-DEV-002](REQ-DEV.md#req-dev-002--code-snippet-generation-per-platform--tag-manager) is unblocked.
 
 **O13 is closed** on 2026-08-13 — the bulk-operation list was confirmed and recorded in [REQ-AUTH-010](REQ-AUTH.md#req-auth-010--bulk-operations-on-a-multi-selection-with-preview). [REQ-AUTH-010](REQ-AUTH.md#req-auth-010--bulk-operations-on-a-multi-selection-with-preview) and [REQ-API-008](REQ-API.md#req-api-008--bulk-operations-restricted-to-explicit-identifier-lists) are unblocked.
 

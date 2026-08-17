@@ -7,7 +7,7 @@ Entry format and status legend: [requirements index](README.md). These requireme
 | ID          | Requirement                                         | MoSCoW | Rel. | Milestone | Status      |
 | ----------- | --------------------------------------------------- | ------ | ---- | --------- | ----------- |
 | REQ-DEV-001 | Figma frame links stored as file_id + node_id       | Should | R2   | M2.7      | Not Started |
-| REQ-DEV-002 | Code snippet generation per platform × tag manager  | Should | R3   | M3.1      | Blocked     |
+| REQ-DEV-002 | Code snippet generation per platform × tag manager  | Should | R3   | M3.1      | Not Started |
 | REQ-DEV-003 | Snippets in every development-facing artefact       | Should | R3   | M3.1      | Not Started |
 | REQ-DEV-004 | Changed-tracking snippets in the developer PDF      | Should | R3   | M3.1      | Not Started |
 | REQ-DEV-005 | Snippets narrowed by structured property conditions | Should | R3   | M3.1      | Not Started |
@@ -30,9 +30,9 @@ Figma links at page and tracking level, stored as `figma_file_id` + `figma_node_
 
 For every tracking, a ready-to-use snippet containing all its properties. Output is determined by the project's platform (Web / iOS / Android / Flutter / React) and tag-manager configuration.
 
-Snippets are **hard-coded per combination in the application source**, not user-configurable — changing a snippet template means a pull request to the Platform. They are **generated on the fly** and are not versioned, not diffed, and not included in the changelog. Placeholders are preserved verbatim (`article_detail_[slug]`) with explanatory comments.
+Snippets are **hard-coded per platform × tag manager combination in the application source** (hybrid model configured at the project level, selecting from built-in templates such as Web + GTM `window.dataLayer.push`, Web + Adobe Client Data Layer, iOS + Firebase `Analytics.logEvent`, Android, etc.), not user-configurable — changing or adding a snippet template means a pull request to the Platform. They are **generated on the fly** and are not versioned, not diffed, and not included in the changelog. Placeholders are preserved verbatim (`article_detail_[slug]`) with explanatory comments.
 
-**Blocked by:** open decision O8 — developer-handoff reference patterns: which snippet conventions to bake in per platform × tag manager, informed by reference products. Unblocked once that design question is settled.
+**Resolved:** Open decision O8 closed on 2026-08-17. The snippet convention uses a hybrid model configured per project by platform and tag-manager selection, using hard-coded application templates for supported pairs. [REQ-DEV-002] is unblocked.
 
 ### REQ-DEV-003 — Snippets in every development-facing artefact
 
