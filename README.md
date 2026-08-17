@@ -117,20 +117,20 @@ Instance-level configuration only — infrastructure and operator secrets. Per-c
 | `AUDIT_RETENTION_MONTHS`                                                                                          | No                                     | `24`                    | Audit log retention                                                                             |
 | `AUTH_SESSION_TTL`                                                                                                | No                                     | `8h`                    | Session expiry                                                                                  |
 | `LOG_LEVEL`                                                                                                       | No                                     | `info`                  | Structured log verbosity                                                                        |
-| `AUTO_MIGRATE`                                                                                                    | No                                     | `true`                  | Run pending migrations automatically at start-up                                                |
 
 ## Development Commands
 
-| Command                | Purpose                          |
-| ---------------------- | -------------------------------- |
-| `npm run dev`          | Start development server         |
-| `npm run build`        | Production build                 |
-| `npm run typecheck`    | TypeScript type checking         |
-| `npm run lint`         | ESLint static analysis           |
-| `npm run format`       | Prettier formatting              |
-| `npm run format:check` | Check formatting without writing |
-| `npm test`             | Unit and component tests         |
-| `npm run test:e2e`     | End-to-end tests                 |
+| Command                | Purpose                                                    |
+| ---------------------- | ---------------------------------------------------------- |
+| `npm run dev`          | Start development server                                   |
+| `npm run build`        | Production build                                           |
+| `npm run typecheck`    | TypeScript type checking                                   |
+| `npm run lint`         | ESLint static analysis                                     |
+| `npm run format`       | Prettier formatting                                        |
+| `npm run format:check` | Check formatting without writing                           |
+| `npm test`             | Unit and component tests                                   |
+| `npm run test:e2e`     | End-to-end tests                                           |
+| `npm run db:migrate`   | Apply pending schema migrations (dbmate; run before `dev`) |
 
 ## Architecture Overview
 
