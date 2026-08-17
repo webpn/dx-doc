@@ -2,15 +2,7 @@
  * Kysely `Database` type — the type-level description of the dx-doc schema.
  *
  * ADR-0024: this interface is the type-level source of truth that the
- * repositories query against. It is hand-maintained in R1 (the schema is
- * small: 9 tables, all created in the current pre-R1 effort). A vitest
- * (`db-schema.test.ts`) reads the live SQLite schema and asserts every
- * table and column named here actually exists, so a drift between this
- * file and the migrations fails the build.
- *
- * Codegen of this interface (e.g. via `kysely-codegen`) is **deferred to
- * R2** when a second adapter exists and the manual interface becomes the
- * actual maintenance burden. See ADR-0024 §Consequences.
+ * repositories query against.
  *
  * Conventions:
  * - Every column name uses camelCase at the TypeScript level. The
@@ -27,28 +19,18 @@
  *   boolean type; Kysely's `BooleanColumnType` maps to INTEGER 0/1
  *   transparently for SQLite, and to native BOOLEAN for MariaDB and
  *   PostgreSQL when those adapters ship (R2).
- * - Nullable columns are typed `string | null` (etc.). `string | null`
- *   for nullable text, `string | null` for nullable timestamp, etc.
- *   We do not use `string | undefined` — this is a database column,
- *   not an optional TypeScript property.
- *
- * The order of tables mirrors the order in which the migrations create
- * them. The order is not semantically meaningful; the alphabetical
- * ordering of column names within each table is enforced by the
- * formatter.
+ * - Nullable columns are typed `string | null` (etc.).
  */
 import type { ColumnType, Generated } from 'kysely';
 
+export type Presence = 'always' | 'sometimes' | 'never';
+export type PropertySource = 'direct' | 'module';
+export type PropertyDataSource = 'development' | 'tag_manager' | 'other';
+export type PropertyStatus = 'active' | 'deprecated';
+export type PropertyDataType = 'string' | 'number' | 'boolean' | 'array' | 'object';
+
 /**
- * The full set of tables dx-doc persists. Adding a new table requires:
- *  1. a new migration in `db/migrations/` (Kysely schema API, R1 onward)
- *  2. an entry in this interface
- *  3. a repository that uses the new table (or an extension to an
- *     existing one) under `src/infrastructure/persistence/`
- *
- * The drift-guard test (`db-schema.test.ts`) verifies (1) and (2) match.
- * TypeScript verifies (2) and (3) match (the repository cannot reference
- * a table that is not in this interface).
+ * The full set of tables dx-doc persists.
  */
 export interface Database {
   company: CompanyTable;
@@ -60,6 +42,18 @@ export interface Database {
   pages: PagesTable;
   sessions: SessionsTable;
   password_reset_tokens: PasswordResetTokensTable;
+  navigation_events: NavigationEventsTable;
+  properties: PropertiesTable;
+  modules: ModulesTable;
+  module_properties: ModulePropertiesTable;
+  destinations: DestinationsTable;
+  property_destinations: PropertyDestinationsTable;
+  tracking_templates: TrackingTemplatesTable;
+  free_pages: FreePagesTable;
+  trackings: TrackingsTable;
+  tracking_modules: TrackingModulesTable;
+  tracking_properties: TrackingPropertiesTable;
+  specific_values: SpecificValuesTable;
 }
 
 /**
@@ -107,16 +101,127 @@ export const SCHEMA_DEFINITIONS: DatabaseSchemaDefinition = {
   pages: ['id', 'project_id', 'parent_id', 'name', 'slug', 'custom_id', 'created_at', 'updated_at'],
   sessions: ['id', 'user_id', 'token_hash', 'expires_at', 'created_at'],
   password_reset_tokens: ['id', 'user_id', 'token_hash', 'expires_at', 'used_at', 'created_at'],
+  navigation_events: [
+    'id',
+    'project_id',
+    'name',
+    'description',
+    'active',
+    'created_at',
+    'updated_at',
+  ],
+  properties: [
+    'id',
+    'company_id',
+    'project_id',
+    'name',
+    'business_label',
+    'description',
+    'data_source',
+    'type',
+    'format_pattern',
+    'allowed_values',
+    'example_values',
+    'pii_flag',
+    'hashing_policy',
+    'status',
+    'introduced_in_version',
+    'analysis_notes',
+    'aep_field_group',
+    'parent_property_id',
+    'derived_from',
+    'custom_id',
+    'created_at',
+    'updated_at',
+  ],
+  modules: [
+    'id',
+    'company_id',
+    'project_id',
+    'name',
+    'description',
+    'custom_id',
+    'created_at',
+    'updated_at',
+  ],
+  module_properties: ['module_id', 'property_id', 'created_at'],
+  destinations: [
+    'id',
+    'company_id',
+    'project_id',
+    'platform',
+    'variable_type',
+    'identifier',
+    'name',
+    'reconciliation_identifier',
+    'notes',
+    'platform_attributes',
+    'custom_id',
+    'created_at',
+    'updated_at',
+  ],
+  property_destinations: [
+    'property_id',
+    'destination_id',
+    'destination_name_override',
+    'created_at',
+  ],
+  tracking_templates: [
+    'id',
+    'company_id',
+    'project_id',
+    'name',
+    'description',
+    'navigation_event_id',
+    'config_json',
+    'custom_id',
+    'created_at',
+    'updated_at',
+  ],
+  free_pages: [
+    'id',
+    'company_id',
+    'project_id',
+    'title',
+    'slug',
+    'content',
+    'publishable',
+    'custom_id',
+    'created_at',
+    'updated_at',
+  ],
+  trackings: [
+    'id',
+    'project_id',
+    'page_id',
+    'navigation_event_id',
+    'name',
+    'slug',
+    'description',
+    'custom_id',
+    'created_at',
+    'updated_at',
+  ],
+  tracking_modules: ['tracking_id', 'module_id', 'created_at'],
+  tracking_properties: [
+    'id',
+    'tracking_id',
+    'property_id',
+    'source',
+    'presence',
+    'created_at',
+    'updated_at',
+  ],
+  specific_values: [
+    'id',
+    'tracking_property_id',
+    'value',
+    'description',
+    'created_at',
+    'updated_at',
+  ],
 };
 
-/**
- * `company` — the tenant boundary (REQ-FDN-002).
- *
- * One row per organisation. The slug is unique across the platform.
- * The instance administrator (REQ-SEC-014) is a `users` row with
- * `companyId = NULL`; a company-less user is not a member of any
- * tenant.
- */
 export interface CompanyTable {
   id: string;
   name: string;
@@ -125,14 +230,6 @@ export interface CompanyTable {
   updated_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
-/**
- * `roles` — the four company-scoped roles (REQ-SEC-002).
- *
- * One row per (company, role-name) pair. The CHECK constraint on
- * `name` is enforced at the database level; the application
- * (`isCompanyRoleName` in `src/application/auth/roles.ts`) also
- * narrows the union before sending writes.
- */
 export interface RolesTable {
   id: string;
   company_id: string;
@@ -141,21 +238,6 @@ export interface RolesTable {
   updated_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
-/**
- * `users` — every login identity on the platform.
- *
- * A user belongs to at most one company. An instance administrator
- * has `company_id = NULL` (the migration that introduced this is
- * `004_nullable_company.sql`, carried over verbatim into the
- * Kysely migration in commit 10). `role_id` is the user's company
- * role and is nullable: an invited or first SSO user has no role
- * until one is assigned deliberately. `password_hash` is nullable
- * for accounts that authenticate only via SSO (M2.8).
- * `instance_admin` is the discrete capability flag (REQ-SEC-014);
- * `active` is the deactivation flag (REQ-SEC-013);
- * `password_must_change` flags accounts that must rotate on next
- * login (REQ-SEC-013).
- */
 export interface UsersTable {
   id: string;
   company_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
@@ -178,15 +260,6 @@ export interface UsersTable {
   updated_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
-/**
- * `projects` — one product on one platform; the unit of access
- * control, versioning and publication (REQ-FDN-003).
- *
- * `platform` is one of the five REQ-FDN-003 values (CHECK
- * constraint); `lifecycle_state` is `active` | `archived`
- * (CHECK constraint); `custom_id` is a single nullable
- * varchar unique within the company (D30, REQ-IMP-003).
- */
 export interface ProjectsTable {
   id: string;
   company_id: string;
@@ -194,9 +267,13 @@ export interface ProjectsTable {
   slug: string;
   description: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   icon: ColumnType<string | null, string | null | undefined, string | null | undefined>;
-  platform: string;
+  platform: 'web' | 'ios' | 'android' | 'flutter' | 'react';
   tag_manager: ColumnType<string | null, string | null | undefined, string | null | undefined>;
-  lifecycle_state: ColumnType<string, string | undefined, string | undefined>;
+  lifecycle_state: ColumnType<
+    'active' | 'archived',
+    'active' | 'archived' | undefined,
+    'active' | 'archived' | undefined
+  >;
   integration_settings: ColumnType<
     string | null,
     string | null | undefined,
@@ -207,26 +284,11 @@ export interface ProjectsTable {
   updated_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
-/**
- * `project_grouping_labels` — flat many-to-many between projects
- * and free-form labels (REQ-FDN-003).
- *
- * Composite primary key on (project_id, label). Affects listing
- * and filtering only; never access control. A join value, not a
- * domain entity, so it carries no id and no timestamps.
- */
 export interface ProjectGroupingLabelsTable {
   project_id: string;
   label: string;
 }
 
-/**
- * `project_grants` — a user's role within one project
- * (REQ-SEC-003).
- *
- * One grant per (project, user); the grant's role is one of the
- * four. Uniqueness is enforced at the database level.
- */
 export interface ProjectGrantsTable {
   id: string;
   project_id: string;
@@ -236,14 +298,6 @@ export interface ProjectGrantsTable {
   updated_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
-/**
- * `pages` — the page/screen hierarchy within a project
- * (REQ-NAV-001).
- *
- * `parent_id` builds the in-project hierarchy; `custom_id` is
- * the single nullable varchar unique within the project.
- * Composition rules arrive with M1.1.
- */
 export interface PagesTable {
   id: string;
   project_id: string;
@@ -255,12 +309,6 @@ export interface PagesTable {
   updated_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
-/**
- * `sessions` — server-side, database-backed sessions (D18).
- *
- * The raw cookie value is never stored; only its SHA-256 hash.
- * Sessions expire per `AUTH_SESSION_TTL`.
- */
 export interface SessionsTable {
   id: string;
   user_id: string;
@@ -269,14 +317,6 @@ export interface SessionsTable {
   created_at: string;
 }
 
-/**
- * `password_reset_tokens` — single-use, expiring reset tokens
- * (REQ-SEC-013).
- *
- * Only the SHA-256 hash is stored; an expired or consumed token
- * cannot be replayed. `used_at` is null until the token is
- * consumed.
- */
 export interface PasswordResetTokensTable {
   id: string;
   user_id: string;
@@ -286,8 +326,167 @@ export interface PasswordResetTokensTable {
   created_at: string;
 }
 
-// `Generated<>` is part of the Kysely surface and is referenced in the
-// `ColumnType` generic above; we re-export it here so the import is
-// visible to readers scanning the file. The export is intentional and
-// internal to the persistence layer.
+export interface NavigationEventsTable {
+  id: string;
+  project_id: string;
+  name: string;
+  description: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  active: ColumnType<boolean, boolean | undefined, boolean | undefined>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface PropertiesTable {
+  id: string;
+  company_id: string;
+  project_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  name: string;
+  business_label: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  description: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  data_source: PropertyDataSource;
+  type: PropertyDataType;
+  format_pattern: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  allowed_values: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  example_values: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  pii_flag: ColumnType<boolean, boolean | undefined, boolean | undefined>;
+  hashing_policy: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  status: PropertyStatus;
+  introduced_in_version: ColumnType<
+    string | null,
+    string | null | undefined,
+    string | null | undefined
+  >;
+  analysis_notes: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  aep_field_group: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  parent_property_id: ColumnType<
+    string | null,
+    string | null | undefined,
+    string | null | undefined
+  >;
+  derived_from: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  custom_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface ModulesTable {
+  id: string;
+  company_id: string;
+  project_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  name: string;
+  description: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  custom_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface ModulePropertiesTable {
+  module_id: string;
+  property_id: string;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface DestinationsTable {
+  id: string;
+  company_id: string;
+  project_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  platform: string;
+  variable_type: string;
+  identifier: string;
+  name: string;
+  reconciliation_identifier: ColumnType<
+    string | null,
+    string | null | undefined,
+    string | null | undefined
+  >;
+  notes: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  platform_attributes: ColumnType<
+    string | null,
+    string | null | undefined,
+    string | null | undefined
+  >;
+  custom_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface PropertyDestinationsTable {
+  property_id: string;
+  destination_id: string;
+  destination_name_override: ColumnType<
+    string | null,
+    string | null | undefined,
+    string | null | undefined
+  >;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface TrackingTemplatesTable {
+  id: string;
+  company_id: string;
+  project_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  name: string;
+  description: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  navigation_event_id: ColumnType<
+    string | null,
+    string | null | undefined,
+    string | null | undefined
+  >;
+  config_json: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  custom_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface FreePagesTable {
+  id: string;
+  company_id: string;
+  project_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  title: string;
+  slug: string;
+  content: string;
+  publishable: ColumnType<boolean, boolean | undefined, boolean | undefined>;
+  custom_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface TrackingsTable {
+  id: string;
+  project_id: string;
+  page_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  navigation_event_id: string;
+  name: string;
+  slug: string;
+  description: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  custom_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface TrackingModulesTable {
+  tracking_id: string;
+  module_id: string;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface TrackingPropertiesTable {
+  id: string;
+  tracking_id: string;
+  property_id: string;
+  source: PropertySource;
+  presence: Presence;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface SpecificValuesTable {
+  id: string;
+  tracking_property_id: string;
+  value: string;
+  description: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
 export type { Generated };
