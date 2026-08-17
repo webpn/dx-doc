@@ -121,8 +121,8 @@ export interface CompanyTable {
   id: string;
   name: string;
   slug: string;
-  created_at: ColumnType<string, string | undefined, never>;
-  updated_at: ColumnType<string, string | undefined, never>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
 /**
@@ -137,8 +137,8 @@ export interface RolesTable {
   id: string;
   company_id: string;
   name: string;
-  created_at: ColumnType<string, string | undefined, never>;
-  updated_at: ColumnType<string, string | undefined, never>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
 /**
@@ -158,16 +158,24 @@ export interface RolesTable {
  */
 export interface UsersTable {
   id: string;
-  company_id: string | null;
-  role_id: string | null;
+  company_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  role_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   email: string;
-  password_hash: string | null;
-  name: string | null;
-  instance_admin: ColumnType<boolean, boolean | undefined, never>;
-  active: ColumnType<boolean, boolean | undefined, never>;
-  password_must_change: ColumnType<boolean, boolean | undefined, never>;
-  created_at: ColumnType<string, string | undefined, never>;
-  updated_at: ColumnType<string, string | undefined, never>;
+  password_hash: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  name: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  instance_admin: ColumnType<
+    number | boolean,
+    number | boolean | undefined,
+    number | boolean | undefined
+  >;
+  active: ColumnType<number | boolean, number | boolean | undefined, number | boolean | undefined>;
+  password_must_change: ColumnType<
+    number | boolean,
+    number | boolean | undefined,
+    number | boolean | undefined
+  >;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
 /**
@@ -184,15 +192,19 @@ export interface ProjectsTable {
   company_id: string;
   name: string;
   slug: string;
-  description: string | null;
-  icon: string | null;
+  description: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  icon: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   platform: string;
-  tag_manager: string | null;
-  lifecycle_state: string;
-  integration_settings: string | null;
-  custom_id: string | null;
-  created_at: ColumnType<string, string | undefined, never>;
-  updated_at: ColumnType<string, string | undefined, never>;
+  tag_manager: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  lifecycle_state: ColumnType<string, string | undefined, string | undefined>;
+  integration_settings: ColumnType<
+    string | null,
+    string | null | undefined,
+    string | null | undefined
+  >;
+  custom_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
 /**
@@ -220,8 +232,8 @@ export interface ProjectGrantsTable {
   project_id: string;
   user_id: string;
   role_id: string;
-  created_at: ColumnType<string, string | undefined, never>;
-  updated_at: ColumnType<string, string | undefined, never>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
 /**
@@ -235,12 +247,12 @@ export interface ProjectGrantsTable {
 export interface PagesTable {
   id: string;
   project_id: string;
-  parent_id: string | null;
+  parent_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   name: string;
   slug: string;
-  custom_id: string | null;
-  created_at: ColumnType<string, string | undefined, never>;
-  updated_at: ColumnType<string, string | undefined, never>;
+  custom_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
 /**
@@ -270,7 +282,7 @@ export interface PasswordResetTokensTable {
   user_id: string;
   token_hash: string;
   expires_at: string;
-  used_at: string | null;
+  used_at: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   created_at: string;
 }
 

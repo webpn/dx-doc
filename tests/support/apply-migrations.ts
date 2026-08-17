@@ -4,13 +4,20 @@ import { fileURLToPath } from 'node:url';
 
 import type Database from 'better-sqlite3';
 
+export interface SqliteExecutable {
+  exec(sqlText: string): void;
+}
+
 /**
  * Apply the repo's real migrations to a SQLite connection, so integration
  * tests exercise the actual schema rather than a hand-rolled copy.
  * dbmate directive lines (`-- migrate:up`/`-- migrate:down`) are stripped;
  * dbmate itself is not required in-process.
  */
-export function applyMigrations(db: Database.Database, migrationsDir = defaultMigrationsDir): void {
+export function applyMigrations(
+  db: Database.Database | SqliteExecutable,
+  migrationsDir = defaultMigrationsDir,
+): void {
   const sorted = readdirSync(migrationsDir)
     .filter((file) => file.endsWith('.sql'))
     .sort();

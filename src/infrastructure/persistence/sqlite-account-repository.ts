@@ -7,36 +7,39 @@ import type {
   ProjectGrant,
   UserAccount,
 } from '@project/application/ports/account-repository';
+import { Kysely, SqliteDialect } from 'kysely';
 
+import type { Database } from './db-schema';
 import type { SqliteDb } from './sqlite';
+import type { Db } from './sqlite-kysely';
 
 interface UserRow {
   id: string;
-  companyId: string | null;
+  company_id: string | null;
   email: string;
-  passwordHash: string | null;
-  roleId: string | null;
+  password_hash: string | null;
+  role_id: string | null;
   name: string | null;
-  instanceAdmin: number;
-  active: number;
-  passwordMustChange: number;
-  createdAt: string;
-  updatedAt: string;
+  instance_admin: number | boolean;
+  active: number | boolean;
+  password_must_change: number | boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 function toUser(row: UserRow): UserAccount {
   return {
     id: row.id,
-    companyId: row.companyId,
+    companyId: row.company_id,
     email: row.email,
-    passwordHash: row.passwordHash,
-    roleId: row.roleId,
+    passwordHash: row.password_hash,
+    roleId: row.role_id,
     name: row.name,
-    instanceAdmin: row.instanceAdmin === 1,
-    active: row.active === 1,
-    passwordMustChange: row.passwordMustChange === 1,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
+    instanceAdmin: Boolean(row.instance_admin),
+    active: Boolean(row.active),
+    passwordMustChange: Boolean(row.password_must_change),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -45,132 +48,128 @@ function toRoleName(name: string): CompanyRoleName {
 }
 
 /**
- * SQLite `AccountRepository`. Synchronous under an async interface: prepared
- * statements return resolved/rejected promises (no await here).
+ * SQLite `AccountRepository` backed by Kysely (ADR-0024).
  */
 export class SqliteAccountRepository implements AccountRepository {
-  constructor(private readonly db: SqliteDb) {}
+  private readonly db: Db;
 
-  createUser(input: CreateUserInput): Promise<void> {
-    const createdAt = input.createdAt;
-    this.db
-      .prepare(
-        `INSERT INTO users (id, company_id, email, password_hash, created_at, updated_at)
-         VALUES (@id, @companyId, @email, @passwordHash, @createdAt, @updatedAt)`,
-      )
-      .run({
-        id: input.id,
-        companyId: input.companyId,
-        email: input.email,
-        passwordHash: input.passwordHash,
-        createdAt,
-        updatedAt: createdAt,
+  constructor(db: Db | SqliteDb) {
+    if ('prepare' in db) {
+      this.db = new Kysely<Database>({
+        dialect: new SqliteDialect({ database: db }),
       });
-    return Promise.resolve();
+    } else {
+      this.db = db;
+    }
   }
 
-  getUserById(id: string): Promise<UserAccount | null> {
-    const row = this.db
-      .prepare(
-        `SELECT id, company_id AS companyId, email, password_hash AS passwordHash,
-                role_id AS roleId, name, instance_admin AS instanceAdmin,
-                active,
-                      password_must_change AS passwordMustChange, created_at AS createdAt, updated_at AS updatedAt
-         FROM users WHERE id = ?`,
-      )
-      .get(id) as UserRow | undefined;
-    return Promise.resolve(row === undefined ? null : toUser(row));
+  async createUser(input: CreateUserInput): Promise<void> {
+    const createdAt = input.createdAt;
+    await this.db
+      .insertInto('users')
+      .values({
+        id: input.id,
+        company_id: input.companyId,
+        email: input.email,
+        password_hash: input.passwordHash,
+        created_at: createdAt,
+        updated_at: createdAt,
+      })
+      .execute();
   }
 
-  getUserByEmail(companyId: string | null, email: string): Promise<UserAccount | null> {
-    const row =
-      companyId === null
-        ? (this.db
-            .prepare(
-              `SELECT id, company_id AS companyId, email, password_hash AS passwordHash,
-                      role_id AS roleId, name, instance_admin AS instanceAdmin,
-                      active,
-                      password_must_change AS passwordMustChange, created_at AS createdAt, updated_at AS updatedAt
-               FROM users WHERE company_id IS NULL AND email = ?`,
-            )
-            .get(email) as UserRow | undefined)
-        : (this.db
-            .prepare(
-              `SELECT id, company_id AS companyId, email, password_hash AS passwordHash,
-                      role_id AS roleId, name, instance_admin AS instanceAdmin,
-                      active,
-                      password_must_change AS passwordMustChange, created_at AS createdAt, updated_at AS updatedAt
-               FROM users WHERE company_id = ? AND email = ?`,
-            )
-            .get(companyId, email) as UserRow | undefined);
-    return Promise.resolve(row === undefined ? null : toUser(row));
+  async getUserById(id: string): Promise<UserAccount | null> {
+    const row = await this.db
+      .selectFrom('users')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+    return row ? toUser(row) : null;
   }
 
-  countUsers(): Promise<number> {
-    const row = this.db.prepare('SELECT COUNT(*) AS count FROM users').get() as { count: number };
-    return Promise.resolve(row.count);
+  async getUserByEmail(companyId: string | null, email: string): Promise<UserAccount | null> {
+    let query = this.db.selectFrom('users').selectAll().where('email', '=', email);
+    if (companyId === null) {
+      query = query.where('company_id', 'is', null);
+    } else {
+      query = query.where('company_id', '=', companyId);
+    }
+    const row = await query.executeTakeFirst();
+    return row ? toUser(row) : null;
   }
 
-  createRole(role: NewCompanyRole): Promise<void> {
-    this.db
-      .prepare(
-        'INSERT INTO roles (id, company_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-      )
-      .run(role.id, role.companyId, role.name, this.nowIso(), this.nowIso());
-    return Promise.resolve();
+  async countUsers(): Promise<number> {
+    const result = await this.db
+      .selectFrom('users')
+      .select((eb) => eb.fn.countAll<number | string>().as('count'))
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
+  }
+
+  async createRole(role: NewCompanyRole): Promise<void> {
+    const now = this.nowIso();
+    await this.db
+      .insertInto('roles')
+      .values({
+        id: role.id,
+        company_id: role.companyId,
+        name: role.name,
+        created_at: now,
+        updated_at: now,
+      })
+      .execute();
   }
 
   private nowIso(): string {
     return new Date().toISOString();
   }
 
-  updateUser(user: UserAccount): Promise<void> {
-    this.db
-      .prepare(
-        `UPDATE users
-         SET password_hash = @passwordHash, role_id = @roleId, name = @name,
-             instance_admin = @instanceAdmin, active = @active,
-             password_must_change = @passwordMustChange, updated_at = @updatedAt
-         WHERE id = @id`,
-      )
-      .run({
-        id: user.id,
-        passwordHash: user.passwordHash,
-        roleId: user.roleId,
+  async updateUser(user: UserAccount): Promise<void> {
+    await this.db
+      .updateTable('users')
+      .set({
+        password_hash: user.passwordHash,
+        role_id: user.roleId,
         name: user.name,
-        instanceAdmin: user.instanceAdmin ? 1 : 0,
+        instance_admin: user.instanceAdmin ? 1 : 0,
         active: user.active ? 1 : 0,
-        passwordMustChange: user.passwordMustChange ? 1 : 0,
-        updatedAt: user.updatedAt,
-      });
-    return Promise.resolve();
+        password_must_change: user.passwordMustChange ? 1 : 0,
+        updated_at: user.updatedAt,
+      })
+      .where('id', '=', user.id)
+      .execute();
   }
 
-  listRolesForCompany(companyId: string): Promise<CompanyRole[]> {
-    const rows = this.db
-      .prepare('SELECT id, company_id AS companyId, name FROM roles WHERE company_id = ?')
-      .all(companyId) as { id: string; companyId: string; name: string }[];
-    return Promise.resolve(
-      rows.map((row) => ({ id: row.id, companyId: row.companyId, name: toRoleName(row.name) })),
-    );
+  async listRolesForCompany(companyId: string): Promise<CompanyRole[]> {
+    const rows = await this.db
+      .selectFrom('roles')
+      .select(['id', 'company_id', 'name'])
+      .where('company_id', '=', companyId)
+      .execute();
+    return rows.map((row) => ({
+      id: row.id,
+      companyId: row.company_id,
+      name: toRoleName(row.name),
+    }));
   }
 
-  listGrantsForUser(userId: string): Promise<ProjectGrant[]> {
-    const rows = this.db
-      .prepare(
-        `SELECT pg.id, pg.project_id AS projectId, pg.user_id AS userId, r.name AS roleName
-         FROM project_grants pg
-         JOIN roles r ON r.id = pg.role_id
-         WHERE pg.user_id = ?`,
-      )
-      .all(userId) as { id: string; projectId: string; userId: string; roleName: string }[];
-    return Promise.resolve(
-      rows.map((row) => ({
-        id: row.id,
-        projectId: row.projectId,
-        userId: row.userId,
-        roleName: toRoleName(row.roleName),
-      })),
-    );
+  async listGrantsForUser(userId: string): Promise<ProjectGrant[]> {
+    const rows = await this.db
+      .selectFrom('project_grants')
+      .innerJoin('roles', 'roles.id', 'project_grants.role_id')
+      .select([
+        'project_grants.id as grant_id',
+        'project_grants.project_id',
+        'project_grants.user_id',
+        'roles.name as role_name',
+      ])
+      .where('project_grants.user_id', '=', userId)
+      .execute();
+    return rows.map((row) => ({
+      id: row.grant_id,
+      projectId: row.project_id,
+      userId: row.user_id,
+      roleName: toRoleName(row.role_name),
+    }));
   }
 }

@@ -6,8 +6,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { applyMigrations } from '../../../tests/support/apply-migrations';
 
-import { openSqliteConnection, type SqliteDb } from './sqlite';
 import { SqliteAccountRepository } from './sqlite-account-repository';
+import { closeSqliteConnection, openSqliteConnection, type Connection } from './sqlite-kysely';
 
 function t(): string {
   return new Date().toISOString();
@@ -23,36 +23,61 @@ async function mustExist<T>(value: Promise<T | null>, label: string): Promise<T>
 
 describe('SqliteAccountRepository (against the real schema)', () => {
   let dir: string;
-  let db: SqliteDb;
+  let connection: Connection;
   let repo: SqliteAccountRepository;
   let companyId: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-account-repo-'));
-    db = openSqliteConnection(path.join(dir, 'test.sqlite'));
-    applyMigrations(db);
-    repo = new SqliteAccountRepository(db);
+    connection = openSqliteConnection(path.join(dir, 'test.sqlite'));
+    applyMigrations(connection);
+    repo = new SqliteAccountRepository(connection.kysely);
 
     // Set up a company and its four roles (REQ-SEC-002) so user/role/grant
     // operations have a tenant context.
     companyId = 'c0000000-0000-0000-0000-000000000001';
-    db.prepare(
-      'INSERT INTO company (id, name, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-    ).run(companyId, 'Acme', 'acme', t(), t());
+    await connection.kysely
+      .insertInto('company')
+      .values({
+        id: companyId,
+        name: 'Acme',
+        slug: 'acme',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
+
     const roleDefs: readonly string[] = ['admin', 'project_manager', 'editor', 'viewer'];
     for (const name of roleDefs) {
-      db.prepare(
-        'INSERT INTO roles (id, company_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-      ).run(`role-${name}`, companyId, name, t(), t());
+      await connection.kysely
+        .insertInto('roles')
+        .values({
+          id: `role-${name}`,
+          company_id: companyId,
+          name,
+          created_at: t(),
+          updated_at: t(),
+        })
+        .execute();
     }
+
     // A project so grants can be assigned.
-    db.prepare(
-      'INSERT INTO projects (id, company_id, name, slug, platform, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    ).run('p0000000-0000-0000-0000-000000000001', companyId, 'Web', 'web', 'web', t(), t());
+    await connection.kysely
+      .insertInto('projects')
+      .values({
+        id: 'p0000000-0000-0000-0000-000000000001',
+        company_id: companyId,
+        name: 'Web',
+        slug: 'web',
+        platform: 'web',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
   });
 
-  afterEach(() => {
-    db.close();
+  afterEach(async () => {
+    await closeSqliteConnection(connection);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -90,9 +115,16 @@ describe('SqliteAccountRepository (against the real schema)', () => {
 
   it('returns null when the email exists but not in the queried company', async () => {
     const otherId = 'c9000000-0000-0000-0000-000000000001';
-    db.prepare(
-      'INSERT INTO company (id, name, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-    ).run(otherId, 'Beta', 'beta', t(), t());
+    await connection.kysely
+      .insertInto('company')
+      .values({
+        id: otherId,
+        name: 'Beta',
+        slug: 'beta',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
     await repo.createUser({
       id: 'u-x',
       companyId: otherId,
@@ -147,9 +179,17 @@ describe('SqliteAccountRepository (against the real schema)', () => {
       passwordHash: 'gh',
       createdAt: t(),
     });
-    db.prepare(
-      'INSERT INTO project_grants (id, project_id, user_id, role_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-    ).run('g-1', 'p0000000-0000-0000-0000-000000000001', 'u-g', 'role-editor', t(), t());
+    await connection.kysely
+      .insertInto('project_grants')
+      .values({
+        id: 'g-1',
+        project_id: 'p0000000-0000-0000-0000-000000000001',
+        user_id: 'u-g',
+        role_id: 'role-editor',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
 
     const grants = await repo.listGrantsForUser('u-g');
 
