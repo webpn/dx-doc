@@ -204,7 +204,7 @@ Additional typed fields defined at company level and attachable to properties, t
 
 The "how to read this in the analytics platform" guidance is captured as a **single free-text note per property**: one unstructured field an editor writes in plain language, describing how the value should be interpreted once it lands in the downstream analytics tool. No per-platform or structured sub-fields are modelled; the flexibility lives in the prose.
 
-**Resolved:** open decision O3 closed on 2026-08-17 — the analytics-reading guidance is a single free-text note per property (option A), not structured or per-destination sub-fields. [REQ-DOM-014](REQ-DOM.md#req-dom-014--company-defined-custom-fields) is unblocked. The view selector ([REQ-VIEW-002](REQ-VIEW.md#req-view-002--view-selector-as-a-presentation-filter)) is sequenced after O3 but at M2.5 is not gated by it.
+**Resolved:** open decision O3 closed on 2026-08-17 — the analytics-reading guidance is a single free-text note per property (option A), not structured or per-destination sub-fields. [REQ-DOM-014](#req-dom-014--company-defined-custom-fields) is unblocked. The view selector ([REQ-VIEW-002](REQ-VIEW.md#req-view-002--view-selector-as-a-presentation-filter)) is sequenced after O3 but at M2.5 is not gated by it.
 
 ### REQ-DOM-015 — Unified Destination entity, N:N with properties
 
