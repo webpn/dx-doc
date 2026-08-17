@@ -97,7 +97,7 @@ See §21 of the full specification (and [requirements index](requirements/README
 
 - **O1:** Semantic layer ontology classes, IRI scheme, export formats — blocks the backlog
 - **O2:** Business glossary details — blocks the backlog
-- **O3:** "How to read this in the analytics platform" — structured field design — blocks R2 Analyst view
+- **O3:** "How to read this in the analytics platform" — structured field design — **closed** on 2026-08-17: a single free-text note per property (unblocking [REQ-DOM-014](requirements/REQ-DOM.md#req-dom-014--company-defined-custom-fields)); [REQ-VIEW-002](requirements/REQ-VIEW.md#req-view-002--view-selector-as-a-presentation-filter) is sequenced after but not gated by it
 - **O4:** Data quality interaction with unstructured placeholders — blocks R4
 - **O5:** Verification/QA module scope — blocks R4
 - **O6:** Complete environment variable matrix — **closed**, see [ADR-0014](../adr/0014-configuration-split.md); matrix reproduced in [README.md](../../README.md#environment-variables)

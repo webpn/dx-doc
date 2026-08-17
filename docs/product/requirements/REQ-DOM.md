@@ -19,7 +19,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-DOM-011 | Prose conditional valorisations                       | Won't  | —    | —         | Rejected    |
 | REQ-DOM-012 | Structured property conditions, four operators + note | Should | R2   | M2.1      | Not Started |
 | REQ-DOM-013 | Conditions targeting nested property paths            | Should | R2   | M2.1      | Not Started |
-| REQ-DOM-014 | Company-defined custom fields                         | Should | R2   | M2.1      | Blocked     |
+| REQ-DOM-014 | Company-defined custom fields                         | Should | R2   | M2.1      | Not Started |
 | REQ-DOM-015 | Unified Destination entity, N:N with properties       | Must   | R1   | M1.1      | Not Started |
 | REQ-DOM-016 | Per-destination name override                         | Must   | R1   | M1.1      | Not Started |
 | REQ-DOM-017 | CDP Audience entity                                   | Should | R2   | M2.7      | Not Started |
@@ -198,11 +198,13 @@ A condition may target a child property by path. A condition on a child is indep
 
 ### REQ-DOM-014 — Company-defined custom fields
 
-**Should** · R2 · [M2.1](../milestones.md#m21--structured-expression) · spec §6.4, §14.2 · **Blocked** · Issue: — · PR: —
+**Should** · R2 · [M2.1](../milestones.md#m21--structured-expression) · spec §6.4, §14.2 · **Not Started** · Issue: — · PR: —
 
 Additional typed fields defined at company level and attachable to properties, trackings and pages. This is how semantic-layer attributes are modelled until the ontology is defined — replacing the previously reserved `owl_details` placeholder.
 
-**Blocked by:** open decision O3 — structured analytics-reading guidance (last responsible moment M2.1, the same milestone as this requirement), which shapes which structured fields exist. The view selector ([REQ-VIEW-002](REQ-VIEW.md#req-view-002--view-selector-as-a-presentation-filter)) is sequenced after O3 too, but at M2.5 it is not blocked by it.
+The "how to read this in the analytics platform" guidance is captured as a **single free-text note per property**: one unstructured field an editor writes in plain language, describing how the value should be interpreted once it lands in the downstream analytics tool. No per-platform or structured sub-fields are modelled; the flexibility lives in the prose.
+
+**Resolved:** open decision O3 closed on 2026-08-17 — the analytics-reading guidance is a single free-text note per property (option A), not structured or per-destination sub-fields. [REQ-DOM-014](REQ-DOM.md#req-dom-014--company-defined-custom-fields) is unblocked. The view selector ([REQ-VIEW-002](REQ-VIEW.md#req-view-002--view-selector-as-a-presentation-filter)) is sequenced after O3 but at M2.5 is not gated by it.
 
 ### REQ-DOM-015 — Unified Destination entity, N:N with properties
 

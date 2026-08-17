@@ -95,6 +95,8 @@ The requirement files are the live status record. [scope.md](../scope.md) stays 
 | O4 — conformance vs unstructured placeholders | REQ-DQ-003                | Start of R4             |
 | O5 — verification module scope                | REQ-DQ-001                | Start of R4             |
 
+**O3 is closed** on 2026-08-17 — the "how to read this in the analytics platform" guidance is a single free-text note per property, not structured or per-destination sub-fields. [REQ-DOM-014](REQ-DOM.md#req-dom-014--company-defined-custom-fields) is unblocked; [REQ-VIEW-002](REQ-VIEW.md#req-view-002--view-selector-as-a-presentation-filter) is sequenced after but not gated by it.
+
 **O8 is closed** on 2026-08-17 — developer-handoff code snippets follow a hybrid model configured per project by selecting platform and tag-manager targets, implemented via hard-coded application templates in code. [REQ-DEV-002](REQ-DEV.md#req-dev-002--code-snippet-generation-per-platform--tag-manager) is unblocked.
 
 **O13 is closed** on 2026-08-13 — the bulk-operation list was confirmed and recorded in [REQ-AUTH-010](REQ-AUTH.md#req-auth-010--bulk-operations-on-a-multi-selection-with-preview). [REQ-AUTH-010](REQ-AUTH.md#req-auth-010--bulk-operations-on-a-multi-selection-with-preview) and [REQ-API-008](REQ-API.md#req-api-008--bulk-operations-restricted-to-explicit-identifier-lists) are unblocked.
