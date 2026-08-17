@@ -4,3 +4,11 @@
 
 export { registerAuthRoutes } from './auth/routes';
 export type { AuthRoutesOptions } from './auth/routes';
+
+export { registerProjectRoutes } from './projects/routes';
+export type { ProjectRoutesOptions } from './projects/routes';
+
+export { registerPageRoutes } from './pages/routes';
+export type { PageRoutesOptions } from './pages/routes';
+
+export { authenticateRequest, replyServiceError, unauthenticated } from './helpers';
