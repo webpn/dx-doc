@@ -72,3 +72,75 @@ export type PageCreateInput = z.infer<typeof pageCreateSchema>;
 
 export const pageUpdateSchema = pageCreateSchema.partial();
 export type PageUpdateInput = z.infer<typeof pageUpdateSchema>;
+
+export const PROPERTY_DATA_SOURCES = ['development', 'tag_manager', 'other'] as const;
+export const PROPERTY_DATA_TYPES = ['string', 'number', 'boolean', 'array', 'object'] as const;
+export const PROPERTY_STATUSES = ['active', 'deprecated'] as const;
+export const PRESENCE_VALUES = ['always', 'sometimes', 'never'] as const;
+
+export const propertyCreateSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'name is required')
+    .max(120, 'name must be 120 characters or fewer'),
+  businessLabel: z.string().max(200).optional(),
+  description: z.string().max(2000).optional(),
+  dataSource: z.enum(PROPERTY_DATA_SOURCES).optional().default('development'),
+  type: z.enum(PROPERTY_DATA_TYPES).optional().default('string'),
+  formatPattern: z.string().max(500).optional(),
+  allowedValues: z.array(z.string()).optional(),
+  exampleValues: z.array(z.string()).optional(),
+  piiFlag: z.boolean().optional().default(false),
+  hashingPolicy: z.string().max(200).optional(),
+  status: z.enum(PROPERTY_STATUSES).optional().default('active'),
+  analysisNotes: z.string().max(2000).optional(),
+  aepFieldGroup: z.string().max(200).optional(),
+  parentPropertyId: z.string().min(1).optional(),
+  derivedFrom: z.array(z.string()).optional(),
+  customId: optionalCustomId.optional(),
+});
+export type PropertyCreateInput = z.input<typeof propertyCreateSchema>;
+export type PropertyCreateOutput = z.output<typeof propertyCreateSchema>;
+
+export const propertyUpdateSchema = propertyCreateSchema.partial();
+export type PropertyUpdateInput = z.infer<typeof propertyUpdateSchema>;
+
+export const moduleCreateSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'name is required')
+    .max(120, 'name must be 120 characters or fewer'),
+  description: z.string().max(2000).optional(),
+  propertyIds: z.array(z.string()).optional().default([]),
+  customId: optionalCustomId.optional(),
+});
+export type ModuleCreateInput = z.input<typeof moduleCreateSchema>;
+export type ModuleCreateOutput = z.output<typeof moduleCreateSchema>;
+
+export const destinationCreateSchema = z.object({
+  platform: z.string().trim().min(1, 'platform is required').max(100),
+  variableType: z.string().trim().min(1, 'variableType is required').max(100),
+  identifier: z.string().trim().min(1, 'identifier is required').max(200),
+  name: z.string().trim().min(1, 'name is required').max(120),
+  reconciliationIdentifier: z.string().max(200).optional(),
+  notes: z.string().max(2000).optional(),
+  platformAttributes: z.record(z.string(), z.unknown()).optional(),
+  customId: optionalCustomId.optional(),
+});
+export type DestinationCreateInput = z.infer<typeof destinationCreateSchema>;
+
+export const trackingCreateSchema = z.object({
+  pageId: z.string().min(1).optional(),
+  navigationEventId: z.string().min(1, 'navigationEventId is required'),
+  name: z
+    .string()
+    .trim()
+    .min(1, 'name is required')
+    .max(120, 'name must be 120 characters or fewer'),
+  slug,
+  description: z.string().max(5000).optional(),
+  customId: optionalCustomId.optional(),
+});
+export type TrackingCreateInput = z.infer<typeof trackingCreateSchema>;

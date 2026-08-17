@@ -55,6 +55,17 @@ export { PageService } from './page/page-service';
 export type { PageServiceError } from './page/page-service';
 
 export type { EmailMessage, EmailSender } from './ports/email-sender';
+export type {
+  PropertyRepository,
+  ModuleRepository,
+  DestinationRepository,
+  TrackingTemplateRepository,
+  FreePageRepository,
+  NavigationEventRepository,
+  TrackingRepository,
+} from './ports/tracking-repositories';
+export { TrackingService } from './tracking/tracking-service';
+export type { TrackingServiceError } from './tracking/tracking-service';
 
 export { validate } from './validation/validate';
 export {
@@ -64,6 +75,15 @@ export {
   PLATFORMS,
   projectCreateSchema,
   projectUpdateSchema,
+  propertyCreateSchema,
+  propertyUpdateSchema,
+  moduleCreateSchema,
+  destinationCreateSchema,
+  trackingCreateSchema,
+  PROPERTY_DATA_SOURCES,
+  PROPERTY_DATA_TYPES,
+  PROPERTY_STATUSES,
+  PRESENCE_VALUES,
 } from './validation/schemas';
 export type {
   CompanyCreateInput,
@@ -72,5 +92,12 @@ export type {
   Platform,
   ProjectCreateInput,
   ProjectUpdateInput,
+  PropertyCreateInput,
+  PropertyCreateOutput,
+  PropertyUpdateInput,
+  ModuleCreateInput,
+  ModuleCreateOutput,
+  DestinationCreateInput,
+  TrackingCreateInput,
 } from './validation/schemas';
 export type { ValidationIssue } from './validation/issues';
