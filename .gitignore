@@ -41,7 +41,7 @@ var/
 *.sqlite3
 *.db
 
-# dbmate's dialect-specific schema dump (regenerable; SQLite view, not the portable schema)
+# Schema dump (any tool may regenerate it; not a hand-edited source of truth)
 db/schema.sql
 
 # Temp
