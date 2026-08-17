@@ -83,7 +83,7 @@ Every entity carries an internal identifier that never changes, distinct from it
 
 **Must** · R0 · [M0.2](../milestones.md) · spec §16.1 · [ADR-0020](../../adr/0020-database-portability.md) · **Not Started** · Issue: — · PR: —
 
-Persistence sits behind repository port interfaces owned by the domain. `DB_DRIVER` selects the adapter. **SQLite is the default and the only adapter through R1** — it backs development, CI and the R1 pilot production instance. MariaDB (REQ-FDN-018) and PostgreSQL (REQ-FDN-019) arrive in R2.
+Persistence sits behind repository port interfaces owned by the domain. `DB_DRIVER` selects the adapter. **SQLite is the default and the only adapter through R1** — it backs development, CI and the R1 production instance. MariaDB (REQ-FDN-018) and PostgreSQL (REQ-FDN-019) arrive in R2.
 
 Graphs (flows, triggers, page hierarchy) are modelled as relational node and edge tables — no graph database is introduced.
 
@@ -160,13 +160,13 @@ One index per project. Scope filtering is applied server-side from the caller's 
 
 **Must** · R0 · [M0.2](../milestones.md) · spec §16.3 · [ADR-0015](../../adr/0015-schema-migration-strategy.md) · **Not Started** · Issue: — · PR: —
 
-Schema migrations are versioned, applied at application start-up, and forward-only. There is no supported downgrade path; a mandatory backup step is documented instead.
+Schema migrations are versioned, forward-only, and applied by an explicit `db:migrate` step (dbmate, D28) rather than at application start-up — the operator or CI runs the command against the target database. There is no supported downgrade path; a mandatory backup step is documented instead.
 
 **Acceptance**
 
 - A fresh database reaches the current schema by running migrations alone.
 - Re-running migrations is a no-op.
-- The application refuses to start against a database ahead of its own schema version, rather than proceeding.
+- The `db:migrate` step refuses to apply against a database ahead of the migration set rather than proceeding; the production guard is implemented at the migration command, not hidden inside process boot.
 - The README documents the backup step as mandatory before upgrading.
 - Migrations run unchanged on every supported dialect (REQ-FDN-020). Because SQLite has no general `ALTER COLUMN` and no `DROP CONSTRAINT`, column and constraint changes use the create-copy-drop-rename table rebuild — which is valid on all three dialects, so it is used everywhere rather than branching per dialect.
 
@@ -205,7 +205,7 @@ A reference stack (application, S3-compatible storage) is supplied as an example
 
 - The reference stack starts from a single command and is documented as an example rather than a supported deployment.
 - CI is green on `main` and required for merge.
-- The stack demonstrates a file-level snapshot of the SQLite database. The Platform provides no backup mechanism (REQ-NFR-006) and git export does not arrive until R2, so through R1 the pilot's only copy is one file — the example is the cheapest place to make that visible.
+- The stack demonstrates a file-level snapshot of the SQLite database. The Platform provides no backup mechanism (REQ-NFR-006) and git export does not arrive until R2, so through R1 the only copy is one file — the example is the cheapest place to make that visible.
 
 ### REQ-FDN-013 — Two-level configuration, environment and company
 
@@ -260,7 +260,7 @@ Helm chart for the reference stack. Deployment remains unprescribed; this is an 
 
 **Should** · R2 · [M2.8](../milestones.md) · [ADR-0020](../../adr/0020-database-portability.md) · **Not Started** · Issue: — · PR: —
 
-A MariaDB implementation of the repository ports, selected by `DB_DRIVER=mariadb`, for deployments that need a managed database with an established backup and scaling story — including, in time, the corporate pilot instance.
+A MariaDB implementation of the repository ports, selected by `DB_DRIVER=mariadb`, for deployments that need a managed database with an established backup and scaling story — including, in time, the first production instance.
 
 ### REQ-FDN-019 — PostgreSQL adapter
 

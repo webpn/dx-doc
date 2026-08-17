@@ -11,7 +11,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-AUTH-001 | Markdown editor with the full block set              | Must   | R1   | M1.5      | Not Started |
 | REQ-AUTH-002 | Image upload, 10 MB cap, resize to 2000 px           | Must   | R1   | M1.5      | Not Started |
 | REQ-AUTH-003 | Free wiki pages with publishable flag                | Must   | R1   | M1.5      | Not Started |
-| REQ-AUTH-004 | Mermaid rendering and live preview                   | Should | R2   | M2.2      | Not Started |
+| REQ-AUTH-004 | Mermaid rendering and live preview                   | Must   | R1   | M1.6      | Not Started |
 | REQ-AUTH-005 | Optimistic concurrency with stale-write rejection    | Must   | R1   | M1.5      | Not Started |
 | REQ-AUTH-006 | Tracking duplication within a project                | Must   | R1   | M1.5      | Not Started |
 | REQ-AUTH-007 | Project-scoped full-text search                      | Must   | R1   | M1.7      | Not Started |
@@ -56,7 +56,7 @@ Direct upload by drag-and-drop and clipboard paste. Maximum `UPLOAD_MAX_BYTES` (
 
 **Must** · R1 · [M1.5](../milestones.md) · spec §7.7 · **Not Started** · Issue: — · PR: —
 
-Hierarchically organised unstructured pages covering what the legacy template held outside the structured tables: data layer overview, script and SDK integration instructions, references, test URLs, test credentials.
+Hierarchically organised unstructured pages covering what the previous documentation template held outside the structured tables: data layer overview, script and SDK integration instructions, references, test URLs, test credentials.
 
 **Acceptance**
 
@@ -66,20 +66,17 @@ Hierarchically organised unstructured pages covering what the legacy template he
 
 ### REQ-AUTH-004 — Mermaid rendering and live preview
 
-**Should** · R2 · [M2.2](../milestones.md) · spec §7.1, §8.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md) · spec §7.1, §8.4 · **Not Started** · Issue: — · PR: —
 
-Mermaid code blocks render, and render live while editing. This is both the format used for hand-written diagrams and the format auto-generated from the flow graph in R2 (REQ-NAV-006).
+Mermaid code blocks render, and render live while editing. This is both the format used for hand-written diagrams and the format auto-generated from the flow graph (REQ-NAV-006, also R1/M1.6).
 
 **Acceptance**
 
 - A syntax error shows a legible message and leaves the source editable — it never discards the block.
-- Hand-written Mermaid remains available inside any rich-text content after REQ-NAV-006 lands.
+- Hand-written Mermaid remains available inside any rich-text content after the flow-graph generator (REQ-NAV-006) lands.
+- A ` ```mermaid ` block authored in R1 renders identically; it was stored verbatim as a fenced block (REQ-AUTH-001) from M1.5.
 
-**Demoted from Must · R1 · M1.5 on 2026-08-12**, and the demotion is close to free because of what it does _not_ move. A ` ```mermaid ` block is a fenced code block, and content is stored as Markdown ([REQ-AUTH-001](#req-auth-001--markdown-editor-with-the-full-block-set)) — so from R1 an author can write one, it is stored verbatim, it survives export and re-import, and it is searchable. What moves to R2 is **rendering it as a diagram** instead of showing it as code.
-
-This is why the requirement lands on [M2.2](../milestones.md) rather than anywhere else: [REQ-NAV-006](REQ-NAV.md) generates Mermaid from the flow graph in that same milestone and needs a renderer regardless. The two are now built once, together, rather than built in R1 and extended in R2.
-
-> The cost is real and worth naming: in R1 a hand-written diagram is legible only to someone who reads Mermaid source. That falls on the container-page use case in the [R1 minimum requirements](../minimum-requirements.md), where a multi-page process is described with a flow diagram. The description and hierarchy carry it in R1; the picture arrives in R2.
+> **Demoted to R2 (M2.2) on 2026-08-12, then returned to R1 (M1.6) on 2026-08-17** when the Flow entity and its Mermaid generator (REQ-NAV-003…007) were moved into R1. The renderer is built once and serves both the auto-generated flow diagrams and hand-written blocks; it now ships with them rather than a release behind. The prior demotion note — that a ` ```mermaid ` block is a fenced code block, stored verbatim and searchable from R1 but not rendered — documents the state that held only while flows were R2.
 
 ### REQ-AUTH-005 — Optimistic concurrency with stale-write rejection
 
@@ -156,7 +153,7 @@ Exposure through API and MCP carries the same validation, but agents must target
 
 > The operation list above is the confirmed scope, which closes open decision O13 — bulk operations are no longer blocked.
 
-> This addresses the second-costliest shortcoming of the legacy wiki. The presentation half is already solved by application-controlled layout: changing how trackings render updates every tracking at once, with no data migration.
+> This addresses a long-standing shortcoming of the previous documentation. The presentation half is already solved by application-controlled layout: changing how trackings render updates every tracking at once, with no data migration.
 
 ### REQ-AUTH-011 — Individual item archive and restore
 

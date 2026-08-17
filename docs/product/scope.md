@@ -23,17 +23,17 @@ The documentation of tracking plans for websites and mobile applications:
 - Specific values (including placeholders) for each property within a tracking.
 - Conditional valorisations of properties — structured only, from R2. Not expressible in R1 in any form.
 - Destinations (analytics variables/events/schema paths) with many-to-many mapping to properties.
-- CDP audiences.
-- Feedback surveys.
+- CDP audiences (R2 — moved from R1 on 2026-08-17, [REQ-DOM-017](requirements/REQ-DOM.md)).
+- Feedback surveys (R2 — moved from R1 on 2026-08-17, [REQ-DOM-018](requirements/REQ-DOM.md)).
 - Free wiki pages for unstructured content (integration instructions, references).
 - User journeys (Flows) as named directed graphs over Pages, with Trigger nodes.
 
 ### Authoring
 
-- Rich text (Markdown) editor with the full block set. Mermaid blocks are authorable and stored from R1; rendering them as diagrams is R2.
+- Rich text (Markdown) editor with the full block set. Mermaid blocks are authorable and stored from R1, and rendered from R1 (M1.6) — flows moved into R1 with their renderer (REQ-AUTH-004).
 - Image upload (drag & drop, clipboard paste), resize, S3 storage.
 - Structural image annotations (R2).
-- Duplication of trackings, pages, flows, and projects.
+- Duplication of trackings (R1). Page/flow duplication (R2, REQ-AUTH-008) and whole-project duplication (R3, REQ-AUTH-015).
 - Bulk operations on a multi-selection of trackings with preview (R2).
 - Optimistic concurrency with stale-write rejection.
 - Per-element change history (R2).
@@ -42,9 +42,9 @@ The documentation of tracking plans for websites and mobile applications:
 
 - Page hierarchy with navigable sidebar.
 - Automatic per-page tracking recap.
-- Flow entity with directed graph (R2).
-- Trigger nodes distinct from visual page transitions (R2).
-- Auto-generated Mermaid diagrams from the graph (R2).
+- Flow entity with directed graph (R1).
+- Trigger nodes distinct from visual page transitions (R1).
+- Auto-generated Mermaid diagrams from the graph, rendered (R1).
 - Full-text search within a project, indexing specific values. Prefix and stem matching; typo tolerance deliberately deferred to an optional adapter (R3).
 
 ### Versioning and Publication
@@ -59,7 +59,7 @@ The documentation of tracking plans for websites and mobile applications:
 ### Audience Views and Distribution
 
 - Two audience views: Analyst/Business and Development. In-app as presentation filters; in published artefacts as physical omission.
-- In-app read-only view behind SSO, email+password, or shared password.
+- In-app read-only view behind email+password or shared password.
 - Static site per project, regenerated on publication (R2).
 - Git export, one commit per publication (R2).
 - PDF export of version changes (R2).
@@ -104,7 +104,7 @@ The documentation of tracking plans for websites and mobile applications:
 - Per-project access grants.
 - Append-only audit log of write events.
 - Email + password login.
-- OIDC SSO (R1), SAML SSO (R2).
+- OIDC SSO (R2, alongside SAML SSO in M2.8).
 - Project shared-password access with expiry (R1).
 - Public MIT repository with README and reference deployment stack (R0).
 
@@ -146,7 +146,7 @@ These ship as containers in R3 and gain substance with the semantic layer in the
 ## Explicitly Rejected
 
 - **Event variants** — a tracking that behaves differently across contexts is expressed through structured property conditions, not through a second inheritance axis.
-- **Prose conditional valorisations** — rejected rather than shipped as an R1 stopgap. The structured form (R2) is the only mechanism, which means no conversion exercise across ~30 imported products.
+- **Prose conditional valorisations** — rejected rather than shipped as an R1 stopgap. The structured form (R2) is the only mechanism, which means no conversion exercise across imported products.
 - **Parallel branches and merge workflows** for versioning — single draft stream only.
 - **Approval workflow** — editors publish autonomously.
 - **Scheduled deprecation** — properties are deprecated manually.

@@ -40,12 +40,12 @@ The Platform contains no parser, block converter, import endpoint or importer UI
 
 **Must** · R1 · [M1.2](../milestones.md) · spec §12.1 · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **Not Started** · Issue: — · PR: —
 
-Every entity in the R1 data model is creatable, readable and updatable through the API: Page, Tracking, DataLayerProperty (including `object` children and `parent_property`), Module, TrackingTemplate, SpecificValue, Destination and its N:N mapping with `destination_name_override`, CdpAudience, Survey, FreePage, and the company catalogue.
+Every entity in the R1 data model is creatable, readable and updatable through the API: Page, Tracking, DataLayerProperty (including `object` children and `parent_property`), Module, TrackingTemplate, SpecificValue, Destination and its N:N mapping with `destination_name_override`, FreePage, and the company catalogue. CDP Audience and Survey were moved to R2 (M2.7) on 2026-08-17, so they are not part of the R1 surface.
 
 **Acceptance**
 
 - Every attribute writable in the UI is writable through the API. A UI-only field is a defect (this follows from ADR-0007, and import is what proves it).
-- The full pilot product can be constructed through the API alone, with the UI never opened. This is the acceptance test for the whole requirement.
+- The full first imported product can be constructed through the API alone, with the UI never opened. This is the acceptance test for the whole requirement.
 - Relationships are settable in either order, or the API documents its required ordering — an agent should not have to infer a creation sequence by trial and error.
 - Validation errors identify the offending field and rule in a form a script can branch on, not only prose for a human.
 
@@ -82,12 +82,12 @@ Images are uploadable through the API with the same limits and processing as the
 
 **Should** · R1 · [M1.2](../milestones.md) · **Not Started** · Issue: — · PR: —
 
-Endpoints accepting an array of entities in one call, so that thousands of trackings across ~30 products do not require one round trip each.
+Endpoints accepting an array of entities in one call, so that thousands of trackings across the products being imported do not require one round trip each.
 
 **Acceptance**
 
 - A batch reports per-item outcomes; one invalid item does not silently discard the rest, and the response says exactly which items failed and why.
-- Batch semantics are documented as all-or-nothing or per-item, and the choice is consistent across endpoints.
+- Batch semantics are **per-item, decided 2026-08-17** (D35): valid items in a batch succeed, and the response lists exactly which items failed and why. This is the consistent behaviour across every batch endpoint — an import with one bad row must not fail the other ~thousands.
 - Batches accept an explicit list of entities only — never a filter expression (REQ-API-008).
 - Batch writes produce proportionate audit entries, not one per item (REQ-SEC-006).
 

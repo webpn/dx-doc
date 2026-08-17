@@ -10,7 +10,7 @@ Accepted
 
 ## Context
 
-The Platform must support versioning of project documentation: editors work on a draft, then publish a snapshot that becomes the authoritative version for consumers. The legacy wiki has no such model — the Platform's versioning is its primary differentiator.
+The Platform must support versioning of project documentation: editors work on a draft, then publish a snapshot that becomes the authoritative version for consumers. The previous documentation has no such model — the Platform's versioning is its primary differentiator.
 
 ## Decision
 

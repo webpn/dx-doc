@@ -52,7 +52,7 @@ The PDF of a version's changes (REQ-VIEW-006) includes snippets for the tracking
 
 Where structured conditions exist (REQ-DOM-012), the snippet shows only the allowed values that condition specifies, comments a property as required where its presence is `always` in that scenario, and as forbidden where it is `never`.
 
-> This is the main practical gain over the legacy wiki: the developer sees what applies to _this_ scenario rather than the full property set. It is also the reason REQ-DOM-012 exists — with prose conditions alone, this is not implementable.
+> This is a main practical gain over the previous documentation: the developer sees what applies to _this_ scenario rather than the full property set. It is also the reason REQ-DOM-012 exists — with prose conditions alone, this is not implementable.
 
 ### REQ-DEV-006 — Dashboard and KPI links
 

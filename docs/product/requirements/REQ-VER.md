@@ -27,6 +27,8 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 One draft stream per project. All edits accumulate in the draft. Publishing creates a Version. No parallel branches, no merges, no approval workflow — editors publish autonomously.
 
+> **Storage representation, decided 2026-08-17 (D36): event-sourced append log.** The draft is an append-only log of edits; a Version is a pointer to a point in that log (gaining its sequential number at publication, REQ-VER-004). Any historical version is reconstructed by replaying edits up to that point — which is exactly the "full historical consultation" REQ-VER-007 requires, and the raw material the diff/changelog (REQ-VER-005/006) are computed from. Selective publication (REQ-VER-003) is expressed as which recorded edits the published point includes. Asset retention (REQ-VER-007) is unaffected: a referenced asset is never pruned while any reachable version references it.
+
 **Acceptance**
 
 - Every write path, including API, MCP and bulk operations, writes to the draft. There is no path that writes directly to a published version.
@@ -55,7 +57,7 @@ At publication the editor may exclude individual Trackings and individual Pages/
 - **No published entity may reference an excluded entity.** This is the general rule; the cases below are its consequences, and it is enforced rather than merely documented.
 - A published tracking can never reference an unpublished property. This is why properties are not selectively excludable.
 - Excluding a Page **proposes excluding the Trackings attached to it**, selected by default. If the editor overrides the proposal and publishes a tracking whose page is excluded, the publication is **refused** with the conflicting pair named — it does not proceed and leave a tracking attached to nothing.
-- From R2, the same rule covers Flows: publishing a Flow whose Trigger references an excluded Tracking or Page is refused, so a generated diagram (REQ-NAV-006) can never contain a node that does not exist in the version.
+- The same rule covers Flows from R1 (they moved into R1/M1.6 on 2026-08-17): publishing a Flow whose Trigger references an excluded Tracking or Page is refused, so a generated diagram (REQ-NAV-006) can never contain a node that does not exist in the version.
 - Destinations, audiences and surveys are not excludable, so they cannot produce this conflict.
 - An exclusion applies to that publication only; excluded items are not remembered as excluded next time.
 - Excluded items remain in the draft, unchanged.

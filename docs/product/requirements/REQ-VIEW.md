@@ -23,7 +23,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 **Must** · R1 · [M1.9](../milestones.md) · spec §10.4 · **Not Started** · Issue: — · PR: —
 
-Read-only consultation behind SSO, email + password, or a project shared password (REQ-SEC-005).
+Read-only consultation behind email + password or a project shared password (REQ-SEC-005). (SSO login is R2 — REQ-SEC-004.)
 
 **Acceptance**
 

@@ -10,13 +10,13 @@ Accepted
 
 ## Context
 
-The specification (§13) calls for an importer built into the Platform: it reads the legacy wiki's "Markdown & CSV" export, maps the structured tables 1:1, migrates assets, converts legacy blocks into supported Markdown, and runs idempotently with an import report. It is listed as a Must in R1.
+The specification (§13) calls for an importer built into the Platform: it reads a source system's "Markdown & CSV" export, maps the structured tables 1:1, migrates assets, converts source blocks into supported Markdown, and runs idempotently with an import report. It is listed as a Must in R1.
 
 Three problems with that shape:
 
 **It is throwaway code in the product.** A Notion-specific parser lives in the Platform's source forever, ships to every open-source deployer, and is exercised roughly thirty times in total — once per existing product — before becoming dead weight. Every future refactor pays for it.
 
-**It is the wrong tool for a messy input.** The source is ~30 products documented over years by many hands against a template that drifted. A parser handles the cases its author anticipated and fails or silently mangles the rest. Fidelity loss in block conversion was already flagged in the spec as "the main source of fidelity loss", and the failure mode of a parser meeting unanticipated structure is silent coercion.
+**It is the wrong tool for a messy input.** The source is many products documented over years by many hands against a template that drifted. A parser handles the cases its author anticipated and fails or silently mangles the rest. Fidelity loss in block conversion was already flagged in the spec as "the main source of fidelity loss", and the failure mode of a parser meeting unanticipated structure is silent coercion.
 
 **It builds nothing durable.** After migration the Platform is left with a dead importer and no better programmatic surface than it had before — while "weak programmatic access" was pain point 6, and machine-readability is a stated secondary goal (§3.2).
 
@@ -36,7 +36,7 @@ Four parts:
 
 4. **The output is a script, not a conversation.** Claude explores one product's export interactively, then writes a migration script that is committed to a repository, reviewed, and re-run per product. This is the part that makes the approach defensible rather than merely convenient: a script is reproducible, reviewable, diffable, and idempotent. An agent transcript is none of those things.
 
-**Applies to all ~30 products,** not the pilot alone. That is why the API investment is justified and why the script is a maintained artefact rather than a scratch file.
+**Applies to all the products being imported.** That is why the API investment is justified and why the script is a maintained artefact rather than a scratch file.
 
 ## Alternatives Considered
 

@@ -24,7 +24,7 @@ Against those: a portability abstraction is speculative generality if no second 
 
 **Persistence sits behind repository port interfaces owned by the domain. Multiple database adapters are supported.**
 
-- **SQLite is the default and the only adapter through R1.** It backs development, CI, and the R1 pilot production instance.
+- **SQLite is the default and the only adapter through R1.** It backs development, CI, and the R1 production instance.
 - **MariaDB and PostgreSQL adapters ship in R2** (REQ-FDN-018, REQ-FDN-019).
 - `DB_DRIVER` selects the adapter; connection settings remain per-driver environment variables.
 
@@ -65,7 +65,7 @@ Rejected for R0/R1. It re-imposes the service dependency on every contributor an
 ## Consequences
 
 - **The R1 pilot runs on SQLite.** At the projected scale — ≤10 concurrent editors, ≤50 viewers, thousands of trackings in the largest project — this is comfortable. SQLite serialises writes; with ten editors that is not a bottleneck.
-- **The R1 pilot's durability story is weak, and this is the sharpest consequence.** The Platform provides no backup mechanism (REQ-NFR-006), git export does not arrive until R2 (REQ-VIEW-005), and the pilot's entire content will live in one file. The reference deployment stack must therefore show a file-level snapshot of the database as part of the example, and the README must say plainly that this is the operator's job. This is cheap to do and expensive to discover after the fact.
+- **An early deployment's durability story is weak, and this is the sharpest consequence.** The Platform provides no backup mechanism (REQ-NFR-006), git export does not arrive until R2 (REQ-VIEW-005), and all imported content lives in one file. The reference deployment stack must therefore show a file-level snapshot of the database as part of the example, and the README must say plainly that this is the operator's job. This is cheap to do and expensive to discover after the fact.
 - **The test matrix grows in R2**, not in R0. Until MariaDB and PostgreSQL adapters exist there is exactly one dialect to test, so the near-term cost of this decision is close to zero — the cost is paid in R2, deliberately, in exchange for R0 and R1 being faster.
 - **A dialect-specific feature is now a decision, not a shortcut.** If one becomes genuinely necessary, the escape hatch is a per-dialect method on the repository port with an implementation for each adapter — not dialect-specific DDL in a shared migration.
 - **Migrations must be dialect-portable** (ADR-0015). SQLite has no general `ALTER COLUMN`, so any column change is a table rebuild; the migration tooling must handle that pattern rather than assume `ALTER TABLE` works everywhere.

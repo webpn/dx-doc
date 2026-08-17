@@ -22,8 +22,8 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-DOM-014 | Company-defined custom fields                         | Should | R2   | M2.1      | Blocked     |
 | REQ-DOM-015 | Unified Destination entity, N:N with properties       | Must   | R1   | M1.1      | Not Started |
 | REQ-DOM-016 | Per-destination name override                         | Must   | R1   | M1.1      | Not Started |
-| REQ-DOM-017 | CDP Audience entity                                   | Must   | R1   | M1.1      | Not Started |
-| REQ-DOM-018 | Survey entity                                         | Must   | R1   | M1.1      | Not Started |
+| REQ-DOM-017 | CDP Audience entity                                   | Should | R2   | M2.7      | Not Started |
+| REQ-DOM-018 | Survey entity                                         | Should | R2   | M2.7      | Not Started |
 | REQ-DOM-019 | Company catalogue, copy-on-project-creation           | Must   | R1   | M1.1      | Not Started |
 | REQ-DOM-020 | Project-scoped impact analysis                        | Should | R2   | M2.7      | Not Started |
 | REQ-DOM-021 | Project pairing and alignment report                  | Could  | R4   | M4.3      | Not Started |
@@ -46,6 +46,7 @@ A page, screen, modal, popup, or page template of the product, organised in a hi
 **Acceptance**
 
 - Modals and popups are Pages, not a distinct entity — a tracking on a modal attaches to that Page.
+- Pages are **created, edited, deleted and reordered by editors** through the UI and the API alike; the page set of a project is not fixed or seeded — it is the project's own catalogue of screens. (Editing was implicit in M0.5 CRUD and REQ-NAV-001; this states it as the page requirement itself.)
 - The hierarchy is arbitrarily deep and reorderable without changing any identifier (REQ-FDN-004).
 - A page carries its position in the hierarchy explicitly, so sibling order survives export and re-import.
 
@@ -57,7 +58,7 @@ A single tracked event. Attaches either to a specific Page or to a page template
 
 **Acceptance**
 
-- The navigation-event list is data, not a hard-coded enum in application logic — adding a value requires no code change beyond a migration.
+- The navigation-event list is **project-scoped data owned by editors** (Admin, Project Manager and Editor), not a hard-coded enum in application logic and not instance- or company-wide configuration. An editor can add, rename and deactivate events from the project settings; every tracking's event references that project's list.
 - There is no "cross-page" attachment mode: an action appearing on many screens is a Trigger with several source Pages (REQ-NAV-004).
 - There is no variant mechanism; scenario differences are expressed as property conditions (REQ-DOM-012).
 
@@ -177,7 +178,7 @@ Rejected. **R1 carries no conditional valorisations in any form.** The structure
 
 An editor who needs to express a condition before then does so as ordinary description text, which is not a mechanism and is not treated as one: nothing reads it, nothing reports on it, and nothing is expected to convert it later.
 
-> Rejecting the prose form removes the conversion problem instead of scheduling it. Had R1 shipped prose conditions, ~30 imported products would have carried an unknown number of them in free text with no marker, and R2 would have needed an inventory report to find them before the structured field could be populated. That report is now unnecessary — which is the whole reason to accept the R1 gap rather than fill it with something that has to be undone.
+> Rejecting the prose form removes the conversion problem instead of scheduling it. Had R1 shipped prose conditions, the products being imported would have carried an unknown number of them in free text with no marker, and R2 would have needed an inventory report to find them before the structured field could be populated. That report is now unnecessary — which is the whole reason to accept the R1 gap rather than fill it with something that has to be undone.
 
 ### REQ-DOM-012 — Structured property conditions, four operators + note
 
@@ -230,9 +231,9 @@ The property↔destination relationship carries `destination_name_override`: the
 
 ### REQ-DOM-017 — CDP Audience entity
 
-**Must** · R1 · [M1.1](../milestones.md) · spec §6.10 · **Not Started** · Issue: — · PR: —
+| **Should** · R2 · [M2.7](../milestones.md) · spec §6.10 · **Not Started** · Issue: — · PR: —
 
-Name, downstream systems fed, identifier in the audience-management platform, free-text entry/exit conditions, and the properties the audience is built on.
+| Name, downstream systems fed, identifier in the audience-management platform, free-text entry/exit conditions, and the properties the audience is built on.
 
 **Acceptance**
 
@@ -242,15 +243,15 @@ Name, downstream systems fed, identifier in the audience-management platform, fr
 
 ### REQ-DOM-018 — Survey entity
 
-**Must** · R1 · [M1.1](../milestones.md) · spec §6.11 · **Not Started** · Issue: — · PR: —
+| **Should** · R2 · [M2.7](../milestones.md) · spec §6.11 · **Not Started** · Issue: — · PR: —
 
-Name, tool, trigger/invitation conditions, properties used, pages involved, status (offline / in test / live), campaign, delivery type, go-live and deactivation dates.
+| Name, tool, trigger/invitation conditions, properties used, pages involved, status (offline / in test / live), campaign, delivery type, go-live and deactivation dates.
 
 **Acceptance**
 
 - Surveys appear in impact analysis and are excluded from the development view.
 
-> Audiences and surveys look secondary but are Must in R1: a 1:1 import that loses them fails the pilot.
+> **Moved out of R1 on 2026-08-17.** Audiences and surveys were originally `Must` in R1 because a 1:1 import that lost them would fail a real imported product. That import no longer requires them in R1, so they move to R2 (M2.7); the import documents them in free text or as post-import additions rather than holding them in the critical path.
 
 ### REQ-DOM-019 — Company catalogue, copy-on-project-creation
 

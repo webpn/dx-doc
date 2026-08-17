@@ -33,7 +33,7 @@ Rejected: not globally unique, leak entity count, and complicate idempotent impo
 
 ### Slug as primary identifier
 
-Rejected: slugs change when names change. Renaming a property would break every reference to it. The legacy wiki's pain points include the inability to rename things without breaking links.
+Rejected: slugs change when names change. Renaming a property would break every reference to it. The previous documentation's pain points include the inability to rename things without breaking links.
 
 ### Natural keys (e.g., property name within a project)
 

@@ -30,14 +30,14 @@ Traceable requirements derived from the [functional specification](../functional
 | Release | Requirements | Focus                                                                                        |
 | ------- | ------------ | -------------------------------------------------------------------------------------------- |
 | R0      | 23           | Foundations, auth and account lifecycle, API, public repository, data-flow statement         |
-| R1      | 63           | Full data model, editor, versioning, import API + MCP, SSO                                   |
-| R2      | 38           | Flows, bulk operations, distribution channels, MariaDB/Postgres adapters, instance portal    |
+| R1      | 67           | Full data model, editor, versioning, import API + MCP, flows                               |
+| R2      | 35           | Bulk operations, distribution channels, MariaDB/Postgres adapters, instance portal, SSO (OIDC) |
 | R3      | 15           | Snippets, Confluence, interactive agent access, hosted search adapter                        |
 | R4      | 6            | Data quality, Figma import, webhooks                                                         |
 | Backlog | 6            | Kubernetes/Helm packaging, semantic layer, lifecycle status, insights (no scheduled release) |
 | —       | 8            | Explicitly rejected (recorded, not gaps)                                                     |
 
-R1 carries 63 requirements in six weeks — two fewer than the draft: [REQ-AUTH-004](REQ-AUTH.md) (Mermaid rendering) moved to R2 on 2026-08-12, where a renderer was already being built for [REQ-NAV-006](REQ-NAV.md), and [REQ-VIEW-002](REQ-VIEW.md) (view selector) moved to R2 on 2026-08-13 to align with open decision O3. That concentration is risk R1 in the register, and it is why the [milestones](../milestones.md) name demotion candidates in advance rather than improvising under pressure.
+R1 carries 67 requirements in six weeks. On 2026-08-17 the Net moves brought flows in and SSO out: REQ-NAV-003…007 (flow entity, triggers, graph, Mermaid generation, flow sidebar) and REQ-AUTH-004 (Mermaid rendering) moved from R2 into R1/M1.6, while REQ-SEC-004 (OIDC SSO) moved from R1/M1.9 to R2/M2.8 to join SAML SSO. Earlier moves: REQ-AUTH-004 had moved to R2 on 2026-08-12 and REQ-VIEW-002 (view selector) to R2 on 2026-08-13 to align with open decision O3, both of which are now reflected in the totals above. That concentration is risk R1 in the register, and it is why the [milestones](../milestones.md) name demotion candidates in advance rather than improvising under pressure.
 
 > **Two decisions moved requirements after the first draft.** [ADR-0020](../../adr/0020-database-portability.md) replaced the MariaDB-only stance with repository ports and a SQLite default, adding three REQ-FDN entries and moving two database adapters into R2. [ADR-0021](../../adr/0021-agent-driven-migration.md) replaced the bespoke Notion importer with an agent driving a complete API, which rewrote REQ-IMP and pulled the documented public API, MCP read tools, MCP write tools and MCP resources from R3 into R1. Net effect on R1: six requirements out, ten in.
 

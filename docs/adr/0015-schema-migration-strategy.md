@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (2026-08-12) — as proposed, unchanged. Closes open decision **O7**.
+Accepted (2026-08-12) — closes open decision **O7**. **Amended 2026-08-17 (D28):** migration tooling is **dbmate**, run as an explicit `npm run db:migrate` step, replacing the original run-at-start-up execution model. The forward-only, versioned, portable, backup-guarded properties are unchanged; the *when* migrations run changes from "the application refuses to start" to "the operator or CI runs the command".
 
 ## Date
 
@@ -20,13 +20,12 @@ The spec's open decision O7 asks: "Upgrade and schema-migration strategy for thi
 
 ## Decision
 
-**Forward-only, versioned SQL migrations executed at application start-up.**
+**Forward-only, versioned SQL migrations executed by dbmate via an explicit `npm run db:migrate` step.**
 
-- Migrations are stored as numbered SQL files in `migrations/`: `001_create_companies.sql`, `002_create_projects.sql`, etc.
+- Migrations are stored as numbered SQL files in `db/migrations/` (dbmate layout): `001_create_companies.sql`, `002_create_projects.sql`, etc.
 - Each migration has an `up` (forward) section. No `down` (rollback) section is provided.
-- Migrations are applied in order at application start-up, before the HTTP server starts.
-- Already-applied migrations are tracked in a `schema_migrations` table and skipped.
-- The application refuses to start if there are unapplied migrations — it does not apply them automatically in production (to prevent accidental schema changes). In development, an environment variable (`AUTO_MIGRATE=true`) enables automatic application.
+- Migration tooling is **dbmate** (D28), driven by `npm run db:migrate`. Migrations are applied in order; already-applied ones are tracked in dbmate's `schema_migrations` table and skipped.
+- Migrations are **not** run automatically at application start-up. Applying them is an explicit operator/CI action: `npm run db:migrate` against the target database. This keeps schema changes visible and reviewable in the deployment pipeline rather than hidden inside process boot.
 - A documented mandatory backup step before running migrations. The operator is responsible for backing up the database before upgrading.
 - No supported downgrade path. Rolling back a deployment means restoring the database backup.
 
@@ -46,15 +45,15 @@ Seeding for tests and for local development is a separate mechanism with a separ
 **Rationale:**
 
 - Forward-only migrations are simpler to write, test, and maintain than reversible migrations.
-- Start-up execution means there is no separate migration command to forget.
-- The production guard (refuse to start rather than auto-apply) prevents accidental schema changes.
+- An explicit `db:migrate` step keeps schema changes visible, reviewable and testable in the CI/deploy pipeline, and avoids surprises inside process boot. dbmate is the migration runner with the largest community of the candidates (D28).
+- Migrations run where the schema is managed (CI, deploy step, `db:seed:demo`) rather than being coupled to a runtime decision.
 - No downgrade path is honest: most downgrade scripts are untested and dangerous. Restoring a backup is the reliable rollback path.
 
 ## Alternatives Considered
 
-### Separate migration CLI command (`npm run db:migrate`)
+### Application start-up execution (the original model)
 
-Rejected: operators forget to run it. Start-up execution is self-contained. However, a CLI command is still useful for development and CI; the production guard can emit the command to run.
+This was the original decision and is **explicitly reversed on 2026-08-17 (D28)** by choosing dbmate/A separate `db:migrate` step. The earlier objection — "operators forget to run it" — was judged less costly than a runtime that quietly couples schema application to process boot, and the reference deployment stack and CI both run the command so the step cannot be missed.
 
 ### Auto-apply in production
 

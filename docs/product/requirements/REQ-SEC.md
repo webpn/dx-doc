@@ -9,7 +9,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-SEC-001 | Email + password login                            | Must   | R0   | M0.4            | Not Started |
 | REQ-SEC-002 | Four company-scoped roles                         | Must   | R0   | M0.4            | Not Started |
 | REQ-SEC-003 | Per-project access grants                         | Must   | R0   | M0.4            | Not Started |
-| REQ-SEC-004 | OIDC SSO                                          | Must   | R1   | M1.9            | Not Started |
+| REQ-SEC-004 | OIDC SSO                                          | Should | R2   | M2.8            | Not Started |
 | REQ-SEC-005 | Project shared-password access with expiry        | Must   | R1   | M1.9            | Not Started |
 | REQ-SEC-006 | Append-only audit log, 24-month retention         | Must   | R1   | M1.9            | Not Started |
 | REQ-SEC-007 | SAML SSO                                          | Should | R2   | M2.8            | Not Started |
@@ -65,13 +65,15 @@ A user sees only the projects explicitly granted to them. Every permission is ad
 - Grant checks live in one place, invoked by API, MCP, search and export paths alike.
 - A test asserts the negative case for every entry point, not only the HTTP API.
 
-**Grant administration is deliberately one project at a time.** There is no bulk grant or revoke, no view of everything one user can reach across projects, and no group-derived assignment (REQ-SEC-002). At ~30 projects and hundreds of readers this is real administrative work, and it is accepted rather than overlooked: every access decision being explicit and individually made is the property the model is buying, and a bulk tool is the mechanism by which access quietly widens. Revisit only with that trade stated.
+**Grant administration is deliberately one project at a time.** There is no bulk grant or revoke, no view of everything one user can reach across projects, and no group-derived assignment (REQ-SEC-002). At dozens of projects and hundreds of readers this is real administrative work, and it is accepted rather than overlooked: every access decision being explicit and individually made is the property the model is buying, and a bulk tool is the mechanism by which access quietly widens. Revisit only with that trade stated.
 
 ### REQ-SEC-004 — OIDC SSO
 
-**Must** · R1 · [M1.9](../milestones.md) · spec §17.1 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.8](../milestones.md) · spec §17.1 · **Not Started** · Issue: — · PR: —
 
 OIDC is the primary corporate authentication method. Each company connects its own identity provider: issuer, client ID, client secret and scopes are company-level configuration, set by the company Admin and stored encrypted at rest ([ADR-0014](../../adr/0014-configuration-split.md)) — not an instance-wide `AUTH_OIDC_*` environment variable, since different companies on the same instance may use different providers. Role and grant assignment remain manual inside the Platform.
+
+> **Implementation details, decided 2026-08-17 (D39–D41):** the client library is the standard `openid-client`; configuration relies on the issuer's `.well-known/openid-configuration` for discovery rather than hand-configuring endpoints. **Identity is the OIDC `sub` claim** — a stable per-IdP identifier — not the email. A first-time SSO login keys the account on `sub`, so a user who switches identity providers becomes a new account (email is still stored as a label, but is not the join key). The acceptance "a first-time SSO login creates a user with no role and no grants" therefore means: an account identified by `sub`, created with no role and no grants.
 
 **Acceptance**
 

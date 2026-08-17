@@ -4,7 +4,7 @@ The REST API as the single entry point, the public API, and the MCP server. Sour
 
 Entry format and status legend: [requirements index](README.md). Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
 
-> **Resequenced.** The documented public API and the MCP read and write tools moved **R3 → R1**. They are no longer a late-release convenience: since [ADR-0021](../../adr/0021-agent-driven-migration.md) replaced the bespoke importer with an agent driving the API, they are the mechanism by which ~30 products get imported. OAuth with user consent (REQ-API-005) stays in R3 — the import authenticates with a service-account token (REQ-API-009), not an interactive consent flow.
+> **Resequenced.** The documented public API and the MCP read and write tools moved **R3 → R1**. They are no longer a late-release convenience: since [ADR-0021](../../adr/0021-agent-driven-migration.md) replaced the bespoke importer with an agent driving the API, they are the mechanism by which the products get imported. OAuth with user consent (REQ-API-005) stays in R3 — the import authenticates with a service-account token (REQ-API-009), not an interactive consent flow.
 
 | ID          | Requirement                                             | MoSCoW | Rel. | Milestone | Status      |
 | ----------- | ------------------------------------------------------- | ------ | ---- | --------- | ----------- |
@@ -56,6 +56,8 @@ A documented, stable public surface. The contract is generated from the implemen
 
 A layer above the REST API. Clients are analysts' and editors' AI assistants, developers' IDEs, and — from M1.4 — the import agent.
 
+> **Transport and auth, decided 2026-08-17 (D37/D38):** the server uses the **Streamable HTTP** MCP transport, served from the same Fastify process (one deployment, one command — fits REQ-FDN-012). Auth is **Bearer** over that transport: each request carries a service-account token (REQ-API-009), and every tool call is scoped by that token's role and project grants (REQ-SEC-003), with the negative case tested (REQ-API-003 acceptance).
+
 R1 set, chosen for what import and verification need: list projects; retrieve a project's page structure; retrieve a page's trackings; search properties; retrieve property detail; retrieve the reconciliation report (REQ-IMP-006). The richer analytical tools are REQ-API-010.
 
 **Acceptance**
@@ -98,7 +100,7 @@ Naming and documentation guidelines exposed as MCP resources and prompts, so the
 - The conventions in REQ-DOM-023 (lowercase underscores, `si`/`no` booleans, ISO 8601, `dev`/`qa`/`prod`, separator rules) are retrievable as a resource.
 - The import agent consumes them, so imported content follows house conventions from the first product rather than being corrected afterwards.
 
-> **Moved R3 → R1**, promoted Could → Should. It was a nice-to-have when agents were a late-release feature; with an agent authoring the import for ~30 products, guidelines it can actually read are what keep the output consistent.
+> **Moved R3 → R1**, promoted Could → Should. It was a nice-to-have when agents were a late-release feature; with an agent authoring the import, guidelines it can actually read are what keep the output consistent.
 
 ### REQ-API-007 — Outbound webhooks on publication
 
@@ -133,4 +135,4 @@ Non-interactive authentication for scripted clients: a token bound to a user ide
 
 The analytical read tools beyond what import required: retrieve the flow and trigger structure of a project, retrieve the changelog between two versions, impact analysis for a property, and property detail enriched with data-quality status once R4 exists.
 
-Split from REQ-API-003 because these depend on capabilities that do not exist in R1 — flows arrive in R2 (REQ-NAV-003), impact analysis in R2 (REQ-DOM-020), data-quality signals in R4 (REQ-DQ-002).
+Split from REQ-API-003 because these depend on capabilities that are not all in R1 — impact analysis in R2 (REQ-DOM-020), data-quality signals in R4 (REQ-DQ-002); the flow/trigger read tools (REQ-NAV-003/004) are in R1 but this milestone still carries the changelog-between-versions and impact-analysis tools that need R2 state.
