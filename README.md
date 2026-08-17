@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/dx-doc-logo.jpg" alt="dx-doc logo" width="240" />
+</p>
+
 # dx-doc — Tracking Documentation Platform
 
 **Status:** Pre-R0 — repository scaffolding and documentation foundation
