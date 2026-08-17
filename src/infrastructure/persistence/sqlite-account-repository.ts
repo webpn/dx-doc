@@ -19,6 +19,7 @@ interface UserRow {
   name: string | null;
   instanceAdmin: number;
   active: number;
+  passwordMustChange: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -33,6 +34,7 @@ function toUser(row: UserRow): UserAccount {
     name: row.name,
     instanceAdmin: row.instanceAdmin === 1,
     active: row.active === 1,
+    passwordMustChange: row.passwordMustChange === 1,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -72,7 +74,8 @@ export class SqliteAccountRepository implements AccountRepository {
       .prepare(
         `SELECT id, company_id AS companyId, email, password_hash AS passwordHash,
                 role_id AS roleId, name, instance_admin AS instanceAdmin,
-                active, created_at AS createdAt, updated_at AS updatedAt
+                active,
+                      password_must_change AS passwordMustChange, created_at AS createdAt, updated_at AS updatedAt
          FROM users WHERE id = ?`,
       )
       .get(id) as UserRow | undefined;
@@ -86,7 +89,8 @@ export class SqliteAccountRepository implements AccountRepository {
             .prepare(
               `SELECT id, company_id AS companyId, email, password_hash AS passwordHash,
                       role_id AS roleId, name, instance_admin AS instanceAdmin,
-                      active, created_at AS createdAt, updated_at AS updatedAt
+                      active,
+                      password_must_change AS passwordMustChange, created_at AS createdAt, updated_at AS updatedAt
                FROM users WHERE company_id IS NULL AND email = ?`,
             )
             .get(email) as UserRow | undefined)
@@ -94,7 +98,8 @@ export class SqliteAccountRepository implements AccountRepository {
             .prepare(
               `SELECT id, company_id AS companyId, email, password_hash AS passwordHash,
                       role_id AS roleId, name, instance_admin AS instanceAdmin,
-                      active, created_at AS createdAt, updated_at AS updatedAt
+                      active,
+                      password_must_change AS passwordMustChange, created_at AS createdAt, updated_at AS updatedAt
                FROM users WHERE company_id = ? AND email = ?`,
             )
             .get(companyId, email) as UserRow | undefined);
@@ -124,7 +129,8 @@ export class SqliteAccountRepository implements AccountRepository {
       .prepare(
         `UPDATE users
          SET password_hash = @passwordHash, role_id = @roleId, name = @name,
-             instance_admin = @instanceAdmin, active = @active, updated_at = @updatedAt
+             instance_admin = @instanceAdmin, active = @active,
+             password_must_change = @passwordMustChange, updated_at = @updatedAt
          WHERE id = @id`,
       )
       .run({
@@ -134,6 +140,7 @@ export class SqliteAccountRepository implements AccountRepository {
         name: user.name,
         instanceAdmin: user.instanceAdmin ? 1 : 0,
         active: user.active ? 1 : 0,
+        passwordMustChange: user.passwordMustChange ? 1 : 0,
         updatedAt: user.updatedAt,
       });
     return Promise.resolve();

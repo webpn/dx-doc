@@ -17,6 +17,8 @@ export interface UserAccount {
   instanceAdmin: boolean;
   /** Deactivation flag (REQ-SEC-013): a deactivated user's sessions stop. */
   active: boolean;
+  /** Bootstrap admins must change their password at first login (REQ-SEC-013). */
+  passwordMustChange: boolean;
   createdAt: string;
   updatedAt: string;
 }

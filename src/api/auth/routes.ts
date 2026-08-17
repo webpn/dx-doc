@@ -49,7 +49,7 @@ export function registerAuthRoutes(app: FastifyInstance, options: AuthRoutesOpti
       maxAge: Math.floor(options.sessionTtlMs / 1000),
       secure: false,
     });
-    return { ok: true, user: result.user };
+    return { ok: true, user: result.user, passwordChangeRequired: result.passwordChangeRequired };
   });
 
   app.post('/api/auth/logout', async (request, reply) => {
@@ -59,6 +59,44 @@ export function registerAuthRoutes(app: FastifyInstance, options: AuthRoutesOpti
       await options.sessions.destroy(token);
     }
     reply.clearCookie(options.cookieName, { path: '/' });
+    return { ok: true };
+  });
+
+  app.post('/api/auth/change-password', async (request, reply) => {
+    const cookies = request.cookies as Record<string, string | undefined>;
+    const token = cookies[options.cookieName];
+    if (token === undefined) {
+      return reply
+        .code(401)
+        .send({ error: { code: 'UNAUTHENTICATED', message: 'Not authenticated' } });
+    }
+    const userId = await options.sessions.resolve(token);
+    if (userId === null) {
+      return reply
+        .code(401)
+        .send({ error: { code: 'UNAUTHENTICATED', message: 'Session expired' } });
+    }
+
+    const body = (request.body ?? {}) as { currentPassword?: unknown; newPassword?: unknown };
+    const currentPassword = typeof body.currentPassword === 'string' ? body.currentPassword : '';
+    const newPassword = typeof body.newPassword === 'string' ? body.newPassword : '';
+    if (currentPassword === '' || newPassword === '') {
+      return reply.code(400).send({
+        error: { code: 'INVALID_INPUT', message: 'currentPassword and newPassword are required' },
+      });
+    }
+
+    const result = await options.auth.changePassword(userId, currentPassword, newPassword);
+    if (!result.ok) {
+      const status = result.error.kind === 'invalid_current_password' ? 401 : 400;
+      const code =
+        result.error.kind === 'invalid_current_password'
+          ? 'INVALID_CURRENT_PASSWORD'
+          : result.error.kind === 'weak_password'
+            ? 'WEAK_PASSWORD'
+            : 'NOT_FOUND';
+      return reply.code(status).send({ error: { code, message: 'Could not change password' } });
+    }
     return { ok: true };
   });
 }

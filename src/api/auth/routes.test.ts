@@ -140,4 +140,50 @@ describe('auth routes (email + password)', () => {
     expect(out.statusCode).toBe(200);
     expect(String(out.headers['set-cookie'])).toContain('dxdoc_session=;');
   });
+
+  it('requires a password change at first login and clearing it unlocks the account', async () => {
+    // Simulate a bootstrap administrator: initial password must be changed.
+    db.prepare('UPDATE users SET password_must_change = 1 WHERE id = ?').run('u1');
+
+    const login = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: loginPayload(),
+    });
+    expect(login.statusCode).toBe(200);
+    const loginBody = login.json<{ passwordChangeRequired?: boolean }>();
+    expect(loginBody.passwordChangeRequired).toBe(true);
+    const token =
+      String(login.headers['set-cookie'] ?? '')
+        .split(';')[0]
+        ?.split('=')[1] ?? '';
+
+    // Wrong current password is rejected.
+    const bad = await app.inject({
+      method: 'POST',
+      url: '/api/auth/change-password',
+      headers: { cookie: `dxdoc_session=${token}` },
+      payload: { currentPassword: 'wrong', newPassword: 'fresh-password-1' },
+    });
+    expect(bad.statusCode).toBe(401);
+
+    // Correct current password changes it and clears the flag.
+    const good = await app.inject({
+      method: 'POST',
+      url: '/api/auth/change-password',
+      headers: { cookie: `dxdoc_session=${token}` },
+      payload: { currentPassword: PASSWORD, newPassword: 'fresh-password-1' },
+    });
+    expect(good.statusCode).toBe(200);
+
+    // The new password logs in and the flag is cleared.
+    const relogin = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: loginPayload({ password: 'fresh-password-1' }),
+    });
+    expect(relogin.statusCode).toBe(200);
+    const reloginBody = relogin.json<{ passwordChangeRequired?: boolean }>();
+    expect(reloginBody.passwordChangeRequired).toBe(false);
+  });
 });

@@ -68,6 +68,8 @@ export class BootstrapService {
     const admin = await this.accounts.getUserById(id);
     if (admin !== null) {
       admin.instanceAdmin = true;
+      // The bootstrap password must be changed at first login (REQ-SEC-013).
+      admin.passwordMustChange = true;
       admin.updatedAt = this.now().toISOString();
       await this.accounts.updateUser(admin);
     }

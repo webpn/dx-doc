@@ -1,11 +1,24 @@
+import { err, ok, type Result } from '@project/shared';
+
 import type { AccountRepository } from '../ports/account-repository';
 import type { PasswordHasher } from '../ports/password-hasher';
 
 import type { NewSession, SessionService } from './session-service';
 
+const MIN_PASSWORD_LENGTH = 8;
+
 export type LoginResult =
-  | { ok: true; session: NewSession; user: { id: string; companyId: string | null } }
+  | {
+      ok: true;
+      session: NewSession;
+      user: { id: string; companyId: string | null };
+      /** True for a bootstrap admin whose initial password must be changed (REQ-SEC-013). */
+      passwordChangeRequired: boolean;
+    }
   | { ok: false; reason: 'invalid_credentials' };
+
+export type ChangePasswordError =
+  { kind: 'invalid_current_password' } | { kind: 'weak_password' } | { kind: 'not_found' };
 
 /**
  * Email + password login (REQ-SEC-001). A failed attempt never discloses
@@ -18,6 +31,7 @@ export class AuthService {
     private readonly accounts: AccountRepository,
     private readonly hasher: PasswordHasher,
     private readonly sessions: SessionService,
+    private readonly now: () => Date = () => new Date(),
   ) {}
 
   async login(companyId: string, email: string, password: string): Promise<LoginResult> {
@@ -30,7 +44,43 @@ export class AuthService {
     }
 
     const session = await this.sessions.create(user.id);
-    return { ok: true, session, user: { id: user.id, companyId: user.companyId } };
+    return {
+      ok: true,
+      session,
+      user: { id: user.id, companyId: user.companyId },
+      passwordChangeRequired: user.passwordMustChange,
+    };
+  }
+
+  /**
+   * Change the current user's password (REQ-SEC-013 first-login change and
+   * routine changes). Requires the current password; clears the
+   * password-must-change flag once a new password is set.
+   */
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<Result<{ ok: true }, ChangePasswordError>> {
+    const user = await this.accounts.getUserById(userId);
+    if (user === null) {
+      return err({ kind: 'not_found' });
+    }
+    if (user.passwordHash === null || !user.active) {
+      return err({ kind: 'not_found' });
+    }
+    const currentValid = await this.hasher.verify(currentPassword, user.passwordHash);
+    if (!currentValid) {
+      return err({ kind: 'invalid_current_password' });
+    }
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      return err({ kind: 'weak_password' });
+    }
+    user.passwordHash = await this.hasher.hash(newPassword);
+    user.passwordMustChange = false;
+    user.updatedAt = this.now().toISOString();
+    await this.accounts.updateUser(user);
+    return ok({ ok: true });
   }
 
   private cachedDummyHash: string | null = null;

@@ -33,6 +33,7 @@ class FakeAccounts implements AccountRepository {
       name: null,
       instanceAdmin: false,
       active: true,
+      passwordMustChange: false,
       createdAt: input.createdAt,
       updatedAt: input.createdAt,
     };
@@ -86,6 +87,7 @@ function setupUser(accounts: FakeAccounts, overrides: Partial<UserAccount>): Use
     name: null,
     instanceAdmin: false,
     active: true,
+    passwordMustChange: false,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
     ...overrides,

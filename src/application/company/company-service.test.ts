@@ -30,6 +30,7 @@ class FakeAccounts implements AccountRepository {
       name: null,
       instanceAdmin: false,
       active: true,
+      passwordMustChange: false,
       createdAt: input.createdAt,
       updatedAt: input.createdAt,
     });
@@ -110,6 +111,7 @@ function buildHarness(): {
     name: null,
     instanceAdmin: true,
     active: true,
+    passwordMustChange: false,
     createdAt: FIXED_NOW.toISOString(),
     updatedAt: FIXED_NOW.toISOString(),
   });
@@ -123,6 +125,7 @@ function buildHarness(): {
     name: null,
     instanceAdmin: false,
     active: true,
+    passwordMustChange: false,
     createdAt: FIXED_NOW.toISOString(),
     updatedAt: FIXED_NOW.toISOString(),
   });

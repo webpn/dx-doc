@@ -47,6 +47,7 @@ class FakeAccounts implements AccountRepository {
       name: null,
       instanceAdmin: false,
       active: true,
+      passwordMustChange: false,
       createdAt: input.createdAt,
       updatedAt: input.createdAt,
     });
@@ -183,6 +184,7 @@ function buildHarness(): Harness {
       name: null,
       instanceAdmin: false,
       active: true,
+      passwordMustChange: false,
       createdAt: FIXED_NOW.toISOString(),
       updatedAt: FIXED_NOW.toISOString(),
     });
@@ -280,6 +282,7 @@ describe('LifecycleService — deactivation (REQ-SEC-013)', () => {
       name: null,
       instanceAdmin: false,
       active: true,
+      passwordMustChange: false,
       createdAt: FIXED_NOW.toISOString(),
       updatedAt: FIXED_NOW.toISOString(),
     });

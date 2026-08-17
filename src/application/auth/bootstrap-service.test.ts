@@ -38,6 +38,7 @@ class FakeAccounts implements AccountRepository {
       name: null,
       instanceAdmin: false,
       active: true,
+      passwordMustChange: false,
       createdAt: input.createdAt,
       updatedAt: input.createdAt,
     });
@@ -103,6 +104,8 @@ describe('BootstrapService (REQ-SEC-013/014)', () => {
     expect(admin?.companyId).toBeNull();
     expect(admin?.email).toBe('root@dx.test');
     expect(admin?.passwordHash).toBe('hash:s3cret');
+    // Must change the bootstrap password at first login (REQ-SEC-013).
+    expect(admin?.passwordMustChange).toBe(true);
   });
 
   it('ignores the variables once any user exists — cannot create a second admin', async () => {
