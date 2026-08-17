@@ -331,7 +331,7 @@ export interface NavigationEventsTable {
   project_id: string;
   name: string;
   description: ColumnType<string | null, string | null | undefined, string | null | undefined>;
-  active: ColumnType<boolean, boolean | undefined, boolean | undefined>;
+  active: ColumnType<number | boolean, number | boolean | undefined, number | boolean | undefined>;
   created_at: ColumnType<string, string | undefined, string | undefined>;
   updated_at: ColumnType<string, string | undefined, string | undefined>;
 }
@@ -348,7 +348,11 @@ export interface PropertiesTable {
   format_pattern: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   allowed_values: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   example_values: ColumnType<string | null, string | null | undefined, string | null | undefined>;
-  pii_flag: ColumnType<boolean, boolean | undefined, boolean | undefined>;
+  pii_flag: ColumnType<
+    number | boolean,
+    number | boolean | undefined,
+    number | boolean | undefined
+  >;
   hashing_policy: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   status: PropertyStatus;
   introduced_in_version: ColumnType<
@@ -445,7 +449,11 @@ export interface FreePagesTable {
   title: string;
   slug: string;
   content: string;
-  publishable: ColumnType<boolean, boolean | undefined, boolean | undefined>;
+  publishable: ColumnType<
+    number | boolean,
+    number | boolean | undefined,
+    number | boolean | undefined
+  >;
   custom_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   created_at: ColumnType<string, string | undefined, string | undefined>;
   updated_at: ColumnType<string, string | undefined, string | undefined>;
