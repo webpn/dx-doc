@@ -35,6 +35,6 @@
       "@project/api/*": ["./src/api/*"]
     }
   },
-  "include": ["src", "tests", "e2e"],
+  "include": ["src", "tests", "e2e", "vite.config.ts"],
   "exclude": ["node_modules", "dist", "build", "coverage"]
 }

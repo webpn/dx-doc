@@ -33,6 +33,14 @@ npm-debug.log*
 test-results/
 playwright-report/
 
+# Local data (default SQLite location, object storage, search indices)
+var/
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+
 # Temp
 tmp/
 temp/
