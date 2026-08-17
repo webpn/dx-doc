@@ -180,6 +180,14 @@ function setEditorWithPassword(accounts: FakeAccounts, passwordHash: string): vo
   accounts.users.set('editor', { ...editor, passwordHash });
 }
 
+function makeInstanceAdmin(accounts: FakeAccounts, userId: string): void {
+  const user = accounts.users.get(userId);
+  if (user === undefined) {
+    throw new Error(`user ${userId} missing from harness`);
+  }
+  accounts.users.set(userId, { ...user, instanceAdmin: true });
+}
+
 describe('LifecycleService — invitation (REQ-SEC-013)', () => {
   it('an Admin invites a user with no role and no grants', async () => {
     const { accounts, lifecycle, adminId } = buildHarness();
@@ -253,6 +261,43 @@ describe('LifecycleService — deactivation (REQ-SEC-013)', () => {
     });
 
     expect(await lifecycle.deactivateUser('admin', 'c1', 'other')).toEqual({
+      ok: false,
+      error: { kind: 'not_found' },
+    });
+  });
+});
+
+describe('LifecycleService — instance-administration capability (REQ-SEC-014)', () => {
+  it('an instance admin can grant and revoke the flag', async () => {
+    const { accounts, lifecycle, adminId } = buildHarness();
+    makeInstanceAdmin(accounts, 'admin');
+
+    expect(await lifecycle.setInstanceAdmin(adminId, 'editor', true)).toEqual({
+      ok: true,
+      value: { ok: true },
+    });
+    expect((await accounts.getUserById('editor'))?.instanceAdmin).toBe(true);
+
+    expect(await lifecycle.setInstanceAdmin(adminId, 'editor', false)).toEqual({
+      ok: true,
+      value: { ok: true },
+    });
+    expect((await accounts.getUserById('editor'))?.instanceAdmin).toBe(false);
+  });
+
+  it('a non-holder cannot change the flag', async () => {
+    const { lifecycle } = buildHarness();
+    expect(await lifecycle.setInstanceAdmin('admin', 'editor', true)).toEqual({
+      ok: false,
+      error: { kind: 'forbidden' },
+    });
+  });
+
+  it('returns not_found for an unknown target', async () => {
+    const { accounts, lifecycle } = buildHarness();
+    makeInstanceAdmin(accounts, 'admin');
+
+    expect(await lifecycle.setInstanceAdmin('admin', 'ghost', true)).toEqual({
       ok: false,
       error: { kind: 'not_found' },
     });

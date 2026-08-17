@@ -85,6 +85,29 @@ export class LifecycleService {
     return ok({ ok: true });
   }
 
+  /**
+   * Grant or revoke the instance-administration capability (REQ-SEC-014).
+   * Only an existing holder can change it; the change is a deliberate,
+   * auditable act (audit recording is an M1.9 concern).
+   */
+  async setInstanceAdmin(
+    actorId: string,
+    targetUserId: string,
+    value: boolean,
+  ): Promise<Result<{ ok: true }, LifecycleError>> {
+    if (!(await this.permissions.canAdministerInstance(actorId))) {
+      return err({ kind: 'forbidden' });
+    }
+    const target = await this.accounts.getUserById(targetUserId);
+    if (target === null) {
+      return err({ kind: 'not_found' });
+    }
+    target.instanceAdmin = value;
+    target.updatedAt = this.now().toISOString();
+    await this.accounts.updateUser(target);
+    return ok({ ok: true });
+  }
+
   async requestPasswordReset(companyId: string, email: string): Promise<void> {
     const user = await this.accounts.getUserByEmail(companyId, email.trim().toLowerCase());
     // Uniform no-op for unknown, password-less (SSO), or deactivated accounts.
