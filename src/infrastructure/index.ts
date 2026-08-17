@@ -1,6 +1,6 @@
 // Infrastructure layer — public API surface
-// Implements the port interfaces defined by the Application layer.
-// Contains all framework, network, persistence, and third-party code.
+// Adapters and concrete implementations behind the ports owned by the domain.
 // See ARCHITECTURE.md §Infrastructure for layer rules.
 
-export {};
+export { openSqliteConnection } from './persistence/sqlite';
+export type { SqliteDb } from './persistence/sqlite';
