@@ -4,3 +4,10 @@
 
 export { openSqliteConnection } from './persistence/sqlite';
 export type { SqliteDb } from './persistence/sqlite';
+
+export {
+  INSTANCE_VARIABLES,
+  InstanceConfigError,
+  loadInstanceConfig,
+} from './config/instance-config';
+export type { InstanceConfig, InstanceVariableDef } from './config/instance-config';
