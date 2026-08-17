@@ -6,30 +6,44 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { applyMigrations } from '../../../tests/support/apply-migrations';
 
-import { openSqliteConnection, type SqliteDb } from './sqlite';
+import { closeSqliteConnection, openSqliteConnection, type Connection } from './sqlite-kysely';
 import { SqliteSessionRepository } from './sqlite-session-repository';
 
 describe('SqliteSessionRepository', () => {
   let dir: string;
-  let db: SqliteDb;
+  let connection: Connection;
   let repo: SqliteSessionRepository;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-session-repo-'));
-    db = openSqliteConnection(path.join(dir, 'test.sqlite'));
-    applyMigrations(db);
+    connection = openSqliteConnection(path.join(dir, 'test.sqlite'));
+    applyMigrations(connection);
     // A user so sessions have a valid foreign key.
-    db.prepare(
-      'INSERT INTO company (id, name, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-    ).run('c1', 'Acme', 'acme', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');
-    db.prepare(
-      'INSERT INTO users (id, company_id, email, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-    ).run('u1', 'c1', 'a@acme.test', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');
-    repo = new SqliteSessionRepository(db);
+    await connection.kysely
+      .insertInto('company')
+      .values({
+        id: 'c1',
+        name: 'Acme',
+        slug: 'acme',
+        created_at: '2026-01-01T00:00:00.000Z',
+        updated_at: '2026-01-01T00:00:00.000Z',
+      })
+      .execute();
+    await connection.kysely
+      .insertInto('users')
+      .values({
+        id: 'u1',
+        company_id: 'c1',
+        email: 'a@acme.test',
+        created_at: '2026-01-01T00:00:00.000Z',
+        updated_at: '2026-01-01T00:00:00.000Z',
+      })
+      .execute();
+    repo = new SqliteSessionRepository(connection.kysely);
   });
 
-  afterEach(() => {
-    db.close();
+  afterEach(async () => {
+    await closeSqliteConnection(connection);
     rmSync(dir, { recursive: true, force: true });
   });
 

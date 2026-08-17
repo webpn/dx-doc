@@ -2,54 +2,66 @@ import type {
   SessionRecord,
   SessionRepository,
 } from '@project/application/ports/session-repository';
+import { Kysely, SqliteDialect } from 'kysely';
 
+import type { Database } from './db-schema';
 import type { SqliteDb } from './sqlite';
+import type { Db } from './sqlite-kysely';
 
 /**
- * SQLite `SessionRepository`. Synchronous under an async interface: prepared
- * statements return resolved/rejected promises.
+ * SQLite `SessionRepository` backed by Kysely (ADR-0024).
  */
 export class SqliteSessionRepository implements SessionRepository {
-  constructor(private readonly db: SqliteDb) {}
+  private readonly db: Db;
 
-  save(session: SessionRecord): Promise<void> {
-    this.db
-      .prepare(
-        `INSERT INTO sessions (id, user_id, token_hash, expires_at, created_at)
-         VALUES (@id, @userId, @tokenHash, @expiresAt, @createdAt)`,
-      )
-      .run({
-        id: session.id,
-        userId: session.userId,
-        tokenHash: session.tokenHash,
-        expiresAt: session.expiresAt,
-        createdAt: session.createdAt,
+  constructor(db: Db | SqliteDb) {
+    if ('prepare' in db) {
+      this.db = new Kysely<Database>({
+        dialect: new SqliteDialect({ database: db }),
       });
-    return Promise.resolve();
+    } else {
+      this.db = db;
+    }
   }
 
-  findByTokenHash(tokenHash: string): Promise<SessionRecord | null> {
-    const row = this.db
-      .prepare(
-        `SELECT id, user_id AS userId, token_hash AS tokenHash, expires_at AS expiresAt, created_at AS createdAt
-         FROM sessions WHERE token_hash = ?`,
-      )
-      .get(tokenHash) as SessionRecord | undefined;
-    return Promise.resolve(row ?? null);
+  async save(session: SessionRecord): Promise<void> {
+    await this.db
+      .insertInto('sessions')
+      .values({
+        id: session.id,
+        user_id: session.userId,
+        token_hash: session.tokenHash,
+        expires_at: session.expiresAt,
+        created_at: session.createdAt,
+      })
+      .execute();
   }
 
-  deleteByTokenHash(tokenHash: string): Promise<void> {
-    this.db.prepare('DELETE FROM sessions WHERE token_hash = ?').run(tokenHash);
-    return Promise.resolve();
+  async findByTokenHash(tokenHash: string): Promise<SessionRecord | null> {
+    const row = await this.db
+      .selectFrom('sessions')
+      .selectAll()
+      .where('token_hash', '=', tokenHash)
+      .executeTakeFirst();
+    if (!row) return null;
+    return {
+      id: row.id,
+      userId: row.user_id,
+      tokenHash: row.token_hash,
+      expiresAt: row.expires_at,
+      createdAt: row.created_at,
+    };
   }
 
-  deleteAllForUser(userId: string): Promise<void> {
-    this.db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
-    return Promise.resolve();
+  async deleteByTokenHash(tokenHash: string): Promise<void> {
+    await this.db.deleteFrom('sessions').where('token_hash', '=', tokenHash).execute();
   }
 
-  deleteExpired(nowIso: string): Promise<void> {
-    this.db.prepare('DELETE FROM sessions WHERE expires_at <= ?').run(nowIso);
-    return Promise.resolve();
+  async deleteAllForUser(userId: string): Promise<void> {
+    await this.db.deleteFrom('sessions').where('user_id', '=', userId).execute();
+  }
+
+  async deleteExpired(nowIso: string): Promise<void> {
+    await this.db.deleteFrom('sessions').where('expires_at', '<=', nowIso).execute();
   }
 }
