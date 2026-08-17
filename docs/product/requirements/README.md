@@ -73,7 +73,7 @@ What the requirement means, and any rationale that is not obvious from the state
 | **Blocked**     | Cannot proceed until a named open decision closes.                                      |
 | **Rejected**    | Consciously excluded. The entry stays, with the reason.                                 |
 
-Everything not marked **Rejected** is currently **Not Started** — the repository is pre-R0.
+R0 requirements are **Implemented** / **Verified**; R1+ requirements are **Not Started** (or **Accepted**/**Rejected** for design decisions).
 
 ## Keeping this current
 

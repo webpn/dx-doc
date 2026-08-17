@@ -33,6 +33,17 @@ npm-debug.log*
 test-results/
 playwright-report/
 
+# Local data (default SQLite location, object storage, search indices)
+var/
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Schema dump (any tool may regenerate it; not a hand-edited source of truth)
+db/schema.sql
+
 # Temp
 tmp/
 temp/

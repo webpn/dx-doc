@@ -50,6 +50,8 @@ One entry per file. Use this to find _what exists and where_ before opening full
 
 ## [ADR-0023](adr/0023-rich-text-editor.md) — Rich-Text Editor Engine
 
+## [ADR-0024](adr/0024-kysely-as-persistence-query-builder.md) — Kysely for Persistence Queries and Migrations
+
 ## [architecture-containers](architecture/containers.md) — Container Architecture
 
 ## [architecture-deployment](architecture/deployment.md) — Deployment

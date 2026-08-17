@@ -69,7 +69,7 @@ Describes the deployable containers/services that compose the dx-doc Platform.
 
 - **Purpose:** Primary data store for all entities, versions, audit logs, and company-level configuration
 - **Multi-tenancy:** company-scoped data through `company_id` foreign keys on all tenant entities
-- **Migrations:** forward-only versioned migrations executed via `npm run db:migrate` (dbmate) as an explicit deploy/CI step (O7; amended 2026-08-17)
+- **Migrations:** forward-only versioned migrations executed via `npm run db:migrate` (Kysely Migrator) as an explicit deploy/CI step (O7; settled in ADR-0024)
 - **Backup:** responsibility of the operator; git export provides partial off-site copy (R2)
 
 ### Search Index (Pagefind, in-process)

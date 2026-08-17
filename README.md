@@ -54,15 +54,19 @@ The detailed, enumerated definition of R1 scope lives in the [R1 minimum require
 
 ## Current Status
 
-- Functional specification complete (see `docs/product/functional-specification.md`)
-- Architecture and engineering foundation documents in progress
-- No application code yet; the repository is being scaffolded for R0
+**R0 (foundations) in progress.** The application is under active development:
+
+- Stack (Vite + React, Fastify API) is wired; `dev`, `build`, `test`, `typecheck` all run.
+- Persistence (SQLite + migrations), authentication/authorisation, and the internal REST API are implemented behind the documented architecture.
+- R1 (the tracking-documentation MVP) is the next target.
+
+The source of truth for what is scheduled is [docs/product/milestones.md](docs/product/milestones.md).
 
 ## Prerequisites
 
 - Node.js 20 LTS or later
 - npm 10 or later
-- S3-compatible object storage (e.g., MinIO for local development)
+- S3-compatible object storage (e.g., MinIO for local development); Docker for the reference stack
 
 No database server is required: the default adapter is SQLite. MariaDB and PostgreSQL adapters arrive in R2, selected with `DB_DRIVER`.
 
@@ -76,7 +80,7 @@ git clone <repo-url>
 cd dx-doc
 
 # Install dependencies
-npm install
+npm ci
 
 # Copy and configure environment variables
 cp .env.example .env
@@ -85,9 +89,58 @@ cp .env.example .env
 # Run database migrations
 npm run db:migrate
 
-# Start development server
+# Start development server (Vite on :5173, API on :3001)
 npm run dev
 ```
+
+## Reference deployment (Docker)
+
+The reference stack is an example, not a supported production packaging. It
+runs the app in one container (serving the API and the built client) next to
+S3-compatible object storage; SQLite and Pagefind are self-contained, so no
+database or search container is needed.
+
+```bash
+docker compose up -d --build
+```
+
+- App: <http://localhost:3001> (health check `GET /api/health`)
+- Object storage (MinIO console): <http://localhost:9001>
+
+Backup is the operator's job: the reference stack mounts the SQLite database on
+a named volume — take a file-level snapshot of that file on a schedule you are
+comfortable with, and always before upgrading.
+
+For host-side local development only (SMTP catcher + object storage, run the
+app yourself with `npm run dev`):
+
+```bash
+docker compose up -d mailpit minio
+```
+
+## Data flow (third-party data-flow statement)
+
+This statement enumerates every external service a running instance may
+contact, what is sent, and what is never sent (REQ-FDN-021). It changes in the
+same pull request as any change to an outbound integration.
+
+For a **stock instance** (SQLite, Pagefind, no SMTP/Sentry/SSO configured),
+**no documentation content leaves the instance** except to the object storage
+the operator configured (`STORAGE_S3_*`). Assets are uploaded to that storage
+and read back from it; nothing else is contacted.
+
+| Integration                                    | When it is contacted                | What is sent                                                | Default                           |
+| ---------------------------------------------- | ----------------------------------- | ----------------------------------------------------------- | --------------------------------- |
+| Object storage (S3-compatible, `STORAGE_S3_*`) | asset upload/read                   | documentation assets the operator configured to store there | Required                          |
+| SMTP (`SMTP_*`)                                | password reset / publication emails | the recipient address and the email body                    | Off — no email is sent without it |
+| Error tracking (Sentry, `SENTRY_DSN`)          | unhandled errors                    | error context (no documentation content, no personal data)  | Off                               |
+| Identity providers (OIDC/SAML, R2+)            | SSO login                           | an authorization code / assertion                           | Off                               |
+| Search (hosted adapter, R3+)                   | search                              | query terms and indexed content                             | Off — Pagefind is local           |
+
+Documentation content is **never** sent to: search (default is local), email
+(the content itself is not emailed), or any analytics/telemetry service. Test
+credentials and other non-publishable content never leave the instance under
+any configuration (REQ-SEC-012).
 
 ## Environment Variables
 
@@ -117,20 +170,21 @@ Instance-level configuration only — infrastructure and operator secrets. Per-c
 | `AUDIT_RETENTION_MONTHS`                                                                                          | No                                     | `24`                    | Audit log retention                                                                             |
 | `AUTH_SESSION_TTL`                                                                                                | No                                     | `8h`                    | Session expiry                                                                                  |
 | `LOG_LEVEL`                                                                                                       | No                                     | `info`                  | Structured log verbosity                                                                        |
-| `AUTO_MIGRATE`                                                                                                    | No                                     | `true`                  | Run pending migrations automatically at start-up                                                |
 
 ## Development Commands
 
-| Command                | Purpose                          |
-| ---------------------- | -------------------------------- |
-| `npm run dev`          | Start development server         |
-| `npm run build`        | Production build                 |
-| `npm run typecheck`    | TypeScript type checking         |
-| `npm run lint`         | ESLint static analysis           |
-| `npm run format`       | Prettier formatting              |
-| `npm run format:check` | Check formatting without writing |
-| `npm test`             | Unit and component tests         |
-| `npm run test:e2e`     | End-to-end tests                 |
+| Command                | Purpose                                                             |
+| ---------------------- | ------------------------------------------------------------------- |
+| `npm run dev`          | Start development server (Vite + API)                               |
+| `npm run start`        | Start the API/production server (Fastify, serves the built client)  |
+| `npm run build`        | Production build (typecheck + Vite)                                 |
+| `npm run typecheck`    | TypeScript type checking                                            |
+| `npm run lint`         | ESLint static analysis                                              |
+| `npm run format`       | Prettier formatting                                                 |
+| `npm run format:check` | Check formatting without writing                                    |
+| `npm test`             | Unit and component tests                                            |
+| `npm run test:e2e`     | End-to-end tests                                                    |
+| `npm run db:migrate`   | Apply pending schema migrations (Kysely Migrator; run before `dev`) |
 
 ## Architecture Overview
 

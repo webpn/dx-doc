@@ -2,11 +2,9 @@
 
 ## Status
 
-Accepted (2026-08-12) — closes open decision **O7**. **Amended 2026-08-17 (D28):** migration tooling is **dbmate**, run as an explicit `npm run db:migrate` step, replacing the original run-at-start-up execution model. The forward-only, versioned, portable, backup-guarded properties are unchanged; the _when_ migrations run changes from "the application refuses to start" to "the operator or CI runs the command".
+**Superseded by [ADR-0024](0024-kysely-as-persistence-query-builder.md)** (2026-08-17).
 
-## Date
-
-2026-08-11 (decided 2026-08-12)
+> The properties this ADR cared about — forward-only migrations, explicit operator step, dialect-portable, backup-guarded, "data is not schema" — are preserved by ADR-0024, which switches the _runner_ from dbmate to Kysely's `Migrator` and the _file format_ from raw SQL to TypeScript modules using the Kysely schema API. ADR-0024 is the live decision; the content below is retained as the historical record of the dbmate + raw SQL choice (D28, 2026-08-17) and the D28 amendment that moved migrations off the "run at start-up" model.
 
 ## Context
 

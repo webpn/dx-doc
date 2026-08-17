@@ -22,7 +22,7 @@ Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that sli
 
 ## Current position
 
-**Pre-R0.** The repository holds documentation, configuration and empty layer barrels (`src/*/index.ts`). No framework is chosen, no persistence exists, and `package.json` scripts for `dev`, `build`, `test` and `db:migrate` are placeholders. M0.1 is therefore the first executable milestone and it is a decision milestone, not a coding one.
+**R0 is complete; entering R1 (MVP).** Foundations, layered architecture, authentication, account lifecycle, Kysely persistence on SQLite, REST API with shared domain validation, Pagefind search abstraction, S3 object storage adapter, and public repository readiness (M0.1–M0.6) are all implemented, tested, and passing CI validations. M1.1 (Tracking Data Model) is the next milestone to execute.
 
 ---
 
@@ -54,7 +54,7 @@ Two things decided here land later and are worth naming now: the editor engine i
 
 **Delivers:** REQ-FDN-002, REQ-FDN-003, REQ-FDN-004, REQ-FDN-005, REQ-FDN-009, REQ-FDN-020
 
-Repository ports owned by the domain, with a **SQLite adapter** as the default and only implementation through R1 ([ADR-0020](../adr/0020-database-portability.md)). Schema v1 covering Company, Project (with grouping labels), User, Role, ProjectGrant, and an empty Page, plus the `custom_id` column that makes import idempotent (REQ-IMP-003). Immutable internal identifiers on every entity, distinct from name and slug. Forward-only versioned migrations applied by an explicit `db:migrate` step (dbmate, D28), written in the portable SQL subset from the first file.
+Repository ports owned by the domain, with a **SQLite adapter** as the default and only implementation through R1 ([ADR-0020](../adr/0020-database-portability.md)). Schema v1 covering Company, Project (with grouping labels), User, Role, ProjectGrant, and an empty Page, plus the `custom_id` column that makes import idempotent (REQ-IMP-003). Immutable internal identifiers on every entity, distinct from name and slug. Forward-only versioned migrations applied by an explicit `db:migrate` step (Kysely `Migrator`, D42, ADR-0024), written with the Kysely schema API from the first file.
 
 **Depends on:** M0.1
 
@@ -505,7 +505,7 @@ Four things sit on the critical path and are worth protecting:
 | O4 — data quality vs unstructured placeholders               | M4.2  | Start of R4             |
 | O5 — verification module scope                               | M4.1  | Start of R4             |
 
-**O7 is closed** — see [ADR-0015](../adr/0015-schema-migration-strategy.md), accepted 2026-08-12 and amended 2026-08-17: forward-only versioned migrations run via an explicit `db:migrate` step (dbmate), no auto-apply at boot, no downgrade path, and backup as the operator's documented responsibility. M0.1 is no longer gated by anything.
+**O7 is closed** — see [ADR-0024](../adr/0024-kysely-as-persistence-query-builder.md) (superseding ADR-0015): forward-only versioned migrations run via an explicit `db:migrate` step (Kysely `Migrator`), no auto-apply at boot, no downgrade path, and backup as the operator's documented responsibility. M0.1 is no longer gated by anything.
 
 **O11 and O14 are closed**, both on 2026-08-12, which leaves R1 ungated end to end. O11: managing the company catalogue is an Admin-role power, not a flag and not a fifth role — the instance administrator's remit is companies as entities, the Admin's is everything inside one ([REQ-SEC-010](requirements/REQ-SEC.md#req-sec-010--company-catalogue-is-managed-by-the-admin-role)). O14: two indices per project, the published one rebuilt on publication and the draft one rebuilt asynchronously after each save, with a 30-second freshness target ([ADR-0009](../adr/0009-search-abstraction.md)).
 

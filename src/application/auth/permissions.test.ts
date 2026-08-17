@@ -1,0 +1,193 @@
+import { describe, expect, it } from 'vitest';
+
+import type {
+  AccountRepository,
+  CompanyRole,
+  CreateUserInput,
+  NewCompanyRole,
+  ProjectGrant,
+  UserAccount,
+} from '../ports/account-repository';
+
+import {
+  COMPANY_ACTION_ROLES,
+  PermissionService,
+  PROJECT_ACTION_ROLES,
+  type CompanyAction,
+  type ProjectAction,
+} from './permissions';
+import { COMPANY_ROLE_NAMES, type CompanyRoleName } from './roles';
+
+class FakeAccounts implements AccountRepository {
+  users = new Map<string, UserAccount>();
+  roles = new Map<string, CompanyRole>();
+  grants: ProjectGrant[] = [];
+
+  createUser(input: CreateUserInput): Promise<void> {
+    const user: UserAccount = {
+      id: input.id,
+      companyId: input.companyId,
+      email: input.email,
+      passwordHash: input.passwordHash,
+      roleId: null,
+      name: null,
+      instanceAdmin: false,
+      active: true,
+      passwordMustChange: false,
+      createdAt: input.createdAt,
+      updatedAt: input.createdAt,
+    };
+    this.users.set(input.id, user);
+    return Promise.resolve();
+  }
+
+  getUserById(id: string): Promise<UserAccount | null> {
+    return Promise.resolve(this.users.get(id) ?? null);
+  }
+
+  getUserByEmail(companyId: string, email: string): Promise<UserAccount | null> {
+    for (const user of this.users.values()) {
+      if (user.companyId === companyId && user.email === email) {
+        return Promise.resolve(user);
+      }
+    }
+    return Promise.resolve(null);
+  }
+
+  updateUser(user: UserAccount): Promise<void> {
+    this.users.set(user.id, user);
+    return Promise.resolve();
+  }
+
+  listRolesForCompany(companyId: string): Promise<CompanyRole[]> {
+    return Promise.resolve([...this.roles.values()].filter((role) => role.companyId === companyId));
+  }
+
+  listGrantsForUser(userId: string): Promise<ProjectGrant[]> {
+    return Promise.resolve(this.grants.filter((grant) => grant.userId === userId));
+  }
+
+  countUsers(): Promise<number> {
+    return Promise.resolve(this.users.size);
+  }
+
+  createRole(role: NewCompanyRole): Promise<void> {
+    this.roles.set(role.id, { id: role.id, companyId: role.companyId, name: role.name });
+    return Promise.resolve();
+  }
+}
+
+function setupUser(accounts: FakeAccounts, overrides: Partial<UserAccount>): UserAccount {
+  const user: UserAccount = {
+    id: 'u1',
+    companyId: 'c1',
+    email: 'u@acme.test',
+    passwordHash: null,
+    roleId: null,
+    name: null,
+    instanceAdmin: false,
+    active: true,
+    passwordMustChange: false,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    ...overrides,
+  };
+  accounts.users.set(user.id, user);
+  return user;
+}
+
+function buildRole(id: string, companyId: string, name: CompanyRoleName): CompanyRole {
+  return { id, companyId, name };
+}
+
+describe('PermissionService project actions (REQ-SEC-003/011)', () => {
+  const accounts = new FakeAccounts();
+  const permissions = new PermissionService(accounts);
+  const companyRoles = (COMPANY_ROLE_NAMES as readonly string[]).map(
+    (name) => name as CompanyRoleName,
+  );
+
+  for (const action of Object.keys(PROJECT_ACTION_ROLES) as ProjectAction[]) {
+    it(`${action}: allows every listed role and denies every other role`, async () => {
+      const allowed = PROJECT_ACTION_ROLES[action];
+      for (const roleName of companyRoles) {
+        accounts.grants = [];
+        accounts.users.clear();
+        const user = setupUser(accounts, { roleId: `r-${roleName}` });
+        accounts.grants.push({ id: 'g1', projectId: 'p1', userId: user.id, roleName });
+
+        const expected = allowed.includes(roleName);
+        await expect(permissions.canOnProject(user.id, 'p1', action)).resolves.toBe(expected);
+      }
+    });
+  }
+
+  it('denies every action when the user has no grant on the project', async () => {
+    const user = setupUser(accounts, {});
+    accounts.grants = [];
+
+    for (const action of Object.keys(PROJECT_ACTION_ROLES) as ProjectAction[]) {
+      await expect(permissions.canOnProject(user.id, 'p1', action)).resolves.toBe(false);
+    }
+  });
+});
+
+describe('PermissionService company actions (REQ-SEC-002/010)', () => {
+  const accounts = new FakeAccounts();
+  const permissions = new PermissionService(accounts);
+
+  function userWithRole(
+    roleName: CompanyRoleName | null,
+    instanceAdmin = false,
+    companyId = 'c1',
+  ): UserAccount {
+    const role = roleName === null ? null : buildRole(`r-${roleName}`, companyId, roleName);
+    if (role !== null) {
+      accounts.roles.set(role.id, role);
+    }
+    return setupUser(accounts, { roleId: role?.id ?? null, instanceAdmin, companyId });
+  }
+
+  for (const action of Object.keys(COMPANY_ACTION_ROLES) as CompanyAction[]) {
+    it(`${action}: allowed only for the listed company roles`, async () => {
+      const allowed = COMPANY_ACTION_ROLES[action];
+      for (const roleName of COMPANY_ROLE_NAMES) {
+        accounts.users.clear();
+        accounts.roles.clear();
+        const user = userWithRole(roleName);
+
+        const expected = allowed.includes(roleName);
+        await expect(permissions.canInCompany(user.id, 'c1', action)).resolves.toBe(expected);
+      }
+      // A deactivated user is denied even with the right role.
+      accounts.users.clear();
+      accounts.roles.clear();
+      const deactivated = userWithRole('admin');
+      deactivated.active = false;
+      await expect(permissions.canInCompany(deactivated.id, 'c1', action)).resolves.toBe(false);
+    });
+  }
+
+  it('denies company actions for a user of a different company', async () => {
+    const user = userWithRole('admin', false, 'c9');
+    return expect(
+      permissions.canInCompany(user.id, 'c1', 'company.manage_catalogue'),
+    ).resolves.toBe(false);
+  });
+});
+
+describe('PermissionService instance administration (REQ-SEC-013/014)', () => {
+  const accounts = new FakeAccounts();
+  const permissions = new PermissionService(accounts);
+
+  it('allows only active holders of the instance_admin capability', async () => {
+    const admin = setupUser(accounts, { instanceAdmin: true });
+    await expect(permissions.canAdministerInstance(admin.id)).resolves.toBe(true);
+
+    const plainUser = setupUser(accounts, { id: 'u2' });
+    await expect(permissions.canAdministerInstance(plainUser.id)).resolves.toBe(false);
+
+    admin.active = false;
+    await expect(permissions.canAdministerInstance(admin.id)).resolves.toBe(false);
+  });
+});

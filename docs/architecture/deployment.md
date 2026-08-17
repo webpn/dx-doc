@@ -11,7 +11,7 @@ The Platform is a **white-label, open-source product**. Each organisation deploy
 - **Single process, multiple responsibilities:** the application server serves the REST API, the MCP server, and static assets from a single Node.js process. No microservices.
 - **Stateless application:** the process holds no persistent state. All state is in the database and S3. The process can be restarted or scaled horizontally without data loss.
 - **Configuration through environment variables:** instance-level configuration uses environment variables. Company-level configuration is in the database.
-- **Forward-only migrations:** schema changes are applied by an explicit `npm run db:migrate` step (dbmate) in CI/deploy, not at process boot. No automated rollback.
+- **Forward-only migrations:** schema changes are applied by an explicit `npm run db:migrate` step (Kysely Migrator) in CI/deploy, not at process boot. No automated rollback.
 
 ## Reference Deployment Stack
 
@@ -96,6 +96,16 @@ Company-level configuration — branding, SMTP override, catalogue defaults, SSO
 5. Verify S3 connectivity.
 6. Start HTTP server (REST API + MCP server + static file serving).
 
+## Reference deployment stack (M0.6)
+
+The reference stack is an example, not a supported deployment. `docker compose up -d --build` stands up:
+
+- **`app`** — one container serving the REST API and the built client (ADR-0022). SQLite and Pagefind are self-contained, so no database or search container is needed. Migrations run on start (`npm run db:migrate` then `npm run start`).
+- **`minio`** — S3-compatible object storage behind the storage port (REQ-FDN-006); the `minio-init` service creates the expected bucket.
+- **`mailpit`** — a local SMTP catcher for development and tests; any outbound email lands here instead of a real inbox.
+
+The SQLite database lives on the named volume `dxdoc-data`; backing up means snapshotting that file (backup is the operator's responsibility).
+
 ## Backup and Recovery
 
 - **Database backup:** responsibility of the operator. The Platform provides no backup mechanism.
@@ -112,7 +122,7 @@ Company-level configuration — branding, SMTP override, catalogue defaults, SSO
 
 ## Monitoring
 
-- **Health check endpoint:** `GET /health` — returns database connectivity, search index status, S3 connectivity.
+- **Health check endpoint:** `GET /api/health` — returns liveness. (Database, search-index and storage connectivity checks are reported through their own endpoints; the health route is transport liveness.)
 - **Error tracking:** Sentry (R1) for unhandled exceptions.
 - **Logs:** structured JSON to stdout. Aggregation is the operator's responsibility.
 
