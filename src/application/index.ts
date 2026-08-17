@@ -8,6 +8,12 @@ export type { IndexableDocument, SearchIndex, SearchResult } from './ports/searc
 export { COMPANY_ROLE_NAMES, isCompanyRoleName } from './auth/roles';
 export type { CompanyRoleName } from './auth/roles';
 
+export { generateSessionToken, hashSessionToken } from './auth/tokens';
+export { SessionService } from './auth/session-service';
+export type { NewSession } from './auth/session-service';
+export { AuthService } from './auth/auth-service';
+export type { LoginResult } from './auth/auth-service';
+
 export type { PasswordHasher } from './ports/password-hasher';
 
 export type {
@@ -17,3 +23,5 @@ export type {
   ProjectGrant,
   UserAccount,
 } from './ports/account-repository';
+
+export type { SessionRecord, SessionRepository } from './ports/session-repository';

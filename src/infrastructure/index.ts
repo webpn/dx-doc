@@ -21,3 +21,4 @@ export { PagefindSearchIndex, PagefindQueryUnsupportedError } from './search/pag
 export { BcryptPasswordHasher } from './security/bcrypt-password-hasher';
 
 export { SqliteAccountRepository } from './persistence/sqlite-account-repository';
+export { SqliteSessionRepository } from './persistence/sqlite-session-repository';

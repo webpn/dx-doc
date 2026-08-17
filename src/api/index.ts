@@ -1,6 +1,6 @@
-// REST API layer — public API surface
-// The single entry point for all operations.
-// The web UI, MCP server, and export generators all consume this API.
-// See ARCHITECTURE.md §API for layer rules.
+// API layer — public API surface
+// REST transport: Fastify routes translate HTTP to application-service calls.
+// See ARCHITECTURE.md §API and ADR-0007/0022.
 
-export {};
+export { registerAuthRoutes } from './auth/routes';
+export type { AuthRoutesOptions } from './auth/routes';
