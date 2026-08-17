@@ -5,8 +5,12 @@ import path from 'node:path';
 import cookie from '@fastify/cookie';
 import { AuthService } from '@project/application/auth/auth-service';
 import { SessionService } from '@project/application/auth/session-service';
-import { openSqliteConnection } from '@project/infrastructure/persistence/sqlite';
 import { SqliteAccountRepository } from '@project/infrastructure/persistence/sqlite-account-repository';
+import {
+  closeSqliteConnection,
+  openSqliteConnection,
+  type Connection,
+} from '@project/infrastructure/persistence/sqlite-kysely';
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
 import Fastify, { type FastifyInstance } from 'fastify';
@@ -21,46 +25,56 @@ const PASSWORD = 'correct-horse-battery-staple';
 
 describe('auth routes (email + password)', () => {
   let dir: string;
-  let db: ReturnType<typeof openSqliteConnection>;
+  let connection: Connection;
   let app: FastifyInstance;
 
   beforeEach(async () => {
     dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-auth-'));
-    db = openSqliteConnection(path.join(dir, 'test.sqlite'));
-    applyMigrations(db);
+    connection = openSqliteConnection(path.join(dir, 'test.sqlite'));
+    applyMigrations(connection);
 
     const companyId = 'c1';
-    db.prepare(
-      'INSERT INTO company (id, name, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-    ).run(companyId, 'Acme', 'acme', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');
+    await connection.kysely
+      .insertInto('company')
+      .values({
+        id: companyId,
+        name: 'Acme',
+        slug: 'acme',
+        created_at: '2026-01-01T00:00:00.000Z',
+        updated_at: '2026-01-01T00:00:00.000Z',
+      })
+      .execute();
+
     for (const name of ['admin', 'project_manager', 'editor', 'viewer']) {
-      db.prepare(
-        'INSERT INTO roles (id, company_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-      ).run(
-        `role-${name}`,
-        companyId,
-        name,
-        '2026-01-01T00:00:00.000Z',
-        '2026-01-01T00:00:00.000Z',
-      );
+      await connection.kysely
+        .insertInto('roles')
+        .values({
+          id: `role-${name}`,
+          company_id: companyId,
+          name,
+          created_at: '2026-01-01T00:00:00.000Z',
+          updated_at: '2026-01-01T00:00:00.000Z',
+        })
+        .execute();
     }
 
     const hasher = new BcryptPasswordHasher();
     const passwordHash = await hasher.hash(PASSWORD);
-    db.prepare(
-      'INSERT INTO users (id, company_id, email, password_hash, role_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    ).run(
-      'u1',
-      companyId,
-      'u@acme.test',
-      passwordHash,
-      'role-editor',
-      '2026-01-01T00:00:00.000Z',
-      '2026-01-01T00:00:00.000Z',
-    );
+    await connection.kysely
+      .insertInto('users')
+      .values({
+        id: 'u1',
+        company_id: companyId,
+        email: 'u@acme.test',
+        password_hash: passwordHash,
+        role_id: 'role-editor',
+        created_at: '2026-01-01T00:00:00.000Z',
+        updated_at: '2026-01-01T00:00:00.000Z',
+      })
+      .execute();
 
-    const accounts = new SqliteAccountRepository(db);
-    const sessions = new SessionService(new SqliteSessionRepository(db), TTL_MS);
+    const accounts = new SqliteAccountRepository(connection.kysely);
+    const sessions = new SessionService(new SqliteSessionRepository(connection.kysely), TTL_MS);
     const auth = new AuthService(accounts, hasher, sessions);
 
     app = Fastify();
@@ -70,7 +84,7 @@ describe('auth routes (email + password)', () => {
 
   afterEach(async () => {
     await app.close();
-    db.close();
+    await closeSqliteConnection(connection);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -109,7 +123,11 @@ describe('auth routes (email + password)', () => {
   });
 
   it('rejects a deactivated account without disclosing it', async () => {
-    db.prepare('UPDATE users SET active = 0 WHERE id = ?').run('u1');
+    await connection.kysely
+      .updateTable('users')
+      .set({ active: 0 })
+      .where('id', '=', 'u1')
+      .execute();
 
     const res = await app.inject({
       method: 'POST',
@@ -143,7 +161,11 @@ describe('auth routes (email + password)', () => {
 
   it('requires a password change at first login and clearing it unlocks the account', async () => {
     // Simulate a bootstrap administrator: initial password must be changed.
-    db.prepare('UPDATE users SET password_must_change = 1 WHERE id = ?').run('u1');
+    await connection.kysely
+      .updateTable('users')
+      .set({ password_must_change: 1 })
+      .where('id', '=', 'u1')
+      .execute();
 
     const login = await app.inject({
       method: 'POST',

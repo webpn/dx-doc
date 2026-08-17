@@ -2,50 +2,57 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+import { sql } from 'kysely';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { openSqliteConnection, type SqliteDb } from './sqlite';
+import { closeSqliteConnection, openSqliteConnection, type Connection } from './sqlite-kysely';
 
 describe('SQLite adapter', () => {
   let dir: string;
+  let connection: Connection | null = null;
 
-  afterEach(() => {
+  afterEach(async () => {
+    if (connection) {
+      await closeSqliteConnection(connection);
+      connection = null;
+    }
     if (dir) {
       rmSync(dir, { recursive: true, force: true });
     }
   });
 
-  function openTempConnection(): SqliteDb {
+  function openTempConnection(): Connection {
     dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-sqlite-'));
-    return openSqliteConnection(path.join(dir, 'test.sqlite'));
+    connection = openSqliteConnection(path.join(dir, 'test.sqlite'));
+    return connection;
   }
 
-  it('sets the operational PRAGMAs on every connection', () => {
-    const db = openTempConnection();
+  it('sets the operational PRAGMAs on every connection', async () => {
+    const conn = openTempConnection();
 
     // foreign_keys is OFF by default in SQLite; the adapter must turn it on.
-    expect(db.pragma('foreign_keys', { simple: true })).toBe(1);
+    const fk = await sql<{ foreign_keys: number }>`PRAGMA foreign_keys`.execute(conn.kysely);
     // WAL so readers never block the writer.
-    expect(db.pragma('journal_mode', { simple: true })).toBe('wal');
+    const jm = await sql<{ journal_mode: string }>`PRAGMA journal_mode`.execute(conn.kysely);
     // A busy timeout so concurrent writes queue rather than fail.
-    expect(db.pragma('busy_timeout', { simple: true })).toBe(5000);
+    const bt = await sql<{ timeout: number }>`PRAGMA busy_timeout`.execute(conn.kysely);
 
-    db.close();
+    expect(fk.rows[0]?.foreign_keys).toBe(1);
+    expect(jm.rows[0]?.journal_mode).toBe('wal');
+    expect(bt.rows[0]?.timeout).toBe(5000);
   });
 
   it('actually enforces foreign keys, not merely reports the pragma', () => {
-    const db = openTempConnection();
+    const conn = openTempConnection();
 
-    db.exec(`
+    conn.exec(`
       CREATE TABLE parent (id TEXT PRIMARY KEY);
       CREATE TABLE child (parent_id TEXT NOT NULL REFERENCES parent (id));
     `);
 
     // A row referencing a missing parent must be rejected.
-    expect(() => db.prepare('INSERT INTO child (parent_id) VALUES (?)').run('missing')).toThrow(
-      /FOREIGN KEY constraint failed/,
-    );
-
-    db.close();
+    expect(() => {
+      conn.exec("INSERT INTO child (parent_id) VALUES ('missing')");
+    }).toThrow(/FOREIGN KEY constraint failed/);
   });
 });

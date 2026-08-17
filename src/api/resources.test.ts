@@ -9,9 +9,13 @@ import { SessionService } from '@project/application/auth/session-service';
 import { PageService } from '@project/application/page/page-service';
 import { ProjectService } from '@project/application/project/project-service';
 import type { ProjectCreateInput } from '@project/application/validation/schemas';
-import { openSqliteConnection } from '@project/infrastructure/persistence/sqlite';
 import { SqliteAccountRepository } from '@project/infrastructure/persistence/sqlite-account-repository';
 import { SqliteCompanyRepository } from '@project/infrastructure/persistence/sqlite-company-repository';
+import {
+  closeSqliteConnection,
+  openSqliteConnection,
+  type Connection,
+} from '@project/infrastructure/persistence/sqlite-kysely';
 import { SqlitePageRepository } from '@project/infrastructure/persistence/sqlite-page-repository';
 import { SqliteProjectRepository } from '@project/infrastructure/persistence/sqlite-project-repository';
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
@@ -34,45 +38,69 @@ function t(): string {
 
 describe('Project and Page REST routes (REQ-API-001)', () => {
   let dir: string;
-  let db: ReturnType<typeof openSqliteConnection>;
+  let connection: Connection;
   let app: FastifyInstance;
   let projects: ProjectService;
 
   beforeEach(async () => {
     dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-crud-routes-'));
-    db = openSqliteConnection(path.join(dir, 'test.sqlite'));
-    applyMigrations(db);
+    connection = openSqliteConnection(path.join(dir, 'test.sqlite'));
+    applyMigrations(connection);
 
     const companyId = 'c1';
-    db.prepare(
-      'INSERT INTO company (id, name, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-    ).run(companyId, 'Acme', 'acme', t(), t());
+    await connection.kysely
+      .insertInto('company')
+      .values({
+        id: companyId,
+        name: 'Acme',
+        slug: 'acme',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
+
     for (const name of ['admin', 'project_manager', 'editor', 'viewer']) {
-      db.prepare(
-        'INSERT INTO roles (id, company_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-      ).run(`role-${name}`, companyId, name, t(), t());
+      await connection.kysely
+        .insertInto('roles')
+        .values({
+          id: `role-${name}`,
+          company_id: companyId,
+          name,
+          created_at: t(),
+          updated_at: t(),
+        })
+        .execute();
     }
 
     const hasher = new BcryptPasswordHasher();
-    db.prepare(
-      'INSERT INTO users (id, company_id, email, password_hash, role_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    ).run('u1', companyId, 'admin@acme.test', await hasher.hash(PASSWORD), 'role-admin', t(), t());
+    await connection.kysely
+      .insertInto('users')
+      .values({
+        id: 'u1',
+        company_id: companyId,
+        email: 'admin@acme.test',
+        password_hash: await hasher.hash(PASSWORD),
+        role_id: 'role-admin',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
 
-    const accounts = new SqliteAccountRepository(db);
-    const sessionsRepo = new SqliteSessionRepository(db);
+    const accounts = new SqliteAccountRepository(connection.kysely);
+    const sessionsRepo = new SqliteSessionRepository(connection.kysely);
     const sessions = new SessionService(sessionsRepo, TTL_MS);
     const auth = new AuthService(accounts, hasher, sessions);
     const permissions = new PermissionService(accounts);
-    const companyRepo = new SqliteCompanyRepository(db);
+    const companyRepo = new SqliteCompanyRepository(connection.kysely);
     projects = new ProjectService(
-      new SqliteProjectRepository(db),
+      new SqliteProjectRepository(connection.kysely),
       permissions,
       () => new Date(),
       () => randomUuid(),
     );
     const pages = new PageService(
-      new SqlitePageRepository(db),
-      new SqliteProjectRepository(db),
+      new SqlitePageRepository(connection.kysely),
+      new SqliteProjectRepository(connection.kysely),
       permissions,
       () => new Date(),
       () => randomUuid(),
@@ -89,7 +117,7 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
 
   afterEach(async () => {
     await app.close();
-    db.close();
+    await closeSqliteConnection(connection);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -168,9 +196,17 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
 
     // Reading content requires a grant on the project (REQ-SEC-003), even for
     // the Admin who created it.
-    db.prepare(
-      'INSERT INTO project_grants (id, project_id, user_id, role_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-    ).run('g-admin', firstBody.id, 'u1', 'role-admin', t(), t());
+    await connection.kysely
+      .insertInto('project_grants')
+      .values({
+        id: 'g-admin',
+        project_id: firstBody.id,
+        user_id: 'u1',
+        role_id: 'role-admin',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
 
     const got = await app.inject({
       method: 'GET',
@@ -200,9 +236,17 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
     });
     const projectId = project.json<{ id: string }>().id;
     // Grant the admin the editor role on the project so page creation is allowed.
-    db.prepare(
-      'INSERT INTO project_grants (id, project_id, user_id, role_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-    ).run('g1', projectId, 'u1', 'role-editor', t(), t());
+    await connection.kysely
+      .insertInto('project_grants')
+      .values({
+        id: 'g1',
+        project_id: projectId,
+        user_id: 'u1',
+        role_id: 'role-editor',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
 
     const created = await app.inject({
       method: 'POST',

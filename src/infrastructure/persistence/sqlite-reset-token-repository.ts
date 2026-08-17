@@ -2,27 +2,14 @@ import type {
   PasswordResetToken,
   PasswordResetTokenRepository,
 } from '@project/application/ports/reset-token-repository';
-import { Kysely, SqliteDialect } from 'kysely';
 
-import type { Database } from './db-schema';
-import type { SqliteDb } from './sqlite';
 import type { Db } from './sqlite-kysely';
 
 /**
  * SQLite `PasswordResetTokenRepository` backed by Kysely (ADR-0024).
  */
 export class SqlitePasswordResetTokenRepository implements PasswordResetTokenRepository {
-  private readonly db: Db;
-
-  constructor(db: Db | SqliteDb) {
-    if ('prepare' in db) {
-      this.db = new Kysely<Database>({
-        dialect: new SqliteDialect({ database: db }),
-      });
-    } else {
-      this.db = db;
-    }
-  }
+  constructor(private readonly db: Db) {}
 
   async save(token: PasswordResetToken): Promise<void> {
     await this.db

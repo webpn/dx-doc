@@ -2,8 +2,12 @@
 // Adapters and concrete implementations behind the ports owned by the domain.
 // See ARCHITECTURE.md §Infrastructure for layer rules.
 
-export { openSqliteConnection } from './persistence/sqlite';
-export type { SqliteDb } from './persistence/sqlite';
+export {
+  openSqliteConnection,
+  closeSqliteConnection,
+  type Connection,
+  type Db,
+} from './persistence/sqlite-kysely';
 
 export {
   INSTANCE_VARIABLES,
