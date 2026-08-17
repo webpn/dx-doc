@@ -14,7 +14,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-AUTH-004 | Mermaid rendering and live preview                   | Must   | R1   | M1.6      | Implemented |
 | REQ-AUTH-005 | Optimistic concurrency with stale-write rejection    | Must   | R1   | M1.5      | Implemented |
 | REQ-AUTH-006 | Tracking duplication within a project                | Must   | R1   | M1.5      | Implemented |
-| REQ-AUTH-007 | Project-scoped full-text search                      | Must   | R1   | M1.7      | Not Started |
+| REQ-AUTH-007 | Project-scoped full-text search                      | Must   | R1   | M1.7      | Implemented |
 | REQ-AUTH-008 | Page and flow duplication                            | Should | R2   | M2.7      | Not Started |
 | REQ-AUTH-009 | Cross-project tracking copy with guided mapping      | Should | R2   | M2.7      | Not Started |
 | REQ-AUTH-010 | Bulk operations on a multi-selection, with preview   | Should | R2   | M2.4      | Not Started |

@@ -26,6 +26,7 @@ import {
   SqliteTrackingTemplateRepository,
   SqliteTriggerRepository,
 } from '@project/infrastructure/persistence/sqlite-tracking-repositories';
+import { InMemorySearchIndex } from '@project/infrastructure/search/in-memory-search';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -144,6 +145,8 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     const flowRepo = new SqliteFlowRepository(connection.kysely);
     const triggerRepo = new SqliteTriggerRepository(connection.kysely);
 
+    const searchIndex = new InMemorySearchIndex();
+
     const trackingService = new TrackingService(
       propRepo,
       modRepo,
@@ -156,6 +159,7 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
       triggerRepo,
       projectRepo,
       permissions,
+      searchIndex,
     );
 
     app = Fastify();
@@ -327,5 +331,43 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     }>();
     expect(report.projectId).toBe(projectId);
     expect(report.counts).toBeDefined();
+  });
+
+  it('syncs search index and executes project-scoped full-text queries (REQ-AUTH-007, REQ-SEC-012)', async () => {
+    // 1. Create a property to index
+    const createPropRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/properties?projectId=${projectId}`,
+      headers: { authorization: `Bearer ${sessionTokenVal}` },
+      payload: {
+        name: 'page_type',
+        businessLabel: 'Page Type',
+        dataSource: 'development',
+        type: 'string',
+        status: 'active',
+      },
+    });
+    expect(createPropRes.statusCode).toBe(201);
+
+    // 2. Sync index
+    const syncRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/projects/${projectId}/search/sync`,
+      headers: { authorization: `Bearer ${sessionTokenVal}` },
+    });
+    expect(syncRes.statusCode).toBe(200);
+    const syncData = syncRes.json<{ indexedCount: number }>();
+    expect(syncData.indexedCount).toBeGreaterThan(0);
+
+    // 3. Query for page_type property
+    const searchRes = await app.inject({
+      method: 'GET',
+      url: `/api/projects/${projectId}/search?q=page_type`,
+      headers: { authorization: `Bearer ${sessionTokenVal}` },
+    });
+    expect(searchRes.statusCode).toBe(200);
+    const results = searchRes.json<{ documentId: string; title: string }[]>();
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0]?.title).toContain('page_type');
   });
 });

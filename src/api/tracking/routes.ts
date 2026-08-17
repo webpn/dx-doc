@@ -616,6 +616,33 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     return { ok: true };
   });
 
+  // ── SEARCH (REQ-AUTH-007, REQ-SEC-012) ──────────────────────
+  app.post('/api/companies/:companyId/projects/:projectId/search/sync', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { companyId, projectId } = request.params as {
+      companyId: string;
+      projectId: string;
+    };
+    const result = await trackingService.syncProjectSearchIndex(userId, companyId, projectId);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return result.value;
+  });
+
+  app.get('/api/projects/:projectId/search', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { projectId } = request.params as { projectId: string };
+    const query = request.query as { q?: string };
+    const q = query.q ?? '';
+
+    const result = await trackingService.searchProject(userId, projectId, q);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return result.value;
+  });
+
   // ── BATCH WRITE ENDPOINT (REQ-IMP-005, D35) ──────────────────
   app.post('/api/companies/:companyId/batch', async (request, reply) => {
     const userId = await authenticateRequest(request, sessions, cookieName);

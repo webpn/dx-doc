@@ -37,6 +37,7 @@ import { err, ok, type Result } from '@project/shared/result';
 
 import type { PermissionService } from '../auth/permissions';
 import type { ProjectRepository } from '../ports/project-repository';
+import type { IndexableDocument, SearchIndex, SearchResult } from '../ports/search';
 import type { ValidationIssue } from '../validation/issues';
 import {
   destinationCreateSchema,
@@ -105,6 +106,7 @@ export class TrackingService {
     private readonly triggers: TriggerRepository,
     private readonly projects: ProjectRepository,
     private readonly permissions: PermissionService,
+    private readonly searchIndex?: SearchIndex,
     private readonly now: () => Date = () => new Date(),
     private readonly newId: () => string = () => randomUUID(),
   ) {}
@@ -1593,5 +1595,77 @@ export class TrackingService {
     }
 
     return ok({ ok: true });
+  }
+
+  // --- FULL-TEXT SEARCH (REQ-AUTH-007, REQ-SEC-012) ---
+  async syncProjectSearchIndex(
+    actorId: string,
+    companyId: string,
+    projectId: string,
+  ): Promise<Result<{ indexedCount: number }, TrackingServiceError>> {
+    if (!this.searchIndex) return ok({ indexedCount: 0 });
+    if (!(await this.permissions.canOnProject(actorId, projectId, 'project.read'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const docs: IndexableDocument[] = [];
+
+    // 1. Properties
+    const props = await this.properties.listProperties(companyId, projectId);
+    for (const p of props) {
+      docs.push({
+        id: p.id,
+        title: p.businessLabel ? `${p.name} (${p.businessLabel})` : p.name,
+        text: [
+          p.name,
+          p.businessLabel ?? '',
+          p.description ?? '',
+          p.analysisNotes ?? '',
+          ...(p.allowedValues ?? []),
+          ...(p.exampleValues ?? []),
+        ].join(' '),
+      });
+    }
+
+    // 2. Trackings & Specific Values (REQ-AUTH-007)
+    const trks = await this.trackings.listTrackingsForProject(projectId);
+    for (const trk of trks) {
+      const svs = await this.trackings.getSpecificValuesForTracking(trk.id);
+      const svTexts = svs.map((s) => `${s.value} ${s.description ?? ''}`);
+      docs.push({
+        id: trk.id,
+        title: trk.name,
+        text: [trk.name, trk.slug, trk.description ?? '', ...svTexts].join(' '),
+      });
+    }
+
+    // 3. Free Pages (REQ-SEC-012: publishable only)
+    const fps = await this.freePages.listFreePages(companyId, projectId);
+    for (const fp of fps) {
+      if (fp.publishable) {
+        docs.push({
+          id: fp.id,
+          title: fp.title,
+          text: [fp.title, fp.slug, fp.content].join(' '),
+        });
+      }
+    }
+
+    await this.searchIndex.indexProject(projectId, docs);
+    return ok({ indexedCount: docs.length });
+  }
+
+  async searchProject(
+    actorId: string,
+    projectId: string,
+    query: string,
+  ): Promise<Result<SearchResult[], TrackingServiceError>> {
+    if (!this.searchIndex) return ok([]);
+    if (!(await this.permissions.canOnProject(actorId, projectId, 'project.read'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const results = await this.searchIndex.query(projectId, query);
+    return ok(results);
   }
 }
