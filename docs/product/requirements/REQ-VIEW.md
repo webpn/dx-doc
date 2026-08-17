@@ -4,34 +4,35 @@ The two audience views and the channels through which documentation leaves the a
 
 Entry format and status legend: [requirements index](README.md). Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned. REQ-VIEW-003 carries full criteria despite being R2, because every other R2 channel depends on it.
 
-| ID | Requirement | MoSCoW | Rel. | Milestone | Status |
-|---|---|---|---|---|---|
-| REQ-VIEW-001 | In-app read-only view | Must | R1 | M1.9 | Not Started |
-| REQ-VIEW-002 | View selector as a presentation filter | Must | R1 | M1.9 | Not Started |
-| REQ-VIEW-003 | Profile-aware rendering engine | Must | R2 | M2.5 | Not Started |
-| REQ-VIEW-004 | Per-project static site | Should | R2 | M2.6 | Not Started |
-| REQ-VIEW-005 | Git export, one commit per publication | Should | R2 | M2.6 | Not Started |
-| REQ-VIEW-006 | PDF export of version changes | Should | R2 | M2.6 | Not Started |
-| REQ-VIEW-007 | Excel export of data layer properties | Should | R2 | M2.6 | Not Started |
-| REQ-VIEW-008 | Development-filtered changelog | Should | R2 | M2.6 | Not Started |
-| REQ-VIEW-009 | Confluence Cloud publication | Should | R3 | M3.2 | Not Started |
-| REQ-VIEW-010 | Dedicated Design view; field-level permissions | Won't | — | — | Rejected |
+| ID           | Requirement                                    | MoSCoW | Rel. | Milestone | Status      |
+| ------------ | ---------------------------------------------- | ------ | ---- | --------- | ----------- |
+| REQ-VIEW-001 | In-app read-only view                          | Must   | R1   | M1.9      | Not Started |
+| REQ-VIEW-002 | View selector as a presentation filter         | Must   | R2   | M2.5      | Not Started |
+| REQ-VIEW-003 | Profile-aware rendering engine                 | Must   | R2   | M2.5      | Not Started |
+| REQ-VIEW-004 | Per-project static site                        | Should | R2   | M2.6      | Not Started |
+| REQ-VIEW-005 | Git export, one commit per publication         | Should | R2   | M2.6      | Not Started |
+| REQ-VIEW-006 | PDF export of version changes                  | Should | R2   | M2.6      | Not Started |
+| REQ-VIEW-007 | Excel export of data layer properties          | Should | R2   | M2.6      | Not Started |
+| REQ-VIEW-008 | Development-filtered changelog                 | Should | R2   | M2.6      | Not Started |
+| REQ-VIEW-009 | Confluence Cloud publication                   | Should | R3   | M3.2      | Not Started |
+| REQ-VIEW-010 | Dedicated Design view; field-level permissions | Won't  | —    | —         | Rejected    |
 
 ---
 
 ### REQ-VIEW-001 — In-app read-only view
 
-**Must** · R1 · [M1.9](../milestones.md) · spec §10.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) · spec §10.4 · **Not Started** · Issue: — · PR: —
 
-Read-only consultation behind SSO, email + password, or a project shared password (REQ-SEC-005).
+Read-only consultation behind email + password or a project shared password (REQ-SEC-005). (SSO login is R2 — REQ-SEC-004.)
 
 **Acceptance**
+
 - A Viewer cannot reach a write path through any entry point, including MCP.
 - Shared-password readers see published content only, never the draft.
 
 ### REQ-VIEW-002 — View selector as a presentation filter
 
-**Must** · R1 · [M1.9](../milestones.md) · spec §10.1, §10.2, §10.3 · **Not Started** · Issue: — · PR: —
+**Must** · R2 · [M2.5](../milestones.md#m25--profile-aware-rendering) · spec §10.1, §10.2, §10.3 · **Not Started** · Issue: — · PR: —
 
 Two views: **Analyst/Business** and **Development**. Designers use the Analyst/Business view. Inside the application, the selector is a presentation filter — any authenticated user with project access may switch views and can potentially see everything.
 
@@ -39,7 +40,10 @@ Two views: **Analyst/Business** and **Development**. Designers use the Analyst/B
 
 **Development** excludes destinations and downstream mappings, `tag_manager`-sourced properties, analysis notes, audiences and surveys. It prominently includes the development-filtered changelog and, from R3, generated snippets.
 
+> Moved from R1 (M1.9) to R2 (M2.5) on 2026-08-13 to ship aligned with — and after — open decision O3 (structured analytics-reading guidance, M2.1) rather than before it. It is sequenced after O3, so it is not marked `Blocked`.
+
 **Acceptance**
+
 - The selector is documented in the UI and in code as **not a security boundary** — there are no field-level permissions.
 - Switching views changes presentation only; no authorisation check depends on the selected view.
 - Platform/environment coverage indicators are absent by design: platforms are separate projects.
@@ -48,11 +52,12 @@ Two views: **Analyst/Business** and **Development**. Designers use the Analyst/B
 
 ### REQ-VIEW-003 — Profile-aware rendering engine
 
-**Must** · R2 · [M2.5](../milestones.md) · spec §10.1 · **Not Started** · Issue: — · PR: —
+**Must** · R2 · [M2.5](../milestones.md#m25--profile-aware-rendering) · spec §10.1 · **Not Started** · Issue: — · PR: —
 
 In published artefacts — static site, Confluence, PDF, git export — excluded content is **physically omitted** from the generated output, with a guarantee of non-leakage.
 
 **Acceptance**
+
 - A development-view artefact contains no destination, no `tag_manager`-sourced property, no analysis note, no audience and no survey — verified by scanning generated output, not by inspecting the template.
 - No non-publishable free-page content appears in any artefact (REQ-SEC-012).
 - The guarantee is a test that runs over generated bytes for every channel, added at the same time as each channel.
@@ -62,13 +67,13 @@ In published artefacts — static site, Confluence, PDF, git export — excluded
 
 ### REQ-VIEW-004 — Per-project static site
 
-**Should** · R2 · [M2.6](../milestones.md) · spec §10.4 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.6](../milestones.md#m26--distribution-channels) · spec §10.4 · **Not Started** · Issue: — · PR: —
 
 One site per project, regenerated on every publication, built with a static site generator. The hosting target is configurable (`STATIC_SITE_OUTPUT_TARGET`). Access protection is the responsibility of whoever hosts the space.
 
 ### REQ-VIEW-005 — Git export, one commit per publication
 
-**Should** · R2 · [M2.6](../milestones.md) · spec §10.4, §15.2 · [ADR-0018](../../adr/0018-git-export-model.md) · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.6](../milestones.md#m26--distribution-channels) · spec §10.4, §15.2 · [ADR-0018](../../adr/0018-git-export-model.md) · **Not Started** · Issue: — · PR: —
 
 Markdown export to a configurable repository. Exactly one commit per publication, authored by the publishing editor. **One-way only** — there is no round-trip import, so no second source of truth can appear.
 
@@ -76,25 +81,25 @@ Also serves as a partial, human-readable off-site copy, which is the only backup
 
 ### REQ-VIEW-006 — PDF export of version changes
 
-**Should** · R2 · [M2.6](../milestones.md) · spec §10.4 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.6](../milestones.md#m26--distribution-channels) · spec §10.4 · **Not Started** · Issue: — · PR: —
 
 The set of changes introduced by a version, including images and — from R3 — code snippets for changed trackings (REQ-DEV-004). Intended for sharing with development, and covers disconnected consultation (REQ-NFR-009).
 
 ### REQ-VIEW-007 — Excel export of data layer properties
 
-**Should** · R2 · [M2.6](../milestones.md) · spec §10.4 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.6](../milestones.md#m26--distribution-channels) · spec §10.4 · **Not Started** · Issue: — · PR: —
 
 All properties with every column, resolving referenced entities to their names.
 
 ### REQ-VIEW-008 — Development-filtered changelog
 
-**Should** · R2 · [M2.6](../milestones.md) · spec §10.3 · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.6](../milestones.md#m26--distribution-channels) · spec §10.3 · **Not Started** · Issue: — · PR: —
 
 The changelog narrowed to changes relevant to development, prominent in the Development view. The underlying diff data supports this from R1 (REQ-VER-006).
 
 ### REQ-VIEW-009 — Confluence Cloud publication
 
-**Should** · R3 · [M3.2](../milestones.md) · spec §10.4 · **Not Started** · Issue: — · PR: —
+**Should** · R3 · [M3.2](../milestones.md#m32--confluence-publication) · spec §10.4 · **Not Started** · Issue: — · PR: —
 
 Via API to a configurable space, mirroring the static site's hierarchy. **Development view only.** Full overwrite on every publication — any manual edit made in Confluence is lost by design, and this is documented as intended behaviour rather than a limitation. Images are served from the same asset storage as the static site.
 

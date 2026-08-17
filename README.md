@@ -6,7 +6,7 @@
 
 **dx-doc is the single source of truth for digital analytics tracking documentation within an organisation.**
 
-It is a self-hosted, open-source, white-label platform that documents *tracking plans* for websites and mobile applications. A tracking plan answers three questions about a digital product:
+It is a self-hosted, open-source, white-label platform that documents _tracking plans_ for websites and mobile applications. A tracking plan answers three questions about a digital product:
 
 1. **What fires where?** — which pages/screens exist, and which tracking events (page views, clicks, form submissions, user errors) are attached to them.
 2. **What data does it carry?** — the data-layer properties each event sends, their meaning, format, origin, allowed values, and examples.
@@ -30,23 +30,22 @@ dx-doc is **not** an analytics tool (it documents, it doesn't report), **not** a
 
 ## Who it's for
 
-| Persona | What they need |
-|---|---|
+| Persona                 | What they need                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------- |
 | **Tracking specialist** | Owns the docs — efficient authoring, templates, bulk operations, publication workflow |
-| **Digital analyst** | Understands what data to expect in the analytics platform and how to interpret it |
-| **Business user / PM** | Reviews flows and trackings at a high level; knows what's in each release |
-| **Developer** | Knows exactly which trackings to implement — which properties, which values |
-| **Designer** | Understands which interactions are tracked, anchored to screenshots |
+| **Digital analyst**     | Understands what data to expect in the analytics platform and how to interpret it     |
+| **Business user / PM**  | Reviews flows and trackings at a high level; knows what's in each release             |
+| **Developer**           | Knows exactly which trackings to implement — which properties, which values           |
+| **Designer**            | Understands which interactions are tracked, anchored to screenshots                   |
 
 ## The goal of the first release (R1)
 
 R1 is the MVP: a complete, usable platform for authoring, versioning, and publishing tracking documentation. Concretely, R1 delivers:
 
 - The full structured data model (pages, trackings, data-layer properties, modules, destinations, and more).
-- A rich authoring editor with Markdown, Mermaid, and image upload.
+- A rich authoring editor with Markdown and image upload. Mermaid blocks are stored from R1 and rendered as diagrams from R2.
 - **Draft → published versioning** with an automatically generated diff and changelog.
-- Search over specific values — *"which tracking sets this value?"* is answerable.
-- Audience-specific views (Analyst/Business and Development).
+- Search over specific values — _"which tracking sets this value?"_ is answerable.
 - A complete REST API and MCP surface — anything doable in the UI is doable by a machine.
 - Read access without a licensed account, via project shared passwords.
 - An append-only audit log.
@@ -94,44 +93,44 @@ npm run dev
 
 Instance-level configuration only — infrastructure and operator secrets. Per-company configuration (SSO connection details, supported login methods, supported locales, branding, catalogue defaults, SMTP override) is set by each company's Admin through the web UI and stored in the database, not here — see [ADR-0014](docs/adr/0014-configuration-split.md). The full set, with defaults, lives in [`.env.example`](.env.example); this table is kept in sync with it (REQ-FDN-013).
 
-| Variable | Required | Default | Purpose |
-|---|---|---|---|
-| `APP_URL` | Yes | — | Public base URL; also derives the OIDC redirect URI |
-| `APP_SECRET` | Yes | — | Signing key for sessions and encrypted company-level secrets |
-| `APP_ENV` | No | `development` | Runtime environment |
-| `APP_DEFAULT_LOCALE` | No | `en` | Interface language fallback before any company context exists |
-| `DB_DRIVER` | No | `sqlite` | Persistence adapter: `sqlite` (default), `mariadb` or `postgres` (R2) |
-| `DB_FILE` | If `DB_DRIVER=sqlite` | `./var/db/dxdoc.sqlite` | SQLite database file path |
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | If `DB_DRIVER` is `mariadb`/`postgres` | — | Server database connection (R2) |
-| `DB_POOL_SIZE`, `DB_SSL_MODE` | No | `10`, `preferred` | Server database tuning (R2) |
-| `STORAGE_S3_ENDPOINT`, `STORAGE_S3_REGION`, `STORAGE_S3_BUCKET`, `STORAGE_S3_ACCESS_KEY`, `STORAGE_S3_SECRET_KEY` | Yes | — | S3-compatible object storage (AWS S3, MinIO, Backblaze B2; not Cloudinary — see `.env.example`) |
-| `STORAGE_S3_FORCE_PATH_STYLE` | No | `true` | Required by providers using path-style addressing (MinIO, B2) |
-| `STORAGE_PUBLIC_BASE_URL` | No | — | Public URL prefix for stored assets, if different from the endpoint |
-| `UPLOAD_MAX_BYTES` | No | `10485760` | Maximum asset upload size |
-| `IMAGE_MAX_DIMENSION` | No | `2000` | Automatic image resize threshold, px per side |
-| `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD` | Yes (first run) | — | Read once, against an empty database, to create the first `instance_admin` |
-| `SEARCH_DRIVER` | No | `pagefind` | Search adapter; a hosted adapter (e.g. Algolia) arrives R3 |
-| `SEARCH_INDEX_PATH` | No | `./var/search` | Pagefind index location on local disk |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | No | — | Instance-wide email fallback; a company may override in the database |
-| `SMTP_TLS` | No | `true` | SMTP transport security |
-| `SENTRY_DSN` | No | — | Error tracking (R1); the application runs normally with none configured |
-| `AUDIT_RETENTION_MONTHS` | No | `24` | Audit log retention |
-| `AUTH_SESSION_TTL` | No | `8h` | Session expiry |
-| `LOG_LEVEL` | No | `info` | Structured log verbosity |
-| `AUTO_MIGRATE` | No | `true` | Run pending migrations automatically at start-up |
+| Variable                                                                                                          | Required                               | Default                 | Purpose                                                                                         |
+| ----------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------- |
+| `APP_URL`                                                                                                         | Yes                                    | —                       | Public base URL; also derives the OIDC redirect URI                                             |
+| `APP_SECRET`                                                                                                      | Yes                                    | —                       | Signing key for sessions and encrypted company-level secrets                                    |
+| `APP_ENV`                                                                                                         | No                                     | `development`           | Runtime environment                                                                             |
+| `APP_DEFAULT_LOCALE`                                                                                              | No                                     | `en`                    | Interface language fallback before any company context exists                                   |
+| `DB_DRIVER`                                                                                                       | No                                     | `sqlite`                | Persistence adapter: `sqlite` (default), `mariadb` or `postgres` (R2)                           |
+| `DB_FILE`                                                                                                         | If `DB_DRIVER=sqlite`                  | `./var/db/dxdoc.sqlite` | SQLite database file path                                                                       |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`                                                         | If `DB_DRIVER` is `mariadb`/`postgres` | —                       | Server database connection (R2)                                                                 |
+| `DB_POOL_SIZE`, `DB_SSL_MODE`                                                                                     | No                                     | `10`, `preferred`       | Server database tuning (R2)                                                                     |
+| `STORAGE_S3_ENDPOINT`, `STORAGE_S3_REGION`, `STORAGE_S3_BUCKET`, `STORAGE_S3_ACCESS_KEY`, `STORAGE_S3_SECRET_KEY` | Yes                                    | —                       | S3-compatible object storage (AWS S3, MinIO, Backblaze B2; not Cloudinary — see `.env.example`) |
+| `STORAGE_S3_FORCE_PATH_STYLE`                                                                                     | No                                     | `true`                  | Required by providers using path-style addressing (MinIO, B2)                                   |
+| `STORAGE_PUBLIC_BASE_URL`                                                                                         | No                                     | —                       | Public URL prefix for stored assets, if different from the endpoint                             |
+| `UPLOAD_MAX_BYTES`                                                                                                | No                                     | `10485760`              | Maximum asset upload size                                                                       |
+| `IMAGE_MAX_DIMENSION`                                                                                             | No                                     | `2000`                  | Automatic image resize threshold, px per side                                                   |
+| `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD`                                                               | Yes (first run)                        | —                       | Read once, against an empty database, to create the first `instance_admin`                      |
+| `SEARCH_DRIVER`                                                                                                   | No                                     | `pagefind`              | Search adapter; a hosted adapter (e.g. Algolia) arrives R3                                      |
+| `SEARCH_INDEX_PATH`                                                                                               | No                                     | `./var/search`          | Pagefind index location on local disk                                                           |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`                                               | No                                     | —                       | Instance-wide email fallback; a company may override in the database                            |
+| `SMTP_TLS`                                                                                                        | No                                     | `true`                  | SMTP transport security                                                                         |
+| `SENTRY_DSN`                                                                                                      | No                                     | —                       | Error tracking (R1); the application runs normally with none configured                         |
+| `AUDIT_RETENTION_MONTHS`                                                                                          | No                                     | `24`                    | Audit log retention                                                                             |
+| `AUTH_SESSION_TTL`                                                                                                | No                                     | `8h`                    | Session expiry                                                                                  |
+| `LOG_LEVEL`                                                                                                       | No                                     | `info`                  | Structured log verbosity                                                                        |
+| `AUTO_MIGRATE`                                                                                                    | No                                     | `true`                  | Run pending migrations automatically at start-up                                                |
 
 ## Development Commands
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Start development server |
-| `npm run build` | Production build |
-| `npm run typecheck` | TypeScript type checking |
-| `npm run lint` | ESLint static analysis |
-| `npm run format` | Prettier formatting |
+| Command                | Purpose                          |
+| ---------------------- | -------------------------------- |
+| `npm run dev`          | Start development server         |
+| `npm run build`        | Production build                 |
+| `npm run typecheck`    | TypeScript type checking         |
+| `npm run lint`         | ESLint static analysis           |
+| `npm run format`       | Prettier formatting              |
 | `npm run format:check` | Check formatting without writing |
-| `npm test` | Unit and component tests |
-| `npm run test:e2e` | End-to-end tests |
+| `npm test`             | Unit and component tests         |
+| `npm run test:e2e`     | End-to-end tests                 |
 
 ## Architecture Overview
 
@@ -140,45 +139,46 @@ The Platform follows a modular architecture with clear separation between:
 - **Domain** — business logic independent of UI and infrastructure
 - **Application** — use cases, orchestration, commands/queries
 - **Infrastructure** — persistence, search, storage, authentication, third-party services
-- **API** — REST API consumed by the web client, MCP server, and export generators
-- **Design System** — internal component library for consistent UX
-- **App / UI** — React-based web application
+- **API** — REST API consumed by the web client, MCP server, and export generators; served by Fastify
+- **Design System** — internal component library built on shadcn/ui, kept close to upstream
+- **App / UI** — React single-page application built with Vite, routed by React Router, with TanStack Query owning server state
 
 **Key architectural constraints:**
+
 - Persistence behind repository ports; SQLite by default, MariaDB and PostgreSQL adapters in R2. The schema stays within a portable SQL subset.
 - S3-compatible object storage behind an interface
 - Search behind an interface; Pagefind by default, so a stock instance sends no documentation content anywhere
-- Internal REST API consumed by all clients; MCP server is a layer above it
-- Content can be imported from other platforms through the public API — no source-format-specific import code ships in the product. Bulk ingestion is idempotent, keyed on an external reference.
+- Internal REST API consumed by all clients; MCP server is a layer above it. In production one process serves both the API and the client assets — one container plus object storage.
+- Content can be imported from other platforms through the public API — no source-format-specific import code ships in the product. Bulk ingestion is idempotent, keyed on a custom id.
 - Multi-company tenancy on a single instance
 - Single draft stream per project; no branches or merge workflows
 - All validation in the backend, shared by UI, API and MCP
 
 ## Documentation Map
 
-| Document | Purpose |
-|---|---|
-| [`AGENTS.md`](AGENTS.md) | Mandatory rules for AI coding agents |
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Architectural style, layers, and rationale |
-| [`ENGINEERING_GUIDE.md`](ENGINEERING_GUIDE.md) | Technical constitution and coding rules |
-| [`STYLE_GUIDE.md`](STYLE_GUIDE.md) | Naming, formatting, and code style |
-| [`AI_DEVELOPMENT_GUIDE.md`](AI_DEVELOPMENT_GUIDE.md) | AI agent workflows and constraints |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribution workflow and review expectations |
-| [`SECURITY.md`](SECURITY.md) | Security policy and vulnerability reporting |
-| [`docs/product/functional-specification.md`](docs/product/functional-specification.md) | Complete functional specification |
-| [`docs/product/vision.md`](docs/product/vision.md) | Product vision and strategic context |
-| [`docs/product/scope.md`](docs/product/scope.md) | In-scope, out-of-scope, deferred |
-| [`docs/product/minimum-requirements.md`](docs/product/minimum-requirements.md) | The enumerated R1 minimum requirements — what R1 must deliver |
-| [`docs/product/glossary.md`](docs/product/glossary.md) | Domain terminology |
-| [`docs/product/personas.md`](docs/product/personas.md) | Personas and system roles |
-| [`docs/product/user-stories.md`](docs/product/user-stories.md) | What each persona needs to get done, traced to requirements |
-| [`docs/product/milestones.md`](docs/product/milestones.md) | Delivery milestones, critical path, and release gates |
-| [`docs/product/requirements/`](docs/product/requirements/) | Traceable requirements, by area, with acceptance criteria |
-| [`docs/architecture/system-context.md`](docs/architecture/system-context.md) | System context and external integrations |
-| [`docs/architecture/containers.md`](docs/architecture/containers.md) | Container/service-level architecture |
-| [`docs/architecture/deployment.md`](docs/architecture/deployment.md) | Deployment model and reference stack |
-| [`docs/adr/`](docs/adr/) | Architecture Decision Records |
-| [`docs/testing/`](docs/testing/) | Testing strategy and conventions |
+| Document                                                                               | Purpose                                                       |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| [`AGENTS.md`](AGENTS.md)                                                               | Mandatory rules for AI coding agents                          |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md)                                                   | Architectural style, layers, and rationale                    |
+| [`ENGINEERING_GUIDE.md`](ENGINEERING_GUIDE.md)                                         | Technical constitution and coding rules                       |
+| [`STYLE_GUIDE.md`](STYLE_GUIDE.md)                                                     | Naming, formatting, and code style                            |
+| [`AI_DEVELOPMENT_GUIDE.md`](AI_DEVELOPMENT_GUIDE.md)                                   | AI agent workflows and constraints                            |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                                                   | Contribution workflow and review expectations                 |
+| [`SECURITY.md`](SECURITY.md)                                                           | Security policy and vulnerability reporting                   |
+| [`docs/product/functional-specification.md`](docs/product/functional-specification.md) | Complete functional specification                             |
+| [`docs/product/vision.md`](docs/product/vision.md)                                     | Product vision and strategic context                          |
+| [`docs/product/scope.md`](docs/product/scope.md)                                       | In-scope, out-of-scope, deferred                              |
+| [`docs/product/minimum-requirements.md`](docs/product/minimum-requirements.md)         | The enumerated R1 minimum requirements — what R1 must deliver |
+| [`docs/product/glossary.md`](docs/product/glossary.md)                                 | Domain terminology                                            |
+| [`docs/product/personas.md`](docs/product/personas.md)                                 | Personas and system roles                                     |
+| [`docs/product/user-stories.md`](docs/product/user-stories.md)                         | What each persona needs to get done, traced to requirements   |
+| [`docs/product/milestones.md`](docs/product/milestones.md)                             | Delivery milestones, critical path, and release gates         |
+| [`docs/product/requirements/`](docs/product/requirements/)                             | Traceable requirements, by area, with acceptance criteria     |
+| [`docs/architecture/system-context.md`](docs/architecture/system-context.md)           | System context and external integrations                      |
+| [`docs/architecture/containers.md`](docs/architecture/containers.md)                   | Container/service-level architecture                          |
+| [`docs/architecture/deployment.md`](docs/architecture/deployment.md)                   | Deployment model and reference stack                          |
+| [`docs/adr/`](docs/adr/)                                                               | Architecture Decision Records                                 |
+| [`docs/testing/`](docs/testing/)                                                       | Testing strategy and conventions                              |
 
 ## License
 

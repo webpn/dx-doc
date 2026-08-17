@@ -1,7 +1,7 @@
 name: Bug Report
 description: Report a bug in the Platform
-title: "bug: "
-labels: ["type:bug"]
+title: 'bug: '
+labels: ['type:bug']
 body:
   - type: markdown
     attributes:
@@ -30,7 +30,7 @@ body:
     attributes:
       label: Version / Environment
       description: Which version of the Platform? Which browser?
-      placeholder: "R1.2, Chrome 120"
+      placeholder: 'R1.2, Chrome 120'
     validations:
       required: true
   - type: textarea

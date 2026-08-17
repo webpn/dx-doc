@@ -11,7 +11,7 @@ The Platform is a **white-label, open-source product**. Each organisation deploy
 - **Single process, multiple responsibilities:** the application server serves the REST API, the MCP server, and static assets from a single Node.js process. No microservices.
 - **Stateless application:** the process holds no persistent state. All state is in the database and S3. The process can be restarted or scaled horizontally without data loss.
 - **Configuration through environment variables:** instance-level configuration uses environment variables. Company-level configuration is in the database.
-- **Forward-only migrations:** schema changes are applied at start-up by a migration runner. No automated rollback.
+- **Forward-only migrations:** schema changes are applied by an explicit `npm run db:migrate` step (dbmate) in CI/deploy, not at process boot. No automated rollback.
 
 ## Reference Deployment Stack
 
@@ -38,6 +38,7 @@ The Platform is a **white-label, open-source product**. Each organisation deploy
 ### Minimum Viable Deployment (R0)
 
 A single server running:
+
 - Node.js application process
 - A database: SQLite file by default (no separate service); MariaDB or PostgreSQL from R2
 - S3-compatible storage (MinIO for self-hosted, or any cloud provider)
@@ -45,7 +46,7 @@ A single server running:
 
 ### Availability
 
-The Platform targets roughly **99% availability, achievable on a single instance with no redundancy** ([REQ-NFR-005](../product/requirements/REQ-NFR.md)). That ceiling is a constraint on the architecture, not a promise the software makes: availability is a property of a deployment, so **the SLA of any given instance is its operator's commitment**. The corporate pilot instance targets 99%.
+The Platform targets roughly **99% availability, achievable on a single instance with no redundancy** ([REQ-NFR-005](../product/requirements/REQ-NFR.md#req-nfr-005--architecture-must-not-require-redundancy)). That ceiling is a constraint on the architecture, not a promise the software makes: availability is a property of a deployment, so **the SLA of any given instance is its operator's commitment**. The corporate pilot instance targets 99%.
 
 ### Production Deployment (R1+)
 
@@ -63,15 +64,15 @@ Instance-level configuration only — infrastructure and operator secrets. See t
 
 Critical variables for R0:
 
-| Variable | Purpose |
-|---|---|
-| `DB_DRIVER` | Database adapter: `sqlite` (default), `mariadb` or `postgres` (R2) |
-| `DB_FILE` | SQLite database file path |
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Server database connection (R2 adapters) |
-| `STORAGE_S3_*` | S3-compatible object storage |
-| `SEARCH_DRIVER`, `SEARCH_INDEX_PATH` | Search adapter (`pagefind` default) and index location |
-| `APP_URL`, `APP_SECRET` | Application base URL and signing key |
-| `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD` | First-run administrator, read once |
+| Variable                                                  | Purpose                                                            |
+| --------------------------------------------------------- | ------------------------------------------------------------------ |
+| `DB_DRIVER`                                               | Database adapter: `sqlite` (default), `mariadb` or `postgres` (R2) |
+| `DB_FILE`                                                 | SQLite database file path                                          |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Server database connection (R2 adapters)                           |
+| `STORAGE_S3_*`                                            | S3-compatible object storage                                       |
+| `SEARCH_DRIVER`, `SEARCH_INDEX_PATH`                      | Search adapter (`pagefind` default) and index location             |
+| `APP_URL`, `APP_SECRET`                                   | Application base URL and signing key                               |
+| `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD`       | First-run administrator, read once                                 |
 
 Authentication is **not** instance-level: each company connects its own SSO provider and chooses its supported login methods and locales through the Admin UI, stored encrypted in the database — see below.
 
@@ -104,7 +105,7 @@ Company-level configuration — branding, SMTP override, catalogue defaults, SSO
 
 ## Scaling
 
-- **Horizontal:** the application server is stateless *except for the search index*, which the default adapter writes to local disk. Replicating the process therefore needs either shared storage for the index directory or a per-instance rebuild — which is why a single instance is the supported shape and why [REQ-NFR-005](../product/requirements/REQ-NFR.md) requires the architecture to work without redundancy. Session state is stored in the database or a shared session store.
+- **Horizontal:** the application server is stateless _except for the search index_, which the default adapter writes to local disk. Replicating the process therefore needs either shared storage for the index directory or a per-instance rebuild — which is why a single instance is the supported shape and why [REQ-NFR-005](../product/requirements/REQ-NFR.md#req-nfr-005--architecture-must-not-require-redundancy) requires the architecture to work without redundancy. Session state is stored in the database or a shared session store.
 - **Database:** a single writer. SQLite serialises writes, which at the projected concurrency is not a bottleneck. Read replicas can be added for read-heavy workloads, though the projected concurrency (≤50 viewers, ≤10 editors) suggests this is unnecessary for the foreseeable scale.
 - **Search:** Pagefind indexes live on the application's disk, so search does **not** scale independently — see the replication caveat above.
 - **Storage:** S3 is a hosted/self-hosted service and scales independently.

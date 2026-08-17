@@ -20,6 +20,8 @@ Read [`ARCHITECTURE.md`](ARCHITECTURE.md) for the full architectural model.
 
 ## Before writing any code
 
+**Changing only files under `docs/`?** Skip this list. Read [`docs/INDEX.md`](docs/INDEX.md) — a generated one-line-per-doc map of every ADR, requirement, milestone and user story and where it lives — then open only the specific file(s) you need to change. Steps 1–4 below are about the application codebase and don't apply.
+
 1. Read [`ENGINEERING_GUIDE.md`](ENGINEERING_GUIDE.md) for coding rules.
 2. Read [`STYLE_GUIDE.md`](STYLE_GUIDE.md) for naming and formatting.
 3. Read [`AI_DEVELOPMENT_GUIDE.md`](AI_DEVELOPMENT_GUIDE.md) for agent-specific workflows.
@@ -44,8 +46,10 @@ Never claim a command passed without running it.
 
 - **Do not import `react` or any UI-library into `src/domain/` or `src/application/`.**
 - **Do not import infrastructure implementations into domain or application code.** Use the interfaces defined in the layer.
-- **Do not import design-system primitives directly from the external UI library outside `src/design-system/`.** Use `@project/design-system` imports.
-- **Do not scatter raw `fetch` or `axios` calls in React components.** Data access goes through the API client layer.
+- **Do not put a business rule in a Fastify route or a route schema.** Routes are transport: HTTP in, application-service call, HTTP out. Validation is defined once in the domain and application layers and invoked by every entry point (REQ-FDN-010, ADR-0007) — a rule enforced only by a route schema is a rule the MCP server does not have.
+- **Do not import design-system primitives from a component path outside `src/design-system/`.** Use `@project/design-system` imports. The design system is built on shadcn/ui (ADR-0011), so its components are source files in this repository — that makes reaching into them easy, and it is still forbidden.
+- **Do not rewrite a shadcn/ui component to taste.** Components are kept close to upstream and each divergence is deliberate and justified in review. The library was chosen precisely so that what you know about it is true of this codebase; casual edits destroy that.
+- **Do not scatter raw `fetch` or `axios` calls in React components.** Data access goes through the API client layer, and server state belongs to TanStack Query (ADR-0012): every read is a query, every write a mutation that invalidates what it affects. Never copy server data into client state to keep it in sync by hand.
 - **Do not introduce dependencies without explicit justification.** See [`ENGINEERING_GUIDE.md` §Dependency Policy](ENGINEERING_GUIDE.md).
 - **Do not use `any`** except where explicitly justified and documented with a comment explaining why `unknown` + narrowing is not practical.
 - **Do not create a second solution when an approved pattern already exists.** Reuse.
@@ -62,10 +66,12 @@ Stop and present the alternatives with their trade-offs. Do not make an arbitrar
 ## Documentation
 
 When behavior or architecture changes:
+
 - Update the relevant documentation in the same PR.
 - If the change affects architectural rules, update [`ARCHITECTURE.md`](ARCHITECTURE.md).
 - If the change introduces a new pattern, update [`ENGINEERING_GUIDE.md`](ENGINEERING_GUIDE.md).
 - Link the PR to the relevant ADR or create one.
+- **When linking between files in `docs/`, reference the other doc by its stable ID (`ADR-0022`, `REQ-IMP-003`, `M1.2`, `US-ANL-01`, ...) as the link text, then run `npm run docs:sync-links`.** Do not hand-compute relative paths (`../../adr/...`) or read the whole tree to verify them — the script resolves and fixes every ID-based link in one pass. See [`docs/README.md`](docs/README.md) for the full convention.
 
 ## Nested instructions
 

@@ -23,17 +23,17 @@ The documentation of tracking plans for websites and mobile applications:
 - Specific values (including placeholders) for each property within a tracking.
 - Conditional valorisations of properties — structured only, from R2. Not expressible in R1 in any form.
 - Destinations (analytics variables/events/schema paths) with many-to-many mapping to properties.
-- CDP audiences.
-- Feedback surveys.
+- CDP audiences (R2 — moved from R1 on 2026-08-17, [REQ-DOM-017](requirements/REQ-DOM.md#req-dom-017--cdp-audience-entity)).
+- Feedback surveys (R2 — moved from R1 on 2026-08-17, [REQ-DOM-018](requirements/REQ-DOM.md#req-dom-018--survey-entity)).
 - Free wiki pages for unstructured content (integration instructions, references).
 - User journeys (Flows) as named directed graphs over Pages, with Trigger nodes.
 
 ### Authoring
 
-- Rich text (Markdown) editor with the full block set including Mermaid with live preview.
+- Rich text (Markdown) editor with the full block set. Mermaid blocks are authorable and stored from R1, and rendered from R1 (M1.6) — flows moved into R1 with their renderer (REQ-AUTH-004).
 - Image upload (drag & drop, clipboard paste), resize, S3 storage.
 - Structural image annotations (R2).
-- Duplication of trackings, pages, flows, and projects.
+- Duplication of trackings (R1). Page/flow duplication (R2, REQ-AUTH-008) and whole-project duplication (R3, REQ-AUTH-015).
 - Bulk operations on a multi-selection of trackings with preview (R2).
 - Optimistic concurrency with stale-write rejection.
 - Per-element change history (R2).
@@ -42,9 +42,9 @@ The documentation of tracking plans for websites and mobile applications:
 
 - Page hierarchy with navigable sidebar.
 - Automatic per-page tracking recap.
-- Flow entity with directed graph (R2).
-- Trigger nodes distinct from visual page transitions (R2).
-- Auto-generated Mermaid diagrams from the graph (R2).
+- Flow entity with directed graph (R1).
+- Trigger nodes distinct from visual page transitions (R1).
+- Auto-generated Mermaid diagrams from the graph, rendered (R1).
 - Full-text search within a project, indexing specific values. Prefix and stem matching; typo tolerance deliberately deferred to an optional adapter (R3).
 
 ### Versioning and Publication
@@ -59,7 +59,7 @@ The documentation of tracking plans for websites and mobile applications:
 ### Audience Views and Distribution
 
 - Two audience views: Analyst/Business and Development. In-app as presentation filters; in published artefacts as physical omission.
-- In-app read-only view behind SSO, email+password, or shared password.
+- In-app read-only view behind email+password or shared password.
 - Static site per project, regenerated on publication (R2).
 - Git export, one commit per publication (R2).
 - PDF export of version changes (R2).
@@ -84,7 +84,7 @@ The documentation of tracking plans for websites and mobile applications:
 
 - **No source-format-specific code in the Platform.** Content is imported by an AI agent driving the public API, producing a committed re-runnable script ([ADR-0021](../adr/0021-agent-driven-migration.md)).
 - API surface complete enough to construct any project without opening the UI.
-- Idempotent upsert keyed on `external_ref`, so an import can be corrected and re-run.
+- Idempotent upsert keyed on `custom_id`, so an import can be corrected and re-run.
 - Asset upload through the API into object storage.
 - Batch write endpoints and a reconciliation report.
 - General-purpose: the same capability serves any bulk ingestion, from any source system.
@@ -104,7 +104,7 @@ The documentation of tracking plans for websites and mobile applications:
 - Per-project access grants.
 - Append-only audit log of write events.
 - Email + password login.
-- OIDC SSO (R1), SAML SSO (R2).
+- OIDC SSO (R2, alongside SAML SSO in M2.8).
 - Project shared-password access with expiry (R1).
 - Public MIT repository with README and reference deployment stack (R0).
 
@@ -116,7 +116,7 @@ The documentation of tracking plans for websites and mobile applications:
 - It is not a data catalogue for the whole enterprise data estate.
 - No mobile/responsive layout — desktop only.
 - No offline mode.
-- No WCAG or public-sector accessibility compliance.
+- No certified WCAG or public-sector accessibility conformance. The interface is built to WCAG AA as a design principle; nothing verifies it and no conformance is claimed.
 - No dedicated Design view — designers use the Analyst/Business view.
 - No field-level permissions — views are presentation filters, not security boundaries.
 - No cross-project search.
@@ -125,15 +125,15 @@ The documentation of tracking plans for websites and mobile applications:
 - No history import — each imported project starts at version 1.
 - No importer UI and no import endpoint accepting an export archive — the Platform holds no knowledge of any source format.
 
-## Deferred (with target release)
+## Deferred
 
-| Module | Release | Notes |
-|---|---|---|
-| Data quality and pre-release verification | R4 | Analytics platform integrations; data-quality signals; conformance reports (reports only, no persisted state) |
-| Semantic layer | R5 | OWL/RDF/SKOS exports; business metrics, dimensions, certified segments; business glossary (pending O1, O2) |
-| Tracking implementation status | R6 | Lifecycle state on each tracking |
-| Figma frame import | R4 | Design-refresh of screenshots |
-| Insights repository | R6+ | Separate product on the same foundation |
+| Module                                    | Release | Notes                                                                                                         |
+| ----------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
+| Data quality and pre-release verification | R4      | Analytics platform integrations; data-quality signals; conformance reports (reports only, no persisted state) |
+| Semantic layer                            | Backlog | OWL/RDF/SKOS exports; business metrics, dimensions, certified segments; business glossary (pending O1, O2)    |
+| Tracking implementation status            | Backlog | Lifecycle state on each tracking                                                                              |
+| Figma frame import                        | R4      | Design-refresh of screenshots                                                                                 |
+| Insights repository                       | Backlog | Separate product on the same foundation                                                                       |
 
 ## Deferred Entities (containers only until semantic layer)
 
@@ -141,12 +141,12 @@ The documentation of tracking plans for websites and mobile applications:
 - Segment (certified analytics segment)
 - Calculated Metric
 
-These ship as containers in R3 and gain substance with the semantic layer in R5.
+These ship as containers in R3 and gain substance with the semantic layer in the backlog.
 
 ## Explicitly Rejected
 
 - **Event variants** — a tracking that behaves differently across contexts is expressed through structured property conditions, not through a second inheritance axis.
-- **Prose conditional valorisations** — rejected rather than shipped as an R1 stopgap. The structured form (R2) is the only mechanism, which means no conversion exercise across ~30 imported products.
+- **Prose conditional valorisations** — rejected rather than shipped as an R1 stopgap. The structured form (R2) is the only mechanism, which means no conversion exercise across imported products.
 - **Parallel branches and merge workflows** for versioning — single draft stream only.
 - **Approval workflow** — editors publish autonomously.
 - **Scheduled deprecation** — properties are deprecated manually.

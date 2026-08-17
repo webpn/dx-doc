@@ -55,8 +55,9 @@ AI-generated code is treated identically to human-written code. It must:
 
 - **Do not import `react`, `react-dom`, or any UI library into `src/domain/` or `src/application/`.**
 - **Do not import infrastructure implementations into domain or application code.** Use the port interfaces defined in `src/application/ports/`.
-- **Do not import the external UI library directly outside `src/design-system/`.** Use `@project/design-system` imports.
-- **Do not scatter raw HTTP calls in React components.** Use the API client layer.
+- **Do not put a business rule in a Fastify route or a route schema** (ADR-0022, REQ-FDN-010). Routes are transport only; validation lives in the domain and application layers where every entry point reaches it.
+- **Do not import a design-system component from its own path outside `src/design-system/`.** Use `@project/design-system` imports. shadcn/ui components live in this repository as source (ADR-0011); that they are easy to reach does not make reaching for them allowed, and editing one to suit a single feature is a change to shared code.
+- **Do not scatter raw HTTP calls in React components.** Use the API client layer, with TanStack Query owning server state (ADR-0012).
 - **Do not bypass these boundaries because it is "easier."** The boundaries exist for long-term maintainability across dozens of contributors and agents.
 
 ## Validation

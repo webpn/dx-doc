@@ -4,14 +4,14 @@ See [ADR-0017: Testing Strategy](../adr/0017-testing-strategy.md) for the formal
 
 ## Test Layers
 
-| Layer | Tool | Focus | Directory |
-|---|---|---|---|
-| Domain (unit) | Vitest | Business rules, invariants, value objects | Co-located with source |
-| Application (unit/integration) | Vitest | Use cases with mocked ports | Co-located |
-| Infrastructure (integration) | Vitest | Repositories, search, storage | `tests/integration/` |
-| API (integration) | Vitest + supertest | Endpoints, validation, auth | `tests/integration/api/` |
-| UI (component) | Vitest + React Testing Library | Component behavior | Co-located |
-| E2E | Playwright | Critical user journeys | `e2e/` |
+| Layer                          | Tool                           | Focus                                     | Directory                |
+| ------------------------------ | ------------------------------ | ----------------------------------------- | ------------------------ |
+| Domain (unit)                  | Vitest                         | Business rules, invariants, value objects | Co-located with source   |
+| Application (unit/integration) | Vitest                         | Use cases with mocked ports               | Co-located               |
+| Infrastructure (integration)   | Vitest                         | Repositories, search, storage             | `tests/integration/`     |
+| API (integration)              | Vitest + supertest             | Endpoints, validation, auth               | `tests/integration/api/` |
+| UI (component)                 | Vitest + React Testing Library | Component behavior                        | Co-located               |
+| E2E                            | Playwright                     | Critical user journeys                    | `e2e/`                   |
 
 ## Running Tests
 
@@ -37,7 +37,10 @@ npm run test:coverage
 describe('Tracking', () => {
   it('detaches module when all its properties are individually removed', () => {
     const tracking = createTracking({ name: 'Test' });
-    const module = createModule({ name: 'Standard Actions', properties: ['action_name', 'action_type'] });
+    const module = createModule({
+      name: 'Standard Actions',
+      properties: ['action_name', 'action_type'],
+    });
 
     tracking.addModule(module);
     tracking.removeProperty('action_name');
@@ -82,10 +85,21 @@ describe('POST /projects/:id/trackings', () => {
 ## Test Database
 
 Integration tests that touch the database use an ephemeral database:
+
 - CI: SQLite (no service container). MariaDB and PostgreSQL join the nightly matrix from R2 — see [ADR-0017](../adr/0017-testing-strategy.md).
 - Local: a separate test database (`dxdoc_test`) — run migrations before tests
 
 Tests are responsible for their own data setup and cleanup. Use transactions where possible for isolation.
+
+## Test data
+
+Two mechanisms, and they do not mix ([ADR-0017](../adr/0017-testing-strategy.md)). Neither is a migration — migrations create structure and never insert data ([ADR-0015](../adr/0015-schema-migration-strategy.md)), so a third-party operator upgrading their instance never receives our fixtures.
+
+**Builders** (`tests/support/builders/`) for unit, integration and API tests. A factory produces a valid entity with sensible defaults and a fluent override for the field under test — `aProject().withGroupingLabel('pilot').build()`. Each test creates what it needs and nothing else, so its precondition is readable inside the test rather than in a shared file.
+
+**The demo dataset** (`seed/demo/`, loaded by `npm run db:seed:demo`) for E2E tests and local development: a company, two projects, users at every role, a page hierarchy, trackings with modules, properties and specific values, destinations, a published version and a dirty draft. It is loaded **through the public API**, which makes every seed run an exercise of `custom_id` idempotency — running it twice must change nothing.
+
+Two rules keep them apart: unit, integration and API tests never read the demo dataset, and the seed command refuses to run against a non-empty database and is unreachable in a production configuration.
 
 ## E2E Tests
 
@@ -113,6 +127,7 @@ All tests run on every PR and push to `main`. See `.github/workflows/ci.yml`.
 ## Coverage
 
 Coverage is measured but no arbitrary threshold is enforced. Focus coverage on:
+
 - Domain logic (high value, easy to test)
 - Application use cases (orchestration and policies)
 - API validation (catches regressions)

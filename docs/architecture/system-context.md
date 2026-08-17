@@ -35,43 +35,43 @@ Describes the dx-doc Platform in its environment: who uses it, what external sys
 
 ## Users
 
-| User type | Access mode | Authentication |
-|---|---|---|
-| Tracking specialist / Analytics engineer | Write (Editor) | SSO (OIDC), email+password |
-| Digital analyst | Read (Viewer) | SSO (OIDC), email+password |
-| Business user | Read (Viewer) | SSO (OIDC), email+password |
-| Web/App developer | Read (Viewer) | SSO (OIDC), email+password, project shared password |
-| Designer | Read (Viewer) | SSO (OIDC), email+password, project shared password |
-| Product manager / Owner | Read + user management on own projects (Project Manager) | SSO (OIDC), email+password |
-| Company admin | Full within one company (Admin) | SSO (OIDC), email+password |
-| System administrator | Instance-wide, no content access (`instance_admin`) | email+password, always available |
-| AI Agent (MCP) | Per consenting user's permissions | OAuth (user consent) |
-| Unauthenticated viewer | Read (Viewer) on projects with shared password | Project-level shared password |
+| User type                                | Access mode                                              | Authentication                                      |
+| ---------------------------------------- | -------------------------------------------------------- | --------------------------------------------------- |
+| Tracking specialist / Analytics engineer | Write (Editor)                                           | SSO (OIDC), email+password                          |
+| Digital analyst                          | Read (Viewer)                                            | SSO (OIDC), email+password                          |
+| Business user                            | Read (Viewer)                                            | SSO (OIDC), email+password                          |
+| Web/App developer                        | Read (Viewer)                                            | SSO (OIDC), email+password, project shared password |
+| Designer                                 | Read (Viewer)                                            | SSO (OIDC), email+password, project shared password |
+| Product manager / Owner                  | Read + user management on own projects (Project Manager) | SSO (OIDC), email+password                          |
+| Company admin                            | Full within one company (Admin)                          | SSO (OIDC), email+password                          |
+| System administrator                     | Instance-wide, no content access (`instance_admin`)      | email+password, always available                    |
+| AI Agent (MCP)                           | Per consenting user's permissions                        | OAuth (user consent)                                |
+| Unauthenticated viewer                   | Read (Viewer) on projects with shared password           | Project-level shared password                       |
 
 ## External Systems — Current (R0–R1)
 
-| System | Purpose | Interface | Direction |
-|---|---|---|---|
-| Database (SQLite default; MariaDB/PostgreSQL R2) | Primary data store | Local file or SQL over TCP | Internal (write/read) |
-| S3-compatible object storage | Asset storage (images) | S3 API (HTTP) | Internal (write/read) |
-| Search index (Pagefind) | Full-text search index | In-process; index artefacts on local disk | **Not external** — no network egress |
-| OIDC Identity Provider | SSO authentication | OpenID Connect | Inbound (auth) |
-| SMTP Server | Email notifications | SMTP | Outbound |
-| Sentry | Error tracking | SDK / HTTP | Outbound |
+| System                                           | Purpose                | Interface                                 | Direction                            |
+| ------------------------------------------------ | ---------------------- | ----------------------------------------- | ------------------------------------ |
+| Database (SQLite default; MariaDB/PostgreSQL R2) | Primary data store     | Local file or SQL over TCP                | Internal (write/read)                |
+| S3-compatible object storage                     | Asset storage (images) | S3 API (HTTP)                             | Internal (write/read)                |
+| Search index (Pagefind)                          | Full-text search index | In-process; index artefacts on local disk | **Not external** — no network egress |
+| OIDC Identity Provider                           | SSO authentication     | OpenID Connect                            | Inbound (auth)                       |
+| SMTP Server                                      | Email notifications    | SMTP                                      | Outbound                             |
+| Sentry                                           | Error tracking         | SDK / HTTP                                | Outbound                             |
 
 ## External Systems — Future
 
-| System | Release | Purpose | Interface |
-|---|---|---|---|
-| SAML Identity Provider | R2 | SSO authentication | SAML 2.0 |
-| Git Repository | R2 | Git export target | Git over HTTPS/SSH |
-| Static Site Host | R2 | Published documentation hosting | File upload / git push |
-| Confluence Cloud | R3 | Published documentation target | Confluence REST API |
-| Adobe Analytics / CJA API | R4 | Data quality signals | Adobe I/O API |
-| GA4 API | R4 | Data quality signals | Google Analytics Data API |
-| PostHog API | R4 | Data quality signals | PostHog REST API |
-| Figma API | R4 | Frame import | Figma REST API |
-| Corporate Data Warehouse | R5 | Semantic layer export | File export (OWL/RDF) |
+| System                    | Release | Purpose                         | Interface                 |
+| ------------------------- | ------- | ------------------------------- | ------------------------- |
+| SAML Identity Provider    | R2      | SSO authentication              | SAML 2.0                  |
+| Git Repository            | R2      | Git export target               | Git over HTTPS/SSH        |
+| Static Site Host          | R2      | Published documentation hosting | File upload / git push    |
+| Confluence Cloud          | R3      | Published documentation target  | Confluence REST API       |
+| Adobe Analytics / CJA API | R4      | Data quality signals            | Adobe I/O API             |
+| GA4 API                   | R4      | Data quality signals            | Google Analytics Data API |
+| PostHog API               | R4      | Data quality signals            | PostHog REST API          |
+| Figma API                 | R4      | Frame import                    | Figma REST API            |
+| Corporate Data Warehouse  | Backlog | Semantic layer export           | File export (OWL/RDF)     |
 
 ## Integration Boundaries
 
@@ -108,7 +108,7 @@ Source system export (e.g. Markdown & CSV ZIP) → AI agent → committed import
 ## Constraints from External Systems
 
 - **Database:** repository ports with a SQLite adapter by default; MariaDB and PostgreSQL from R2. Schema must support multi-tenancy natively and stay within a portable SQL subset.
-- **Search:** Pagefind by default — in-process, no account, no egress ([ADR-0009](../adr/0009-search-abstraction.md)). Indices must exclude non-publishable free pages, and index artefacts must be served only through a route applying the caller's project grants. Two capability gaps are open decision O14: no typo tolerance, and the index is built rather than updated per record. An optional hosted adapter (R3) reintroduces the scoped-key obligation and changes the data-flow statement (REQ-FDN-021).
+- **Search:** Pagefind by default — in-process, no account, no egress ([ADR-0009](../adr/0009-search-abstraction.md)). Indices must exclude non-publishable free pages, and index artefacts must be served only through a route applying the caller's project grants. Two indices per project — published, rebuilt on publication; draft, rebuilt asynchronously after each save (O14, closed 2026-08-12). One capability gap remains and is accepted rather than open: no typo tolerance. An optional hosted adapter (R3) reintroduces the scoped-key obligation and changes the data-flow statement (REQ-FDN-021).
 - **S3:** any S3-compatible provider. Path-style access must be supported. Public base URL for CDN is optional.
 - **OIDC:** each company connects its own identity provider; connection details are company-level, stored encrypted in the database, not an instance-wide credential ([ADR-0014](../adr/0014-configuration-split.md)). SAML is added in R2 for generality, same model.
 - **SMTP:** instance-level fallback; per-company SMTP settings in the database override it ([ADR-0014](../adr/0014-configuration-split.md)).

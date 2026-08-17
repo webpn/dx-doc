@@ -45,9 +45,9 @@ The architecture is **not** a mechanical implementation of textbook Clean Archit
 
 Contains pure business logic with no external dependencies (no React, no browser APIs, no network, no persistence).
 
-- **Entities:** Company, Project, Page, Flow, FlowEdge, Trigger, Tracking, DataLayerProperty, Module, TrackingTemplate, SpecificValue, Destination, CdpAudience, Survey, FreePage, Version, ChangeEntry, User, AuditEntry. Defined as plain TypeScript types/interfaces.
-- **Value objects:** SpecificValue, PropertyCondition, Presence (`always` | `sometimes` | `never`), PropertyType, NavigationEvent, ProjectPlatform.
-- **Domain invariants:** property composition rules (module detachment when all properties removed), specific-value placeholder validation (non-blocking warning), property identity isolation per project.
+- **Entities:** Company, Project, Page, Flow, FlowEdge, Trigger, Tracking, TrackingProperty, DataLayerProperty, Module, TrackingTemplate, SpecificValue, Destination, CdpAudience, Survey, FreePage, Version, ChangeEntry, User, Role, ProjectGrant, AuditEntry. Defined as plain TypeScript types/interfaces.
+- **Value objects:** PropertyCondition, Presence (`always` | `sometimes` | `never`), PropertyType, NavigationEvent, ProjectPlatform. `Presence` is carried by TrackingProperty and by nothing else.
+- **Domain invariants:** property composition rules (module detachment when all properties removed), presence carried only by TrackingProperty, specific-value placeholder validation (non-blocking warning), property identity isolation per project.
 - **Domain services (only where justified):** for rules that span multiple entities without a natural home on any single one — e.g., impact analysis (which entities reference a given property).
 
 No persistence, no network, no React. Domain types are independent of API DTOs — the mapping happens at the application/infrastructure boundary.
@@ -81,10 +81,13 @@ The REST API is the single entry point for all operations. The web client, MCP s
 - **Authentication/authorization middleware:** project-scoped grants enforced at the API layer.
 - **MCP server:** a layer above the REST API — not a parallel entry point. MCP tools call the same use cases through the same validation path.
 - **Documented public API delivered in R3.** Until then the API is internal but structured as if it will be public.
+- **Served by Fastify** (ADR-0022), which in production also serves the built client assets from the same process. A route is transport only: it translates HTTP to an application-service call and back. No business rule lives in a route file, and **validation does not move into Fastify's JSON-schema layer** — a route schema may describe the wire format, never own a rule (REQ-FDN-010).
 
 ### Design System (`src/design-system/`)
 
-An internal component library that wraps the chosen external UI library. The rest of the application imports from `@project/design-system`, never directly from the external library.
+An internal component library built on **shadcn/ui** (Radix primitives + Tailwind CSS), chosen in ADR-0011. The rest of the application imports from `@project/design-system`, never from a component path directly.
+
+Because shadcn/ui is copy-paste source rather than a runtime dependency, its components live here as project source files. They are kept **close to upstream**: taking a component as published is the default, and each divergence is deliberate and reviewable. This is what keeps agent-generated code and upstream documentation applicable to the code actually in the repository, and it is the reason the library was chosen.
 
 - **Primitives:** Button, Input, Dialog, Select, DataTable, FormField, Notification, Layout components.
 - **Design tokens:** colors, typography, spacing, radii, shadows, breakpoints, z-index, motion. Single source of truth for all visual values.
@@ -102,6 +105,7 @@ Truly generic utilities and type helpers with no domain, UI, or infrastructure k
 ### API-first
 
 Every piece of functionality is exposed through the REST API before any UI is built. The web client is one consumer among several. This is non-negotiable because:
+
 - The MCP server must have the same capabilities as the UI.
 - Export generators (static site, Confluence, PDF, Excel, git) consume the same API.
 - The public API (R3) is not a separate implementation.
@@ -139,7 +143,7 @@ Optimistic concurrency: every mutable entity carries a version token. A save is 
 
 Three categories of state:
 
-1. **Server/remote state:** fetched from the REST API. Managed through a dedicated data-fetching/caching layer (not manually copied into global state). The choice of library is recorded in an ADR.
+1. **Server/remote state:** fetched from the REST API through **TanStack Query** (ADR-0012), never manually copied into global state. Every read is a query; every write is a mutation that invalidates the queries it affects. Query keys are project-scoped by convention, so cache entries cannot cross a project boundary.
 2. **Local UI state:** component-local `useState`/`useReducer`. Not shared across components unless genuinely needed.
 3. **URL state:** route parameters, query strings. The URL is the source of truth for navigation state.
 
@@ -147,14 +151,14 @@ Global state is only introduced with a documented reason. Avoid prop drilling on
 
 ## Testing strategy
 
-| Layer | Test type | Focus |
-|---|---|---|
-| Domain | Unit | Pure business logic, invariants, value objects |
-| Application | Unit / Integration | Use cases with mocked ports |
-| Infrastructure | Integration | Repository implementations against a test database |
-| API | Integration | Endpoint behavior, validation, auth |
-| UI | Component | Meaningful behavior, not implementation details |
-| E2E | End-to-end | Critical user journeys |
+| Layer          | Test type          | Focus                                              |
+| -------------- | ------------------ | -------------------------------------------------- |
+| Domain         | Unit               | Pure business logic, invariants, value objects     |
+| Application    | Unit / Integration | Use cases with mocked ports                        |
+| Infrastructure | Integration        | Repository implementations against a test database |
+| API            | Integration        | Endpoint behavior, validation, auth                |
+| UI             | Component          | Meaningful behavior, not implementation details    |
+| E2E            | End-to-end         | Critical user journeys                             |
 
 Tests assert behavior, not internal structure. Avoid tests that merely confirm React rendered a div — test what matters.
 
@@ -168,26 +172,26 @@ Tests assert behavior, not internal structure. Avoid tests that merely confirm R
 
 ## External integrations
 
-| Integration | Release | Status |
-|---|---|---|
-| SQLite | R0 | Default database adapter |
-| MariaDB | R2 | Database adapter |
-| PostgreSQL | R2 | Database adapter |
-| S3-compatible storage | R0 | Asset storage |
-| Pagefind (in-process) | R0 | Search — default, no external service |
-| Hosted search adapter | R3 | Search — optional, opt-in |
-| OIDC SSO | R1 | Authentication |
-| Project shared password | R1 | Unauthenticated read access |
-| SMTP | R1 | Email notifications |
-| SAML SSO | R2 | Authentication |
-| Confluence Cloud API | R3 | Publication target |
-| Git export | R2 | Publication target |
-| Static site hosting | R2 | Publication target |
-| Adobe Analytics/CJA API | R4 | Data quality signals |
-| GA4 API | R4 | Data quality signals |
-| PostHog API | R4 | Data quality signals |
-| Figma API | R4 | Frame import |
-| Sentry | R1 | Error tracking |
+| Integration             | Release | Status                                |
+| ----------------------- | ------- | ------------------------------------- |
+| SQLite                  | R0      | Default database adapter              |
+| MariaDB                 | R2      | Database adapter                      |
+| PostgreSQL              | R2      | Database adapter                      |
+| S3-compatible storage   | R0      | Asset storage                         |
+| Pagefind (in-process)   | R0      | Search — default, no external service |
+| Hosted search adapter   | R3      | Search — optional, opt-in             |
+| OIDC SSO                | R1      | Authentication                        |
+| Project shared password | R1      | Unauthenticated read access           |
+| SMTP                    | R1      | Email notifications                   |
+| SAML SSO                | R2      | Authentication                        |
+| Confluence Cloud API    | R3      | Publication target                    |
+| Git export              | R2      | Publication target                    |
+| Static site hosting     | R2      | Publication target                    |
+| Adobe Analytics/CJA API | R4      | Data quality signals                  |
+| GA4 API                 | R4      | Data quality signals                  |
+| PostHog API             | R4      | Data quality signals                  |
+| Figma API               | R4      | Frame import                          |
+| Sentry                  | R1      | Error tracking                        |
 
 All integrations live in `src/infrastructure/` behind interfaces defined in `src/application/ports/`.
 
