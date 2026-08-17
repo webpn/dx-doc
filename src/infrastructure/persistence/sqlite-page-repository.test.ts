@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { applyMigrations } from '../../../tests/support/apply-migrations';
 
-import { openSqliteConnection, type SqliteDb } from './sqlite';
+import { closeSqliteConnection, openSqliteConnection, type Connection } from './sqlite-kysely';
 import { SqlitePageRepository } from './sqlite-page-repository';
 
 function t(): string {
@@ -30,24 +30,40 @@ function page(overrides: Partial<PageRecord>): PageRecord {
 
 describe('SqlitePageRepository (against the real schema)', () => {
   let dir: string;
-  let db: SqliteDb;
+  let connection: Connection;
   let repo: SqlitePageRepository;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-page-repo-'));
-    db = openSqliteConnection(path.join(dir, 'test.sqlite'));
-    applyMigrations(db);
-    db.prepare(
-      'INSERT INTO company (id, name, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-    ).run('c1', 'Acme', 'acme', t(), t());
-    db.prepare(
-      'INSERT INTO projects (id, company_id, name, slug, platform, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    ).run('proj-1', 'c1', 'Web', 'web', 'web', t(), t());
-    repo = new SqlitePageRepository(db);
+    connection = openSqliteConnection(path.join(dir, 'test.sqlite'));
+    applyMigrations(connection);
+    await connection.kysely
+      .insertInto('company')
+      .values({
+        id: 'c1',
+        name: 'Acme',
+        slug: 'acme',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
+    await connection.kysely
+      .insertInto('projects')
+      .values({
+        id: 'proj-1',
+        company_id: 'c1',
+        name: 'Web',
+        slug: 'web',
+        platform: 'web',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
+    repo = new SqlitePageRepository(connection.kysely);
   });
 
-  afterEach(() => {
-    db.close();
+  afterEach(async () => {
+    await closeSqliteConnection(connection);
     rmSync(dir, { recursive: true, force: true });
   });
 

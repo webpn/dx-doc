@@ -1,93 +1,104 @@
 import type { PageRecord, PageRepository } from '@project/application/ports/page-repository';
+import { Kysely, SqliteDialect } from 'kysely';
 
+import type { Database } from './db-schema';
 import type { SqliteDb } from './sqlite';
+import type { Db } from './sqlite-kysely';
 
 interface PageRow {
   id: string;
-  projectId: string;
-  parentId: string | null;
+  project_id: string;
+  parent_id: string | null;
   name: string;
   slug: string;
-  customId: string | null;
-  createdAt: string;
-  updatedAt: string;
+  custom_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 function toPage(row: PageRow): PageRecord {
   return {
     id: row.id,
-    projectId: row.projectId,
-    parentId: row.parentId,
+    projectId: row.project_id,
+    parentId: row.parent_id,
     name: row.name,
     slug: row.slug,
-    customId: row.customId,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
+    customId: row.custom_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
-const SELECT = `
-  SELECT id, project_id AS projectId, parent_id AS parentId, name, slug,
-         custom_id AS customId, created_at AS createdAt, updated_at AS updatedAt
-  FROM pages`;
-
-/** SQLite `PageRepository`. Synchronous under an async interface. */
+/** SQLite `PageRepository` backed by Kysely (ADR-0024). */
 export class SqlitePageRepository implements PageRepository {
-  constructor(private readonly db: SqliteDb) {}
+  private readonly db: Db;
 
-  createPage(page: PageRecord): Promise<void> {
-    this.db
-      .prepare(
-        `INSERT INTO pages (id, project_id, parent_id, name, slug, custom_id, created_at, updated_at)
-         VALUES (@id, @projectId, @parentId, @name, @slug, @customId, @createdAt, @updatedAt)`,
-      )
-      .run({
+  constructor(db: Db | SqliteDb) {
+    if ('prepare' in db) {
+      this.db = new Kysely<Database>({
+        dialect: new SqliteDialect({ database: db }),
+      });
+    } else {
+      this.db = db;
+    }
+  }
+
+  async createPage(page: PageRecord): Promise<void> {
+    await this.db
+      .insertInto('pages')
+      .values({
         id: page.id,
-        projectId: page.projectId,
-        parentId: page.parentId,
+        project_id: page.projectId,
+        parent_id: page.parentId,
         name: page.name,
         slug: page.slug,
-        customId: page.customId,
-        createdAt: page.createdAt,
-        updatedAt: page.updatedAt,
-      });
-    return Promise.resolve();
+        custom_id: page.customId,
+        created_at: page.createdAt,
+        updated_at: page.updatedAt,
+      })
+      .execute();
   }
 
-  getPageById(id: string): Promise<PageRecord | null> {
-    const row = this.db.prepare(`${SELECT} WHERE id = ?`).get(id) as PageRow | undefined;
-    return Promise.resolve(row === undefined ? null : toPage(row));
+  async getPageById(id: string): Promise<PageRecord | null> {
+    const row = await this.db
+      .selectFrom('pages')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+    return row ? toPage(row) : null;
   }
 
-  getPageByProjectAndSlug(projectId: string, slug: string): Promise<PageRecord | null> {
-    const row = this.db
-      .prepare(`${SELECT} WHERE project_id = ? AND slug = ?`)
-      .get(projectId, slug) as PageRow | undefined;
-    return Promise.resolve(row === undefined ? null : toPage(row));
+  async getPageByProjectAndSlug(projectId: string, slug: string): Promise<PageRecord | null> {
+    const row = await this.db
+      .selectFrom('pages')
+      .selectAll()
+      .where('project_id', '=', projectId)
+      .where('slug', '=', slug)
+      .executeTakeFirst();
+    return row ? toPage(row) : null;
   }
 
-  getPageByCustomId(projectId: string, customId: string): Promise<PageRecord | null> {
-    const row = this.db
-      .prepare(`${SELECT} WHERE project_id = ? AND custom_id = ?`)
-      .get(projectId, customId) as PageRow | undefined;
-    return Promise.resolve(row === undefined ? null : toPage(row));
+  async getPageByCustomId(projectId: string, customId: string): Promise<PageRecord | null> {
+    const row = await this.db
+      .selectFrom('pages')
+      .selectAll()
+      .where('project_id', '=', projectId)
+      .where('custom_id', '=', customId)
+      .executeTakeFirst();
+    return row ? toPage(row) : null;
   }
 
-  updatePage(page: PageRecord): Promise<void> {
-    this.db
-      .prepare(
-        `UPDATE pages SET name = @name, slug = @slug, parent_id = @parentId,
-                          custom_id = @customId, updated_at = @updatedAt
-         WHERE id = @id`,
-      )
-      .run({
-        id: page.id,
+  async updatePage(page: PageRecord): Promise<void> {
+    await this.db
+      .updateTable('pages')
+      .set({
         name: page.name,
         slug: page.slug,
-        parentId: page.parentId,
-        customId: page.customId,
-        updatedAt: page.updatedAt,
-      });
-    return Promise.resolve();
+        parent_id: page.parentId,
+        custom_id: page.customId,
+        updated_at: page.updatedAt,
+      })
+      .where('id', '=', page.id)
+      .execute();
   }
 }
