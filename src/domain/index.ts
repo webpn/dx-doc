@@ -2,4 +2,5 @@
 // This module contains pure business logic with no UI or infrastructure dependencies.
 // See ARCHITECTURE.md §Domain for layer rules.
 
-export {};
+export * from './entities';
+export * from './composition';
