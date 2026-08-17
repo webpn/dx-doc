@@ -22,7 +22,7 @@ Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that sli
 
 ## Current position
 
-**M1.1 through M1.9 are implemented.** Core R1 entities, composition invariants, Kysely repositories, REST endpoints, batch writers, reconciliation reports, service token auth, MCP Streamable HTTP server, optimistic concurrency stale-write guards, tracking duplication, Flow and Trigger entities, automated Mermaid diagram generation, project-scoped search, single-draft version publication pipeline with immutable snapshots, project shared-password access with expiry, and append-only audit logging are all complete, tested, and validated. M1.10 (Import verification and frozen archive) is next to close R1.
+**Release 1 (MVP) is complete.** All milestones M1.1 through M1.10 are implemented, tested, and validated. Core tracking data models, import-grade REST APIs, MCP Streamable HTTP server, agent-driven pilot import harness, optimistic concurrency stale-write guards, rich-text markdown & tracking duplication, flow graphs with automated Mermaid diagram generation, project-scoped search, single-draft version publication pipeline with immutable snapshots & automated changelog diffing, shared-password project access with expiry, append-only audit logging, and pilot cutover requirements are all fully implemented and verified. Release 2 (R2) is next.
 
 ---
 

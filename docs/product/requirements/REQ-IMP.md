@@ -17,7 +17,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-IMP-005 | Batch write endpoints                          | Should | R1   | M1.2      | Implemented |
 | REQ-IMP-006 | Reconciliation report                          | Should | R1   | M1.2      | Implemented |
 | REQ-IMP-007 | Import scripts committed and re-runnable       | Must   | R1   | M1.4      | Implemented |
-| REQ-IMP-008 | Source system frozen, then read-only archive   | Must   | R1   | M1.10     | Not Started |
+| REQ-IMP-008 | Source system frozen, then read-only archive   | Must   | R1   | M1.10     | Implemented |
 | REQ-IMP-009 | Flows, history, internal links, importer UI    | Won't  | —    | —         | Rejected    |
 
 ---
