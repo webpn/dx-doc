@@ -18,6 +18,11 @@ const projectAliases: Record<string, string> = {
 export default defineConfig({
   plugins: [react()],
 
+  test: {
+    pool: 'forks',
+    fileParallelism: false,
+  },
+
   resolve: {
     alias: projectAliases,
   },
