@@ -10,12 +10,12 @@ Entry format and status legend: [requirements index](README.md).
 
 | ID          | Requirement                                    | MoSCoW | Rel. | Milestone | Status      |
 | ----------- | ---------------------------------------------- | ------ | ---- | --------- | ----------- |
-| REQ-IMP-001 | No source-format-specific code in the Platform | Must   | R1   | M1.2      | Not Started |
-| REQ-IMP-002 | API surface complete for every R1 entity       | Must   | R1   | M1.2      | Not Started |
-| REQ-IMP-003 | Idempotent upsert keyed on `custom_id`         | Must   | R1   | M1.2      | Not Started |
-| REQ-IMP-004 | Asset upload through the API                   | Must   | R1   | M1.2      | Not Started |
-| REQ-IMP-005 | Batch write endpoints                          | Should | R1   | M1.2      | Not Started |
-| REQ-IMP-006 | Reconciliation report                          | Should | R1   | M1.2      | Not Started |
+| REQ-IMP-001 | No source-format-specific code in the Platform | Must   | R1   | M1.2      | Implemented |
+| REQ-IMP-002 | API surface complete for every R1 entity       | Must   | R1   | M1.2      | Implemented |
+| REQ-IMP-003 | Idempotent upsert keyed on `custom_id`         | Must   | R1   | M1.2      | Implemented |
+| REQ-IMP-004 | Asset upload through the API                   | Must   | R1   | M1.2      | Implemented |
+| REQ-IMP-005 | Batch write endpoints                          | Should | R1   | M1.2      | Implemented |
+| REQ-IMP-006 | Reconciliation report                          | Should | R1   | M1.2      | Implemented |
 | REQ-IMP-007 | Import scripts committed and re-runnable       | Must   | R1   | M1.4      | Not Started |
 | REQ-IMP-008 | Source system frozen, then read-only archive   | Must   | R1   | M1.10     | Not Started |
 | REQ-IMP-009 | Flows, history, internal links, importer UI    | Won't  | —    | —         | Rejected    |

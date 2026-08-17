@@ -22,7 +22,7 @@ Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that sli
 
 ## Current position
 
-**M1.1 (Tracking Data Model) is implemented.** Core R1 entities (DataLayerProperty, Module, Destination, TrackingTemplate, FreePage, Tracking, TrackingProperty, SpecificValue, NavigationEvent) and their domain composition rules, Kysely persistence repositories, and application services are complete and tested. M1.2 (Import-grade API) is next.
+**M1.1 (Tracking Data Model) & M1.2 (Import-grade API) are implemented.** Core R1 entities, domain composition rules, Kysely persistence repositories, application services, and REST API endpoints (including batch writes, reconciliation reports, and Bearer service-account auth) are complete and tested. M1.3 (MCP server) is next.
 
 ---
 

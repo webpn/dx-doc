@@ -3,14 +3,24 @@ import type { ValidationIssue } from '@project/application/validation/issues';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 /**
- * Resolve the authenticated user id from the session cookie, or null when
- * unauthenticated. Transport concern: the session store decides validity.
+ * Resolve the authenticated user id from the session cookie or Bearer header (REQ-API-009, D38).
+ * Transport concern: the session store decides validity.
  */
 export async function authenticateRequest(
   request: FastifyRequest,
   sessions: SessionService,
   cookieName: string,
 ): Promise<string | null> {
+  // 1. Check Bearer token (service-account / script auth, REQ-API-009)
+  const authHeader = request.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    const bearerToken = authHeader.slice(7).trim();
+    if (bearerToken.length > 0) {
+      return sessions.resolve(bearerToken);
+    }
+  }
+
+  // 2. Check Cookie
   const cookies = request.cookies as Record<string, string | undefined>;
   const token = cookies[cookieName];
   if (token === undefined) {
@@ -48,8 +58,19 @@ export function replyServiceError(reply: FastifyReply, error: ServiceErrorShape)
         error: { code: 'DUPLICATE_CUSTOM_ID', message: 'custom_id is already in use' },
       });
     case 'cross_project_parent':
+    case 'cross_project_reference':
       return reply.code(400).send({
-        error: { code: 'CROSS_PROJECT_PARENT', message: 'Parent page belongs to another project' },
+        error: {
+          code: 'CROSS_PROJECT_REFERENCE',
+          message: 'Referenced entity belongs to a different project (REQ-DOM-028)',
+        },
+      });
+    case 'hierarchy_cycle':
+      return reply.code(400).send({
+        error: {
+          code: 'HIERARCHY_CYCLE',
+          message: 'Hierarchy cycle detected in property parent references (REQ-DOM-004)',
+        },
       });
     default:
       return reply.code(500).send({ error: { code: 'INTERNAL', message: 'Internal error' } });

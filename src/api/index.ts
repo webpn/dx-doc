@@ -11,4 +11,7 @@ export type { ProjectRoutesOptions } from './projects/routes';
 export { registerPageRoutes } from './pages/routes';
 export type { PageRoutesOptions } from './pages/routes';
 
+export { registerTrackingRoutes } from './tracking/routes';
+export type { TrackingRoutesOptions } from './tracking/routes';
+
 export { authenticateRequest, replyServiceError, unauthenticated } from './helpers';
