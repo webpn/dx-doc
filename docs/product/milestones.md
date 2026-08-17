@@ -22,7 +22,7 @@ Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that sli
 
 ## Current position
 
-**R0 is complete; entering R1 (MVP).** Foundations, layered architecture, authentication, account lifecycle, Kysely persistence on SQLite, REST API with shared domain validation, Pagefind search abstraction, S3 object storage adapter, and public repository readiness (M0.1–M0.6) are all implemented, tested, and passing CI validations. M1.1 (Tracking Data Model) is the next milestone to execute.
+**M1.1 (Tracking Data Model) is implemented.** Core R1 entities (DataLayerProperty, Module, Destination, TrackingTemplate, FreePage, Tracking, TrackingProperty, SpecificValue, NavigationEvent) and their domain composition rules, Kysely persistence repositories, and application services are complete and tested. M1.2 (Import-grade API) is next.
 
 ---
 

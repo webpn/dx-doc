@@ -6,25 +6,25 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 | ID          | Requirement                                           | MoSCoW | Rel. | Milestone | Status      |
 | ----------- | ----------------------------------------------------- | ------ | ---- | --------- | ----------- |
-| REQ-DOM-001 | Page/Screen entity                                    | Must   | R1   | M1.1      | Not Started |
-| REQ-DOM-002 | Tracking entity with navigation event and attachment  | Must   | R1   | M1.1      | Not Started |
-| REQ-DOM-003 | Data Layer Property, full attribute set               | Must   | R1   | M1.1      | Not Started |
-| REQ-DOM-004 | `object` property type with parent-child hierarchy    | Must   | R1   | M1.1      | Not Started |
-| REQ-DOM-005 | `business_label` field                                | Must   | R1   | M1.1      | Not Started |
-| REQ-DOM-006 | Module entity, project-scoped, inheritable            | Must   | R1   | M1.1      | Not Started |
-| REQ-DOM-007 | Opt-in propagation of module changes                  | Must   | R1   | M1.1      | Not Started |
-| REQ-DOM-008 | Property removal with automatic module detachment     | Must   | R1   | M1.1      | Not Started |
-| REQ-DOM-009 | Tracking Template, editor-configurable                | Must   | R1   | M1.1      | Not Started |
-| REQ-DOM-010 | Specific Values with plain `[placeholder]` strings    | Must   | R1   | M1.1      | Not Started |
+| REQ-DOM-001 | Page/Screen entity                                    | Must   | R1   | M1.1      | Implemented |
+| REQ-DOM-002 | Tracking entity with navigation event and attachment  | Must   | R1   | M1.1      | Implemented |
+| REQ-DOM-003 | Data Layer Property, full attribute set               | Must   | R1   | M1.1      | Implemented |
+| REQ-DOM-004 | `object` property type with parent-child hierarchy    | Must   | R1   | M1.1      | Implemented |
+| REQ-DOM-005 | `business_label` field                                | Must   | R1   | M1.1      | Implemented |
+| REQ-DOM-006 | Module entity, project-scoped, inheritable            | Must   | R1   | M1.1      | Implemented |
+| REQ-DOM-007 | Opt-in propagation of module changes                  | Must   | R1   | M1.1      | Implemented |
+| REQ-DOM-008 | Property removal with automatic module detachment     | Must   | R1   | M1.1      | Implemented |
+| REQ-DOM-009 | Tracking Template, editor-configurable                | Must   | R1   | M1.1      | Implemented |
+| REQ-DOM-010 | Specific Values with plain `[placeholder]` strings    | Must   | R1   | M1.1      | Implemented |
 | REQ-DOM-011 | Prose conditional valorisations                       | Won't  | —    | —         | Rejected    |
 | REQ-DOM-012 | Structured property conditions, four operators + note | Should | R2   | M2.1      | Not Started |
 | REQ-DOM-013 | Conditions targeting nested property paths            | Should | R2   | M2.1      | Not Started |
 | REQ-DOM-014 | Company-defined custom fields                         | Should | R2   | M2.1      | Not Started |
-| REQ-DOM-015 | Unified Destination entity, N:N with properties       | Must   | R1   | M1.1      | Not Started |
-| REQ-DOM-016 | Per-destination name override                         | Must   | R1   | M1.1      | Not Started |
+| REQ-DOM-015 | Unified Destination entity, N:N with properties       | Must   | R1   | M1.1      | Implemented |
+| REQ-DOM-016 | Per-destination name override                         | Must   | R1   | M1.1      | Implemented |
 | REQ-DOM-017 | CDP Audience entity                                   | Should | R2   | M2.7      | Not Started |
 | REQ-DOM-018 | Survey entity                                         | Should | R2   | M2.7      | Not Started |
-| REQ-DOM-019 | Company catalogue, copy-on-project-creation           | Must   | R1   | M1.1      | Not Started |
+| REQ-DOM-019 | Company catalogue, copy-on-project-creation           | Must   | R1   | M1.1      | Implemented |
 | REQ-DOM-020 | Project-scoped impact analysis                        | Should | R2   | M2.7      | Not Started |
 | REQ-DOM-021 | Project pairing and alignment report                  | Could  | R4   | M4.3      | Not Started |
 | REQ-DOM-022 | `derived_from` descriptive dependency field           | Should | R2   | M2.1      | Not Started |
@@ -32,8 +32,8 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-DOM-024 | Selective adoption of catalogue module changes        | Should | R2   | M2.7      | Not Started |
 | REQ-DOM-025 | Extension / Segment / Calculated Metric containers    | Should | R3   | M3.5      | Not Started |
 | REQ-DOM-026 | Recurring custom property standardisation hint        | Could  | R3   | M3.5      | Not Started |
-| REQ-DOM-027 | TrackingProperty entity carrying the `presence` enum  | Must   | R1   | M1.1      | Not Started |
-| REQ-DOM-028 | No cross-project references                           | Must   | R1   | M1.1      | Not Started |
+| REQ-DOM-027 | TrackingProperty entity carrying the `presence` enum  | Must   | R1   | M1.1      | Implemented |
+| REQ-DOM-028 | No cross-project references                           | Must   | R1   | M1.1      | Implemented |
 
 ---
 

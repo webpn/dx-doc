@@ -15,7 +15,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-SEC-007 | SAML SSO                                          | Should | R2   | M2.8            | Not Started |
 | REQ-SEC-008 | Audit log UI, paginated list and CSV export       | Should | R2   | M2.8            | Not Started |
 | REQ-SEC-009 | Project archive and restore; no hard delete       | Should | R2   | M2.8            | Not Started |
-| REQ-SEC-010 | Company catalogue managed by the Admin role       | Must   | R1   | M1.1            | Not Started |
+| REQ-SEC-010 | Company catalogue managed by the Admin role       | Must   | R1   | M1.1            | Implemented |
 | REQ-SEC-011 | Permission matrix enforced server-side            | Must   | R0   | M0.4            | Implemented |
 | REQ-SEC-012 | Non-publishable content never leaves the instance | Must   | R1   | M1.7 → standing | Not Started |
 | REQ-SEC-013 | Account lifecycle and first-run bootstrap         | Must   | R0   | M0.4            | Implemented |
