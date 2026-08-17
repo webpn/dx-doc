@@ -30,6 +30,15 @@ export { SqlitePasswordResetTokenRepository } from './persistence/sqlite-reset-t
 export { SqliteCompanyRepository } from './persistence/sqlite-company-repository';
 export { SqliteProjectRepository } from './persistence/sqlite-project-repository';
 export { SqlitePageRepository } from './persistence/sqlite-page-repository';
+export {
+  SqlitePropertyRepository,
+  SqliteModuleRepository,
+  SqliteDestinationRepository,
+  SqliteNavigationEventRepository,
+  SqliteTrackingRepository,
+  SqliteTrackingTemplateRepository,
+  SqliteFreePageRepository,
+} from './persistence/sqlite-tracking-repositories';
 
 export { SmtpEmailSender, createSmtpEmailSender } from './email/smtp-email-sender';
 export { NoopEmailSender } from './email/noop-email-sender';
