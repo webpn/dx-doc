@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (2026-08-12) — closes open decision **O7**. **Amended 2026-08-17 (D28):** migration tooling is **dbmate**, run as an explicit `npm run db:migrate` step, replacing the original run-at-start-up execution model. The forward-only, versioned, portable, backup-guarded properties are unchanged; the *when* migrations run changes from "the application refuses to start" to "the operator or CI runs the command".
+Accepted (2026-08-12) — closes open decision **O7**. **Amended 2026-08-17 (D28):** migration tooling is **dbmate**, run as an explicit `npm run db:migrate` step, replacing the original run-at-start-up execution model. The forward-only, versioned, portable, backup-guarded properties are unchanged; the _when_ migrations run changes from "the application refuses to start" to "the operator or CI runs the command".
 
 ## Date
 

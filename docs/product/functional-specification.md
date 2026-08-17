@@ -82,14 +82,14 @@ The domain model defines ~25 entities. See `docs/product/glossary.md` for defini
 
 ## Delivery Roadmap Summary
 
-| Release | Content                                                                      | Timeline              |
-| ------- | ---------------------------------------------------------------------------- | --------------------- |
-| R0      | Foundations: stack, schema, auth, API, CI, public repo                       | Weeks 1–2             |
-| R1      | MVP: full data model, editor, versioning, import API + MCP                  | Weeks 3–8             |
-| R2      | Distribution: bulk ops, exports, notifications, SAML, MariaDB/Postgres adapters | Months 3–4         |
-| R3      | Developer handoff: snippets, Confluence, interactive agent access            | Months 5–6            |
-| R4      | Data quality: analytics integrations, conformance reports, Figma import      | Months 7–8            |
-| Backlog | Semantic layer (OWL/RDF/SKOS, business glossary), lifecycle, insights        | No committed timeline |
+| Release | Content                                                                         | Timeline              |
+| ------- | ------------------------------------------------------------------------------- | --------------------- |
+| R0      | Foundations: stack, schema, auth, API, CI, public repo                          | Weeks 1–2             |
+| R1      | MVP: full data model, editor, versioning, import API + MCP                      | Weeks 3–8             |
+| R2      | Distribution: bulk ops, exports, notifications, SAML, MariaDB/Postgres adapters | Months 3–4            |
+| R3      | Developer handoff: snippets, Confluence, interactive agent access               | Months 5–6            |
+| R4      | Data quality: analytics integrations, conformance reports, Figma import         | Months 7–8            |
+| Backlog | Semantic layer (OWL/RDF/SKOS, business glossary), lifecycle, insights           | No committed timeline |
 
 ## Open Decisions
 
