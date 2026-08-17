@@ -11,6 +11,7 @@ import * as m003 from '../../db/migrations/003_password_reset';
 import * as m004 from '../../db/migrations/004_nullable_company';
 import * as m005 from '../../db/migrations/005_password_must_change';
 import * as m006 from '../../db/migrations/006_tracking_data_model';
+import * as m007 from '../../db/migrations/007_flows_and_navigation';
 import type { Connection } from '../../src/infrastructure/persistence/sqlite-kysely';
 
 const staticMigrations: Record<string, Migration> = {
@@ -20,6 +21,7 @@ const staticMigrations: Record<string, Migration> = {
   '004_nullable_company': m004,
   '005_password_must_change': m005,
   '006_tracking_data_model': m006,
+  '007_flows_and_navigation': m007,
 };
 
 class StaticMigrationProvider implements MigrationProvider {

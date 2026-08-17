@@ -17,12 +17,14 @@ import { SqliteProjectRepository } from '@project/infrastructure/persistence/sql
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
 import {
   SqliteDestinationRepository,
+  SqliteFlowRepository,
   SqliteFreePageRepository,
   SqliteModuleRepository,
   SqliteNavigationEventRepository,
   SqlitePropertyRepository,
   SqliteTrackingRepository,
   SqliteTrackingTemplateRepository,
+  SqliteTriggerRepository,
 } from '@project/infrastructure/persistence/sqlite-tracking-repositories';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
 import Fastify, { type FastifyInstance } from 'fastify';
@@ -139,6 +141,8 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     const trkRepo = new SqliteTrackingRepository(connection.kysely);
     const tplRepo = new SqliteTrackingTemplateRepository(connection.kysely);
     const freePageRepo = new SqliteFreePageRepository(connection.kysely);
+    const flowRepo = new SqliteFlowRepository(connection.kysely);
+    const triggerRepo = new SqliteTriggerRepository(connection.kysely);
 
     const trackingService = new TrackingService(
       propRepo,
@@ -148,6 +152,8 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
       trkRepo,
       tplRepo,
       freePageRepo,
+      flowRepo,
+      triggerRepo,
       projectRepo,
       permissions,
     );

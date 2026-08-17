@@ -1,15 +1,20 @@
 import type {
   DestinationRepository,
+  FlowRepository,
   FreePageRepository,
   ModuleRepository,
   NavigationEventRepository,
   PropertyRepository,
   TrackingRepository,
   TrackingTemplateRepository,
+  TriggerRepository,
 } from '@project/application/ports/tracking-repositories';
 import type {
   DataLayerProperty,
   Destination,
+  Flow,
+  FlowEdge,
+  FlowNode,
   FreePage,
   Module,
   NavigationEvent,
@@ -21,6 +26,7 @@ import type {
   Tracking,
   TrackingProperty,
   TrackingTemplate,
+  Trigger,
 } from '@project/domain/entities';
 import type { Kysely } from 'kysely';
 
@@ -1072,5 +1078,269 @@ export class SqliteFreePageRepository implements FreePageRepository {
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };
+  }
+}
+
+export class SqliteFlowRepository implements FlowRepository {
+  constructor(private readonly db: Db) {}
+
+  async createFlow(flow: Flow): Promise<void> {
+    await this.db
+      .insertInto('flows')
+      .values({
+        id: flow.id,
+        project_id: flow.projectId,
+        name: flow.name,
+        slug: flow.slug,
+        description: flow.description,
+        custom_id: flow.customId,
+        created_at: flow.createdAt,
+        updated_at: flow.updatedAt,
+      })
+      .execute();
+  }
+
+  async getFlowById(id: string): Promise<Flow | null> {
+    const row = await this.db
+      .selectFrom('flows')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+    return row ? this.toEntity(row) : null;
+  }
+
+  async getFlowByProjectAndSlug(projectId: string, slug: string): Promise<Flow | null> {
+    const row = await this.db
+      .selectFrom('flows')
+      .selectAll()
+      .where('project_id', '=', projectId)
+      .where('slug', '=', slug)
+      .executeTakeFirst();
+    return row ? this.toEntity(row) : null;
+  }
+
+  async listFlowsForProject(projectId: string): Promise<Flow[]> {
+    const rows = await this.db
+      .selectFrom('flows')
+      .selectAll()
+      .where('project_id', '=', projectId)
+      .orderBy('name', 'asc')
+      .execute();
+    return rows.map((r) => this.toEntity(r));
+  }
+
+  async updateFlow(flow: Flow): Promise<void> {
+    await this.db
+      .updateTable('flows')
+      .set({
+        name: flow.name,
+        slug: flow.slug,
+        description: flow.description,
+        updated_at: flow.updatedAt,
+      })
+      .where('id', '=', flow.id)
+      .execute();
+  }
+
+  async setFlowNodes(nodes: FlowNode[]): Promise<void> {
+    if (nodes.length === 0) return;
+    const first = nodes[0];
+    if (!first) return;
+    const flowId = first.flowId;
+    await this.db.deleteFrom('flow_nodes').where('flow_id', '=', flowId).execute();
+
+    await this.db
+      .insertInto('flow_nodes')
+      .values(
+        nodes.map((n) => ({
+          id: n.id,
+          flow_id: n.flowId,
+          node_type: n.nodeType,
+          page_id: n.pageId,
+          trigger_id: n.triggerId,
+          position_x: n.positionX,
+          position_y: n.positionY,
+          created_at: n.createdAt,
+        })),
+      )
+      .execute();
+  }
+
+  async getFlowNodes(flowId: string): Promise<FlowNode[]> {
+    const rows = await this.db
+      .selectFrom('flow_nodes')
+      .selectAll()
+      .where('flow_id', '=', flowId)
+      .execute();
+    return rows.map((r) => ({
+      id: r.id,
+      flowId: r.flow_id,
+      nodeType: r.node_type,
+      pageId: r.page_id,
+      triggerId: r.trigger_id,
+      positionX: r.position_x,
+      positionY: r.position_y,
+      createdAt: r.created_at,
+    }));
+  }
+
+  async setFlowEdges(edges: FlowEdge[]): Promise<void> {
+    if (edges.length === 0) return;
+    const first = edges[0];
+    if (!first) return;
+    const flowId = first.flowId;
+    await this.db.deleteFrom('flow_edges').where('flow_id', '=', flowId).execute();
+
+    await this.db
+      .insertInto('flow_edges')
+      .values(
+        edges.map((e) => ({
+          id: e.id,
+          flow_id: e.flowId,
+          from_node_id: e.fromNodeId,
+          to_node_id: e.toNodeId,
+          label: e.label,
+          condition_description: e.conditionDescription,
+          created_at: e.createdAt,
+        })),
+      )
+      .execute();
+  }
+
+  async getFlowEdges(flowId: string): Promise<FlowEdge[]> {
+    const rows = await this.db
+      .selectFrom('flow_edges')
+      .selectAll()
+      .where('flow_id', '=', flowId)
+      .execute();
+    return rows.map((r) => ({
+      id: r.id,
+      flowId: r.flow_id,
+      fromNodeId: r.from_node_id,
+      toNodeId: r.to_node_id,
+      label: r.label,
+      conditionDescription: r.condition_description,
+      createdAt: r.created_at,
+    }));
+  }
+
+  private toEntity(row: {
+    id: string;
+    project_id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    custom_id: string | null;
+    created_at: string;
+    updated_at: string;
+  }): Flow {
+    return {
+      id: row.id,
+      projectId: row.project_id,
+      name: row.name,
+      slug: row.slug,
+      description: row.description,
+      customId: row.custom_id,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  }
+}
+
+export class SqliteTriggerRepository implements TriggerRepository {
+  constructor(private readonly db: Db) {}
+
+  async createTrigger(trigger: Trigger): Promise<void> {
+    await this.db
+      .insertInto('triggers')
+      .values({
+        id: trigger.id,
+        project_id: trigger.projectId,
+        name: trigger.name,
+        description: trigger.description,
+        custom_id: trigger.customId,
+        created_at: trigger.createdAt,
+        updated_at: trigger.updatedAt,
+      })
+      .execute();
+  }
+
+  async getTriggerById(id: string): Promise<Trigger | null> {
+    const row = await this.db
+      .selectFrom('triggers')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+    return row
+      ? {
+          id: row.id,
+          projectId: row.project_id,
+          name: row.name,
+          description: row.description,
+          customId: row.custom_id,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+        }
+      : null;
+  }
+
+  async listTriggersForProject(projectId: string): Promise<Trigger[]> {
+    const rows = await this.db
+      .selectFrom('triggers')
+      .selectAll()
+      .where('project_id', '=', projectId)
+      .orderBy('name', 'asc')
+      .execute();
+    return rows.map((r) => ({
+      id: r.id,
+      projectId: r.project_id,
+      name: r.name,
+      description: r.description,
+      customId: r.custom_id,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    }));
+  }
+
+  async updateTrigger(trigger: Trigger): Promise<void> {
+    await this.db
+      .updateTable('triggers')
+      .set({
+        name: trigger.name,
+        description: trigger.description,
+        updated_at: trigger.updatedAt,
+      })
+      .where('id', '=', trigger.id)
+      .execute();
+  }
+
+  async setTriggerTrackings(
+    triggerId: string,
+    trackingIds: string[],
+    nowIso: string,
+  ): Promise<void> {
+    await this.db.deleteFrom('trigger_trackings').where('trigger_id', '=', triggerId).execute();
+
+    if (trackingIds.length > 0) {
+      await this.db
+        .insertInto('trigger_trackings')
+        .values(
+          trackingIds.map((tId) => ({
+            trigger_id: triggerId,
+            tracking_id: tId,
+            created_at: nowIso,
+          })),
+        )
+        .execute();
+    }
+  }
+
+  async getTriggerTrackingIds(triggerId: string): Promise<string[]> {
+    const rows = await this.db
+      .selectFrom('trigger_trackings')
+      .select('tracking_id')
+      .where('trigger_id', '=', triggerId)
+      .execute();
+    return rows.map((r) => r.tracking_id);
   }
 }

@@ -20,12 +20,14 @@ import { SqliteProjectRepository } from '@project/infrastructure/persistence/sql
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
 import {
   SqliteDestinationRepository,
+  SqliteFlowRepository,
   SqliteFreePageRepository,
   SqliteModuleRepository,
   SqliteNavigationEventRepository,
   SqlitePropertyRepository,
   SqliteTrackingRepository,
   SqliteTrackingTemplateRepository,
+  SqliteTriggerRepository,
 } from '@project/infrastructure/persistence/sqlite-tracking-repositories';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
 import Fastify, { type FastifyInstance } from 'fastify';
@@ -142,6 +144,8 @@ describe('MCP Server (M1.3, REQ-API-003, REQ-API-004, REQ-API-006, D37, D38)', (
     const trkRepo = new SqliteTrackingRepository(connection.kysely);
     const tplRepo = new SqliteTrackingTemplateRepository(connection.kysely);
     const freePageRepo = new SqliteFreePageRepository(connection.kysely);
+    const flowRepo = new SqliteFlowRepository(connection.kysely);
+    const triggerRepo = new SqliteTriggerRepository(connection.kysely);
 
     const projectService = new ProjectService(projectRepo, permissions);
     const pageService = new PageService(pageRepo, projectRepo, permissions);
@@ -153,6 +157,8 @@ describe('MCP Server (M1.3, REQ-API-003, REQ-API-004, REQ-API-006, D37, D38)', (
       trkRepo,
       tplRepo,
       freePageRepo,
+      flowRepo,
+      triggerRepo,
       projectRepo,
       permissions,
     );

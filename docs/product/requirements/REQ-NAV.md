@@ -6,13 +6,13 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 | ID          | Requirement                                    | MoSCoW | Rel. | Milestone | Status      |
 | ----------- | ---------------------------------------------- | ------ | ---- | --------- | ----------- |
-| REQ-NAV-001 | Page hierarchy with navigable sidebar          | Must   | R1   | M1.6      | Not Started |
-| REQ-NAV-002 | Automatic per-page tracking recap              | Must   | R1   | M1.6      | Not Started |
-| REQ-NAV-003 | Flow entity                                    | Must   | R1   | M1.6      | Not Started |
-| REQ-NAV-004 | Trigger nodes distinct from visual transitions | Must   | R1   | M1.6      | Not Started |
-| REQ-NAV-005 | Directed graph with labels and conditions      | Must   | R1   | M1.6      | Not Started |
-| REQ-NAV-006 | Automatic Mermaid generation from the graph    | Must   | R1   | M1.6      | Not Started |
-| REQ-NAV-007 | Sidebar exposing flows alongside the hierarchy | Must   | R1   | M1.6      | Not Started |
+| REQ-NAV-001 | Page hierarchy with navigable sidebar          | Must   | R1   | M1.6      | Implemented |
+| REQ-NAV-002 | Automatic per-page tracking recap              | Must   | R1   | M1.6      | Implemented |
+| REQ-NAV-003 | Flow entity                                    | Must   | R1   | M1.6      | Implemented |
+| REQ-NAV-004 | Trigger nodes distinct from visual transitions | Must   | R1   | M1.6      | Implemented |
+| REQ-NAV-005 | Directed graph with labels and conditions      | Must   | R1   | M1.6      | Implemented |
+| REQ-NAV-006 | Automatic Mermaid generation from the graph    | Must   | R1   | M1.6      | Implemented |
+| REQ-NAV-007 | Sidebar exposing flows alongside the hierarchy | Must   | R1   | M1.6      | Implemented |
 | REQ-NAV-008 | Visual drag-and-drop graph editor              | Could  | R3   | M3.5      | Not Started |
 | REQ-NAV-009 | Cross-project search                           | Won't  | —    | —         | Rejected    |
 

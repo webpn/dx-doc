@@ -54,6 +54,11 @@ export interface Database {
   tracking_modules: TrackingModulesTable;
   tracking_properties: TrackingPropertiesTable;
   specific_values: SpecificValuesTable;
+  flows: FlowsTable;
+  triggers: TriggersTable;
+  trigger_trackings: TriggerTrackingsTable;
+  flow_nodes: FlowNodesTable;
+  flow_edges: FlowEdgesTable;
 }
 
 /**
@@ -219,6 +224,37 @@ export const SCHEMA_DEFINITIONS: DatabaseSchemaDefinition = {
     'description',
     'created_at',
     'updated_at',
+  ],
+  flows: [
+    'id',
+    'project_id',
+    'name',
+    'slug',
+    'description',
+    'custom_id',
+    'created_at',
+    'updated_at',
+  ],
+  triggers: ['id', 'project_id', 'name', 'description', 'custom_id', 'created_at', 'updated_at'],
+  trigger_trackings: ['trigger_id', 'tracking_id', 'created_at'],
+  flow_nodes: [
+    'id',
+    'flow_id',
+    'node_type',
+    'page_id',
+    'trigger_id',
+    'position_x',
+    'position_y',
+    'created_at',
+  ],
+  flow_edges: [
+    'id',
+    'flow_id',
+    'from_node_id',
+    'to_node_id',
+    'label',
+    'condition_description',
+    'created_at',
   ],
 };
 
@@ -495,6 +531,58 @@ export interface SpecificValuesTable {
   description: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   created_at: ColumnType<string, string | undefined, string | undefined>;
   updated_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface FlowsTable {
+  id: string;
+  project_id: string;
+  name: string;
+  slug: string;
+  description: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  custom_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface TriggersTable {
+  id: string;
+  project_id: string;
+  name: string;
+  description: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  custom_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface TriggerTrackingsTable {
+  trigger_id: string;
+  tracking_id: string;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface FlowNodesTable {
+  id: string;
+  flow_id: string;
+  node_type: 'page' | 'trigger';
+  page_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  trigger_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  position_x: ColumnType<number | null, number | null | undefined, number | null | undefined>;
+  position_y: ColumnType<number | null, number | null | undefined, number | null | undefined>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface FlowEdgesTable {
+  id: string;
+  flow_id: string;
+  from_node_id: string;
+  to_node_id: string;
+  label: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  condition_description: ColumnType<
+    string | null,
+    string | null | undefined,
+    string | null | undefined
+  >;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
 export type { Generated };

@@ -14,12 +14,14 @@ import {
 import { SqliteProjectRepository } from '../../infrastructure/persistence/sqlite-project-repository';
 import {
   SqliteDestinationRepository,
+  SqliteFlowRepository,
   SqliteFreePageRepository,
   SqliteModuleRepository,
   SqliteNavigationEventRepository,
   SqlitePropertyRepository,
   SqliteTrackingRepository,
   SqliteTrackingTemplateRepository,
+  SqliteTriggerRepository,
 } from '../../infrastructure/persistence/sqlite-tracking-repositories';
 import { PermissionService } from '../auth/permissions';
 
@@ -151,6 +153,8 @@ describe('TrackingService (M1.1 Application Service)', () => {
     trkRepo = new SqliteTrackingRepository(connection.kysely);
     const tplRepo = new SqliteTrackingTemplateRepository(connection.kysely);
     const freePageRepo = new SqliteFreePageRepository(connection.kysely);
+    const flowRepo = new SqliteFlowRepository(connection.kysely);
+    const triggerRepo = new SqliteTriggerRepository(connection.kysely);
 
     trackingService = new TrackingService(
       propRepo,
@@ -160,6 +164,8 @@ describe('TrackingService (M1.1 Application Service)', () => {
       trkRepo,
       tplRepo,
       freePageRepo,
+      flowRepo,
+      triggerRepo,
       projectRepo,
       permissions,
     );
@@ -290,5 +296,56 @@ describe('TrackingService (M1.1 Application Service)', () => {
     expect(reportRes.value.projectId).toBe(projectId);
     expect(reportRes.value.counts).toBeDefined();
     expect(reportRes.value.customIdCounts).toBeDefined();
+  });
+
+  it('manages Flows, Triggers, and auto-generates Mermaid diagram (REQ-NAV-003 .. REQ-NAV-007, REQ-AUTH-004)', async () => {
+    // 0. Seed a real page
+    await connection.kysely
+      .insertInto('pages')
+      .values({
+        id: 'page-flow-1',
+        project_id: projectId,
+        name: 'Sign Up Page',
+        slug: 'sign-up-page',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
+
+    // 1. Create Flow
+    const flowRes = await trackingService.createFlow(editorId, projectId, {
+      name: 'Onboarding Funnel',
+      slug: 'onboarding-funnel',
+    });
+    expect(flowRes.ok).toBe(true);
+    if (!flowRes.ok) throw new Error('flow create failed');
+    const flowId = flowRes.value.flowId;
+
+    // 2. Create Trigger
+    const trgRes = await trackingService.createTrigger(editorId, projectId, {
+      name: 'Click Sign Up',
+    });
+    expect(trgRes.ok).toBe(true);
+    if (!trgRes.ok) throw new Error('trigger create failed');
+    const triggerId = trgRes.value.triggerId;
+
+    // 3. Set Flow graph nodes and edges
+    const graphRes = await trackingService.setFlowGraph(editorId, flowId, {
+      nodes: [
+        { id: 'node-p1', nodeType: 'page', pageId: 'page-flow-1' },
+        { id: 'node-t1', nodeType: 'trigger', triggerId },
+      ],
+      edges: [{ fromNodeId: 'node-p1', toNodeId: 'node-t1', label: 'User clicks' }],
+    });
+    expect(graphRes.ok).toBe(true);
+
+    // 4. Retrieve flow with Mermaid diagram
+    const flowData = await trackingService.getFlow(editorId, flowId);
+    expect(flowData.ok).toBe(true);
+    if (!flowData.ok) throw new Error('flow get failed');
+    expect(flowData.value.nodes).toHaveLength(2);
+    expect(flowData.value.edges).toHaveLength(1);
+    expect(flowData.value.mermaidDiagram).toContain('graph TD');
+    expect(flowData.value.mermaidDiagram).toContain('-->|"User clicks"|');
   });
 });

@@ -1,6 +1,9 @@
 import type {
   DataLayerProperty,
   Destination,
+  Flow,
+  FlowEdge,
+  FlowNode,
   FreePage,
   Module,
   NavigationEvent,
@@ -9,6 +12,7 @@ import type {
   Tracking,
   TrackingProperty,
   TrackingTemplate,
+  Trigger,
 } from '@project/domain/entities';
 
 export interface PropertyRepository {
@@ -121,4 +125,27 @@ export interface TrackingRepository {
   setSpecificValues(specificValues: SpecificValue[]): Promise<void>;
   getSpecificValuesForTrackingProperty(trackingPropertyId: string): Promise<SpecificValue[]>;
   getSpecificValuesForTracking(trackingId: string): Promise<SpecificValue[]>;
+}
+
+export interface FlowRepository {
+  createFlow(flow: Flow): Promise<void>;
+  getFlowById(id: string): Promise<Flow | null>;
+  getFlowByProjectAndSlug(projectId: string, slug: string): Promise<Flow | null>;
+  listFlowsForProject(projectId: string): Promise<Flow[]>;
+  updateFlow(flow: Flow): Promise<void>;
+
+  // Nodes and edges
+  setFlowNodes(nodes: FlowNode[]): Promise<void>;
+  getFlowNodes(flowId: string): Promise<FlowNode[]>;
+  setFlowEdges(edges: FlowEdge[]): Promise<void>;
+  getFlowEdges(flowId: string): Promise<FlowEdge[]>;
+}
+
+export interface TriggerRepository {
+  createTrigger(trigger: Trigger): Promise<void>;
+  getTriggerById(id: string): Promise<Trigger | null>;
+  listTriggersForProject(projectId: string): Promise<Trigger[]>;
+  updateTrigger(trigger: Trigger): Promise<void>;
+  setTriggerTrackings(triggerId: string, trackingIds: string[], nowIso: string): Promise<void>;
+  getTriggerTrackingIds(triggerId: string): Promise<string[]>;
 }

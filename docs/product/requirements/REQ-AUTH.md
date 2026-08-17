@@ -11,7 +11,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-AUTH-001 | Markdown editor with the full block set              | Must   | R1   | M1.5      | Implemented |
 | REQ-AUTH-002 | Image upload, 10 MB cap, resize to 2000 px           | Must   | R1   | M1.5      | Implemented |
 | REQ-AUTH-003 | Free wiki pages with publishable flag                | Must   | R1   | M1.5      | Implemented |
-| REQ-AUTH-004 | Mermaid rendering and live preview                   | Must   | R1   | M1.6      | Not Started |
+| REQ-AUTH-004 | Mermaid rendering and live preview                   | Must   | R1   | M1.6      | Implemented |
 | REQ-AUTH-005 | Optimistic concurrency with stale-write rejection    | Must   | R1   | M1.5      | Implemented |
 | REQ-AUTH-006 | Tracking duplication within a project                | Must   | R1   | M1.5      | Implemented |
 | REQ-AUTH-007 | Project-scoped full-text search                      | Must   | R1   | M1.7      | Not Started |

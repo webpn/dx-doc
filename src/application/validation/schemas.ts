@@ -215,3 +215,60 @@ export const specificValueCreateSchema = z.object({
   description: z.string().max(2000).optional(),
 });
 export type SpecificValueCreateInput = z.infer<typeof specificValueCreateSchema>;
+
+export const flowCreateSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'name is required')
+    .max(120, 'name must be 120 characters or fewer'),
+  slug,
+  description: z.string().max(5000).optional(),
+  customId: optionalCustomId.optional(),
+});
+export type FlowCreateInput = z.input<typeof flowCreateSchema>;
+export type FlowCreateOutput = z.output<typeof flowCreateSchema>;
+
+export const flowUpdateSchema = flowCreateSchema.partial();
+export type FlowUpdateInput = z.infer<typeof flowUpdateSchema>;
+
+export const triggerCreateSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'name is required')
+    .max(120, 'name must be 120 characters or fewer'),
+  description: z.string().max(2000).optional(),
+  trackingIds: z.array(z.string()).optional().default([]),
+  customId: optionalCustomId.optional(),
+});
+export type TriggerCreateInput = z.input<typeof triggerCreateSchema>;
+export type TriggerCreateOutput = z.output<typeof triggerCreateSchema>;
+
+export const triggerUpdateSchema = triggerCreateSchema.partial();
+export type TriggerUpdateInput = z.infer<typeof triggerUpdateSchema>;
+
+export const flowNodeSchema = z.object({
+  id: z.string().min(1).optional(),
+  nodeType: z.enum(['page', 'trigger']),
+  pageId: z.string().min(1).optional(),
+  triggerId: z.string().min(1).optional(),
+  positionX: z.number().optional(),
+  positionY: z.number().optional(),
+});
+export type FlowNodeInput = z.infer<typeof flowNodeSchema>;
+
+export const flowEdgeSchema = z.object({
+  id: z.string().min(1).optional(),
+  fromNodeId: z.string().min(1, 'fromNodeId is required'),
+  toNodeId: z.string().min(1, 'toNodeId is required'),
+  label: z.string().max(200).optional(),
+  conditionDescription: z.string().max(2000).optional(),
+});
+export type FlowEdgeInput = z.infer<typeof flowEdgeSchema>;
+
+export const flowGraphSchema = z.object({
+  nodes: z.array(flowNodeSchema),
+  edges: z.array(flowEdgeSchema),
+});
+export type FlowGraphInput = z.infer<typeof flowGraphSchema>;

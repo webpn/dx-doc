@@ -135,3 +135,47 @@ export interface SpecificValue {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface Flow {
+  id: string;
+  projectId: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  customId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Trigger {
+  id: string;
+  projectId: string;
+  name: string;
+  description: string | null;
+  customId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type FlowNodeType = 'page' | 'trigger';
+
+export interface FlowNode {
+  id: string;
+  flowId: string;
+  nodeType: FlowNodeType;
+  pageId: string | null;
+  triggerId: string | null;
+  positionX: number | null;
+  positionY: number | null;
+  createdAt: string;
+}
+
+export interface FlowEdge {
+  id: string;
+  flowId: string;
+  fromNodeId: string;
+  toNodeId: string;
+  label: string | null;
+  conditionDescription: string | null;
+  createdAt: string;
+}

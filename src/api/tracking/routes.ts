@@ -3,6 +3,9 @@ import type { TrackingService } from '@project/application/tracking/tracking-ser
 import type {
   DestinationCreateInput,
   DestinationUpdateInput,
+  FlowCreateInput,
+  FlowGraphInput,
+  FlowUpdateInput,
   FreePageCreateInput,
   FreePageUpdateInput,
   ModuleCreateInput,
@@ -17,6 +20,8 @@ import type {
   TrackingTemplateCreateInput,
   TrackingTemplateUpdateInput,
   TrackingUpdateInput,
+  TriggerCreateInput,
+  TriggerUpdateInput,
 } from '@project/application/validation/schemas';
 import type { FastifyInstance } from 'fastify';
 
@@ -507,6 +512,109 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
       return result.value;
     },
   );
+
+  // ── FLOWS & TRIGGERS (REQ-NAV-003 .. REQ-NAV-007, REQ-AUTH-004) ──
+  app.post('/api/projects/:projectId/flows', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { projectId } = request.params as { projectId: string };
+    const result = await trackingService.createFlow(
+      userId,
+      projectId,
+      request.body as FlowCreateInput,
+    );
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return reply.code(201).send({ id: result.value.flowId });
+  });
+
+  app.get('/api/projects/:projectId/flows', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { projectId } = request.params as { projectId: string };
+    const result = await trackingService.listFlowsForProject(userId, projectId);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return result.value;
+  });
+
+  app.get('/api/flows/:id', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { id } = request.params as { id: string };
+    const result = await trackingService.getFlow(userId, id);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return result.value;
+  });
+
+  app.patch('/api/flows/:id', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { id } = request.params as { id: string };
+    const result = await trackingService.updateFlow(userId, id, request.body as FlowUpdateInput);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return { ok: true };
+  });
+
+  app.put('/api/flows/:id/graph', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { id } = request.params as { id: string };
+    const result = await trackingService.setFlowGraph(userId, id, request.body as FlowGraphInput);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return { ok: true };
+  });
+
+  app.post('/api/projects/:projectId/triggers', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { projectId } = request.params as { projectId: string };
+    const result = await trackingService.createTrigger(
+      userId,
+      projectId,
+      request.body as TriggerCreateInput,
+    );
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return reply.code(201).send({ id: result.value.triggerId });
+  });
+
+  app.get('/api/projects/:projectId/triggers', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { projectId } = request.params as { projectId: string };
+    const result = await trackingService.listTriggersForProject(userId, projectId);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return result.value;
+  });
+
+  app.get('/api/triggers/:id', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { id } = request.params as { id: string };
+    const result = await trackingService.getTrigger(userId, id);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return result.value;
+  });
+
+  app.patch('/api/triggers/:id', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { id } = request.params as { id: string };
+    const result = await trackingService.updateTrigger(
+      userId,
+      id,
+      request.body as TriggerUpdateInput,
+    );
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return { ok: true };
+  });
 
   // ── BATCH WRITE ENDPOINT (REQ-IMP-005, D35) ──────────────────
   app.post('/api/companies/:companyId/batch', async (request, reply) => {

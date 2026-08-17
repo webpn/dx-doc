@@ -2,12 +2,14 @@ import { randomUUID } from 'node:crypto';
 
 import type {
   DestinationRepository,
+  FlowRepository,
   FreePageRepository,
   ModuleRepository,
   NavigationEventRepository,
   PropertyRepository,
   TrackingRepository,
   TrackingTemplateRepository,
+  TriggerRepository,
 } from '@project/application/ports/tracking-repositories';
 import {
   applyModuleToTracking,
@@ -17,6 +19,9 @@ import {
 import type {
   DataLayerProperty,
   Destination,
+  Flow,
+  FlowEdge,
+  FlowNode,
   FreePage,
   Module,
   NavigationEvent,
@@ -25,7 +30,9 @@ import type {
   Tracking,
   TrackingProperty,
   TrackingTemplate,
+  Trigger,
 } from '@project/domain/entities';
+import { generateMermaidDiagram } from '@project/domain/mermaid';
 import { err, ok, type Result } from '@project/shared/result';
 
 import type { PermissionService } from '../auth/permissions';
@@ -34,6 +41,9 @@ import type { ValidationIssue } from '../validation/issues';
 import {
   destinationCreateSchema,
   destinationUpdateSchema,
+  flowCreateSchema,
+  flowGraphSchema,
+  flowUpdateSchema,
   freePageCreateSchema,
   freePageUpdateSchema,
   moduleCreateSchema,
@@ -48,8 +58,13 @@ import {
   trackingTemplateCreateSchema,
   trackingTemplateUpdateSchema,
   trackingUpdateSchema,
+  triggerCreateSchema,
+  triggerUpdateSchema,
   type DestinationCreateInput,
   type DestinationUpdateInput,
+  type FlowCreateInput,
+  type FlowGraphInput,
+  type FlowUpdateInput,
   type FreePageCreateInput,
   type FreePageUpdateInput,
   type ModuleCreateInput,
@@ -64,6 +79,8 @@ import {
   type TrackingTemplateCreateInput,
   type TrackingTemplateUpdateInput,
   type TrackingUpdateInput,
+  type TriggerCreateInput,
+  type TriggerUpdateInput,
 } from '../validation/schemas';
 import { validate } from '../validation/validate';
 
@@ -84,6 +101,8 @@ export class TrackingService {
     private readonly trackings: TrackingRepository,
     private readonly templates: TrackingTemplateRepository,
     private readonly freePages: FreePageRepository,
+    private readonly flows: FlowRepository,
+    private readonly triggers: TriggerRepository,
     private readonly projects: ProjectRepository,
     private readonly permissions: PermissionService,
     private readonly now: () => Date = () => new Date(),
@@ -1327,5 +1346,252 @@ export class TrackingService {
       },
       unreferencedPropertyNames,
     });
+  }
+
+  // --- FLOWS & TRIGGERS (REQ-NAV-003 .. REQ-NAV-007, REQ-AUTH-004) ---
+  async createFlow(
+    actorId: string,
+    projectId: string,
+    input: FlowCreateInput,
+  ): Promise<Result<{ flowId: string }, TrackingServiceError>> {
+    const parsed = validate(flowCreateSchema, input);
+    if (!parsed.ok) return err({ kind: 'validation', issues: parsed.error });
+
+    if (!(await this.permissions.canOnProject(actorId, projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const flowId = this.newId();
+    const nowIso = this.now().toISOString();
+
+    await this.flows.createFlow({
+      id: flowId,
+      projectId,
+      name: parsed.value.name,
+      slug: parsed.value.slug,
+      description: parsed.value.description ?? null,
+      customId: parsed.value.customId ?? null,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    });
+
+    return ok({ flowId });
+  }
+
+  async getFlow(
+    actorId: string,
+    flowId: string,
+  ): Promise<
+    Result<
+      {
+        flow: Flow;
+        nodes: FlowNode[];
+        edges: FlowEdge[];
+        mermaidDiagram: string;
+      },
+      TrackingServiceError
+    >
+  > {
+    const flow = await this.flows.getFlowById(flowId);
+    if (!flow) return err({ kind: 'not_found' });
+
+    if (!(await this.permissions.canOnProject(actorId, flow.projectId, 'project.read'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const nodes = await this.flows.getFlowNodes(flowId);
+    const edges = await this.flows.getFlowEdges(flowId);
+
+    // Build node label map for Mermaid generation (REQ-NAV-006)
+    const labelMap = new Map<string, string>();
+    for (const node of nodes) {
+      if (node.nodeType === 'page' && node.pageId) {
+        labelMap.set(node.id, `Page ${node.pageId}`);
+      } else if (node.nodeType === 'trigger' && node.triggerId) {
+        const trg = await this.triggers.getTriggerById(node.triggerId);
+        labelMap.set(node.id, trg?.name ?? `Trigger ${node.triggerId}`);
+      } else {
+        labelMap.set(node.id, node.id);
+      }
+    }
+
+    const mermaidDiagram = generateMermaidDiagram(nodes, edges, labelMap);
+
+    return ok({ flow, nodes, edges, mermaidDiagram });
+  }
+
+  async listFlowsForProject(
+    actorId: string,
+    projectId: string,
+  ): Promise<Result<Flow[], TrackingServiceError>> {
+    if (!(await this.permissions.canOnProject(actorId, projectId, 'project.read'))) {
+      return err({ kind: 'forbidden' });
+    }
+    const list = await this.flows.listFlowsForProject(projectId);
+    return ok(list);
+  }
+
+  async updateFlow(
+    actorId: string,
+    flowId: string,
+    input: FlowUpdateInput,
+  ): Promise<Result<{ ok: true }, TrackingServiceError>> {
+    const flow = await this.flows.getFlowById(flowId);
+    if (!flow) return err({ kind: 'not_found' });
+
+    if (!(await this.permissions.canOnProject(actorId, flow.projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const parsed = validate(flowUpdateSchema, input);
+    if (!parsed.ok) return err({ kind: 'validation', issues: parsed.error });
+
+    const nowIso = this.now().toISOString();
+    await this.flows.updateFlow({
+      ...flow,
+      name: parsed.value.name ?? flow.name,
+      slug: parsed.value.slug ?? flow.slug,
+      description:
+        parsed.value.description !== undefined
+          ? (parsed.value.description ?? null)
+          : flow.description,
+      updatedAt: nowIso,
+    });
+
+    return ok({ ok: true });
+  }
+
+  async setFlowGraph(
+    actorId: string,
+    flowId: string,
+    input: FlowGraphInput,
+  ): Promise<Result<{ ok: true }, TrackingServiceError>> {
+    const flow = await this.flows.getFlowById(flowId);
+    if (!flow) return err({ kind: 'not_found' });
+
+    if (!(await this.permissions.canOnProject(actorId, flow.projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const parsed = validate(flowGraphSchema, input);
+    if (!parsed.ok) return err({ kind: 'validation', issues: parsed.error });
+
+    const nowIso = this.now().toISOString();
+    const domainNodes: FlowNode[] = parsed.value.nodes.map((n) => ({
+      id: n.id ?? this.newId(),
+      flowId,
+      nodeType: n.nodeType,
+      pageId: n.pageId ?? null,
+      triggerId: n.triggerId ?? null,
+      positionX: n.positionX ?? null,
+      positionY: n.positionY ?? null,
+      createdAt: nowIso,
+    }));
+
+    const domainEdges: FlowEdge[] = parsed.value.edges.map((e) => ({
+      id: e.id ?? this.newId(),
+      flowId,
+      fromNodeId: e.fromNodeId,
+      toNodeId: e.toNodeId,
+      label: e.label ?? null,
+      conditionDescription: e.conditionDescription ?? null,
+      createdAt: nowIso,
+    }));
+
+    await this.flows.setFlowNodes(domainNodes);
+    await this.flows.setFlowEdges(domainEdges);
+
+    return ok({ ok: true });
+  }
+
+  async createTrigger(
+    actorId: string,
+    projectId: string,
+    input: TriggerCreateInput,
+  ): Promise<Result<{ triggerId: string }, TrackingServiceError>> {
+    const parsed = validate(triggerCreateSchema, input);
+    if (!parsed.ok) return err({ kind: 'validation', issues: parsed.error });
+
+    if (!(await this.permissions.canOnProject(actorId, projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const triggerId = this.newId();
+    const nowIso = this.now().toISOString();
+
+    await this.triggers.createTrigger({
+      id: triggerId,
+      projectId,
+      name: parsed.value.name,
+      description: parsed.value.description ?? null,
+      customId: parsed.value.customId ?? null,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    });
+
+    if (parsed.value.trackingIds.length > 0) {
+      await this.triggers.setTriggerTrackings(triggerId, parsed.value.trackingIds, nowIso);
+    }
+
+    return ok({ triggerId });
+  }
+
+  async getTrigger(
+    actorId: string,
+    triggerId: string,
+  ): Promise<Result<{ trigger: Trigger; trackingIds: string[] }, TrackingServiceError>> {
+    const trg = await this.triggers.getTriggerById(triggerId);
+    if (!trg) return err({ kind: 'not_found' });
+
+    if (!(await this.permissions.canOnProject(actorId, trg.projectId, 'project.read'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const trackingIds = await this.triggers.getTriggerTrackingIds(triggerId);
+    return ok({ trigger: trg, trackingIds });
+  }
+
+  async listTriggersForProject(
+    actorId: string,
+    projectId: string,
+  ): Promise<Result<Trigger[], TrackingServiceError>> {
+    if (!(await this.permissions.canOnProject(actorId, projectId, 'project.read'))) {
+      return err({ kind: 'forbidden' });
+    }
+    const list = await this.triggers.listTriggersForProject(projectId);
+    return ok(list);
+  }
+
+  async updateTrigger(
+    actorId: string,
+    triggerId: string,
+    input: TriggerUpdateInput,
+  ): Promise<Result<{ ok: true }, TrackingServiceError>> {
+    const trg = await this.triggers.getTriggerById(triggerId);
+    if (!trg) return err({ kind: 'not_found' });
+
+    if (!(await this.permissions.canOnProject(actorId, trg.projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const parsed = validate(triggerUpdateSchema, input);
+    if (!parsed.ok) return err({ kind: 'validation', issues: parsed.error });
+
+    const nowIso = this.now().toISOString();
+    await this.triggers.updateTrigger({
+      ...trg,
+      name: parsed.value.name ?? trg.name,
+      description:
+        parsed.value.description !== undefined
+          ? (parsed.value.description ?? null)
+          : trg.description,
+      updatedAt: nowIso,
+    });
+
+    if (parsed.value.trackingIds !== undefined) {
+      await this.triggers.setTriggerTrackings(triggerId, parsed.value.trackingIds, nowIso);
+    }
+
+    return ok({ ok: true });
   }
 }
