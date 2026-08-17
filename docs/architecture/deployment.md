@@ -11,7 +11,7 @@ The Platform is a **white-label, open-source product**. Each organisation deploy
 - **Single process, multiple responsibilities:** the application server serves the REST API, the MCP server, and static assets from a single Node.js process. No microservices.
 - **Stateless application:** the process holds no persistent state. All state is in the database and S3. The process can be restarted or scaled horizontally without data loss.
 - **Configuration through environment variables:** instance-level configuration uses environment variables. Company-level configuration is in the database.
-- **Forward-only migrations:** schema changes are applied by an explicit `npm run db:migrate` step (dbmate) in CI/deploy, not at process boot. No automated rollback.
+- **Forward-only migrations:** schema changes are applied by an explicit `npm run db:migrate` step (Kysely Migrator) in CI/deploy, not at process boot. No automated rollback.
 
 ## Reference Deployment Stack
 

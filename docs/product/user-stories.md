@@ -77,7 +77,7 @@ _Weeks 1–2. No user-visible value; determines the cost of everything after it.
 
 [REQ-FDN-009](requirements/REQ-FDN.md#req-fdn-009--versioned-idempotent-forward-only-migrations)
 
-**Done when** — migrations are forward-only and idempotent, applied by an explicit `db:migrate` step that refuses to run against a database ahead of the migration set (ADR-0015, amended 2026-08-17 to dbmate via `npm run db:migrate`). **Unblocked** — O7 closed on 2026-08-12 by [ADR-0015](../adr/0015-schema-migration-strategy.md), which also settles that no migration ever inserts data, so an upgrade never delivers someone else's fixtures.
+**Done when** — migrations are forward-only and idempotent, applied by an explicit `db:migrate` step that refuses to run against a database ahead of the migration set ([ADR-0024](../adr/0024-kysely-as-persistence-query-builder.md), superseding ADR-0015; Kysely `Migrator` via `npm run db:migrate`). **Unblocked** — O7 closed on 2026-08-12 by [ADR-0015](../adr/0015-schema-migration-strategy.md) (and superseded by ADR-0024), which also settles that no migration ever inserts data, so an upgrade never delivers someone else's fixtures.
 
 ## M0.3 — Ports and adapters
 

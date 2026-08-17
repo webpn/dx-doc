@@ -160,7 +160,7 @@ One index per project. Scope filtering is applied server-side from the caller's 
 
 **Must** · R0 · [M0.2](../milestones.md#m02--persistence-foundation) · spec §16.3 · [ADR-0015](../../adr/0015-schema-migration-strategy.md) · **Not Started** · Issue: — · PR: —
 
-Schema migrations are versioned, forward-only, and applied by an explicit `db:migrate` step (dbmate, D28) rather than at application start-up — the operator or CI runs the command against the target database. There is no supported downgrade path; a mandatory backup step is documented instead.
+Schema migrations are versioned, forward-only, and applied by an explicit `db:migrate` step (Kysely `Migrator`, D42, ADR-0024) rather than at application start-up — the operator or CI runs the command against the target database. There is no supported downgrade path; a mandatory backup step is documented instead.
 
 **Acceptance**
 

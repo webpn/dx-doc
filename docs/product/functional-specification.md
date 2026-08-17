@@ -101,7 +101,7 @@ See §21 of the full specification (and [requirements index](requirements/README
 - **O4:** Data quality interaction with unstructured placeholders — blocks R4
 - **O5:** Verification/QA module scope — blocks R4
 - **O6:** Complete environment variable matrix — **closed**, see [ADR-0014](../adr/0014-configuration-split.md); matrix reproduced in [README.md](../../README.md#environment-variables)
-- **O7:** Schema migration strategy for third-party installs — **closed**, see [ADR-0015](../adr/0015-schema-migration-strategy.md); forward-only versioned migrations via an explicit `db:migrate` step (dbmate, amended 2026-08-17), no auto-apply at boot, backup as the operator's responsibility. It gated M0.1, not R1.
+- **O7:** Schema migration strategy for third-party installs — **closed**, see [ADR-0024](../adr/0024-kysely-as-persistence-query-builder.md) (superseding ADR-0015); forward-only versioned migrations via an explicit `db:migrate` step (Kysely Migrator), no auto-apply at boot, backup as the operator's responsibility. It gated M0.1, not R1.
 - **O8:** Design patterns from reference products — **closed** on 2026-08-17: developer-handoff code snippets use a project-configured hybrid model selecting from hard-coded application templates for supported platform × tag manager pairs (unblocking [REQ-DEV-002](requirements/REQ-DEV.md#req-dev-002--code-snippet-generation-per-platform--tag-manager))
 - **O9:** Extension/Segment/CalculatedMetric attributes before the semantic layer — blocks the backlog
 - **O10:** Config key split (environment vs database) — **closed**, see [ADR-0014](../adr/0014-configuration-split.md); SSO details, supported login methods and supported locales are company-level, not environment variables

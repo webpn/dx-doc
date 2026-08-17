@@ -173,18 +173,18 @@ Instance-level configuration only — infrastructure and operator secrets. Per-c
 
 ## Development Commands
 
-| Command                | Purpose                                                            |
-| ---------------------- | ------------------------------------------------------------------ |
-| `npm run dev`          | Start development server (Vite + API)                              |
-| `npm run start`        | Start the API/production server (Fastify, serves the built client) |
-| `npm run build`        | Production build (typecheck + Vite)                                |
-| `npm run typecheck`    | TypeScript type checking                                           |
-| `npm run lint`         | ESLint static analysis                                             |
-| `npm run format`       | Prettier formatting                                                |
-| `npm run format:check` | Check formatting without writing                                   |
-| `npm test`             | Unit and component tests                                           |
-| `npm run test:e2e`     | End-to-end tests                                                   |
-| `npm run db:migrate`   | Apply pending schema migrations (dbmate; run before `dev`)         |
+| Command                | Purpose                                                             |
+| ---------------------- | ------------------------------------------------------------------- |
+| `npm run dev`          | Start development server (Vite + API)                               |
+| `npm run start`        | Start the API/production server (Fastify, serves the built client)  |
+| `npm run build`        | Production build (typecheck + Vite)                                 |
+| `npm run typecheck`    | TypeScript type checking                                            |
+| `npm run lint`         | ESLint static analysis                                              |
+| `npm run format`       | Prettier formatting                                                 |
+| `npm run format:check` | Check formatting without writing                                    |
+| `npm test`             | Unit and component tests                                            |
+| `npm run test:e2e`     | End-to-end tests                                                    |
+| `npm run db:migrate`   | Apply pending schema migrations (Kysely Migrator; run before `dev`) |
 
 ## Architecture Overview
 
