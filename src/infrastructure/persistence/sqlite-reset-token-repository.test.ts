@@ -17,7 +17,7 @@ describe('SqlitePasswordResetTokenRepository', () => {
   beforeEach(async () => {
     dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-reset-token-repo-'));
     connection = openSqliteConnection(path.join(dir, 'test.sqlite'));
-    applyMigrations(connection);
+    await applyMigrations(connection);
     // User required for foreign key
     await connection.kysely
       .insertInto('company')

@@ -27,20 +27,13 @@
  * commit 10, uses `exec()` for the bootstrap and the Kysely
  * query builder for the assertions.
  */
-import { readFileSync, readdirSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 import { sql } from 'kysely';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { applyMigrations } from '../../../tests/support/apply-migrations';
+
 import { type Database, SCHEMA_DEFINITIONS } from './db-schema';
 import { closeSqliteConnection, openSqliteConnection, type Connection } from './sqlite-kysely';
-
-const MIGRATIONS_DIR = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '../../../db/migrations',
-);
 
 interface TableInfoRow {
   name: string;
@@ -50,40 +43,12 @@ interface ColumnInfoRow {
   name: string;
 }
 
-/**
- * Apply every `.sql` file in `db/migrations/` in numeric order,
- * stripped of dbmate directive lines (`-- migrate:up` /
- * `-- migrate:down`). For the drift-guard test we want the
- * live schema to be the one the SQL migrations produce, not
- * the one the Kysely migrations produce, so the test continues
- * to validate the *raw* schema source of truth.
- *
- * This is intentionally raw SQL via `Connection#exec`: it is a
- * one-shot bootstrap path, not application code, and the SQL
- * files contain multiple statements per file. It is removed in
- * the commit (10) that switches the application to Kysely's
- * `Migrator`; until then it keeps the drift guard running
- * against the existing SQL files.
- */
-function applyRawSqliteMigrations(connection: Connection): void {
-  const files = readdirSync(MIGRATIONS_DIR)
-    .filter((f) => f.endsWith('.sql'))
-    .sort();
-  for (const file of files) {
-    const sqlText = readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8')
-      .split('\n')
-      .filter((line) => !line.trimStart().startsWith('-- migrate:'))
-      .join('\n');
-    connection.exec(sqlText);
-  }
-}
-
 describe('Database interface drift guard (ADR-0024)', () => {
   let connection: Connection;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     connection = openSqliteConnection(':memory:');
-    applyRawSqliteMigrations(connection);
+    await applyMigrations(connection);
   });
 
   afterEach(async () => {
@@ -94,7 +59,7 @@ describe('Database interface drift guard (ADR-0024)', () => {
     const expected = Object.keys(SCHEMA_DEFINITIONS).sort();
     const result = await sql<TableInfoRow>`
       SELECT name FROM sqlite_master
-      WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
+      WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'kysely_%'
     `.execute(connection.kysely);
     const actual = result.rows.map((r) => r.name).sort();
     expect(actual).toEqual(expected);

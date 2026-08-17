@@ -30,7 +30,7 @@ describe('SqliteAccountRepository (against the real schema)', () => {
   beforeEach(async () => {
     dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-account-repo-'));
     connection = openSqliteConnection(path.join(dir, 'test.sqlite'));
-    applyMigrations(connection);
+    await applyMigrations(connection);
     repo = new SqliteAccountRepository(connection.kysely);
 
     // Set up a company and its four roles (REQ-SEC-002) so user/role/grant

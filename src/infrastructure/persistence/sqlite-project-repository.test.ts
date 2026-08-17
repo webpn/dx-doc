@@ -41,7 +41,7 @@ describe('SqliteProjectRepository (against the real schema)', () => {
   beforeEach(async () => {
     dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-project-repo-'));
     connection = openSqliteConnection(path.join(dir, 'test.sqlite'));
-    applyMigrations(connection);
+    await applyMigrations(connection);
     await connection.kysely
       .insertInto('company')
       .values({

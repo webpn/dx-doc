@@ -14,10 +14,10 @@ describe('SqliteCompanyRepository', () => {
   let connection: Connection;
   let repo: SqliteCompanyRepository;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-company-repo-'));
     connection = openSqliteConnection(path.join(dir, 'test.sqlite'));
-    applyMigrations(connection);
+    await applyMigrations(connection);
     repo = new SqliteCompanyRepository(connection.kysely);
   });
 

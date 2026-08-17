@@ -17,7 +17,7 @@ describe('SqliteSessionRepository', () => {
   beforeEach(async () => {
     dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-session-repo-'));
     connection = openSqliteConnection(path.join(dir, 'test.sqlite'));
-    applyMigrations(connection);
+    await applyMigrations(connection);
     // A user so sessions have a valid foreign key.
     await connection.kysely
       .insertInto('company')

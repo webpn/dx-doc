@@ -45,7 +45,7 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
   beforeEach(async () => {
     dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-crud-routes-'));
     connection = openSqliteConnection(path.join(dir, 'test.sqlite'));
-    applyMigrations(connection);
+    await applyMigrations(connection);
 
     const companyId = 'c1';
     await connection.kysely
