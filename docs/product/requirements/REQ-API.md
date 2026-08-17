@@ -10,10 +10,10 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | ----------- | ------------------------------------------------------- | ------ | ---- | --------- | ----------- |
 | REQ-API-001 | Internal REST API as the single entry point             | Must   | R0   | M0.5      | Implemented |
 | REQ-API-002 | Documented public API                                   | Must   | R1   | M1.2      | Implemented |
-| REQ-API-003 | MCP read tools                                          | Must   | R1   | M1.3      | Not Started |
-| REQ-API-004 | MCP write tools, draft only                             | Must   | R1   | M1.3      | Not Started |
+| REQ-API-003 | MCP read tools                                          | Must   | R1   | M1.3      | Implemented |
+| REQ-API-004 | MCP write tools, draft only                             | Must   | R1   | M1.3      | Implemented |
 | REQ-API-005 | OAuth with user consent for MCP clients                 | Should | R3   | M3.4      | Not Started |
-| REQ-API-006 | MCP resources exposing naming guidelines                | Should | R1   | M1.3      | Not Started |
+| REQ-API-006 | MCP resources exposing naming guidelines                | Should | R1   | M1.3      | Implemented |
 | REQ-API-007 | Outbound webhooks on publication                        | Could  | R4   | M4.3      | Not Started |
 | REQ-API-008 | Bulk operations restricted to explicit identifier lists | Should | R2   | M2.4      | Not Started |
 | REQ-API-009 | Service-account API tokens                              | Must   | R1   | M1.2      | Implemented |

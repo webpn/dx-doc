@@ -94,6 +94,16 @@ export class SqliteProjectRepository implements ProjectRepository {
     return row ? toProject(row) : null;
   }
 
+  async listProjectsForCompany(companyId: string): Promise<ProjectRecord[]> {
+    const rows = await this.db
+      .selectFrom('projects')
+      .selectAll()
+      .where('company_id', '=', companyId)
+      .orderBy('name', 'asc')
+      .execute();
+    return rows.map((r) => toProject(r));
+  }
+
   async updateProject(project: ProjectRecord): Promise<void> {
     await this.db
       .updateTable('projects')

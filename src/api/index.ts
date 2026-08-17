@@ -14,4 +14,8 @@ export type { PageRoutesOptions } from './pages/routes';
 export { registerTrackingRoutes } from './tracking/routes';
 export type { TrackingRoutesOptions } from './tracking/routes';
 
+export { registerMcpRoutes } from './mcp/routes';
+export type { McpRoutesOptions } from './mcp/routes';
+export { McpServerHandler, MCP_TOOLS } from './mcp/server';
+
 export { authenticateRequest, replyServiceError, unauthenticated } from './helpers';

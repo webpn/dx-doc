@@ -14,10 +14,12 @@ import {
 import { SqliteProjectRepository } from '../../infrastructure/persistence/sqlite-project-repository';
 import {
   SqliteDestinationRepository,
+  SqliteFreePageRepository,
   SqliteModuleRepository,
   SqliteNavigationEventRepository,
   SqlitePropertyRepository,
   SqliteTrackingRepository,
+  SqliteTrackingTemplateRepository,
 } from '../../infrastructure/persistence/sqlite-tracking-repositories';
 import { PermissionService } from '../auth/permissions';
 
@@ -147,6 +149,8 @@ describe('TrackingService (M1.1 Application Service)', () => {
     const destRepo = new SqliteDestinationRepository(connection.kysely);
     navRepo = new SqliteNavigationEventRepository(connection.kysely);
     trkRepo = new SqliteTrackingRepository(connection.kysely);
+    const tplRepo = new SqliteTrackingTemplateRepository(connection.kysely);
+    const freePageRepo = new SqliteFreePageRepository(connection.kysely);
 
     trackingService = new TrackingService(
       propRepo,
@@ -154,6 +158,8 @@ describe('TrackingService (M1.1 Application Service)', () => {
       destRepo,
       navRepo,
       trkRepo,
+      tplRepo,
+      freePageRepo,
       projectRepo,
       permissions,
     );
@@ -270,5 +276,19 @@ describe('TrackingService (M1.1 Application Service)', () => {
     expect(projProps[0]?.name).toBe('global_user_id');
     expect(projProps[0]?.projectId).toBe(projectId);
     expect(projProps[0]?.id).not.toBe(catPropRes.value.propertyId);
+  });
+
+  it('generates reconciliation report for a project (REQ-IMP-006)', async () => {
+    const reportRes = await trackingService.generateReconciliationReport(
+      editorId,
+      companyId,
+      projectId,
+    );
+    expect(reportRes.ok).toBe(true);
+    if (!reportRes.ok) throw new Error('report failed');
+
+    expect(reportRes.value.projectId).toBe(projectId);
+    expect(reportRes.value.counts).toBeDefined();
+    expect(reportRes.value.customIdCounts).toBeDefined();
   });
 });

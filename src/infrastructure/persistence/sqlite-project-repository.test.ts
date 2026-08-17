@@ -68,6 +68,10 @@ describe('SqliteProjectRepository (against the real schema)', () => {
     expect(stored?.platform).toBe('web');
     expect(stored?.lifecycleState).toBe('active');
     expect(stored?.customId).toBeNull();
+
+    const list = await repo.listProjectsForCompany('c1');
+    expect(list).toHaveLength(1);
+    expect(list[0]?.id).toBe('p1');
   });
 
   it('finds by company + slug', async () => {

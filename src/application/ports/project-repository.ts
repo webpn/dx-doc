@@ -23,5 +23,6 @@ export interface ProjectRepository {
   getProjectByCompanyAndSlug(companyId: string, slug: string): Promise<ProjectRecord | null>;
   /** Idempotency lookup keyed on the orthogonal `custom_id` (REQ-IMP-003). */
   getProjectByCustomId(companyId: string, customId: string): Promise<ProjectRecord | null>;
+  listProjectsForCompany(companyId: string): Promise<ProjectRecord[]>;
   updateProject(project: ProjectRecord): Promise<void>;
 }

@@ -131,6 +131,61 @@ export const destinationCreateSchema = z.object({
 });
 export type DestinationCreateInput = z.infer<typeof destinationCreateSchema>;
 
+export const destinationUpdateSchema = destinationCreateSchema.partial();
+export type DestinationUpdateInput = z.infer<typeof destinationUpdateSchema>;
+
+export const moduleUpdateSchema = moduleCreateSchema.partial();
+export type ModuleUpdateInput = z.infer<typeof moduleUpdateSchema>;
+
+export const trackingTemplateCreateSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'name is required')
+    .max(120, 'name must be 120 characters or fewer'),
+  description: z.string().max(2000).optional(),
+  navigationEventId: z.string().min(1).optional(),
+  configJson: z.string().optional(),
+  customId: optionalCustomId.optional(),
+});
+export type TrackingTemplateCreateInput = z.input<typeof trackingTemplateCreateSchema>;
+export type TrackingTemplateCreateOutput = z.output<typeof trackingTemplateCreateSchema>;
+
+export const trackingTemplateUpdateSchema = trackingTemplateCreateSchema.partial();
+export type TrackingTemplateUpdateInput = z.infer<typeof trackingTemplateUpdateSchema>;
+
+export const freePageCreateSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, 'title is required')
+    .max(200, 'title must be 200 characters or fewer'),
+  slug,
+  content: z.string().default(''),
+  publishable: z.boolean().optional().default(true),
+  customId: optionalCustomId.optional(),
+});
+export type FreePageCreateInput = z.input<typeof freePageCreateSchema>;
+export type FreePageCreateOutput = z.output<typeof freePageCreateSchema>;
+
+export const freePageUpdateSchema = freePageCreateSchema.partial();
+export type FreePageUpdateInput = z.infer<typeof freePageUpdateSchema>;
+
+export const navigationEventCreateSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'name is required')
+    .max(120, 'name must be 120 characters or fewer'),
+  description: z.string().max(2000).optional(),
+  active: z.boolean().optional().default(true),
+});
+export type NavigationEventCreateInput = z.input<typeof navigationEventCreateSchema>;
+export type NavigationEventCreateOutput = z.output<typeof navigationEventCreateSchema>;
+
+export const navigationEventUpdateSchema = navigationEventCreateSchema.partial();
+export type NavigationEventUpdateInput = z.infer<typeof navigationEventUpdateSchema>;
+
 export const trackingCreateSchema = z.object({
   pageId: z.string().min(1).optional(),
   navigationEventId: z.string().min(1, 'navigationEventId is required'),
@@ -144,3 +199,17 @@ export const trackingCreateSchema = z.object({
   customId: optionalCustomId.optional(),
 });
 export type TrackingCreateInput = z.infer<typeof trackingCreateSchema>;
+
+export const trackingUpdateSchema = trackingCreateSchema.partial();
+export type TrackingUpdateInput = z.infer<typeof trackingUpdateSchema>;
+
+export const trackingPropertyPresenceSchema = z.object({
+  presence: z.enum(PRESENCE_VALUES),
+});
+export type TrackingPropertyPresenceInput = z.infer<typeof trackingPropertyPresenceSchema>;
+
+export const specificValueCreateSchema = z.object({
+  value: z.string().min(1, 'value is required'),
+  description: z.string().max(2000).optional(),
+});
+export type SpecificValueCreateInput = z.infer<typeof specificValueCreateSchema>;

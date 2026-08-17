@@ -81,6 +81,20 @@ export class ProjectService {
     return ok({ projectId, created: true });
   }
 
+  async list(
+    actorId: string,
+    companyId: string,
+  ): Promise<Result<ProjectServiceRecord[], ProjectServiceError>> {
+    const projects = await this.projects.listProjectsForCompany(companyId);
+    const accessible: ProjectServiceRecord[] = [];
+    for (const p of projects) {
+      if (await this.permissions.canOnProject(actorId, p.id, 'project.read')) {
+        accessible.push(p);
+      }
+    }
+    return ok(accessible);
+  }
+
   async get(
     actorId: string,
     projectId: string,

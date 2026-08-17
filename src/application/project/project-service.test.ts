@@ -63,6 +63,12 @@ class FakeProjects implements ProjectRepository {
     return Promise.resolve(project);
   }
 
+  listProjectsForCompany(companyId: string): Promise<ProjectRecord[]> {
+    return Promise.resolve(
+      Array.from(this.projects.values()).filter((p) => p.companyId === companyId),
+    );
+  }
+
   updateProject(project: ProjectRecord): Promise<void> {
     this.projects.set(project.id, project);
     if (project.customId) {
