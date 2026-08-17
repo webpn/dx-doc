@@ -46,3 +46,22 @@ export type {
 export type { CompanyRecord, CompanyRepository } from './ports/company-repository';
 
 export type { EmailMessage, EmailSender } from './ports/email-sender';
+
+export { validate } from './validation/validate';
+export {
+  companyCreateSchema,
+  pageCreateSchema,
+  pageUpdateSchema,
+  PLATFORMS,
+  projectCreateSchema,
+  projectUpdateSchema,
+} from './validation/schemas';
+export type {
+  CompanyCreateInput,
+  PageCreateInput,
+  PageUpdateInput,
+  Platform,
+  ProjectCreateInput,
+  ProjectUpdateInput,
+} from './validation/schemas';
+export type { ValidationIssue } from './validation/issues';
