@@ -11,3 +11,7 @@ export {
   loadInstanceConfig,
 } from './config/instance-config';
 export type { InstanceConfig, InstanceVariableDef } from './config/instance-config';
+
+export { InMemoryObjectStorage } from './storage/in-memory-storage';
+
+export { InMemorySearchIndex } from './search/in-memory-search';
