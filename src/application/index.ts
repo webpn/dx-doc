@@ -14,6 +14,9 @@ export type { NewSession } from './auth/session-service';
 export { AuthService } from './auth/auth-service';
 export type { LoginResult } from './auth/auth-service';
 
+export { COMPANY_ACTION_ROLES, PermissionService, PROJECT_ACTION_ROLES } from './auth/permissions';
+export type { CompanyAction, InstanceAction, ProjectAction } from './auth/permissions';
+
 export type { PasswordHasher } from './ports/password-hasher';
 
 export type {

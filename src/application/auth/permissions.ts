@@ -1,0 +1,87 @@
+import type { AccountRepository } from '../ports/account-repository';
+
+import type { CompanyRoleName } from './roles';
+
+/**
+ * Authorisation model (REQ-SEC-002/003/011/014).
+ *
+ * Two scopes, enforced server-side from the acting user's identity:
+ *   * project actions — decided by the grant's role on that project; a user
+ *     with no grant can do nothing on it (REQ-SEC-003: no role confers access
+ *     to an ungranted project, and even an Admin's project access is
+ *     grant-scoped).
+ *   * company actions — decided by the user's company role.
+ * plus the discrete instance-administration capability (REQ-SEC-014).
+ *
+ * These tables approximate Appendix B from the documented role semantics
+ * (personas.md + REQ-SEC). The grid is data-driven so the remaining Appendix B
+ * rows from the external spec artefact port in as data, not code. Cells not
+ * yet enumerated fail closed (denied).
+ */
+
+export type ProjectAction =
+  | 'project.read'
+  | 'project.export'
+  | 'project.edit'
+  | 'project.publish'
+  | 'project.manage_access'
+  | 'project.manage_integrations'
+  | 'project.archive';
+
+export type CompanyAction = 'company.manage_catalogue' | 'company.read_audit_log';
+
+export type InstanceAction = 'instance.create_company' | 'instance.manage_admin_flag';
+
+/** Roles allowed per project action, read from the user's grant on the project. */
+export const PROJECT_ACTION_ROLES: Readonly<Record<ProjectAction, readonly CompanyRoleName[]>> = {
+  'project.read': ['admin', 'project_manager', 'editor', 'viewer'],
+  'project.export': ['admin', 'project_manager', 'editor', 'viewer'],
+  'project.edit': ['admin', 'editor'],
+  'project.publish': ['admin', 'editor'],
+  'project.manage_access': ['admin', 'project_manager'],
+  'project.manage_integrations': ['admin'],
+  'project.archive': ['admin'],
+};
+
+/** Roles allowed per company action, read from the user's company role. */
+export const COMPANY_ACTION_ROLES: Readonly<Record<CompanyAction, readonly CompanyRoleName[]>> = {
+  'company.manage_catalogue': ['admin'],
+  'company.read_audit_log': ['admin'],
+};
+
+export class PermissionService {
+  constructor(private readonly accounts: AccountRepository) {}
+
+  /** May the user perform `action` on `projectId`? Requires a matching grant. */
+  async canOnProject(userId: string, projectId: string, action: ProjectAction): Promise<boolean> {
+    const grants = await this.accounts.listGrantsForUser(userId);
+    const grant = grants.find((candidate) => candidate.projectId === projectId);
+    if (grant === undefined) {
+      return false;
+    }
+    return PROJECT_ACTION_ROLES[action].includes(grant.roleName);
+  }
+
+  /** May the user perform `action` within `companyId`? Uses the company role. */
+  async canInCompany(userId: string, companyId: string, action: CompanyAction): Promise<boolean> {
+    const user = await this.accounts.getUserById(userId);
+    if (user === null) {
+      return false;
+    }
+    if (user.companyId !== companyId || user.roleId === null || !user.active) {
+      return false;
+    }
+    const roles = await this.accounts.listRolesForCompany(companyId);
+    const role = roles.find((candidate) => candidate.id === user.roleId);
+    if (role === undefined) {
+      return false;
+    }
+    return COMPANY_ACTION_ROLES[action].includes(role.name);
+  }
+
+  /** Holders of the instance-administration capability (REQ-SEC-014). */
+  async canAdministerInstance(userId: string): Promise<boolean> {
+    const user = await this.accounts.getUserById(userId);
+    return user !== null && user.instanceAdmin && user.active;
+  }
+}
