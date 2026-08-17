@@ -13,5 +13,7 @@ export {
 export type { InstanceConfig, InstanceVariableDef } from './config/instance-config';
 
 export { InMemoryObjectStorage } from './storage/in-memory-storage';
+export { createS3ObjectStorage, S3ObjectStorage } from './storage/s3-storage';
 
 export { InMemorySearchIndex } from './search/in-memory-search';
+export { PagefindSearchIndex, PagefindQueryUnsupportedError } from './search/pagefind-search';
