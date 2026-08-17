@@ -4,7 +4,7 @@ import type { PasswordHasher } from '../ports/password-hasher';
 import type { NewSession, SessionService } from './session-service';
 
 export type LoginResult =
-  | { ok: true; session: NewSession; user: { id: string; companyId: string } }
+  | { ok: true; session: NewSession; user: { id: string; companyId: string | null } }
   | { ok: false; reason: 'invalid_credentials' };
 
 /**

@@ -20,6 +20,12 @@ export type { CompanyAction, InstanceAction, ProjectAction } from './auth/permis
 export { LifecycleService } from './auth/lifecycle-service';
 export type { LifecycleError } from './auth/lifecycle-service';
 
+export { BootstrapService, BootstrapConfigError } from './auth/bootstrap-service';
+export type { BootstrapResult, BootstrapVariables } from './auth/bootstrap-service';
+
+export { CompanyService } from './company/company-service';
+export type { CompanyError } from './company/company-service';
+
 export type { PasswordHasher } from './ports/password-hasher';
 
 export type {
@@ -36,3 +42,5 @@ export type {
   PasswordResetToken,
   PasswordResetTokenRepository,
 } from './ports/reset-token-repository';
+
+export type { CompanyRecord, CompanyRepository } from './ports/company-repository';

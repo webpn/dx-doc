@@ -3,6 +3,7 @@ import type {
   AccountRepository,
   CompanyRole,
   CreateUserInput,
+  NewCompanyRole,
   ProjectGrant,
   UserAccount,
 } from '@project/application/ports/account-repository';
@@ -11,7 +12,7 @@ import type { SqliteDb } from './sqlite';
 
 interface UserRow {
   id: string;
-  companyId: string;
+  companyId: string | null;
   email: string;
   passwordHash: string | null;
   roleId: string | null;
@@ -78,16 +79,44 @@ export class SqliteAccountRepository implements AccountRepository {
     return Promise.resolve(row === undefined ? null : toUser(row));
   }
 
-  getUserByEmail(companyId: string, email: string): Promise<UserAccount | null> {
-    const row = this.db
-      .prepare(
-        `SELECT id, company_id AS companyId, email, password_hash AS passwordHash,
-                role_id AS roleId, name, instance_admin AS instanceAdmin,
-                active, created_at AS createdAt, updated_at AS updatedAt
-         FROM users WHERE company_id = ? AND email = ?`,
-      )
-      .get(companyId, email) as UserRow | undefined;
+  getUserByEmail(companyId: string | null, email: string): Promise<UserAccount | null> {
+    const row =
+      companyId === null
+        ? (this.db
+            .prepare(
+              `SELECT id, company_id AS companyId, email, password_hash AS passwordHash,
+                      role_id AS roleId, name, instance_admin AS instanceAdmin,
+                      active, created_at AS createdAt, updated_at AS updatedAt
+               FROM users WHERE company_id IS NULL AND email = ?`,
+            )
+            .get(email) as UserRow | undefined)
+        : (this.db
+            .prepare(
+              `SELECT id, company_id AS companyId, email, password_hash AS passwordHash,
+                      role_id AS roleId, name, instance_admin AS instanceAdmin,
+                      active, created_at AS createdAt, updated_at AS updatedAt
+               FROM users WHERE company_id = ? AND email = ?`,
+            )
+            .get(companyId, email) as UserRow | undefined);
     return Promise.resolve(row === undefined ? null : toUser(row));
+  }
+
+  countUsers(): Promise<number> {
+    const row = this.db.prepare('SELECT COUNT(*) AS count FROM users').get() as { count: number };
+    return Promise.resolve(row.count);
+  }
+
+  createRole(role: NewCompanyRole): Promise<void> {
+    this.db
+      .prepare(
+        'INSERT INTO roles (id, company_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
+      )
+      .run(role.id, role.companyId, role.name, this.nowIso(), this.nowIso());
+    return Promise.resolve();
+  }
+
+  private nowIso(): string {
+    return new Date().toISOString();
   }
 
   updateUser(user: UserAccount): Promise<void> {
