@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { applyMigrations } from '../../../tests/support/apply-migrations';
 
-import { openSqliteConnection, type SqliteDb } from './sqlite';
+import { closeSqliteConnection, openSqliteConnection, type Connection } from './sqlite-kysely';
 import { SqliteProjectRepository } from './sqlite-project-repository';
 
 function t(): string {
@@ -35,21 +35,28 @@ function project(overrides: Partial<ProjectRecord>): ProjectRecord {
 
 describe('SqliteProjectRepository (against the real schema)', () => {
   let dir: string;
-  let db: SqliteDb;
+  let connection: Connection;
   let repo: SqliteProjectRepository;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-project-repo-'));
-    db = openSqliteConnection(path.join(dir, 'test.sqlite'));
-    applyMigrations(db);
-    db.prepare(
-      'INSERT INTO company (id, name, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-    ).run('c1', 'Acme', 'acme', t(), t());
-    repo = new SqliteProjectRepository(db);
+    connection = openSqliteConnection(path.join(dir, 'test.sqlite'));
+    applyMigrations(connection);
+    await connection.kysely
+      .insertInto('company')
+      .values({
+        id: 'c1',
+        name: 'Acme',
+        slug: 'acme',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
+    repo = new SqliteProjectRepository(connection.kysely);
   });
 
-  afterEach(() => {
-    db.close();
+  afterEach(async () => {
+    await closeSqliteConnection(connection);
     rmSync(dir, { recursive: true, force: true });
   });
 
