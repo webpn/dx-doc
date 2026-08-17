@@ -15,7 +15,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-NFR-005 | Architecture must not require redundancy     | —      | R1               | Not Started |
 | REQ-NFR-006 | Backup is the operator's responsibility      | —      | M2.6             | Not Started |
 | REQ-NFR-007 | Desktop only; no responsive layout           | —      | M1.5             | Not Started |
-| REQ-NFR-008 | Browser support `browserslist >5%`           | —      | M0.1             | Not Started |
+| REQ-NFR-008 | Browser support `browserslist >5%`           | —      | M0.1             | Implemented |
 | REQ-NFR-009 | No offline mode                              | —      | —                | Accepted    |
 | REQ-NFR-010 | English by default, with translation support | —      | M1.5             | Not Started |
 | REQ-NFR-011 | Content is single-language                   | —      | M1.1             | Not Started |
@@ -78,7 +78,7 @@ Desktop is essential; 99% of client usage. Mobile and responsive layouts are not
 
 ### REQ-NFR-008 — Browser support `browserslist >5%`
 
-**Must** · R0 · spec §15.3 · **Not Started**
+**Must** · R0 · spec §15.3 · **Implemented**
 
 Set in build configuration at M0.1 so it constrains the toolchain from the start rather than being discovered later.
 

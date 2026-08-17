@@ -6,9 +6,9 @@ Entry format and status legend: [requirements index](README.md).
 
 | ID          | Requirement                                       | MoSCoW | Rel. | Milestone       | Status      |
 | ----------- | ------------------------------------------------- | ------ | ---- | --------------- | ----------- |
-| REQ-SEC-001 | Email + password login                            | Must   | R0   | M0.4            | Not Started |
-| REQ-SEC-002 | Four company-scoped roles                         | Must   | R0   | M0.4            | Not Started |
-| REQ-SEC-003 | Per-project access grants                         | Must   | R0   | M0.4            | Not Started |
+| REQ-SEC-001 | Email + password login                            | Must   | R0   | M0.4            | Implemented |
+| REQ-SEC-002 | Four company-scoped roles                         | Must   | R0   | M0.4            | Implemented |
+| REQ-SEC-003 | Per-project access grants                         | Must   | R0   | M0.4            | Implemented |
 | REQ-SEC-004 | OIDC SSO                                          | Should | R2   | M2.8            | Not Started |
 | REQ-SEC-005 | Project shared-password access with expiry        | Must   | R1   | M1.9            | Not Started |
 | REQ-SEC-006 | Append-only audit log, 24-month retention         | Must   | R1   | M1.9            | Not Started |
@@ -16,17 +16,17 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-SEC-008 | Audit log UI, paginated list and CSV export       | Should | R2   | M2.8            | Not Started |
 | REQ-SEC-009 | Project archive and restore; no hard delete       | Should | R2   | M2.8            | Not Started |
 | REQ-SEC-010 | Company catalogue managed by the Admin role       | Must   | R1   | M1.1            | Not Started |
-| REQ-SEC-011 | Permission matrix enforced server-side            | Must   | R0   | M0.4            | Not Started |
+| REQ-SEC-011 | Permission matrix enforced server-side            | Must   | R0   | M0.4            | Implemented |
 | REQ-SEC-012 | Non-publishable content never leaves the instance | Must   | R1   | M1.7 → standing | Not Started |
-| REQ-SEC-013 | Account lifecycle and first-run bootstrap         | Must   | R0   | M0.4            | Not Started |
-| REQ-SEC-014 | Instance-administration capability                | Must   | R0   | M0.4            | Not Started |
+| REQ-SEC-013 | Account lifecycle and first-run bootstrap         | Must   | R0   | M0.4            | Implemented |
+| REQ-SEC-014 | Instance-administration capability                | Must   | R0   | M0.4            | Implemented |
 | REQ-SEC-015 | Instance-administration portal                    | Should | R2   | M2.8            | Not Started |
 
 ---
 
 ### REQ-SEC-001 — Email + password login
 
-**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec §17.1 · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec §17.1 · **Implemented** · Issue: — · PR: —
 
 Local authentication, required so the Platform is not tied to a single identity provider. Whether a company accepts local password login is part of its **supported login methods** setting (company-level, database — [ADR-0014](../../adr/0014-configuration-split.md)); sessions expire per `AUTH_SESSION_TTL` (instance-level, default 8h).
 
@@ -38,7 +38,7 @@ Local authentication, required so the Platform is not tied to a single identity 
 
 ### REQ-SEC-002 — Four company-scoped roles
 
-**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec §4.2, §17.2 · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec §4.2, §17.2 · **Implemented** · Issue: — · PR: —
 
 Admin, Project Manager, Editor, Viewer. A user belongs to **one company**, and their role applies across that company, narrowed further by their per-project grants (REQ-SEC-003). Roles compose (a Project Manager who must also edit additionally holds Editor). Roles are assigned inside the Platform and are never derived from identity-provider groups.
 
@@ -55,7 +55,7 @@ Admin, Project Manager, Editor, Viewer. A user belongs to **one company**, and t
 
 ### REQ-SEC-003 — Per-project access grants
 
-**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec §17.2 · [ADR-0010](../../adr/0010-project-scoped-isolation.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec §17.2 · [ADR-0010](../../adr/0010-project-scoped-isolation.md) · **Implemented** · Issue: — · PR: —
 
 A user sees only the projects explicitly granted to them. Every permission is additionally scoped by the grant: no role confers access to an ungranted project.
 
@@ -153,7 +153,7 @@ Creating and modifying the company-level catalogue (standard properties, modules
 
 ### REQ-SEC-011 — Permission matrix enforced server-side
 
-**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec Appendix B · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec Appendix B · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **Implemented** · Issue: — · PR: —
 
 Every action in Appendix B is authorised in the backend. The UI hides what a user cannot do as a convenience; hiding is never the enforcement.
 
@@ -184,7 +184,7 @@ The documentation contains no personal data, but it does contain test credential
 
 ### REQ-SEC-013 — Account lifecycle and first-run bootstrap
 
-**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · **Implemented** · Issue: — · PR: —
 
 How identities come into being, and how they leave. Four parts:
 
@@ -212,7 +212,7 @@ How identities come into being, and how they leave. Four parts:
 
 ### REQ-SEC-014 — Instance-administration capability
 
-**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · **Implemented** · Issue: — · PR: —
 
 A discrete `instance_admin` flag on a user, independent of the four company-scoped roles (REQ-SEC-002), marking the person who administers the **deployment** rather than a tenant within it. It is what gates the instance-administration portal (REQ-SEC-015) and it is held by the bootstrap administrator (REQ-SEC-013).
 

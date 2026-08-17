@@ -8,7 +8,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 | ID          | Requirement                                             | MoSCoW | Rel. | Milestone | Status      |
 | ----------- | ------------------------------------------------------- | ------ | ---- | --------- | ----------- |
-| REQ-API-001 | Internal REST API as the single entry point             | Must   | R0   | M0.5      | Not Started |
+| REQ-API-001 | Internal REST API as the single entry point             | Must   | R0   | M0.5      | Implemented |
 | REQ-API-002 | Documented public API                                   | Must   | R1   | M1.2      | Not Started |
 | REQ-API-003 | MCP read tools                                          | Must   | R1   | M1.3      | Not Started |
 | REQ-API-004 | MCP write tools, draft only                             | Must   | R1   | M1.3      | Not Started |
@@ -23,7 +23,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 ### REQ-API-001 — Internal REST API as the single entry point
 
-**Must** · R0 · [M0.5](../milestones.md#m05--rest-api-and-shared-validation) · spec §12.1, §16 · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **Not Started** · Issue: — · PR: —
+**Must** · R0 · [M0.5](../milestones.md#m05--rest-api-and-shared-validation) · spec §12.1, §16 · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **Implemented** · Issue: — · PR: —
 
 The REST API is the foundation of the system, not a feature. The web client, the MCP server, the export generators, the static-site builder and the import scripts all consume it. All validation lives behind it (REQ-FDN-010).
 

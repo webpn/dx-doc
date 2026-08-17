@@ -22,7 +22,7 @@ Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that sli
 
 ## Current position
 
-**Pre-R0.** The repository holds documentation, configuration and empty layer barrels (`src/*/index.ts`). No framework is chosen, no persistence exists, and `package.json` scripts for `dev`, `build`, `test` and `db:migrate` are placeholders. M0.1 is therefore the first executable milestone and it is a decision milestone, not a coding one.
+**R0 is complete; entering R1 (MVP).** Foundations, layered architecture, authentication, account lifecycle, Kysely persistence on SQLite, REST API with shared domain validation, Pagefind search abstraction, S3 object storage adapter, and public repository readiness (M0.1–M0.6) are all implemented, tested, and passing CI validations. M1.1 (Tracking Data Model) is the next milestone to execute.
 
 ---
 
