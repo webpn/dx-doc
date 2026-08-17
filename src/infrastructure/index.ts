@@ -41,6 +41,8 @@ export {
   SqliteFlowRepository,
   SqliteTriggerRepository,
   SqliteVersionRepository,
+  SqliteSharedPasswordRepository,
+  SqliteAuditLogRepository,
 } from './persistence/sqlite-tracking-repositories';
 
 export { SmtpEmailSender, createSmtpEmailSender } from './email/smtp-email-sender';

@@ -29,6 +29,8 @@ import {
   SqliteTrackingTemplateRepository,
   SqliteTriggerRepository,
   SqliteVersionRepository,
+  SqliteSharedPasswordRepository,
+  SqliteAuditLogRepository,
 } from '@project/infrastructure/persistence/sqlite-tracking-repositories';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
 import Fastify, { type FastifyInstance } from 'fastify';
@@ -148,6 +150,8 @@ describe('MCP Server (M1.3, REQ-API-003, REQ-API-004, REQ-API-006, D37, D38)', (
     const flowRepo = new SqliteFlowRepository(connection.kysely);
     const triggerRepo = new SqliteTriggerRepository(connection.kysely);
     const versionRepo = new SqliteVersionRepository(connection.kysely);
+    const sharedPasswordRepo = new SqliteSharedPasswordRepository(connection.kysely);
+    const auditLogRepo = new SqliteAuditLogRepository(connection.kysely);
 
     const projectService = new ProjectService(projectRepo, permissions);
     const pageService = new PageService(pageRepo, projectRepo, permissions);
@@ -162,6 +166,9 @@ describe('MCP Server (M1.3, REQ-API-003, REQ-API-004, REQ-API-006, D37, D38)', (
       flowRepo,
       triggerRepo,
       versionRepo,
+      sharedPasswordRepo,
+      auditLogRepo,
+      hasher,
       projectRepo,
       permissions,
     );

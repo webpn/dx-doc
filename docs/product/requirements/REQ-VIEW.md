@@ -6,7 +6,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 
 | ID           | Requirement                                    | MoSCoW | Rel. | Milestone | Status      |
 | ------------ | ---------------------------------------------- | ------ | ---- | --------- | ----------- |
-| REQ-VIEW-001 | In-app read-only view                          | Must   | R1   | M1.9      | Not Started |
+| REQ-VIEW-001 | In-app read-only view                          | Must   | R1   | M1.9      | Implemented |
 | REQ-VIEW-002 | View selector as a presentation filter         | Must   | R2   | M2.5      | Not Started |
 | REQ-VIEW-003 | Profile-aware rendering engine                 | Must   | R2   | M2.5      | Not Started |
 | REQ-VIEW-004 | Per-project static site                        | Should | R2   | M2.6      | Not Started |

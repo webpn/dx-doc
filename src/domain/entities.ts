@@ -213,3 +213,25 @@ export interface ProjectVersion {
   createdBy: string;
   createdAt: string;
 }
+
+export interface ProjectSharedPassword {
+  id: string;
+  projectId: string;
+  passwordHash: string;
+  label: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  companyId: string;
+  projectId: string | null;
+  actorId: string;
+  action: string;
+  entityType: string;
+  entityId: string | null;
+  details?: Record<string, unknown> | null;
+  createdAt: string;
+}

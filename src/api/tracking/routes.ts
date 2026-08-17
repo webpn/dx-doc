@@ -12,6 +12,8 @@ import type {
   ModuleUpdateInput,
   NavigationEventCreateInput,
   NavigationEventUpdateInput,
+  ProjectSharedPasswordCreateInput,
+  ProjectSharedPasswordVerifyInput,
   PropertyCreateInput,
   PropertyUpdateInput,
   PublishVersionInput,
@@ -679,6 +681,62 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
 
     const { id } = request.params as { id: string };
     const result = await trackingService.getVersion(userId, id);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return result.value;
+  });
+
+  // ── ACCESS, SHARED PASSWORDS & AUDIT (REQ-SEC-005, REQ-SEC-006, REQ-VIEW-001) ──
+  app.post('/api/projects/:projectId/shared-passwords', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { projectId } = request.params as { projectId: string };
+    const result = await trackingService.createSharedPassword(
+      userId,
+      projectId,
+      request.body as ProjectSharedPasswordCreateInput,
+    );
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return reply.code(201).send({ id: result.value.sharedPasswordId });
+  });
+
+  app.post('/api/projects/:projectId/shared-passwords/verify', async (request, reply) => {
+    const { projectId } = request.params as { projectId: string };
+    const result = await trackingService.verifySharedPassword(
+      projectId,
+      request.body as ProjectSharedPasswordVerifyInput,
+    );
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return result.value;
+  });
+
+  app.get('/api/projects/:projectId/shared-passwords', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { projectId } = request.params as { projectId: string };
+    const result = await trackingService.listSharedPasswords(userId, projectId);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return result.value;
+  });
+
+  app.delete('/api/projects/:projectId/shared-passwords/:id', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { projectId, id } = request.params as { projectId: string; id: string };
+    const result = await trackingService.deleteSharedPassword(userId, projectId, id);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return { ok: true };
+  });
+
+  app.get('/api/companies/:companyId/audit-logs', async (request, reply) => {
+    const userId = await authenticateRequest(request, sessions, cookieName);
+    if (!userId) return unauthenticated(reply);
+
+    const { companyId } = request.params as { companyId: string };
+    const query = request.query as { projectId?: string };
+    const result = await trackingService.listAuditLogs(userId, companyId, query.projectId);
     if (!result.ok) return replyServiceError(reply, result.error);
     return result.value;
   });

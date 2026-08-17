@@ -60,6 +60,8 @@ export interface Database {
   flow_nodes: FlowNodesTable;
   flow_edges: FlowEdgesTable;
   versions: VersionsTable;
+  project_shared_passwords: ProjectSharedPasswordsTable;
+  audit_logs: AuditLogsTable;
 }
 
 /**
@@ -266,6 +268,26 @@ export const SCHEMA_DEFINITIONS: DatabaseSchemaDefinition = {
     'changelog_json',
     'snapshot_json',
     'created_by',
+    'created_at',
+  ],
+  project_shared_passwords: [
+    'id',
+    'project_id',
+    'password_hash',
+    'label',
+    'expires_at',
+    'created_at',
+    'updated_at',
+  ],
+  audit_logs: [
+    'id',
+    'company_id',
+    'project_id',
+    'actor_id',
+    'action',
+    'entity_type',
+    'entity_id',
+    'details_json',
     'created_at',
   ],
 };
@@ -606,6 +628,28 @@ export interface VersionsTable {
   changelog_json: string;
   snapshot_json: string;
   created_by: string;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface ProjectSharedPasswordsTable {
+  id: string;
+  project_id: string;
+  password_hash: string;
+  label: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  expires_at: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+export interface AuditLogsTable {
+  id: string;
+  company_id: string;
+  project_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  actor_id: string;
+  action: string;
+  entity_type: string;
+  entity_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  details_json: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   created_at: ColumnType<string, string | undefined, string | undefined>;
 }
 

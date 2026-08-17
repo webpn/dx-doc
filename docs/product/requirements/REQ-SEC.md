@@ -10,8 +10,8 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-SEC-002 | Four company-scoped roles                         | Must   | R0   | M0.4      | Implemented |
 | REQ-SEC-003 | Per-project access grants                         | Must   | R0   | M0.4      | Implemented |
 | REQ-SEC-004 | OIDC SSO                                          | Should | R2   | M2.8      | Not Started |
-| REQ-SEC-005 | Project shared-password access with expiry        | Must   | R1   | M1.9      | Not Started |
-| REQ-SEC-006 | Append-only audit log, 24-month retention         | Must   | R1   | M1.9      | Not Started |
+| REQ-SEC-005 | Project shared-password access with expiry        | Must   | R1   | M1.9      | Implemented |
+| REQ-SEC-006 | Append-only audit log, 24-month retention         | Must   | R1   | M1.9      | Implemented |
 | REQ-SEC-007 | SAML SSO                                          | Should | R2   | M2.8      | Not Started |
 | REQ-SEC-008 | Audit log UI, paginated list and CSV export       | Should | R2   | M2.8      | Not Started |
 | REQ-SEC-009 | Project archive and restore; no hard delete       | Should | R2   | M2.8      | Not Started |

@@ -13,6 +13,7 @@ import * as m005 from '../../db/migrations/005_password_must_change';
 import * as m006 from '../../db/migrations/006_tracking_data_model';
 import * as m007 from '../../db/migrations/007_flows_and_navigation';
 import * as m008 from '../../db/migrations/008_versions_and_publication';
+import * as m009 from '../../db/migrations/009_access_and_audit';
 import type { Connection } from '../../src/infrastructure/persistence/sqlite-kysely';
 
 const staticMigrations: Record<string, Migration> = {
@@ -24,6 +25,7 @@ const staticMigrations: Record<string, Migration> = {
   '006_tracking_data_model': m006,
   '007_flows_and_navigation': m007,
   '008_versions_and_publication': m008,
+  '009_access_and_audit': m009,
 };
 
 class StaticMigrationProvider implements MigrationProvider {

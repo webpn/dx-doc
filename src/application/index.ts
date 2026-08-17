@@ -99,6 +99,8 @@ export {
   flowEdgeSchema,
   flowGraphSchema,
   publishVersionSchema,
+  projectSharedPasswordCreateSchema,
+  projectSharedPasswordVerifySchema,
   PROPERTY_DATA_SOURCES,
   PROPERTY_DATA_TYPES,
   PROPERTY_STATUSES,
@@ -143,5 +145,7 @@ export type {
   FlowGraphInput,
   PublishVersionInput,
   PublishVersionOutput,
+  ProjectSharedPasswordCreateInput,
+  ProjectSharedPasswordVerifyInput,
 } from './validation/schemas';
 export type { ValidationIssue } from './validation/issues';

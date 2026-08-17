@@ -19,7 +19,7 @@ Entry format and status legend: [requirements index](README.md). Acceptance crit
 | REQ-FDN-011 | Public MIT repository with README                     | Must   | R0      | M0.6      | Implemented |
 | REQ-FDN-012 | Reference deployment stack and CI                     | Must   | R0      | M0.6      | Implemented |
 | REQ-FDN-013 | Two-level configuration, environment and company      | Must   | R0      | M0.3      | Implemented |
-| REQ-FDN-014 | Error-tracking integration                            | Should | R1      | M1.9      | Not Started |
+| REQ-FDN-014 | Error-tracking integration                            | Should | R1      | M1.9      | Implemented |
 | REQ-FDN-015 | Per-company branding                                  | Should | R2      | M2.8      | Not Started |
 | REQ-FDN-016 | Self-hostable search adapter                          | Won't  | —       | —         | Rejected    |
 | REQ-FDN-017 | Kubernetes/Helm packaging                             | Could  | Backlog | —         | Not Started |

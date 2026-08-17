@@ -1,4 +1,5 @@
 import type {
+  AuditLogEntry,
   DataLayerProperty,
   Destination,
   Flow,
@@ -7,6 +8,7 @@ import type {
   FreePage,
   Module,
   NavigationEvent,
+  ProjectSharedPassword,
   ProjectVersion,
   PropertyDestinationMapping,
   SpecificValue,
@@ -160,4 +162,17 @@ export interface VersionRepository {
   ): Promise<ProjectVersion | null>;
   getLatestVersion(projectId: string): Promise<ProjectVersion | null>;
   listVersionsForProject(projectId: string): Promise<ProjectVersion[]>;
+}
+
+export interface SharedPasswordRepository {
+  createSharedPassword(sharedPassword: ProjectSharedPassword): Promise<void>;
+  getSharedPasswordById(id: string): Promise<ProjectSharedPassword | null>;
+  listSharedPasswordsForProject(projectId: string): Promise<ProjectSharedPassword[]>;
+  deleteSharedPassword(id: string): Promise<void>;
+}
+
+export interface AuditLogRepository {
+  appendLog(entry: AuditLogEntry): Promise<void>;
+  listLogsForCompany(companyId: string, limit?: number): Promise<AuditLogEntry[]>;
+  listLogsForProject(projectId: string, limit?: number): Promise<AuditLogEntry[]>;
 }

@@ -1,12 +1,14 @@
 import { randomUUID } from 'node:crypto';
 
 import type {
+  AuditLogRepository,
   DestinationRepository,
   FlowRepository,
   FreePageRepository,
   ModuleRepository,
   NavigationEventRepository,
   PropertyRepository,
+  SharedPasswordRepository,
   TrackingRepository,
   TrackingTemplateRepository,
   TriggerRepository,
@@ -18,6 +20,7 @@ import {
   removePropertyFromTracking,
 } from '@project/domain/composition';
 import type {
+  AuditLogEntry,
   ChangelogEntry,
   DataLayerProperty,
   Destination,
@@ -27,6 +30,7 @@ import type {
   FreePage,
   Module,
   NavigationEvent,
+  ProjectSharedPassword,
   ProjectVersion,
   ProjectVersionSnapshot,
   PropertyDestinationMapping,
@@ -40,6 +44,7 @@ import { generateMermaidDiagram } from '@project/domain/mermaid';
 import { err, ok, type Result } from '@project/shared/result';
 
 import type { PermissionService } from '../auth/permissions';
+import type { PasswordHasher } from '../ports/password-hasher';
 import type { ProjectRepository } from '../ports/project-repository';
 import type { IndexableDocument, SearchIndex, SearchResult } from '../ports/search';
 import type { ValidationIssue } from '../validation/issues';
@@ -55,6 +60,8 @@ import {
   moduleUpdateSchema,
   navigationEventCreateSchema,
   navigationEventUpdateSchema,
+  projectSharedPasswordCreateSchema,
+  projectSharedPasswordVerifySchema,
   propertyCreateSchema,
   propertyUpdateSchema,
   publishVersionSchema,
@@ -77,6 +84,8 @@ import {
   type ModuleUpdateInput,
   type NavigationEventCreateInput,
   type NavigationEventUpdateInput,
+  type ProjectSharedPasswordCreateInput,
+  type ProjectSharedPasswordVerifyInput,
   type PropertyCreateInput,
   type PropertyUpdateInput,
   type PublishVersionInput,
@@ -111,6 +120,9 @@ export class TrackingService {
     private readonly flows: FlowRepository,
     private readonly triggers: TriggerRepository,
     private readonly versions: VersionRepository,
+    private readonly sharedPasswords: SharedPasswordRepository,
+    private readonly auditLogs: AuditLogRepository,
+    private readonly passwordHasher: PasswordHasher,
     private readonly projects: ProjectRepository,
     private readonly permissions: PermissionService,
     private readonly searchIndex?: SearchIndex,
@@ -1830,5 +1842,128 @@ export class TrackingService {
     }
 
     return ok(ver);
+  }
+
+  // --- ACCESS, SHARED PASSWORDS & AUDIT (REQ-SEC-005, REQ-SEC-006, REQ-VIEW-001) ---
+  async createSharedPassword(
+    actorId: string,
+    projectId: string,
+    input: ProjectSharedPasswordCreateInput,
+  ): Promise<Result<{ sharedPasswordId: string }, TrackingServiceError>> {
+    if (!(await this.permissions.canOnProject(actorId, projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const parsed = validate(projectSharedPasswordCreateSchema, input);
+    if (!parsed.ok) return err({ kind: 'validation', issues: parsed.error });
+
+    const hash = await this.passwordHasher.hash(parsed.value.password);
+    const id = this.newId();
+    const nowIso = this.now().toISOString();
+
+    await this.sharedPasswords.createSharedPassword({
+      id,
+      projectId,
+      passwordHash: hash,
+      label: parsed.value.label ?? null,
+      expiresAt: parsed.value.expiresAt ?? null,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    });
+
+    const project = await this.projects.getProjectById(projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId,
+        actorId,
+        action: 'shared_password.created',
+        entityType: 'shared_password',
+        entityId: id,
+        details: { label: parsed.value.label, expiresAt: parsed.value.expiresAt },
+        createdAt: nowIso,
+      });
+    }
+
+    return ok({ sharedPasswordId: id });
+  }
+
+  async verifySharedPassword(
+    projectId: string,
+    input: ProjectSharedPasswordVerifyInput,
+  ): Promise<Result<{ verified: boolean; sharedPasswordId: string | null }, TrackingServiceError>> {
+    const parsed = validate(projectSharedPasswordVerifySchema, input);
+    if (!parsed.ok) return err({ kind: 'validation', issues: parsed.error });
+
+    const list = await this.sharedPasswords.listSharedPasswordsForProject(projectId);
+    const nowIso = this.now().toISOString();
+
+    for (const sp of list) {
+      // Expiry check (REQ-SEC-005)
+      if (sp.expiresAt && sp.expiresAt < nowIso) {
+        continue;
+      }
+
+      const match = await this.passwordHasher.verify(parsed.value.password, sp.passwordHash);
+      if (match) {
+        const project = await this.projects.getProjectById(projectId);
+        if (project) {
+          await this.auditLogs.appendLog({
+            id: this.newId(),
+            companyId: project.companyId,
+            projectId,
+            actorId: `shared-password:${sp.id}`,
+            action: 'shared_password.authenticated',
+            entityType: 'project',
+            entityId: projectId,
+            createdAt: nowIso,
+          });
+        }
+        return ok({ verified: true, sharedPasswordId: sp.id });
+      }
+    }
+
+    return ok({ verified: false, sharedPasswordId: null });
+  }
+
+  async listSharedPasswords(
+    actorId: string,
+    projectId: string,
+  ): Promise<Result<ProjectSharedPassword[], TrackingServiceError>> {
+    if (!(await this.permissions.canOnProject(actorId, projectId, 'project.read'))) {
+      return err({ kind: 'forbidden' });
+    }
+    const list = await this.sharedPasswords.listSharedPasswordsForProject(projectId);
+    return ok(list);
+  }
+
+  async deleteSharedPassword(
+    actorId: string,
+    projectId: string,
+    sharedPasswordId: string,
+  ): Promise<Result<{ ok: true }, TrackingServiceError>> {
+    if (!(await this.permissions.canOnProject(actorId, projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+    await this.sharedPasswords.deleteSharedPassword(sharedPasswordId);
+    return ok({ ok: true });
+  }
+
+  async listAuditLogs(
+    actorId: string,
+    companyId: string,
+    projectId?: string,
+  ): Promise<Result<AuditLogEntry[], TrackingServiceError>> {
+    if (!(await this.permissions.canInCompany(actorId, companyId, 'company.read_audit_log'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    if (projectId) {
+      const logs = await this.auditLogs.listLogsForProject(projectId);
+      return ok(logs);
+    }
+    const logs = await this.auditLogs.listLogsForCompany(companyId);
+    return ok(logs);
   }
 }

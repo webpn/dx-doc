@@ -23,7 +23,10 @@ import {
   SqliteTrackingTemplateRepository,
   SqliteTriggerRepository,
   SqliteVersionRepository,
+  SqliteSharedPasswordRepository,
+  SqliteAuditLogRepository,
 } from '../../infrastructure/persistence/sqlite-tracking-repositories';
+import { BcryptPasswordHasher } from '../../infrastructure/security/bcrypt-password-hasher';
 import { PermissionService } from '../auth/permissions';
 
 import { TrackingService } from './tracking-service';
@@ -157,6 +160,9 @@ describe('TrackingService (M1.1 Application Service)', () => {
     const flowRepo = new SqliteFlowRepository(connection.kysely);
     const triggerRepo = new SqliteTriggerRepository(connection.kysely);
     const versionRepo = new SqliteVersionRepository(connection.kysely);
+    const sharedPasswordRepo = new SqliteSharedPasswordRepository(connection.kysely);
+    const auditLogRepo = new SqliteAuditLogRepository(connection.kysely);
+    const hasher = new BcryptPasswordHasher();
 
     trackingService = new TrackingService(
       propRepo,
@@ -169,6 +175,9 @@ describe('TrackingService (M1.1 Application Service)', () => {
       flowRepo,
       triggerRepo,
       versionRepo,
+      sharedPasswordRepo,
+      auditLogRepo,
+      hasher,
       projectRepo,
       permissions,
     );
@@ -395,5 +404,31 @@ describe('TrackingService (M1.1 Application Service)', () => {
 
     // 5. Verify immutable snapshot holds full history (REQ-VER-007)
     expect(v2Data.value.snapshot.properties.some((p) => p.name === 'cart_value')).toBe(true);
+  });
+
+  it('manages project shared passwords with expiry and appends audit logs (REQ-SEC-005, REQ-SEC-006)', async () => {
+    // 1. Create shared password
+    const spRes = await trackingService.createSharedPassword(editorId, projectId, {
+      password: 'client-secure-pass',
+      label: 'Agency Q3 Access',
+    });
+    expect(spRes.ok).toBe(true);
+    if (!spRes.ok) throw new Error('shared password create failed');
+
+    // 2. Verify shared password
+    const verifyRes = await trackingService.verifySharedPassword(projectId, {
+      password: 'client-secure-pass',
+    });
+    expect(verifyRes.ok).toBe(true);
+    if (!verifyRes.ok) throw new Error('verify failed');
+    expect(verifyRes.value.verified).toBe(true);
+
+    // 3. Verify audit log entry
+    const auditRes = await trackingService.listAuditLogs(adminId, companyId, projectId);
+    expect(auditRes.ok).toBe(true);
+    if (!auditRes.ok) throw new Error('list audit logs failed');
+    expect(auditRes.value.length).toBeGreaterThanOrEqual(2);
+    expect(auditRes.value.some((l) => l.action === 'shared_password.created')).toBe(true);
+    expect(auditRes.value.some((l) => l.action === 'shared_password.authenticated')).toBe(true);
   });
 });

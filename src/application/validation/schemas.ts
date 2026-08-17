@@ -282,3 +282,15 @@ export const publishVersionSchema = z.object({
 });
 export type PublishVersionInput = z.input<typeof publishVersionSchema>;
 export type PublishVersionOutput = z.output<typeof publishVersionSchema>;
+
+export const projectSharedPasswordCreateSchema = z.object({
+  password: z.string().min(6, 'password must be at least 6 characters'),
+  label: z.string().max(100).optional(),
+  expiresAt: z.string().optional(),
+});
+export type ProjectSharedPasswordCreateInput = z.infer<typeof projectSharedPasswordCreateSchema>;
+
+export const projectSharedPasswordVerifySchema = z.object({
+  password: z.string().min(1, 'password is required'),
+});
+export type ProjectSharedPasswordVerifyInput = z.infer<typeof projectSharedPasswordVerifySchema>;

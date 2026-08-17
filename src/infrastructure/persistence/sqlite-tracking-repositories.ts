@@ -1,16 +1,19 @@
 import type {
+  AuditLogRepository,
   DestinationRepository,
   FlowRepository,
   FreePageRepository,
   ModuleRepository,
   NavigationEventRepository,
   PropertyRepository,
+  SharedPasswordRepository,
   TrackingRepository,
   TrackingTemplateRepository,
   TriggerRepository,
   VersionRepository,
 } from '@project/application/ports/tracking-repositories';
 import type {
+  AuditLogEntry,
   ChangelogEntry,
   DataLayerProperty,
   Destination,
@@ -20,6 +23,7 @@ import type {
   FreePage,
   Module,
   NavigationEvent,
+  ProjectSharedPassword,
   ProjectVersion,
   ProjectVersionSnapshot,
   PropertyDataSource,
@@ -1431,6 +1435,135 @@ export class SqliteVersionRepository implements VersionRepository {
       changelog: JSON.parse(row.changelog_json) as ChangelogEntry[],
       snapshot: JSON.parse(row.snapshot_json) as ProjectVersionSnapshot,
       createdBy: row.created_by,
+      createdAt: row.created_at,
+    };
+  }
+}
+
+export class SqliteSharedPasswordRepository implements SharedPasswordRepository {
+  constructor(private readonly db: Db) {}
+
+  async createSharedPassword(sharedPassword: ProjectSharedPassword): Promise<void> {
+    await this.db
+      .insertInto('project_shared_passwords')
+      .values({
+        id: sharedPassword.id,
+        project_id: sharedPassword.projectId,
+        password_hash: sharedPassword.passwordHash,
+        label: sharedPassword.label,
+        expires_at: sharedPassword.expiresAt,
+        created_at: sharedPassword.createdAt,
+        updated_at: sharedPassword.updatedAt,
+      })
+      .execute();
+  }
+
+  async getSharedPasswordById(id: string): Promise<ProjectSharedPassword | null> {
+    const row = await this.db
+      .selectFrom('project_shared_passwords')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+    return row ? this.toEntity(row) : null;
+  }
+
+  async listSharedPasswordsForProject(projectId: string): Promise<ProjectSharedPassword[]> {
+    const rows = await this.db
+      .selectFrom('project_shared_passwords')
+      .selectAll()
+      .where('project_id', '=', projectId)
+      .orderBy('created_at', 'desc')
+      .execute();
+    return rows.map((r) => this.toEntity(r));
+  }
+
+  async deleteSharedPassword(id: string): Promise<void> {
+    await this.db.deleteFrom('project_shared_passwords').where('id', '=', id).execute();
+  }
+
+  private toEntity(row: {
+    id: string;
+    project_id: string;
+    password_hash: string;
+    label: string | null;
+    expires_at: string | null;
+    created_at: string;
+    updated_at: string;
+  }): ProjectSharedPassword {
+    return {
+      id: row.id,
+      projectId: row.project_id,
+      passwordHash: row.password_hash,
+      label: row.label,
+      expiresAt: row.expires_at,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  }
+}
+
+export class SqliteAuditLogRepository implements AuditLogRepository {
+  constructor(private readonly db: Db) {}
+
+  async appendLog(entry: AuditLogEntry): Promise<void> {
+    await this.db
+      .insertInto('audit_logs')
+      .values({
+        id: entry.id,
+        company_id: entry.companyId,
+        project_id: entry.projectId,
+        actor_id: entry.actorId,
+        action: entry.action,
+        entity_type: entry.entityType,
+        entity_id: entry.entityId,
+        details_json: entry.details ? JSON.stringify(entry.details) : null,
+        created_at: entry.createdAt,
+      })
+      .execute();
+  }
+
+  async listLogsForCompany(companyId: string, limit = 100): Promise<AuditLogEntry[]> {
+    const rows = await this.db
+      .selectFrom('audit_logs')
+      .selectAll()
+      .where('company_id', '=', companyId)
+      .orderBy('created_at', 'desc')
+      .limit(limit)
+      .execute();
+    return rows.map((r) => this.toEntity(r));
+  }
+
+  async listLogsForProject(projectId: string, limit = 100): Promise<AuditLogEntry[]> {
+    const rows = await this.db
+      .selectFrom('audit_logs')
+      .selectAll()
+      .where('project_id', '=', projectId)
+      .orderBy('created_at', 'desc')
+      .limit(limit)
+      .execute();
+    return rows.map((r) => this.toEntity(r));
+  }
+
+  private toEntity(row: {
+    id: string;
+    company_id: string;
+    project_id: string | null;
+    actor_id: string;
+    action: string;
+    entity_type: string;
+    entity_id: string | null;
+    details_json: string | null;
+    created_at: string;
+  }): AuditLogEntry {
+    return {
+      id: row.id,
+      companyId: row.company_id,
+      projectId: row.project_id,
+      actorId: row.actor_id,
+      action: row.action,
+      entityType: row.entity_type,
+      entityId: row.entity_id,
+      details: row.details_json ? (JSON.parse(row.details_json) as Record<string, unknown>) : null,
       createdAt: row.created_at,
     };
   }
