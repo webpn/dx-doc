@@ -22,7 +22,7 @@ Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that sli
 
 ## Current position
 
-**M1.1 (Tracking Data Model), M1.2 (Import-grade API), & M1.3 (MCP Server) are implemented.** Core R1 entities, composition invariants, Kysely repositories, REST endpoints, batch writers, reconciliation reports, service token auth, and the MCP Streamable HTTP server with read/write tools and naming guideline resources are all complete, tested, and validated. M1.4 (Agent-driven pilot import) is next.
+**M1.1 (Tracking Data Model), M1.2 (Import-grade API), M1.3 (MCP Server), & M1.4 (Agent-driven pilot import harness) are implemented.** Core R1 entities, composition invariants, Kysely repositories, REST endpoints, batch writers, reconciliation reports, service token auth, and the MCP Streamable HTTP server with read/write tools and naming guideline resources are all complete, tested, and validated. M1.5 (Authoring) is next.
 
 ---
 
