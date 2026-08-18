@@ -39,4 +39,16 @@ export class SqliteCompanyRepository implements CompanyRepository {
       updatedAt: row.updated_at,
     };
   }
+
+  async updateCompany(company: CompanyRecord): Promise<void> {
+    await this.db
+      .updateTable('company')
+      .set({
+        name: company.name,
+        slug: company.slug,
+        updated_at: company.updatedAt,
+      })
+      .where('id', '=', company.id)
+      .execute();
+  }
 }

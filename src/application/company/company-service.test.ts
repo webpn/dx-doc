@@ -100,6 +100,11 @@ class FakeCompanies implements CompanyRepository {
   getCompanyById(id: string): Promise<CompanyRecord | null> {
     return Promise.resolve(this.companies.get(id) ?? null);
   }
+
+  updateCompany(company: CompanyRecord): Promise<void> {
+    this.companies.set(company.id, company);
+    return Promise.resolve();
+  }
 }
 
 function buildHarness(): {
@@ -108,6 +113,11 @@ function buildHarness(): {
   companyService: CompanyService;
   sysadminId: string;
   plainUserId: string;
+  companyAId: string;
+  companyAAdminId: string;
+  companyAViewerId: string;
+  companyBId: string;
+  companyBAdminId: string;
 } {
   const accounts = new FakeAccounts();
   const companies = new FakeCompanies();
@@ -151,7 +161,98 @@ function buildHarness(): {
     updatedAt: FIXED_NOW.toISOString(),
   });
 
-  return { accounts, companies, companyService, sysadminId, plainUserId };
+  // Two tenants, each with an Admin (company A also has a Viewer), for the
+  // get/update acceptance below.
+  const companyAId = 'company-a';
+  companies.companies.set(companyAId, {
+    id: companyAId,
+    name: 'Acme',
+    slug: 'acme',
+    createdAt: FIXED_NOW.toISOString(),
+    updatedAt: FIXED_NOW.toISOString(),
+  });
+  const companyAAdminRoleId = 'company-a-admin-role';
+  const companyAViewerRoleId = 'company-a-viewer-role';
+  accounts.roles.set(companyAAdminRoleId, {
+    id: companyAAdminRoleId,
+    companyId: companyAId,
+    name: 'admin',
+  });
+  accounts.roles.set(companyAViewerRoleId, {
+    id: companyAViewerRoleId,
+    companyId: companyAId,
+    name: 'viewer',
+  });
+  const companyAAdminId = 'company-a-admin';
+  accounts.users.set(companyAAdminId, {
+    id: companyAAdminId,
+    companyId: companyAId,
+    email: 'admin@acme.test',
+    passwordHash: null,
+    roleId: companyAAdminRoleId,
+    name: null,
+    instanceAdmin: false,
+    active: true,
+    passwordMustChange: false,
+    createdAt: FIXED_NOW.toISOString(),
+    updatedAt: FIXED_NOW.toISOString(),
+  });
+  const companyAViewerId = 'company-a-viewer';
+  accounts.users.set(companyAViewerId, {
+    id: companyAViewerId,
+    companyId: companyAId,
+    email: 'viewer@acme.test',
+    passwordHash: null,
+    roleId: companyAViewerRoleId,
+    name: null,
+    instanceAdmin: false,
+    active: true,
+    passwordMustChange: false,
+    createdAt: FIXED_NOW.toISOString(),
+    updatedAt: FIXED_NOW.toISOString(),
+  });
+
+  const companyBId = 'company-b';
+  companies.companies.set(companyBId, {
+    id: companyBId,
+    name: 'Globex',
+    slug: 'globex',
+    createdAt: FIXED_NOW.toISOString(),
+    updatedAt: FIXED_NOW.toISOString(),
+  });
+  const companyBAdminRoleId = 'company-b-admin-role';
+  accounts.roles.set(companyBAdminRoleId, {
+    id: companyBAdminRoleId,
+    companyId: companyBId,
+    name: 'admin',
+  });
+  const companyBAdminId = 'company-b-admin';
+  accounts.users.set(companyBAdminId, {
+    id: companyBAdminId,
+    companyId: companyBId,
+    email: 'admin@globex.test',
+    passwordHash: null,
+    roleId: companyBAdminRoleId,
+    name: null,
+    instanceAdmin: false,
+    active: true,
+    passwordMustChange: false,
+    createdAt: FIXED_NOW.toISOString(),
+    updatedAt: FIXED_NOW.toISOString(),
+  });
+
+  return {
+    accounts,
+    companies,
+    companyService,
+    sysadminId,
+    plainUserId,
+    companyAId,
+    companyAAdminId,
+    companyAViewerId,
+    companyBId,
+    companyBAdminId,
+  };
 }
 
 describe('CompanyService.createCompany (REQ-FDN-002, REQ-SEC-015)', () => {
@@ -187,6 +288,118 @@ describe('CompanyService.createCompany (REQ-FDN-002, REQ-SEC-015)', () => {
     expect(await companyService.createCompany(sysadminId, { name: '  ', slug: '' })).toEqual({
       ok: false,
       error: { kind: 'invalid_input' },
+    });
+  });
+});
+
+describe('CompanyService.get (REQ-SEC-014)', () => {
+  it('a member reads their own company', async () => {
+    const { companyService, companyAViewerId, companyAId } = buildHarness();
+
+    const result = await companyService.get(companyAViewerId, companyAId);
+
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        id: companyAId,
+        name: 'Acme',
+        slug: 'acme',
+        createdAt: FIXED_NOW.toISOString(),
+        updatedAt: FIXED_NOW.toISOString(),
+      },
+    });
+  });
+
+  it('the instance administrator reads any company', async () => {
+    const { companyService, sysadminId, companyBId } = buildHarness();
+
+    const result = await companyService.get(sysadminId, companyBId);
+
+    expect(result.ok).toBe(true);
+  });
+
+  it('a member of a different company cannot read it', async () => {
+    const { companyService, companyBAdminId, companyAId } = buildHarness();
+
+    expect(await companyService.get(companyBAdminId, companyAId)).toEqual({
+      ok: false,
+      error: { kind: 'forbidden' },
+    });
+  });
+
+  it('a company-less user with no capability cannot read a company', async () => {
+    const { companyService, plainUserId, companyAId } = buildHarness();
+
+    expect(await companyService.get(plainUserId, companyAId)).toEqual({
+      ok: false,
+      error: { kind: 'forbidden' },
+    });
+  });
+
+  it('reports not_found for a non-existent company', async () => {
+    const { companyService, sysadminId } = buildHarness();
+
+    expect(await companyService.get(sysadminId, 'nope')).toEqual({
+      ok: false,
+      error: { kind: 'not_found' },
+    });
+  });
+});
+
+describe('CompanyService.update (REQ-SEC-014)', () => {
+  it("the company's own Admin renames it", async () => {
+    const { companyService, companies, companyAAdminId, companyAId } = buildHarness();
+
+    const result = await companyService.update(companyAAdminId, companyAId, { name: 'Acme Corp' });
+
+    expect(result).toEqual({ ok: true, value: { ok: true } });
+    expect((await companies.getCompanyById(companyAId))?.name).toBe('Acme Corp');
+  });
+
+  it('the instance administrator renames any company', async () => {
+    const { companyService, companies, sysadminId, companyBId } = buildHarness();
+
+    const result = await companyService.update(sysadminId, companyBId, { slug: 'globex-corp' });
+
+    expect(result.ok).toBe(true);
+    expect((await companies.getCompanyById(companyBId))?.slug).toBe('globex-corp');
+  });
+
+  it('a Viewer within the company cannot rename it', async () => {
+    const { companyService, companyAViewerId, companyAId } = buildHarness();
+
+    expect(await companyService.update(companyAViewerId, companyAId, { name: 'Nope' })).toEqual({
+      ok: false,
+      error: { kind: 'forbidden' },
+    });
+  });
+
+  it('an Admin of another company cannot rename this one', async () => {
+    const { companyService, companyBAdminId, companyAId } = buildHarness();
+
+    expect(await companyService.update(companyBAdminId, companyAId, { name: 'Nope' })).toEqual({
+      ok: false,
+      error: { kind: 'forbidden' },
+    });
+  });
+
+  it('rejects an empty name', async () => {
+    const { companyService, companyAAdminId, companyAId } = buildHarness();
+
+    const result = await companyService.update(companyAAdminId, companyAId, { name: '  ' });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.kind).toBe('validation');
+    }
+  });
+
+  it('reports not_found for a non-existent company', async () => {
+    const { companyService, sysadminId } = buildHarness();
+
+    expect(await companyService.update(sysadminId, 'nope', { name: 'X' })).toEqual({
+      ok: false,
+      error: { kind: 'not_found' },
     });
   });
 });

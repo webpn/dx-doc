@@ -489,6 +489,79 @@ describe('Access administration and service tokens over HTTP (M1.12 first half)'
     ]);
   });
 
+  it('a company reads its own identity; a member of another company cannot (REQ-SEC-014)', async () => {
+    await connection.kysely
+      .insertInto('company')
+      .values({ id: 'c2', name: 'Globex', slug: 'globex', created_at: t(), updated_at: t() })
+      .execute();
+    await connection.kysely
+      .insertInto('roles')
+      .values({
+        id: 'role-c2-admin',
+        company_id: 'c2',
+        name: 'admin',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
+    await connection.kysely
+      .insertInto('users')
+      .values({
+        id: 'u-c2-admin',
+        company_id: 'c2',
+        email: 'admin@globex.test',
+        password_hash: await new BcryptPasswordHasher().hash(PASSWORD),
+        role_id: 'role-c2-admin',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
+
+    const adminCookie = await loginToken('admin@acme.test');
+    const own = await app.inject({
+      method: 'GET',
+      url: '/api/companies/c1',
+      headers: { cookie: `dxdoc_session=${adminCookie}` },
+    });
+    expect(own.statusCode).toBe(200);
+    expect(own.json<{ name: string }>().name).toBe('Acme');
+
+    const otherCompanyCookie = await loginToken('admin@globex.test', 'c2');
+    const crossTenant = await app.inject({
+      method: 'GET',
+      url: '/api/companies/c1',
+      headers: { cookie: `dxdoc_session=${otherCompanyCookie}` },
+    });
+    expect(crossTenant.statusCode).toBe(403);
+  });
+
+  it("the company's own Admin renames it; a Viewer cannot (REQ-SEC-014)", async () => {
+    const adminCookie = await loginToken('admin@acme.test');
+    const renamed = await app.inject({
+      method: 'PATCH',
+      url: '/api/companies/c1',
+      headers: { cookie: `dxdoc_session=${adminCookie}` },
+      payload: { name: 'Acme Corporation' },
+    });
+    expect(renamed.statusCode).toBe(200);
+
+    const got = await app.inject({
+      method: 'GET',
+      url: '/api/companies/c1',
+      headers: { cookie: `dxdoc_session=${adminCookie}` },
+    });
+    expect(got.json<{ name: string }>().name).toBe('Acme Corporation');
+
+    const viewerCookie = await loginToken('viewer@acme.test');
+    const denied = await app.inject({
+      method: 'PATCH',
+      url: '/api/companies/c1',
+      headers: { cookie: `dxdoc_session=${viewerCookie}` },
+      payload: { name: 'Nope' },
+    });
+    expect(denied.statusCode).toBe(403);
+  });
+
   it('issues, lists and revokes service tokens; the revoked token dies within one request (REQ-API-009)', async () => {
     const adminCookie = await loginToken('admin@acme.test');
     const projectId = await createProject(adminCookie, 'Web', 'web');

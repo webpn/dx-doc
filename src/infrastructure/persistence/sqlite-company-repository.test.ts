@@ -45,4 +45,31 @@ describe('SqliteCompanyRepository', () => {
     const found = await repo.getCompanyById('non-existent');
     expect(found).toBeNull();
   });
+
+  it('updates a company’s name, slug and updatedAt', async () => {
+    const company = {
+      id: 'c-2',
+      name: 'Acme Corp',
+      slug: 'acme-corp',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
+    await repo.createCompany(company);
+
+    await repo.updateCompany({
+      ...company,
+      name: 'Acme Corporation',
+      slug: 'acme-corporation',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    });
+
+    const found = await repo.getCompanyById('c-2');
+    expect(found).toEqual({
+      id: 'c-2',
+      name: 'Acme Corporation',
+      slug: 'acme-corporation',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    });
+  });
 });

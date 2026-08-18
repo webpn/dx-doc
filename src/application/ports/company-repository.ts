@@ -14,4 +14,5 @@ export interface CompanyRecord {
 export interface CompanyRepository {
   createCompany(company: CompanyRecord): Promise<void>;
   getCompanyById(id: string): Promise<CompanyRecord | null>;
+  updateCompany(company: CompanyRecord): Promise<void>;
 }

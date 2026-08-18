@@ -30,6 +30,7 @@ export type ProjectAction =
   | 'project.archive';
 
 export type CompanyAction =
+  | 'company.manage'
   | 'company.manage_catalogue'
   | 'company.manage_projects'
   | 'company.read_audit_log'
@@ -52,6 +53,11 @@ export const PROJECT_ACTION_ROLES: Readonly<Record<ProjectAction, readonly Compa
 
 /** Roles allowed per company action, read from the user's company role. */
 export const COMPANY_ACTION_ROLES: Readonly<Record<CompanyAction, readonly CompanyRoleName[]>> = {
+  // Company identity and settings (REQ-SEC-014: "everything else an Admin
+  // does — projects, integrations, catalogue, branding — stays with the
+  // Admin role, inside one company"). Creating a company is the
+  // instance-administration power; managing an existing one is not.
+  'company.manage': ['admin'],
   'company.manage_catalogue': ['admin'],
   'company.read_audit_log': ['admin'],
   // REQ-SEC-002: an Admin creates and configures projects within their company.

@@ -38,6 +38,9 @@ export const companyCreateSchema = z.object({
 });
 export type CompanyCreateInput = z.infer<typeof companyCreateSchema>;
 
+export const companyUpdateSchema = companyCreateSchema.partial();
+export type CompanyUpdateInput = z.infer<typeof companyUpdateSchema>;
+
 export const projectCreateSchema = z.object({
   name: z
     .string()
