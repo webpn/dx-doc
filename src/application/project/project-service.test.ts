@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import { PermissionService } from '../auth/permissions';
-import type { AccountRepository } from '../ports/account-repository';
+import type {
+  AccountRepository,
+  CompanyRole,
+  CreateUserInput,
+  NewCompanyRole,
+  NewProjectGrant,
+  ProjectGrant,
+  UserAccount,
+} from '../ports/account-repository';
 import type { ProjectRecord, ProjectRepository } from '../ports/project-repository';
 import type { ProjectCreateInput } from '../validation/schemas';
 
@@ -20,6 +28,84 @@ class StubPermissions extends PermissionService {
 
   override canInCompany(): Promise<boolean> {
     return Promise.resolve(this.answers.company ?? true);
+  }
+}
+
+/** In-memory accounts: only the role lookup + grant write the service needs. */
+class FakeAccounts implements AccountRepository {
+  roles = new Map<string, CompanyRole>();
+  grants: ProjectGrant[] = [];
+
+  createUser(_input: CreateUserInput): Promise<void> {
+    return Promise.resolve();
+  }
+
+  getUserById(_id: string): Promise<UserAccount | null> {
+    return Promise.resolve(null);
+  }
+
+  getUserByEmail(_companyId: string | null, _email: string): Promise<UserAccount | null> {
+    return Promise.resolve(null);
+  }
+
+  updateUser(_user: UserAccount): Promise<void> {
+    return Promise.resolve();
+  }
+
+  countUsers(): Promise<number> {
+    return Promise.resolve(0);
+  }
+
+  createRole(role: NewCompanyRole): Promise<void> {
+    this.roles.set(role.id, { id: role.id, companyId: role.companyId, name: role.name });
+    return Promise.resolve();
+  }
+
+  listRolesForCompany(companyId: string): Promise<CompanyRole[]> {
+    return Promise.resolve([...this.roles.values()].filter((role) => role.companyId === companyId));
+  }
+
+  listGrantsForUser(userId: string): Promise<ProjectGrant[]> {
+    return Promise.resolve(this.grants.filter((grant) => grant.userId === userId));
+  }
+
+  createGrant(grant: NewProjectGrant): Promise<void> {
+    const roleName = this.roles.get(grant.roleId)?.name ?? 'viewer';
+    this.grants.push({
+      id: grant.id,
+      projectId: grant.projectId,
+      userId: grant.userId,
+      roleName,
+    });
+    return Promise.resolve();
+  }
+
+  updateGrantRole(_grantId: string, _roleId: string, _updatedAt: string): Promise<void> {
+    return Promise.resolve();
+  }
+
+  revokeGrant(_grantId: string): Promise<void> {
+    return Promise.resolve();
+  }
+
+  getGrantForProjectAndUser(_projectId: string, _userId: string): Promise<ProjectGrant | null> {
+    return Promise.resolve(null);
+  }
+
+  listGrantsForProject(_projectId: string): Promise<ProjectGrant[]> {
+    return Promise.resolve([]);
+  }
+}
+
+/** Seed the four company roles for `companyId` into `accounts`. */
+function seedCompanyRoles(accounts: FakeAccounts, companyId: string): void {
+  const names = ['admin', 'project_manager', 'editor', 'viewer'] as const;
+  for (const name of names) {
+    accounts.roles.set(`role-${name}-${companyId}`, {
+      id: `role-${name}-${companyId}`,
+      companyId,
+      name,
+    });
   }
 }
 
@@ -82,15 +168,18 @@ function input(overrides: Partial<ProjectCreateInput> = {}): ProjectCreateInput 
   return { name: 'Web analytics', slug: 'web-analytics', platform: 'web', ...overrides };
 }
 
-function build(): { projects: FakeProjects; service: ProjectService } {
+function build(): { projects: FakeProjects; accounts: FakeAccounts; service: ProjectService } {
   const projects = new FakeProjects();
+  const accounts = new FakeAccounts();
+  seedCompanyRoles(accounts, 'c1');
   const service = new ProjectService(
     projects,
     new StubPermissions({}),
+    accounts,
     () => FIXED_NOW,
     () => 'id-' + String(projects.projects.size),
   );
-  return { projects, service };
+  return { projects, accounts, service };
 }
 
 describe('ProjectService.create (REQ-FDN-003, REQ-IMP-003)', () => {
@@ -125,9 +214,11 @@ describe('ProjectService.create (REQ-FDN-003, REQ-IMP-003)', () => {
 
   it('forbids a non-Admin', async () => {
     const projects = new FakeProjects();
+    const accounts = new FakeAccounts();
     const service = new ProjectService(
       projects,
       new StubPermissions({ company: false }),
+      accounts,
       () => FIXED_NOW,
       () => 'id',
     );
@@ -196,10 +287,22 @@ describe('ProjectService.update + get', () => {
     const restricted = new ProjectService(
       projects,
       new StubPermissions({ project: false }),
+      new FakeAccounts(),
       () => FIXED_NOW,
       () => 'id',
     );
 
     expect(await restricted.get('viewer', id)).toEqual({ ok: false, error: { kind: 'forbidden' } });
+  });
+
+  it('grants the creator the admin role on the project it just created (REQ-SEC-003, M1.12)', async () => {
+    const { accounts, service } = build();
+
+    const result = await service.create('u1', 'c1', input());
+    const projectId = result.ok ? result.value.projectId : '';
+
+    const grants = await accounts.listGrantsForUser('u1');
+    expect(grants).toHaveLength(1);
+    expect(grants[0]).toMatchObject({ projectId, userId: 'u1', roleName: 'admin' });
   });
 });

@@ -4,6 +4,7 @@ import type {
   CompanyRole,
   CreateUserInput,
   NewCompanyRole,
+  NewProjectGrant,
   ProjectGrant,
   UserAccount,
 } from '@project/application/ports/account-repository';
@@ -151,6 +152,79 @@ export class SqliteAccountRepository implements AccountRepository {
         'roles.name as role_name',
       ])
       .where('project_grants.user_id', '=', userId)
+      .execute();
+    return rows.map((row) => ({
+      id: row.grant_id,
+      projectId: row.project_id,
+      userId: row.user_id,
+      roleName: toRoleName(row.role_name),
+    }));
+  }
+
+  async createGrant(grant: NewProjectGrant): Promise<void> {
+    await this.db
+      .insertInto('project_grants')
+      .values({
+        id: grant.id,
+        project_id: grant.projectId,
+        user_id: grant.userId,
+        role_id: grant.roleId,
+        created_at: grant.createdAt,
+        updated_at: grant.updatedAt,
+      })
+      .execute();
+  }
+
+  async updateGrantRole(grantId: string, roleId: string, updatedAt: string): Promise<void> {
+    await this.db
+      .updateTable('project_grants')
+      .set({ role_id: roleId, updated_at: updatedAt })
+      .where('id', '=', grantId)
+      .execute();
+  }
+
+  async revokeGrant(grantId: string): Promise<void> {
+    await this.db.deleteFrom('project_grants').where('id', '=', grantId).execute();
+  }
+
+  async getGrantForProjectAndUser(
+    projectId: string,
+    userId: string,
+  ): Promise<ProjectGrant | null> {
+    const row = await this.db
+      .selectFrom('project_grants')
+      .innerJoin('roles', 'roles.id', 'project_grants.role_id')
+      .select([
+        'project_grants.id as grant_id',
+        'project_grants.project_id',
+        'project_grants.user_id',
+        'roles.name as role_name',
+      ])
+      .where('project_grants.project_id', '=', projectId)
+      .where('project_grants.user_id', '=', userId)
+      .executeTakeFirst();
+    if (row === undefined) {
+      return null;
+    }
+    return {
+      id: row.grant_id,
+      projectId: row.project_id,
+      userId: row.user_id,
+      roleName: toRoleName(row.role_name),
+    };
+  }
+
+  async listGrantsForProject(projectId: string): Promise<ProjectGrant[]> {
+    const rows = await this.db
+      .selectFrom('project_grants')
+      .innerJoin('roles', 'roles.id', 'project_grants.role_id')
+      .select([
+        'project_grants.id as grant_id',
+        'project_grants.project_id',
+        'project_grants.user_id',
+        'roles.name as role_name',
+      ])
+      .where('project_grants.project_id', '=', projectId)
       .execute();
     return rows.map((row) => ({
       id: row.grant_id,

@@ -19,6 +19,7 @@ const MIGRATION_NAMES = [
   '007_flows_and_navigation',
   '008_versions_and_publication',
   '009_access_and_audit',
+  '010_service_tokens_and_audit_kind',
 ];
 
 describe('migration introspection (REQ-FDN-024 readiness)', () => {

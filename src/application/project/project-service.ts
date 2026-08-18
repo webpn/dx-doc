@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { err, ok, type Result } from '@project/shared';
 
 import type { PermissionService } from '../auth/permissions';
+import type { AccountRepository } from '../ports/account-repository';
 import type { ProjectRepository, ProjectRecord } from '../ports/project-repository';
 import type { ValidationIssue } from '../validation/issues';
 import { projectCreateSchema, projectUpdateSchema } from '../validation/schemas';
@@ -24,6 +25,7 @@ export class ProjectService {
   constructor(
     private readonly projects: ProjectRepository,
     private readonly permissions: PermissionService,
+    private readonly accounts: AccountRepository,
     private readonly now: () => Date = () => new Date(),
     private readonly newId: () => string = () => randomUUID(),
   ) {}
@@ -78,6 +80,28 @@ export class ProjectService {
       createdAt: nowIso,
       updatedAt: nowIso,
     });
+
+    // M1.12 (REQ-SEC-003): the creator is granted the project's
+    // administrator-equivalent role (`admin`) on the project it just created,
+    // so a newly created project is readable and editable by its creator with
+    // no manual database write. roles.ts maps 'project.edit', 'project.manage'
+    // and 'project.manage_access' to `admin` — the full project-owner surface.
+    // The grant is scoped to this project like any other; it confers nothing
+    // beyond the project (REQ-SEC-003: no role confers access to an ungranted
+    // project, and the creator is an Admin of the company by the gate above).
+    const companyRoles = await this.accounts.listRolesForCompany(companyId);
+    const adminRole = companyRoles.find((role) => role.name === 'admin');
+    if (adminRole !== undefined) {
+      await this.accounts.createGrant({
+        id: this.newId(),
+        projectId,
+        userId: actorId,
+        roleId: adminRole.id,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      });
+    }
+
     return ok({ projectId, created: true });
   }
 

@@ -10,7 +10,7 @@ import type { CompanyRepository } from '../ports/company-repository';
 export type CompanyError = { kind: 'forbidden' } | { kind: 'invalid_input' };
 
 /**
- * Company lifecycle (REQ-FDN-002, REQ-SEC-015). Creating a company — including
+ * Company lifecycle (REQ-FDN-002, REQ-SEC-014). Creating a company — including
  * the first one — is an instance-administration power: the instance admin
  * creates tenants rather than belonging to a pre-made one. A company can be
  * created as a stub: only identity (name + slug) is required; configuration,

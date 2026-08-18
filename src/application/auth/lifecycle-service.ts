@@ -111,7 +111,7 @@ export class LifecycleService {
     return ok({ ok: true });
   }
 
-  async requestPasswordReset(companyId: string, email: string): Promise<void> {
+  async requestPasswordReset(companyId: string | null, email: string): Promise<void> {
     const user = await this.accounts.getUserByEmail(companyId, email.trim().toLowerCase());
     // Uniform no-op for unknown, password-less (SSO), or deactivated accounts.
     if (user === null) {

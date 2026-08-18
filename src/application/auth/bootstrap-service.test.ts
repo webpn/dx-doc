@@ -5,6 +5,7 @@ import type {
   CompanyRole,
   CreateUserInput,
   NewCompanyRole,
+  NewProjectGrant,
   ProjectGrant,
   UserAccount,
 } from '../ports/account-repository';
@@ -71,6 +72,26 @@ class FakeAccounts implements AccountRepository {
   }
 
   listGrantsForUser(_userId: string): Promise<ProjectGrant[]> {
+    return Promise.resolve([]);
+  }
+
+  createGrant(_grant: NewProjectGrant): Promise<void> {
+    return Promise.resolve();
+  }
+
+  updateGrantRole(_grantId: string, _roleId: string, _updatedAt: string): Promise<void> {
+    return Promise.resolve();
+  }
+
+  revokeGrant(_grantId: string): Promise<void> {
+    return Promise.resolve();
+  }
+
+  getGrantForProjectAndUser(_projectId: string, _userId: string): Promise<ProjectGrant | null> {
+    return Promise.resolve(null);
+  }
+
+  listGrantsForProject(_projectId: string): Promise<ProjectGrant[]> {
     return Promise.resolve([]);
   }
 }

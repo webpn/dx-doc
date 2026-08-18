@@ -197,4 +197,77 @@ describe('SqliteAccountRepository (against the real schema)', () => {
     expect(grants[0]?.projectId).toBe('p0000000-0000-0000-0000-000000000001');
     expect(grants[0]?.roleName).toBe('editor');
   });
+
+  it('creates a grant and lists it per user and per project (REQ-SEC-003, M1.12)', async () => {
+    await repo.createUser({
+      id: 'u-new',
+      companyId,
+      email: 'new@acme.test',
+      passwordHash: null,
+      createdAt: t(),
+    });
+
+    await repo.createGrant({
+      id: 'g-new',
+      projectId: 'p0000000-0000-0000-0000-000000000001',
+      userId: 'u-new',
+      roleId: 'role-viewer',
+      createdAt: t(),
+      updatedAt: t(),
+    });
+
+    const forUser = await repo.listGrantsForUser('u-new');
+    expect(forUser).toHaveLength(1);
+    expect(forUser[0]).toMatchObject({ roleName: 'viewer', userId: 'u-new' });
+
+    const forProject = await repo.listGrantsForProject(
+      'p0000000-0000-0000-0000-000000000001',
+    );
+    expect(forProject).toHaveLength(1);
+
+    const lookup = await repo.getGrantForProjectAndUser(
+      'p0000000-0000-0000-0000-000000000001',
+      'u-new',
+    );
+    expect(lookup?.roleName).toBe('viewer');
+  });
+
+  it('changes a grant role and revokes the grant (REQ-SEC-003, M1.12)', async () => {
+    await repo.createUser({
+      id: 'u-role',
+      companyId,
+      email: 'role@acme.test',
+      passwordHash: null,
+      createdAt: t(),
+    });
+    await repo.createGrant({
+      id: 'g-role',
+      projectId: 'p0000000-0000-0000-0000-000000000001',
+      userId: 'u-role',
+      roleId: 'role-viewer',
+      createdAt: t(),
+      updatedAt: t(),
+    });
+
+    const grant = await repo.getGrantForProjectAndUser(
+      'p0000000-0000-0000-0000-000000000001',
+      'u-role',
+    );
+    if (grant === null) {
+      throw new Error('expected the grant to exist');
+    }
+    await repo.updateGrantRole(grant.id, 'role-editor', t());
+
+    const updated = await repo.getGrantForProjectAndUser(
+      'p0000000-0000-0000-0000-000000000001',
+      'u-role',
+    );
+    expect(updated?.roleName).toBe('editor');
+
+    await repo.revokeGrant(grant.id);
+    expect(
+      await repo.getGrantForProjectAndUser('p0000000-0000-0000-0000-000000000001', 'u-role'),
+    ).toBeNull();
+    expect(await repo.listGrantsForProject('p0000000-0000-0000-0000-000000000001')).toHaveLength(0);
+  });
 });

@@ -5,6 +5,7 @@ import type {
   CompanyRole,
   CreateUserInput,
   NewCompanyRole,
+  NewProjectGrant,
   ProjectGrant,
   UserAccount,
 } from '../ports/account-repository';
@@ -65,6 +66,42 @@ class FakeAccounts implements AccountRepository {
 
   listGrantsForUser(userId: string): Promise<ProjectGrant[]> {
     return Promise.resolve(this.grants.filter((grant) => grant.userId === userId));
+  }
+
+  createGrant(grant: NewProjectGrant): Promise<void> {
+    const roleName = this.roles.get(grant.roleId)?.name ?? 'viewer';
+    this.grants.push({
+      id: grant.id,
+      projectId: grant.projectId,
+      userId: grant.userId,
+      roleName,
+    });
+    return Promise.resolve();
+  }
+
+  updateGrantRole(grantId: string, roleId: string, _updatedAt: string): Promise<void> {
+    const roleName = this.roles.get(roleId)?.name;
+    const grant = this.grants.find((candidate) => candidate.id === grantId);
+    if (grant && roleName) {
+      grant.roleName = roleName;
+    }
+    return Promise.resolve();
+  }
+
+  revokeGrant(grantId: string): Promise<void> {
+    this.grants = this.grants.filter((grant) => grant.id !== grantId);
+    return Promise.resolve();
+  }
+
+  getGrantForProjectAndUser(projectId: string, userId: string): Promise<ProjectGrant | null> {
+    const grant = this.grants.find(
+      (candidate) => candidate.projectId === projectId && candidate.userId === userId,
+    );
+    return Promise.resolve(grant ?? null);
+  }
+
+  listGrantsForProject(projectId: string): Promise<ProjectGrant[]> {
+    return Promise.resolve(this.grants.filter((grant) => grant.projectId === projectId));
   }
 
   countUsers(): Promise<number> {

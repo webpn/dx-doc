@@ -20,6 +20,19 @@ export type { CompanyAction, InstanceAction, ProjectAction } from './auth/permis
 export { LifecycleService } from './auth/lifecycle-service';
 export type { LifecycleError } from './auth/lifecycle-service';
 
+export { GrantService, GRANT_ADMIN_ACTION } from './auth/grant-service';
+export type { GrantServiceError } from './auth/grant-service';
+
+export {
+  DEFAULT_SERVICE_TOKEN_TTL_MS,
+  ServiceTokenService,
+} from './auth/service-token-service';
+export type {
+  IssuedServiceToken,
+  ServiceTokenError,
+  ServiceTokenReadModel,
+} from './auth/service-token-service';
+
 export { BootstrapService, BootstrapConfigError } from './auth/bootstrap-service';
 export type { BootstrapResult, BootstrapVariables } from './auth/bootstrap-service';
 
@@ -38,10 +51,13 @@ export type {
 
 export type { SessionRecord, SessionRepository } from './ports/session-repository';
 
+export type { PasswordResetToken, PasswordResetTokenRepository } from './ports/reset-token-repository';
+
 export type {
-  PasswordResetToken,
-  PasswordResetTokenRepository,
-} from './ports/reset-token-repository';
+  ApiServiceToken,
+  NewServiceToken,
+  ServiceTokenRepository,
+} from './ports/service-token-repository';
 
 export type { CompanyRecord, CompanyRepository } from './ports/company-repository';
 

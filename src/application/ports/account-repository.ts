@@ -36,6 +36,15 @@ export interface ProjectGrant {
   roleName: CompanyRoleName;
 }
 
+export interface NewProjectGrant {
+  id: string;
+  projectId: string;
+  userId: string;
+  roleId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CreateUserInput {
   id: string;
   /** Nullable for a company-less instance administrator (REQ-SEC-014). */
@@ -62,4 +71,13 @@ export interface AccountRepository {
   createRole(role: NewCompanyRole): Promise<void>;
   listRolesForCompany(companyId: string): Promise<CompanyRole[]>;
   listGrantsForUser(userId: string): Promise<ProjectGrant[]>;
+
+  // Grant administration (REQ-SEC-003): one project at a time, no bulk
+  // operations. So: any application path can now write the table that
+  // `canOnProject` consults, which is what M1.12 closes.
+  createGrant(grant: NewProjectGrant): Promise<void>;
+  updateGrantRole(grantId: string, roleId: string, updatedAt: string): Promise<void>;
+  revokeGrant(grantId: string): Promise<void>;
+  getGrantForProjectAndUser(projectId: string, userId: string): Promise<ProjectGrant | null>;
+  listGrantsForProject(projectId: string): Promise<ProjectGrant[]>;
 }
