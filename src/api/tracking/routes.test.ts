@@ -5,6 +5,7 @@ import path from 'node:path';
 import cookie from '@fastify/cookie';
 import { AuthService } from '@project/application/auth/auth-service';
 import { PermissionService } from '@project/application/auth/permissions';
+import { ServiceTokenService } from '@project/application/auth/service-token-service';
 import { SessionService } from '@project/application/auth/session-service';
 import { TrackingService } from '@project/application/tracking/tracking-service';
 import { SqliteAccountRepository } from '@project/infrastructure/persistence/sqlite-account-repository';
@@ -13,6 +14,7 @@ import {
   openSqliteConnection,
   type Connection,
 } from '@project/infrastructure/persistence/sqlite-kysely';
+import { SqliteServiceTokenRepository } from '@project/infrastructure/persistence/sqlite-service-token-repository';
 import { SqliteProjectRepository } from '@project/infrastructure/persistence/sqlite-project-repository';
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
 import {
@@ -134,6 +136,10 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     const accounts = new SqliteAccountRepository(connection.kysely);
     const sessionRepo = new SqliteSessionRepository(connection.kysely);
     sessions = new SessionService(sessionRepo, TTL_MS);
+    const serviceTokens = new ServiceTokenService(
+      new SqliteServiceTokenRepository(connection.kysely),
+      accounts,
+    );
     auth = new AuthService(accounts, hasher, sessions);
     const permissions = new PermissionService(accounts);
 
@@ -186,6 +192,7 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     registerTrackingRoutes(app, {
       trackingService,
       sessions,
+      serviceTokens,
       cookieName,
     });
 

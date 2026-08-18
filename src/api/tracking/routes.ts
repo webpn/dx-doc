@@ -1,3 +1,4 @@
+import type { ServiceTokenService } from '@project/application/auth/service-token-service';
 import type { SessionService } from '@project/application/auth/session-service';
 import type { TrackingService } from '@project/application/tracking/tracking-service';
 import type {
@@ -33,6 +34,7 @@ import { authenticateRequest, replyServiceError, unauthenticated } from '../help
 export interface TrackingRoutesOptions {
   trackingService: TrackingService;
   sessions: SessionService;
+  serviceTokens: ServiceTokenService;
   cookieName: string;
 }
 
@@ -41,12 +43,13 @@ export interface TrackingRoutesOptions {
  * Exposes all R1 entities, batch write endpoints (REQ-IMP-005), and reconciliation reports (REQ-IMP-006).
  */
 export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRoutesOptions): void {
-  const { trackingService, sessions, cookieName } = options;
+  const { trackingService, sessions, serviceTokens, cookieName } = options;
 
   // ── PROPERTIES ────────────────────────────────────────────────
   app.post('/api/companies/:companyId/properties', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { companyId } = request.params as { companyId: string };
     const query = request.query as { projectId?: string };
@@ -63,8 +66,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/companies/:companyId/properties', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { companyId } = request.params as { companyId: string };
     const query = request.query as { projectId?: string };
@@ -76,8 +80,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/properties/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.getProperty(userId, id);
@@ -86,8 +91,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.patch('/api/properties/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.updateProperty(
@@ -101,8 +107,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
 
   // ── MODULES ───────────────────────────────────────────────────
   app.post('/api/companies/:companyId/modules', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { companyId } = request.params as { companyId: string };
     const query = request.query as { projectId?: string };
@@ -119,8 +126,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/companies/:companyId/modules', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { companyId } = request.params as { companyId: string };
     const query = request.query as { projectId?: string };
@@ -132,8 +140,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/modules/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.getModule(userId, id);
@@ -142,8 +151,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.patch('/api/modules/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.updateModule(
@@ -157,8 +167,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
 
   // ── DESTINATIONS ──────────────────────────────────────────────
   app.post('/api/companies/:companyId/destinations', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { companyId } = request.params as { companyId: string };
     const query = request.query as { projectId?: string };
@@ -175,8 +186,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/companies/:companyId/destinations', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { companyId } = request.params as { companyId: string };
     const query = request.query as { projectId?: string };
@@ -188,8 +200,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/destinations/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.getDestination(userId, id);
@@ -198,8 +211,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.patch('/api/destinations/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.updateDestination(
@@ -212,8 +226,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.put('/api/properties/:id/destinations', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const body = request.body as {
@@ -230,8 +245,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
 
   // ── NAVIGATION EVENTS ─────────────────────────────────────────
   app.post('/api/projects/:projectId/navigation-events', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { projectId } = request.params as { projectId: string };
     const result = await trackingService.createNavigationEvent(
@@ -244,8 +260,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/projects/:projectId/navigation-events', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { projectId } = request.params as { projectId: string };
     const result = await trackingService.listNavigationEvents(userId, projectId);
@@ -254,8 +271,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.patch('/api/navigation-events/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.updateNavigationEvent(
@@ -269,8 +287,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
 
   // ── TRACKING TEMPLATES ────────────────────────────────────────
   app.post('/api/companies/:companyId/tracking-templates', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { companyId } = request.params as { companyId: string };
     const query = request.query as { projectId?: string };
@@ -287,8 +306,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/tracking-templates/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.getTrackingTemplate(userId, id);
@@ -297,8 +317,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.patch('/api/tracking-templates/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.updateTrackingTemplate(
@@ -312,8 +333,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
 
   // ── FREE PAGES ────────────────────────────────────────────────
   app.post('/api/companies/:companyId/free-pages', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { companyId } = request.params as { companyId: string };
     const query = request.query as { projectId?: string };
@@ -330,8 +352,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/free-pages/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.getFreePage(userId, id);
@@ -340,8 +363,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.patch('/api/free-pages/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.updateFreePage(
@@ -355,8 +379,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
 
   // ── TRACKINGS & COMPOSITION ───────────────────────────────────
   app.post('/api/projects/:projectId/trackings', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { projectId } = request.params as { projectId: string };
     const result = await trackingService.createTracking(
@@ -369,8 +394,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/projects/:projectId/trackings', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { projectId } = request.params as { projectId: string };
     const result = await trackingService.listTrackingsForProject(userId, projectId);
@@ -379,8 +405,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/trackings/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.getTracking(userId, id);
@@ -389,8 +416,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.patch('/api/trackings/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.updateTracking(
@@ -403,8 +431,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.post('/api/trackings/:id/duplicate', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const body = (request.body ?? {}) as { nameOverride?: string };
@@ -414,8 +443,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.post('/api/trackings/:id/modules', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const body = request.body as { moduleId: string };
@@ -425,8 +455,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.delete('/api/trackings/:id/properties/:propertyId', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id, propertyId } = request.params as {
       id: string;
@@ -438,8 +469,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.patch('/api/trackings/:id/properties/:propertyId/presence', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id, propertyId } = request.params as {
       id: string;
@@ -456,8 +488,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.post('/api/tracking-properties/:tpId/specific-values', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { tpId } = request.params as { tpId: string };
     const result = await trackingService.setSpecificValue(
@@ -473,8 +506,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   app.post(
     '/api/companies/:companyId/projects/:projectId/copy-catalogue',
     async (request, reply) => {
-      const userId = await authenticateRequest(request, sessions, cookieName);
-      if (!userId) return unauthenticated(reply);
+      const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+      if (!actor) return unauthenticated(reply);
+      const userId = actor.userId;
 
       const { companyId, projectId } = request.params as {
         companyId: string;
@@ -499,8 +533,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   app.get(
     '/api/companies/:companyId/projects/:projectId/reconciliation',
     async (request, reply) => {
-      const userId = await authenticateRequest(request, sessions, cookieName);
-      if (!userId) return unauthenticated(reply);
+      const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+      if (!actor) return unauthenticated(reply);
+      const userId = actor.userId;
 
       const { companyId, projectId } = request.params as {
         companyId: string;
@@ -518,8 +553,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
 
   // ── FLOWS & TRIGGERS (REQ-NAV-003 .. REQ-NAV-007, REQ-AUTH-004) ──
   app.post('/api/projects/:projectId/flows', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { projectId } = request.params as { projectId: string };
     const result = await trackingService.createFlow(
@@ -532,8 +568,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/projects/:projectId/flows', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { projectId } = request.params as { projectId: string };
     const result = await trackingService.listFlowsForProject(userId, projectId);
@@ -542,8 +579,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/flows/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.getFlow(userId, id);
@@ -552,8 +590,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.patch('/api/flows/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.updateFlow(userId, id, request.body as FlowUpdateInput);
@@ -562,8 +601,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.put('/api/flows/:id/graph', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.setFlowGraph(userId, id, request.body as FlowGraphInput);
@@ -572,8 +612,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.post('/api/projects/:projectId/triggers', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { projectId } = request.params as { projectId: string };
     const result = await trackingService.createTrigger(
@@ -586,8 +627,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/projects/:projectId/triggers', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { projectId } = request.params as { projectId: string };
     const result = await trackingService.listTriggersForProject(userId, projectId);
@@ -596,8 +638,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/triggers/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.getTrigger(userId, id);
@@ -606,8 +649,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.patch('/api/triggers/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.updateTrigger(
@@ -621,8 +665,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
 
   // ── SEARCH (REQ-AUTH-007, REQ-SEC-012) ──────────────────────
   app.post('/api/companies/:companyId/projects/:projectId/search/sync', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { companyId, projectId } = request.params as {
       companyId: string;
@@ -634,8 +679,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/projects/:projectId/search', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { projectId } = request.params as { projectId: string };
     const query = request.query as { q?: string };
@@ -648,8 +694,21 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
 
   // ── VERSIONING & PUBLICATION (REQ-VER-001 .. REQ-VER-007) ──
   app.post('/api/companies/:companyId/projects/:projectId/versions', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
+
+    // A service-account token cannot publish a version — the same restriction
+    // as REQ-API-004, enforced here because tokens authenticate AS their owner
+    // and the permission model must not be the only gate (REQ-API-009).
+    if (actor.actorKind === 'service_token') {
+      return reply.code(403).send({
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Service tokens cannot publish versions (REQ-API-004/009)',
+        },
+      });
+    }
 
     const { companyId, projectId } = request.params as {
       companyId: string;
@@ -666,8 +725,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/projects/:projectId/versions', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { projectId } = request.params as { projectId: string };
     const result = await trackingService.listVersionsForProject(userId, projectId);
@@ -676,8 +736,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/versions/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { id } = request.params as { id: string };
     const result = await trackingService.getVersion(userId, id);
@@ -687,8 +748,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
 
   // ── ACCESS, SHARED PASSWORDS & AUDIT (REQ-SEC-005, REQ-SEC-006, REQ-VIEW-001) ──
   app.post('/api/projects/:projectId/shared-passwords', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { projectId } = request.params as { projectId: string };
     const result = await trackingService.createSharedPassword(
@@ -711,8 +773,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/projects/:projectId/shared-passwords', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { projectId } = request.params as { projectId: string };
     const result = await trackingService.listSharedPasswords(userId, projectId);
@@ -721,8 +784,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.delete('/api/projects/:projectId/shared-passwords/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { projectId, id } = request.params as { projectId: string; id: string };
     const result = await trackingService.deleteSharedPassword(userId, projectId, id);
@@ -731,8 +795,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   app.get('/api/companies/:companyId/audit-logs', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { companyId } = request.params as { companyId: string };
     const query = request.query as { projectId?: string };
@@ -743,8 +808,9 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
 
   // ── BATCH WRITE ENDPOINT (REQ-IMP-005, D35) ──────────────────
   app.post('/api/companies/:companyId/batch', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) return unauthenticated(reply);
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
 
     const { companyId } = request.params as { companyId: string };
     const body = request.body as {

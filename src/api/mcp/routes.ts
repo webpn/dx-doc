@@ -1,3 +1,4 @@
+import type { ServiceTokenService } from '@project/application/auth/service-token-service';
 import type { SessionService } from '@project/application/auth/session-service';
 import type { FastifyInstance } from 'fastify';
 
@@ -9,6 +10,7 @@ import type { McpRequest } from './types';
 export interface McpRoutesOptions {
   mcpHandler: McpServerHandler;
   sessions: SessionService;
+  serviceTokens: ServiceTokenService;
   cookieName: string;
 }
 
@@ -17,13 +19,14 @@ export interface McpRoutesOptions {
  * Streamable JSON-RPC over HTTP, authenticated via Bearer service tokens or session cookie.
  */
 export function registerMcpRoutes(app: FastifyInstance, options: McpRoutesOptions): void {
-  const { mcpHandler, sessions, cookieName } = options;
+  const { mcpHandler, sessions, serviceTokens, cookieName } = options;
 
   app.post('/api/mcp', async (request, reply) => {
-    const userId = await authenticateRequest(request, sessions, cookieName);
-    if (!userId) {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) {
       return unauthenticated(reply);
     }
+    const userId = actor.userId;
 
     const mcpReq = (request.body ?? {}) as Partial<McpRequest>;
     if (mcpReq.jsonrpc !== '2.0' || typeof mcpReq.method !== 'string') {

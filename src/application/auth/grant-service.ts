@@ -2,18 +2,14 @@ import { randomUUID } from 'node:crypto';
 
 import { err, ok, type Result } from '@project/shared';
 
-import type { ProjectGrant } from '../ports/account-repository';
-import type { AccountRepository } from '../ports/account-repository';
+import type { ProjectGrant, AccountRepository } from '../ports/account-repository';
 import type { ProjectRepository } from '../ports/project-repository';
 
-import type { ProjectAction } from './permissions';
-import { PermissionService } from './permissions';
+import type { ProjectAction, PermissionService } from './permissions';
 import { isCompanyRoleName, type CompanyRoleName } from './roles';
 
 export type GrantServiceError =
-  | { kind: 'forbidden' }
-  | { kind: 'not_found' }
-  | { kind: 'invalid_role' };
+  { kind: 'forbidden' } | { kind: 'not_found' } | { kind: 'invalid_role' };
 
 /** The project action that gates grant administration (REQ-SEC-003). */
 export const GRANT_ADMIN_ACTION: ProjectAction = 'project.manage_access';
@@ -61,7 +57,7 @@ export class GrantService {
       return err({ kind: 'not_found' });
     }
     const target = await this.accounts.getUserById(userId);
-    if (target === null || target.companyId !== project.companyId) {
+    if (target?.companyId !== project.companyId) {
       return err({ kind: 'not_found' });
     }
 

@@ -1,3 +1,4 @@
+import type { ServiceTokenService } from '@project/application/auth/service-token-service';
 import type { SessionService } from '@project/application/auth/session-service';
 import type { ProjectService } from '@project/application/project/project-service';
 import type {
@@ -11,6 +12,7 @@ import { authenticateRequest, replyServiceError, unauthenticated } from '../help
 export interface ProjectRoutesOptions {
   projects: ProjectService;
   sessions: SessionService;
+  serviceTokens: ServiceTokenService;
   cookieName: string;
 }
 
@@ -22,10 +24,16 @@ export interface ProjectRoutesOptions {
  */
 export function registerProjectRoutes(app: FastifyInstance, options: ProjectRoutesOptions): void {
   app.post('/api/projects', async (request, reply) => {
-    const userId = await authenticateRequest(request, options.sessions, options.cookieName);
-    if (userId === null) {
+    const actor = await authenticateRequest(
+      request,
+      options.sessions,
+      options.serviceTokens,
+      options.cookieName,
+    );
+    if (actor === null) {
       return unauthenticated(reply);
     }
+    const userId = actor.userId;
     const body = (request.body ?? {}) as { companyId?: unknown };
     const companyId = typeof body.companyId === 'string' ? body.companyId : '';
     if (companyId === '') {
@@ -46,10 +54,16 @@ export function registerProjectRoutes(app: FastifyInstance, options: ProjectRout
   });
 
   app.get('/api/projects/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, options.sessions, options.cookieName);
-    if (userId === null) {
+    const actor = await authenticateRequest(
+      request,
+      options.sessions,
+      options.serviceTokens,
+      options.cookieName,
+    );
+    if (actor === null) {
       return unauthenticated(reply);
     }
+    const userId = actor.userId;
     const { id } = request.params as { id: string };
     const result = await options.projects.get(userId, id);
     if (!result.ok) {
@@ -59,10 +73,16 @@ export function registerProjectRoutes(app: FastifyInstance, options: ProjectRout
   });
 
   app.patch('/api/projects/:id', async (request, reply) => {
-    const userId = await authenticateRequest(request, options.sessions, options.cookieName);
-    if (userId === null) {
+    const actor = await authenticateRequest(
+      request,
+      options.sessions,
+      options.serviceTokens,
+      options.cookieName,
+    );
+    if (actor === null) {
       return unauthenticated(reply);
     }
+    const userId = actor.userId;
     const { id } = request.params as { id: string };
     const result = await options.projects.update(userId, id, request.body as ProjectUpdateInput);
     if (!result.ok) {

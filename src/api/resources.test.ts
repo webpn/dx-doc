@@ -5,6 +5,7 @@ import path from 'node:path';
 import cookie from '@fastify/cookie';
 import { AuthService } from '@project/application/auth/auth-service';
 import { PermissionService } from '@project/application/auth/permissions';
+import { ServiceTokenService } from '@project/application/auth/service-token-service';
 import { SessionService } from '@project/application/auth/session-service';
 import { PageService } from '@project/application/page/page-service';
 import { ProjectService } from '@project/application/project/project-service';
@@ -18,6 +19,7 @@ import {
 } from '@project/infrastructure/persistence/sqlite-kysely';
 import { SqlitePageRepository } from '@project/infrastructure/persistence/sqlite-page-repository';
 import { SqliteProjectRepository } from '@project/infrastructure/persistence/sqlite-project-repository';
+import { SqliteServiceTokenRepository } from '@project/infrastructure/persistence/sqlite-service-token-repository';
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
 import Fastify, { type FastifyInstance } from 'fastify';
@@ -28,6 +30,7 @@ import { applyMigrations } from '../../tests/support/apply-migrations';
 import { registerAuthRoutes } from './auth/routes';
 import { registerPageRoutes } from './pages/routes';
 import { registerProjectRoutes } from './projects/routes';
+import { registerTokenRoutes } from './tokens/routes';
 
 const TTL_MS = 8 * 60 * 60 * 1000;
 const PASSWORD = 'correct-horse-battery-staple';
@@ -89,12 +92,17 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
     const accounts = new SqliteAccountRepository(connection.kysely);
     const sessionsRepo = new SqliteSessionRepository(connection.kysely);
     const sessions = new SessionService(sessionsRepo, TTL_MS);
+    const serviceTokens = new ServiceTokenService(
+      new SqliteServiceTokenRepository(connection.kysely),
+      accounts,
+    );
     const auth = new AuthService(accounts, hasher, sessions);
     const permissions = new PermissionService(accounts);
     const companyRepo = new SqliteCompanyRepository(connection.kysely);
     projects = new ProjectService(
       new SqliteProjectRepository(connection.kysely),
       permissions,
+      accounts,
       () => new Date(),
       () => randomUuid(),
     );
@@ -109,8 +117,14 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
     app = Fastify();
     await app.register(cookie);
     registerAuthRoutes(app, { auth, sessions, cookieName: 'dxdoc_session', sessionTtlMs: TTL_MS });
-    registerProjectRoutes(app, { projects, sessions, cookieName: 'dxdoc_session' });
-    registerPageRoutes(app, { pages, sessions, cookieName: 'dxdoc_session' });
+    registerProjectRoutes(app, { projects, sessions, serviceTokens, cookieName: 'dxdoc_session' });
+    registerPageRoutes(app, { pages, sessions, serviceTokens, cookieName: 'dxdoc_session' });
+    registerTokenRoutes(app, {
+      tokens: serviceTokens,
+      sessions,
+      serviceTokens,
+      cookieName: 'dxdoc_session',
+    });
     // companyRepo is wired so the create flow has a tenant; unused directly here.
     void companyRepo;
   });
@@ -194,20 +208,9 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
     expect(secondBody.id).toBe(firstBody.id);
     expect(secondBody.created).toBe(false);
 
-    // Reading content requires a grant on the project (REQ-SEC-003), even for
-    // the Admin who created it.
-    await connection.kysely
-      .insertInto('project_grants')
-      .values({
-        id: 'g-admin',
-        project_id: firstBody.id,
-        user_id: 'u1',
-        role_id: 'role-admin',
-        created_at: t(),
-        updated_at: t(),
-      })
-      .execute();
-
+    // M1.12 (REQ-SEC-003): the creator is granted automatically on creation,
+    // so the Admin who created it can read it back with no manual database
+    // write — the milestone's negative case is now the positive one.
     const got = await app.inject({
       method: 'GET',
       url: `/api/projects/${firstBody.id}`,
@@ -235,19 +238,8 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
       payload: { companyId: 'c1', name: 'Web', slug: 'web', platform: 'web' },
     });
     const projectId = project.json<{ id: string }>().id;
-    // Grant the admin the editor role on the project so page creation is allowed.
-    await connection.kysely
-      .insertInto('project_grants')
-      .values({
-        id: 'g1',
-        project_id: projectId,
-        user_id: 'u1',
-        role_id: 'role-editor',
-        created_at: t(),
-        updated_at: t(),
-      })
-      .execute();
-
+    // The creator's auto-grant (M1.12) already carries the edit rights page
+    // creation needs — no manual grant row required.
     const created = await app.inject({
       method: 'POST',
       url: `/api/projects/${projectId}/pages`,

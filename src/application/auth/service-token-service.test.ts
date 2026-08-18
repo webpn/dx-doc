@@ -132,7 +132,13 @@ function build(): { tokens: FakeTokens; accounts: FakeAccounts; service: Service
     createdAt: FIXED_NOW.toISOString(),
     updatedAt: FIXED_NOW.toISOString(),
   });
-  const service = new ServiceTokenService(tokens, accounts, TTL_MS, () => FIXED_NOW, () => 'tok-1');
+  const service = new ServiceTokenService(
+    tokens,
+    accounts,
+    TTL_MS,
+    () => FIXED_NOW,
+    () => 'tok-1',
+  );
   return { tokens, accounts, service };
 }
 

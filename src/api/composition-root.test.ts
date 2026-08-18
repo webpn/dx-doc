@@ -3,7 +3,11 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import type { AuthService } from '@project/application/auth/auth-service';
+import type { GrantService } from '@project/application/auth/grant-service';
+import type { LifecycleService } from '@project/application/auth/lifecycle-service';
+import type { ServiceTokenService } from '@project/application/auth/service-token-service';
 import type { SessionService } from '@project/application/auth/session-service';
+import type { CompanyService } from '@project/application/company/company-service';
 import type { PageService } from '@project/application/page/page-service';
 import type { ProjectService } from '@project/application/project/project-service';
 import type { TrackingService } from '@project/application/tracking/tracking-service';
@@ -14,6 +18,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { applyMigrations } from '../../tests/support/apply-migrations';
 
+import { registerAccessRoutes } from './access/routes';
 import { registerAuthRoutes } from './auth/routes';
 import {
   assembleComposition,
@@ -23,11 +28,14 @@ import {
   type Composition,
   type ServedRoute,
 } from './composition-root';
+import { registerCompanyRoutes } from './company/routes';
+import { registerLifecycleRoutes } from './lifecycle/routes';
 import { registerMcpRoutes } from './mcp/routes';
 import type { McpServerHandler } from './mcp/server';
 import { registerPageRoutes } from './pages/routes';
 import { registerProjectRoutes } from './projects/routes';
 import { registerAllRoutes } from './routes';
+import { registerTokenRoutes } from './tokens/routes';
 import { registerTrackingRoutes } from './tracking/routes';
 
 const ADMIN_EMAIL = 'admin@dxdoc.test';
@@ -83,6 +91,10 @@ const stubPage = {} as PageService;
 const stubTracking = {} as TrackingService;
 const stubAuth = {} as AuthService;
 const stubSessions = {} as SessionService;
+const stubServiceTokens = {} as ServiceTokenService;
+const stubLifecycle = {} as LifecycleService;
+const stubCompany = {} as CompanyService;
+const stubGrants = {} as GrantService;
 
 function captureRoutes(register: (app: FastifyInstance) => void): ServedRoute[] {
   const app = Fastify();
@@ -118,6 +130,10 @@ const ALL_ROUTES = captureRoutes((app) => {
     trackingService: stubTracking,
     auth: stubAuth,
     sessions: stubSessions,
+    serviceTokens: stubServiceTokens,
+    lifecycle: stubLifecycle,
+    companyService: stubCompany,
+    grantService: stubGrants,
     cookieName: SESSION_COOKIE_NAME,
     sessionTtlMs: 1000,
   });
@@ -137,6 +153,7 @@ const INDIVIDUAL_ROUTES = [
     registerProjectRoutes(app, {
       projects: stubProject,
       sessions: stubSessions,
+      serviceTokens: stubServiceTokens,
       cookieName: SESSION_COOKIE_NAME,
     });
   }),
@@ -144,6 +161,7 @@ const INDIVIDUAL_ROUTES = [
     registerPageRoutes(app, {
       pages: stubPage,
       sessions: stubSessions,
+      serviceTokens: stubServiceTokens,
       cookieName: SESSION_COOKIE_NAME,
     });
   }),
@@ -151,6 +169,7 @@ const INDIVIDUAL_ROUTES = [
     registerTrackingRoutes(app, {
       trackingService: stubTracking,
       sessions: stubSessions,
+      serviceTokens: stubServiceTokens,
       cookieName: SESSION_COOKIE_NAME,
     });
   }),
@@ -158,6 +177,39 @@ const INDIVIDUAL_ROUTES = [
     registerMcpRoutes(app, {
       mcpHandler: {} as McpServerHandler,
       sessions: stubSessions,
+      serviceTokens: stubServiceTokens,
+      cookieName: SESSION_COOKIE_NAME,
+    });
+  }),
+  ...captureRoutes((app) => {
+    registerAccessRoutes(app, {
+      grants: stubGrants,
+      sessions: stubSessions,
+      serviceTokens: stubServiceTokens,
+      cookieName: SESSION_COOKIE_NAME,
+    });
+  }),
+  ...captureRoutes((app) => {
+    registerLifecycleRoutes(app, {
+      lifecycle: stubLifecycle,
+      sessions: stubSessions,
+      serviceTokens: stubServiceTokens,
+      cookieName: SESSION_COOKIE_NAME,
+    });
+  }),
+  ...captureRoutes((app) => {
+    registerCompanyRoutes(app, {
+      companies: stubCompany,
+      sessions: stubSessions,
+      serviceTokens: stubServiceTokens,
+      cookieName: SESSION_COOKIE_NAME,
+    });
+  }),
+  ...captureRoutes((app) => {
+    registerTokenRoutes(app, {
+      tokens: stubServiceTokens,
+      sessions: stubSessions,
+      serviceTokens: stubServiceTokens,
       cookieName: SESSION_COOKIE_NAME,
     });
   }),
@@ -203,6 +255,10 @@ describe('composition root — route table (REQ-FDN-023)', () => {
       'POST /api/auth/logout',
       'POST /api/auth/change-password',
       'POST /api/mcp',
+      'POST /api/users/invite',
+      'POST /api/companies',
+      'POST /api/auth/tokens',
+      'PUT /api/projects/:projectId/grants/:userId',
     ];
     for (const route of critical) {
       expect(served).toContain(route);

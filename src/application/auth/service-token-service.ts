@@ -7,7 +7,8 @@ import type { ServiceTokenRepository } from '../ports/service-token-repository';
 
 import { generateSessionToken, hashSessionToken } from './tokens';
 
-export type ServiceTokenError = { kind: 'forbidden' } | { kind: 'not_found' } | { kind: 'invalid_input' };
+export type ServiceTokenError =
+  { kind: 'forbidden' } | { kind: 'not_found' } | { kind: 'invalid_input' };
 
 /**
  * Default service-token lifetime. A constant, deliberately not an environment
@@ -52,9 +53,12 @@ export class ServiceTokenService {
   ) {}
 
   /** Issue a token bound to the caller's own identity. */
-  async issue(userId: string, name: string): Promise<Result<IssuedServiceToken, ServiceTokenError>> {
+  async issue(
+    userId: string,
+    name: string,
+  ): Promise<Result<IssuedServiceToken, ServiceTokenError>> {
     const user = await this.accounts.getUserById(userId);
-    if (user === null || !user.active) {
+    if (!user?.active) {
       return err({ kind: 'forbidden' });
     }
     const trimmed = name.trim();
@@ -91,10 +95,7 @@ export class ServiceTokenService {
   }
 
   /** Revoke one of the caller's own tokens; another user's token is not found. */
-  async revoke(
-    userId: string,
-    tokenId: string,
-  ): Promise<Result<{ ok: true }, ServiceTokenError>> {
+  async revoke(userId: string, tokenId: string): Promise<Result<{ ok: true }, ServiceTokenError>> {
     const records = await this.tokens.listForUser(userId);
     const token = records.find((candidate) => candidate.id === tokenId);
     if (token === undefined) {
@@ -122,7 +123,7 @@ export class ServiceTokenService {
       return null;
     }
     const user = await this.accounts.getUserById(record.userId);
-    if (user === null || !user.active) {
+    if (!user?.active) {
       return null;
     }
     return user.id;

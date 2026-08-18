@@ -11,8 +11,8 @@ import type {
 } from '../ports/account-repository';
 import type { ProjectRecord, ProjectRepository } from '../ports/project-repository';
 
-import { PermissionService } from './permissions';
 import { GrantService } from './grant-service';
+import { PermissionService } from './permissions';
 import { COMPANY_ROLE_NAMES, type CompanyRoleName } from './roles';
 
 const FIXED_NOW = new Date('2026-06-01T00:00:00.000Z');
@@ -167,7 +167,12 @@ function seedCompany(accounts: FakeAccounts, projects: FakeProjects, companyId: 
   });
 }
 
-function addUser(accounts: FakeAccounts, id: string, companyId: string, roleName: CompanyRoleName): void {
+function addUser(
+  accounts: FakeAccounts,
+  id: string,
+  companyId: string,
+  roleName: CompanyRoleName,
+): void {
   accounts.users.set(id, {
     id,
     companyId,
@@ -240,7 +245,12 @@ describe('GrantService (REQ-SEC-003, M1.12)', () => {
     const { accounts, grants, viewerId } = build();
     addUser(accounts, 'pm', 'c1', 'project_manager');
     addUser(accounts, 'editor', 'c1', 'editor');
-    accounts.grants.push({ id: 'g-pm', projectId: 'p1', userId: 'pm', roleName: 'project_manager' });
+    accounts.grants.push({
+      id: 'g-pm',
+      projectId: 'p1',
+      userId: 'pm',
+      roleName: 'project_manager',
+    });
     accounts.grants.push({ id: 'g-ed', projectId: 'p1', userId: 'editor', roleName: 'editor' });
 
     expect((await grants.setRole('pm', 'p1', viewerId, 'viewer')).ok).toBe(true);

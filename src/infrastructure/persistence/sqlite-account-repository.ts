@@ -187,10 +187,7 @@ export class SqliteAccountRepository implements AccountRepository {
     await this.db.deleteFrom('project_grants').where('id', '=', grantId).execute();
   }
 
-  async getGrantForProjectAndUser(
-    projectId: string,
-    userId: string,
-  ): Promise<ProjectGrant | null> {
+  async getGrantForProjectAndUser(projectId: string, userId: string): Promise<ProjectGrant | null> {
     const row = await this.db
       .selectFrom('project_grants')
       .innerJoin('roles', 'roles.id', 'project_grants.role_id')

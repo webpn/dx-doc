@@ -1,24 +1,25 @@
 import type { ServiceTokenService } from '@project/application/auth/service-token-service';
 import type { SessionService } from '@project/application/auth/session-service';
-import type { PageService } from '@project/application/page/page-service';
-import type { PageCreateInput, PageUpdateInput } from '@project/application/validation/schemas';
 import type { FastifyInstance } from 'fastify';
 
 import { authenticateRequest, replyServiceError, unauthenticated } from '../helpers';
 
-export interface PageRoutesOptions {
-  pages: PageService;
+export interface TokenRoutesOptions {
+  tokens: ServiceTokenService;
   sessions: SessionService;
   serviceTokens: ServiceTokenService;
   cookieName: string;
 }
 
 /**
- * Page/Screen REST routes (REQ-API-001). Transport only; rules live in the
- * application layer (ADR-0007, REQ-FDN-010).
+ * Service-account API token lifecycle routes (REQ-API-009, M1.12): issue,
+ * list, revoke. A token is bound to the authenticated actor's own identity
+ * and never carries more privilege than its owner; the raw value is returned
+ * exactly once, at issuance.
  */
-export function registerPageRoutes(app: FastifyInstance, options: PageRoutesOptions): void {
-  app.post('/api/projects/:projectId/pages', async (request, reply) => {
+export function registerTokenRoutes(app: FastifyInstance, options: TokenRoutesOptions): void {
+  // Issue a token bound to the caller.
+  app.post('/api/auth/tokens', async (request, reply) => {
     const actor = await authenticateRequest(
       request,
       options.sessions,
@@ -28,16 +29,21 @@ export function registerPageRoutes(app: FastifyInstance, options: PageRoutesOpti
     if (actor === null) {
       return unauthenticated(reply);
     }
-    const userId = actor.userId;
-    const { projectId } = request.params as { projectId: string };
-    const result = await options.pages.create(userId, projectId, request.body as PageCreateInput);
+    const body = (request.body ?? {}) as { name?: unknown };
+    const name = typeof body.name === 'string' ? body.name : '';
+    const result = await options.tokens.issue(actor.userId, name);
     if (!result.ok) {
       return replyServiceError(reply, result.error);
     }
-    return reply.code(201).send({ id: result.value.pageId, created: result.value.created });
+    return reply.code(201).send({
+      tokenId: result.value.tokenId,
+      token: result.value.token,
+      expiresAt: result.value.expiresAt,
+    });
   });
 
-  app.get('/api/pages/:id', async (request, reply) => {
+  // List the caller's own tokens (no token value is ever returned).
+  app.get('/api/auth/tokens', async (request, reply) => {
     const actor = await authenticateRequest(
       request,
       options.sessions,
@@ -47,16 +53,11 @@ export function registerPageRoutes(app: FastifyInstance, options: PageRoutesOpti
     if (actor === null) {
       return unauthenticated(reply);
     }
-    const userId = actor.userId;
-    const { id } = request.params as { id: string };
-    const result = await options.pages.get(userId, id);
-    if (!result.ok) {
-      return replyServiceError(reply, result.error);
-    }
-    return result.value;
+    return { tokens: await options.tokens.list(actor.userId) };
   });
 
-  app.patch('/api/pages/:id', async (request, reply) => {
+  // Revoke one of the caller's own tokens.
+  app.delete('/api/auth/tokens/:id', async (request, reply) => {
     const actor = await authenticateRequest(
       request,
       options.sessions,
@@ -66,9 +67,8 @@ export function registerPageRoutes(app: FastifyInstance, options: PageRoutesOpti
     if (actor === null) {
       return unauthenticated(reply);
     }
-    const userId = actor.userId;
     const { id } = request.params as { id: string };
-    const result = await options.pages.update(userId, id, request.body as PageUpdateInput);
+    const result = await options.tokens.revoke(actor.userId, id);
     if (!result.ok) {
       return replyServiceError(reply, result.error);
     }

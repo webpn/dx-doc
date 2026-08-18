@@ -23,8 +23,12 @@ import cookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
 import { AuthService } from '@project/application/auth/auth-service';
 import { BootstrapService } from '@project/application/auth/bootstrap-service';
+import { GrantService } from '@project/application/auth/grant-service';
+import { LifecycleService } from '@project/application/auth/lifecycle-service';
 import { PermissionService } from '@project/application/auth/permissions';
+import { ServiceTokenService } from '@project/application/auth/service-token-service';
 import { SessionService } from '@project/application/auth/session-service';
+import { CompanyService } from '@project/application/company/company-service';
 import { PageService } from '@project/application/page/page-service';
 import type { SearchIndex } from '@project/application/ports/search';
 import type { ObjectStorage } from '@project/application/ports/storage';
@@ -34,12 +38,15 @@ import {
   loadInstanceConfig,
   type InstanceConfig,
 } from '@project/infrastructure/config/instance-config';
+import { NoopEmailSender } from '@project/infrastructure/email/noop-email-sender';
+import { createSmtpEmailSender } from '@project/infrastructure/email/smtp-email-sender';
 import {
   createErrorTracking,
   type ErrorTracking,
 } from '@project/infrastructure/error-tracking/sentry';
 import { pendingMigrations } from '@project/infrastructure/persistence/migrations';
 import { SqliteAccountRepository } from '@project/infrastructure/persistence/sqlite-account-repository';
+import { SqliteCompanyRepository } from '@project/infrastructure/persistence/sqlite-company-repository';
 import {
   closeSqliteConnection,
   openSqliteConnection,
@@ -47,6 +54,8 @@ import {
 } from '@project/infrastructure/persistence/sqlite-kysely';
 import { SqlitePageRepository } from '@project/infrastructure/persistence/sqlite-page-repository';
 import { SqliteProjectRepository } from '@project/infrastructure/persistence/sqlite-project-repository';
+import { SqlitePasswordResetTokenRepository } from '@project/infrastructure/persistence/sqlite-reset-token-repository';
+import { SqliteServiceTokenRepository } from '@project/infrastructure/persistence/sqlite-service-token-repository';
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
 import {
   SqliteAuditLogRepository,
@@ -138,6 +147,9 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
   // ── Repositories (adapter wiring lives nowhere else, REQ-FDN-023) ────────
   const accounts = new SqliteAccountRepository(connection.kysely);
   const sessions = new SqliteSessionRepository(connection.kysely);
+  const resetTokens = new SqlitePasswordResetTokenRepository(connection.kysely);
+  const serviceTokens = new SqliteServiceTokenRepository(connection.kysely);
+  const companies = new SqliteCompanyRepository(connection.kysely);
   const projects = new SqliteProjectRepository(connection.kysely);
   const pages = new SqlitePageRepository(connection.kysely);
   const properties = new SqlitePropertyRepository(connection.kysely);
@@ -156,16 +168,36 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
   const hasher = new BcryptPasswordHasher();
   const sessionTtlMs = parseDurationToMs(config.AUTH_SESSION_TTL);
   const sessionService = new SessionService(sessions, sessionTtlMs);
+  const serviceTokenService = new ServiceTokenService(serviceTokens, accounts);
   const permissions = new PermissionService(accounts);
   const auth = new AuthService(accounts, hasher, sessionService);
   const bootstrap = new BootstrapService(accounts, hasher);
+  // Email delivery is fire-and-forget; an instance without SMTP configured
+  // uses the no-op sender rather than failing resets (REQ-SEC-013).
+  const emailSender = config.SMTP_HOST ? createSmtpEmailSender(config) : new NoopEmailSender();
+  // Password-reset token lifetime: a constant until per-company settings land
+  // (ADR-0014) — one hour is long enough for a human to click, short enough
+  // to be useless when forwarded. Deliberately not an environment variable.
+  const passwordResetTtlMs = 60 * 60 * 1000;
+  const lifecycle = new LifecycleService(
+    accounts,
+    hasher,
+    resetTokens,
+    sessions,
+    permissions,
+    emailSender,
+    config.APP_URL,
+    passwordResetTtlMs,
+  );
+  const companyService = new CompanyService(accounts, companies, permissions);
 
   const search =
     options.searchIndex ?? new PagefindSearchIndex(path.resolve(config.SEARCH_INDEX_PATH));
   const storage = options.storage ?? createS3ObjectStorage(config);
 
-  const projectService = new ProjectService(projects, permissions);
+  const projectService = new ProjectService(projects, permissions, accounts);
   const pageService = new PageService(pages, projects, permissions);
+  const grantService = new GrantService(accounts, projects, permissions);
   const trackingService = new TrackingService(
     properties,
     modules,
@@ -223,6 +255,10 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
     trackingService,
     auth,
     sessions: sessionService,
+    serviceTokens: serviceTokenService,
+    lifecycle,
+    companyService,
+    grantService,
     cookieName: SESSION_COOKIE_NAME,
     sessionTtlMs,
   });

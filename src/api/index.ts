@@ -5,6 +5,18 @@
 export { registerAuthRoutes } from './auth/routes';
 export type { AuthRoutesOptions } from './auth/routes';
 
+export { registerAccessRoutes } from './access/routes';
+export type { AccessRoutesOptions } from './access/routes';
+
+export { registerCompanyRoutes } from './company/routes';
+export type { CompanyRoutesOptions } from './company/routes';
+
+export { registerLifecycleRoutes } from './lifecycle/routes';
+export type { LifecycleRoutesOptions } from './lifecycle/routes';
+
+export { registerTokenRoutes } from './tokens/routes';
+export type { TokenRoutesOptions } from './tokens/routes';
+
 export { registerProjectRoutes } from './projects/routes';
 export type { ProjectRoutesOptions } from './projects/routes';
 
@@ -30,3 +42,4 @@ export {
 export type { Composition, CompositionOptions, ReadyStatus, ServedRoute } from './composition-root';
 
 export { authenticateRequest, replyServiceError, unauthenticated } from './helpers';
+export type { ActorKind, AuthenticatedActor } from './helpers';

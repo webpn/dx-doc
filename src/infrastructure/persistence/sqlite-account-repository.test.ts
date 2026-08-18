@@ -220,9 +220,7 @@ describe('SqliteAccountRepository (against the real schema)', () => {
     expect(forUser).toHaveLength(1);
     expect(forUser[0]).toMatchObject({ roleName: 'viewer', userId: 'u-new' });
 
-    const forProject = await repo.listGrantsForProject(
-      'p0000000-0000-0000-0000-000000000001',
-    );
+    const forProject = await repo.listGrantsForProject('p0000000-0000-0000-0000-000000000001');
     expect(forProject).toHaveLength(1);
 
     const lookup = await repo.getGrantForProjectAndUser(

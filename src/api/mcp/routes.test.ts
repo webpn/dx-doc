@@ -5,6 +5,7 @@ import path from 'node:path';
 import cookie from '@fastify/cookie';
 import { AuthService } from '@project/application/auth/auth-service';
 import { PermissionService } from '@project/application/auth/permissions';
+import { ServiceTokenService } from '@project/application/auth/service-token-service';
 import { SessionService } from '@project/application/auth/session-service';
 import { PageService } from '@project/application/page/page-service';
 import { ProjectService } from '@project/application/project/project-service';
@@ -17,6 +18,7 @@ import {
 } from '@project/infrastructure/persistence/sqlite-kysely';
 import { SqlitePageRepository } from '@project/infrastructure/persistence/sqlite-page-repository';
 import { SqliteProjectRepository } from '@project/infrastructure/persistence/sqlite-project-repository';
+import { SqliteServiceTokenRepository } from '@project/infrastructure/persistence/sqlite-service-token-repository';
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
 import {
   SqliteDestinationRepository,
@@ -135,6 +137,10 @@ describe('MCP Server (M1.3, REQ-API-003, REQ-API-004, REQ-API-006, D37, D38)', (
     const accounts = new SqliteAccountRepository(connection.kysely);
     const sessionRepo = new SqliteSessionRepository(connection.kysely);
     sessions = new SessionService(sessionRepo, TTL_MS);
+    const serviceTokens = new ServiceTokenService(
+      new SqliteServiceTokenRepository(connection.kysely),
+      accounts,
+    );
     auth = new AuthService(accounts, hasher, sessions);
     const permissions = new PermissionService(accounts);
 
@@ -153,7 +159,7 @@ describe('MCP Server (M1.3, REQ-API-003, REQ-API-004, REQ-API-006, D37, D38)', (
     const sharedPasswordRepo = new SqliteSharedPasswordRepository(connection.kysely);
     const auditLogRepo = new SqliteAuditLogRepository(connection.kysely);
 
-    const projectService = new ProjectService(projectRepo, permissions);
+    const projectService = new ProjectService(projectRepo, permissions, accounts);
     const pageService = new PageService(pageRepo, projectRepo, permissions);
     const trackingService = new TrackingService(
       propRepo,
@@ -189,6 +195,7 @@ describe('MCP Server (M1.3, REQ-API-003, REQ-API-004, REQ-API-006, D37, D38)', (
     registerMcpRoutes(app, {
       mcpHandler,
       sessions,
+      serviceTokens,
       cookieName,
     });
 

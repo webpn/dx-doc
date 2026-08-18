@@ -1,22 +1,44 @@
+import type { ServiceTokenService } from '@project/application/auth/service-token-service';
 import type { SessionService } from '@project/application/auth/session-service';
 import type { ValidationIssue } from '@project/application/validation/issues';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
+/** Who is acting: a human session, or a service-account token (REQ-API-009). */
+export type ActorKind = 'session' | 'service_token';
+
+export interface AuthenticatedActor {
+  userId: string;
+  actorKind: ActorKind;
+}
+
 /**
- * Resolve the authenticated user id from the session cookie or Bearer header (REQ-API-009, D38).
- * Transport concern: the session store decides validity.
+ * Resolve the authenticated actor from the session cookie or Bearer header
+ * (REQ-API-009, D38). Transport concern: the session store and the
+ * service-token store decide validity; a revoked token or a deactivated
+ * owner's token stops resolving within one request.
  */
 export async function authenticateRequest(
   request: FastifyRequest,
   sessions: SessionService,
+  serviceTokens: ServiceTokenService,
   cookieName: string,
-): Promise<string | null> {
-  // 1. Check Bearer token (service-account / script auth, REQ-API-009)
+): Promise<AuthenticatedActor | null> {
+  // 1. Check Bearer token. Service-account tokens first (REQ-API-009); the
+  // legacy fallback — a session cookie token sent as Bearer — keeps working
+  // exactly as it did before M1.12.
   const authHeader = request.headers.authorization;
   if (authHeader?.startsWith('Bearer ')) {
     const bearerToken = authHeader.slice(7).trim();
     if (bearerToken.length > 0) {
-      return sessions.resolve(bearerToken);
+      const serviceUserId = await serviceTokens.resolve(bearerToken);
+      if (serviceUserId !== null) {
+        return { userId: serviceUserId, actorKind: 'service_token' };
+      }
+      const sessionUserId = await sessions.resolve(bearerToken);
+      if (sessionUserId !== null) {
+        return { userId: sessionUserId, actorKind: 'session' };
+      }
+      return null;
     }
   }
 
@@ -26,7 +48,11 @@ export async function authenticateRequest(
   if (token === undefined) {
     return null;
   }
-  return sessions.resolve(token);
+  const userId = await sessions.resolve(token);
+  if (userId === null) {
+    return null;
+  }
+  return { userId, actorKind: 'session' };
 }
 
 export function unauthenticated(reply: FastifyReply): FastifyReply {
@@ -79,6 +105,25 @@ export function replyServiceError(reply: FastifyReply, error: ServiceErrorShape)
           code: 'HIERARCHY_CYCLE',
           message: 'Hierarchy cycle detected in property parent references (REQ-DOM-004)',
         },
+      });
+    case 'invalid_role':
+      return reply.code(400).send({
+        error: {
+          code: 'INVALID_ROLE',
+          message: 'Must be one of the four company roles (admin, project_manager, editor, viewer)',
+        },
+      });
+    case 'invalid_email':
+      return reply.code(400).send({ error: { code: 'INVALID_EMAIL', message: 'Invalid email' } });
+    case 'invalid_input':
+      return reply.code(400).send({ error: { code: 'INVALID_INPUT', message: 'Invalid input' } });
+    case 'invalid_or_expired_token':
+      return reply.code(400).send({
+        error: { code: 'INVALID_OR_EXPIRED_TOKEN', message: 'Reset token is invalid or expired' },
+      });
+    case 'weak_password':
+      return reply.code(400).send({
+        error: { code: 'WEAK_PASSWORD', message: 'New password is too short' },
       });
     default:
       return reply.code(500).send({ error: { code: 'INTERNAL', message: 'Internal error' } });

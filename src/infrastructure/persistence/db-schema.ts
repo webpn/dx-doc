@@ -662,11 +662,7 @@ export interface AuditLogsTable {
   entity_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   details_json: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   created_at: ColumnType<string, string | undefined, string | undefined>;
-  actor_kind: ColumnType<
-    string,
-    string | undefined,
-    string | undefined
-  >;
+  actor_kind: ColumnType<string, string | undefined, string | undefined>;
 }
 
 export interface ApiServiceTokensTable {

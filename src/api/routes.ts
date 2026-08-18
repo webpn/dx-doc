@@ -1,15 +1,23 @@
 import type { AuthService } from '@project/application/auth/auth-service';
+import type { GrantService } from '@project/application/auth/grant-service';
+import type { LifecycleService } from '@project/application/auth/lifecycle-service';
+import type { ServiceTokenService } from '@project/application/auth/service-token-service';
 import type { SessionService } from '@project/application/auth/session-service';
+import type { CompanyService } from '@project/application/company/company-service';
 import type { PageService } from '@project/application/page/page-service';
 import type { ProjectService } from '@project/application/project/project-service';
 import type { TrackingService } from '@project/application/tracking/tracking-service';
 import type { FastifyInstance } from 'fastify';
 
+import { registerAccessRoutes } from './access/routes';
 import { registerAuthRoutes } from './auth/routes';
+import { registerCompanyRoutes } from './company/routes';
+import { registerLifecycleRoutes } from './lifecycle/routes';
 import { registerMcpRoutes } from './mcp/routes';
 import { McpServerHandler } from './mcp/server';
 import { registerPageRoutes } from './pages/routes';
 import { registerProjectRoutes } from './projects/routes';
+import { registerTokenRoutes } from './tokens/routes';
 import { registerTrackingRoutes } from './tracking/routes';
 
 export interface ApiRoutesOptions {
@@ -18,6 +26,10 @@ export interface ApiRoutesOptions {
   trackingService: TrackingService;
   auth: AuthService;
   sessions: SessionService;
+  serviceTokens: ServiceTokenService;
+  lifecycle: LifecycleService;
+  companyService: CompanyService;
+  grantService: GrantService;
   cookieName: string;
   sessionTtlMs: number;
 }
@@ -28,33 +40,53 @@ export interface ApiRoutesOptions {
  * register ALL routes).
  */
 export function registerAllRoutes(app: FastifyInstance, options: ApiRoutesOptions): void {
-  const { projectService, pageService, trackingService, auth, sessions, cookieName, sessionTtlMs } =
-    options;
+  const {
+    projectService,
+    pageService,
+    trackingService,
+    auth,
+    sessions,
+    serviceTokens,
+    lifecycle,
+    companyService,
+    grantService,
+    cookieName,
+    sessionTtlMs,
+  } = options;
 
   registerAuthRoutes(app, { auth, sessions, cookieName, sessionTtlMs });
 
   registerProjectRoutes(app, {
     projects: projectService,
     sessions,
+    serviceTokens,
     cookieName,
   });
 
   registerPageRoutes(app, {
     pages: pageService,
     sessions,
+    serviceTokens,
     cookieName,
   });
 
   registerTrackingRoutes(app, {
     trackingService,
     sessions,
+    serviceTokens,
     cookieName,
   });
+
+  registerAccessRoutes(app, { grants: grantService, sessions, serviceTokens, cookieName });
+  registerLifecycleRoutes(app, { lifecycle, sessions, serviceTokens, cookieName });
+  registerCompanyRoutes(app, { companies: companyService, sessions, serviceTokens, cookieName });
+  registerTokenRoutes(app, { tokens: serviceTokens, sessions, serviceTokens, cookieName });
 
   const mcpHandler = new McpServerHandler(projectService, pageService, trackingService);
   registerMcpRoutes(app, {
     mcpHandler,
     sessions,
+    serviceTokens,
     cookieName,
   });
 }
