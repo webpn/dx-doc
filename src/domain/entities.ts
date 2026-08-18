@@ -234,4 +234,9 @@ export interface AuditLogEntry {
   entityId: string | null;
   details?: Record<string, unknown> | null;
   createdAt: string;
+  /**
+   * Distinguishes a human-session actor from a service-token actor
+   * (REQ-API-009). Defaults to 'session' when absent.
+   */
+  actorKind?: 'session' | 'service_token';
 }

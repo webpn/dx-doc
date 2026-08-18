@@ -62,6 +62,7 @@ export interface Database {
   versions: VersionsTable;
   project_shared_passwords: ProjectSharedPasswordsTable;
   audit_logs: AuditLogsTable;
+  api_service_tokens: ApiServiceTokensTable;
 }
 
 /**
@@ -289,6 +290,16 @@ export const SCHEMA_DEFINITIONS: DatabaseSchemaDefinition = {
     'entity_id',
     'details_json',
     'created_at',
+    'actor_kind',
+  ],
+  api_service_tokens: [
+    'id',
+    'user_id',
+    'name',
+    'token_hash',
+    'created_at',
+    'expires_at',
+    'revoked_at',
   ],
 };
 
@@ -651,6 +662,21 @@ export interface AuditLogsTable {
   entity_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   details_json: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   created_at: ColumnType<string, string | undefined, string | undefined>;
+  actor_kind: ColumnType<
+    string,
+    string | undefined,
+    string | undefined
+  >;
+}
+
+export interface ApiServiceTokensTable {
+  id: string;
+  user_id: string;
+  name: string;
+  token_hash: string;
+  created_at: string;
+  expires_at: string;
+  revoked_at: ColumnType<string | null, string | null | undefined, string | null | undefined>;
 }
 
 export type { Generated };

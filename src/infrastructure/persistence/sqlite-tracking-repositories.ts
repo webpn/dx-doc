@@ -1513,6 +1513,7 @@ export class SqliteAuditLogRepository implements AuditLogRepository {
         company_id: entry.companyId,
         project_id: entry.projectId,
         actor_id: entry.actorId,
+        actor_kind: entry.actorKind ?? 'session',
         action: entry.action,
         entity_type: entry.entityType,
         entity_id: entry.entityId,
@@ -1549,6 +1550,7 @@ export class SqliteAuditLogRepository implements AuditLogRepository {
     company_id: string;
     project_id: string | null;
     actor_id: string;
+    actor_kind: string | null;
     action: string;
     entity_type: string;
     entity_id: string | null;
@@ -1565,6 +1567,7 @@ export class SqliteAuditLogRepository implements AuditLogRepository {
       entityId: row.entity_id,
       details: row.details_json ? (JSON.parse(row.details_json) as Record<string, unknown>) : null,
       createdAt: row.created_at,
+      actorKind: row.actor_kind === 'service_token' ? 'service_token' : 'session',
     };
   }
 }
