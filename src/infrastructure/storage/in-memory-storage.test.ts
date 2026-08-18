@@ -41,4 +41,10 @@ describe('InMemoryObjectStorage', () => {
 
     await expect(storage.copy('assets/missing.png', 'assets/b.png')).rejects.toThrow(/not found/);
   });
+
+  it('reports healthy (readiness probe resolves)', async () => {
+    const storage = new InMemoryObjectStorage();
+
+    await expect(storage.checkHealth()).resolves.toBeUndefined();
+  });
 });

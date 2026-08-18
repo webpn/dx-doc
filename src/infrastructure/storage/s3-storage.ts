@@ -2,6 +2,7 @@ import {
   CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadBucketCommand,
   PutObjectCommand,
   S3Client,
   S3ServiceException,
@@ -75,6 +76,11 @@ export class S3ObjectStorage implements ObjectStorage {
         CopySource: `${this.bucket}/${sourceKey}`,
       }),
     );
+  }
+
+  /** Probe reachability (REQ-FDN-024). HeadBucket resolves when the bucket is reachable. */
+  async checkHealth(): Promise<void> {
+    await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));
   }
 }
 

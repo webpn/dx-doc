@@ -25,12 +25,15 @@ export function registerAuthRoutes(app: FastifyInstance, options: AuthRoutesOpti
     const body = (request.body ?? {}) as LoginBody;
     const email = typeof body.email === 'string' ? body.email : '';
     const password = typeof body.password === 'string' ? body.password : '';
-    const companyId = typeof body.companyId === 'string' ? body.companyId : '';
+    // An absent or empty companyId means the company-less instance
+    // administrator (REQ-SEC-013/014): resolved against `company_id IS NULL`.
+    const companyId =
+      typeof body.companyId === 'string' && body.companyId.trim() !== '' ? body.companyId : null;
 
-    if (email === '' || password === '' || companyId === '') {
-      return reply.code(400).send({
-        error: { code: 'INVALID_INPUT', message: 'email, password and companyId are required' },
-      });
+    if (email === '' || password === '') {
+      return reply
+        .code(400)
+        .send({ error: { code: 'INVALID_INPUT', message: 'email and password are required' } });
     }
 
     const result = await options.auth.login(companyId, email, password);

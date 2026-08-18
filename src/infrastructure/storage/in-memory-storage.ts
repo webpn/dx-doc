@@ -33,4 +33,8 @@ export class InMemoryObjectStorage implements ObjectStorage {
     this.objects.set(destinationKey, Buffer.from(body));
     return Promise.resolve();
   }
+
+  checkHealth(): Promise<void> {
+    return Promise.resolve();
+  }
 }

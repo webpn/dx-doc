@@ -18,4 +18,9 @@ export interface ObjectStorage {
   delete(key: string): Promise<void>;
   /** Copy `sourceKey` to `destinationKey`; throws when the source is absent. */
   copy(sourceKey: string, destinationKey: string): Promise<void>;
+  /**
+   * Probe reachability (REQ-FDN-024 readiness). Returns without throwing when
+   * the storage backend is reachable; throws on unreachable/unavailable.
+   */
+  checkHealth(): Promise<void>;
 }

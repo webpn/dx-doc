@@ -21,4 +21,12 @@ export { McpServerHandler, MCP_TOOLS } from './mcp/server';
 export { registerAllRoutes } from './routes';
 export type { ApiRoutesOptions } from './routes';
 
+export {
+  assembleComposition,
+  checkStartup,
+  SESSION_COOKIE_NAME,
+  StartupError,
+} from './composition-root';
+export type { Composition, CompositionOptions, ReadyStatus, ServedRoute } from './composition-root';
+
 export { authenticateRequest, replyServiceError, unauthenticated } from './helpers';

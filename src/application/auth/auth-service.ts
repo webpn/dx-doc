@@ -34,7 +34,13 @@ export class AuthService {
     private readonly now: () => Date = () => new Date(),
   ) {}
 
-  async login(companyId: string, email: string, password: string): Promise<LoginResult> {
+  /**
+   * Log in with email + password (REQ-SEC-001, D18). A company-less
+   * administrator authenticates with `companyId` null (REQ-SEC-013/014); this
+   * is what the first-run bootstrap account needs, because it is created
+   * before any tenant exists.
+   */
+  async login(companyId: string | null, email: string, password: string): Promise<LoginResult> {
     const user = await this.accounts.getUserByEmail(companyId, email.trim().toLowerCase());
     const hashToCheck = user?.passwordHash ?? (await this.dummyHash());
 

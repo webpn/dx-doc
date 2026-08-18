@@ -208,4 +208,49 @@ describe('auth routes (email + password)', () => {
     const reloginBody = relogin.json<{ passwordChangeRequired?: boolean }>();
     expect(reloginBody.passwordChangeRequired).toBe(false);
   });
+
+  it('logs in a company-less administrator without a companyId (REQ-SEC-013)', async () => {
+    // A second connection not needed: seed a company-less instance admin
+    // directly, mirroring what BootstrapService.createUser produces.
+    const hasher = new BcryptPasswordHasher();
+    await connection.kysely
+      .insertInto('users')
+      .values({
+        id: 'admin-null',
+        company_id: null,
+        email: 'root@instance.test',
+        password_hash: await hasher.hash(PASSWORD),
+        role_id: null,
+        instance_admin: 1,
+        password_must_change: 1,
+        created_at: '2026-01-01T00:00:00.000Z',
+        updated_at: '2026-01-01T00:00:00.000Z',
+      })
+      .execute();
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email: 'root@instance.test', password: PASSWORD },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json<{
+      user: { companyId: string | null };
+      passwordChangeRequired?: boolean;
+    }>();
+    expect(body.user.companyId).toBeNull();
+    expect(body.passwordChangeRequired).toBe(true);
+  });
+
+  it('rejects a company-less login for an unknown address without disclosure', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email: 'nobody@instance.test', password: 'whatever' },
+    });
+
+    expect(res.statusCode).toBe(401);
+    expect(res.json<{ error: { code: string } }>().error.code).toBe('INVALID_CREDENTIALS');
+  });
 });

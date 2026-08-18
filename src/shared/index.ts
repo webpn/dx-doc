@@ -3,3 +3,4 @@
 // See ARCHITECTURE.md §Shared.
 
 export * from './result';
+export { parseDurationToMs } from './duration';
