@@ -2,26 +2,29 @@
 
 The two audience views and the channels through which documentation leaves the application. Source: [functional specification](../functional-specification.md) §10, §19.7.
 
-Entry format and status legend: [requirements index](README.md). Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned. REQ-VIEW-003 carries full criteria despite being R2, because every other R2 channel depends on it.
+Entry format and status legend: [requirements index](README.md).
 
-| ID           | Requirement                                    | MoSCoW | Rel. | Milestone | Status      |
-| ------------ | ---------------------------------------------- | ------ | ---- | --------- | ----------- |
-| REQ-VIEW-001 | In-app read-only view                          | Must   | R1   | M1.9      | Implemented |
-| REQ-VIEW-002 | View selector as a presentation filter         | Must   | R2   | M2.5      | Not Started |
-| REQ-VIEW-003 | Profile-aware rendering engine                 | Must   | R2   | M2.5      | Not Started |
-| REQ-VIEW-004 | Per-project static site                        | Should | R2   | M2.6      | Not Started |
-| REQ-VIEW-005 | Git export, one commit per publication         | Should | R2   | M2.6      | Not Started |
-| REQ-VIEW-006 | PDF export of version changes                  | Should | R2   | M2.6      | Not Started |
-| REQ-VIEW-007 | Excel export of data layer properties          | Should | R2   | M2.6      | Not Started |
-| REQ-VIEW-008 | Development-filtered changelog                 | Should | R2   | M2.6      | Not Started |
-| REQ-VIEW-009 | Confluence Cloud publication                   | Should | R3   | M3.2      | Not Started |
-| REQ-VIEW-010 | Dedicated Design view; field-level permissions | Won't  | —    | —         | Rejected    |
+> **Carried forward on 2026-08-18.** A codebase review found that R1 milestones were closed on the strength of unit tests over application services, while the application itself was never assembled and no UI existed. Rows below that moved from `Implemented` to `In Progress` or `Not Started` have a service layer and no reachable entry point, or a defect the closing milestone did not test for; the `Milestone` column shows `original → completing` and the completing milestone is in the [R1 completion chain](../milestones.md#r1-completion--assembly-hardening-and-the-client). **No requirement changed scope, priority or release** — only the record of whether it is done. See the [milestones current position](../milestones.md#current-position).
+> Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned. REQ-VIEW-003 carries full criteria despite being R2, because every other R2 channel depends on it.
+
+| ID           | Requirement                                    | MoSCoW | Rel. | Milestone    | Status      |
+| ------------ | ---------------------------------------------- | ------ | ---- | ------------ | ----------- |
+| REQ-VIEW-001 | In-app read-only view                          | Must   | R1   | M1.9 → M1.17 | Not Started |
+| REQ-VIEW-002 | View selector as a presentation filter         | Must   | R2   | M2.5         | Not Started |
+| REQ-VIEW-003 | Profile-aware rendering engine                 | Must   | R2   | M2.5         | Not Started |
+| REQ-VIEW-004 | Per-project static site                        | Should | R2   | M2.6         | Not Started |
+| REQ-VIEW-005 | Git export, one commit per publication         | Should | R2   | M2.6         | Not Started |
+| REQ-VIEW-006 | PDF export of version changes                  | Should | R2   | M2.6         | Not Started |
+| REQ-VIEW-007 | Excel export of data layer properties          | Should | R2   | M2.6         | Not Started |
+| REQ-VIEW-008 | Development-filtered changelog                 | Should | R2   | M2.6         | Not Started |
+| REQ-VIEW-009 | Confluence Cloud publication                   | Should | R3   | M3.2         | Not Started |
+| REQ-VIEW-010 | Dedicated Design view; field-level permissions | Won't  | —    | —            | Rejected    |
 
 ---
 
 ### REQ-VIEW-001 — In-app read-only view
 
-**Must** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) · spec §10.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §10.4 · **Not Started** · Issue: — · PR: —
 
 Read-only consultation behind email + password or a project shared password (REQ-SEC-005). (SSO login is R2 — REQ-SEC-004.)
 
@@ -29,6 +32,8 @@ Read-only consultation behind email + password or a project shared password (REQ
 
 - A Viewer cannot reach a write path through any entry point, including MCP.
 - Shared-password readers see published content only, never the draft.
+
+> **Found not implemented on 2026-08-18.** There is no client, so there is no read-only view. The shared-password mechanism it would sit on returns a boolean and issues no session ([REQ-SEC-005](REQ-SEC.md#req-sec-005--project-shared-password-access-with-expiry)), so both halves are missing. The reader session is built at [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) and the view at [M1.17](../milestones.md#m117--consultation-search-and-publication-ui).
 
 ### REQ-VIEW-002 — View selector as a presentation filter
 

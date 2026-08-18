@@ -2,32 +2,39 @@
 
 Platform, persistence, abstractions, configuration and distribution. Source: [functional specification](../functional-specification.md) §16, §18, §19.1.
 
-Entry format and status legend: [requirements index](README.md). Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
+Entry format and status legend: [requirements index](README.md).
 
-| ID          | Requirement                                           | MoSCoW | Rel.    | Milestone | Status      |
-| ----------- | ----------------------------------------------------- | ------ | ------- | --------- | ----------- |
-| REQ-FDN-001 | Layered architecture with enforced boundaries         | Must   | R0      | M0.1      | Implemented |
-| REQ-FDN-002 | Multi-company tenancy on a single instance            | Must   | R0      | M0.2      | Implemented |
-| REQ-FDN-003 | Projects with flat grouping labels                    | Must   | R0      | M0.2      | Implemented |
-| REQ-FDN-004 | Immutable internal identifiers                        | Must   | R0      | M0.2      | Implemented |
-| REQ-FDN-005 | Persistence behind repository ports; SQLite default   | Must   | R0      | M0.2      | Implemented |
-| REQ-FDN-006 | S3-compatible object storage behind an interface      | Must   | R0      | M0.3      | Implemented |
-| REQ-FDN-007 | Search behind a port; Pagefind is the default adapter | Must   | R0      | M0.3      | Implemented |
-| REQ-FDN-008 | Search scoping enforced server-side                   | Must   | R0      | M0.3      | Implemented |
-| REQ-FDN-009 | Versioned, idempotent, forward-only migrations        | Must   | R0      | M0.2      | Implemented |
-| REQ-FDN-010 | Server-side validation shared by UI, API and MCP      | Must   | R0      | M0.5      | Implemented |
-| REQ-FDN-011 | Public MIT repository with README                     | Must   | R0      | M0.6      | Implemented |
-| REQ-FDN-012 | Reference deployment stack and CI                     | Must   | R0      | M0.6      | Implemented |
-| REQ-FDN-013 | Two-level configuration, environment and company      | Must   | R0      | M0.3      | Implemented |
-| REQ-FDN-014 | Error-tracking integration                            | Should | R1      | M1.9      | Implemented |
-| REQ-FDN-015 | Per-company branding                                  | Should | R2      | M2.8      | Not Started |
-| REQ-FDN-016 | Self-hostable search adapter                          | Won't  | —       | —         | Rejected    |
-| REQ-FDN-017 | Kubernetes/Helm packaging                             | Could  | Backlog | —         | Not Started |
-| REQ-FDN-018 | MariaDB adapter                                       | Should | R2      | M2.8      | Not Started |
-| REQ-FDN-019 | PostgreSQL adapter                                    | Should | R2      | M2.8      | Not Started |
-| REQ-FDN-020 | Schema constrained to a portable SQL subset           | Must   | R0      | M0.2      | Implemented |
-| REQ-FDN-021 | Third-party data-flow statement                       | Must   | R0      | M0.6      | Implemented |
-| REQ-FDN-022 | Hosted search adapter                                 | Could  | R3      | —         | Not Started |
+> **Carried forward on 2026-08-18.** A codebase review found that R1 milestones were closed on the strength of unit tests over application services, while the application itself was never assembled and no UI existed. Rows below that moved from `Implemented` to `In Progress` or `Not Started` have a service layer and no reachable entry point, or a defect the closing milestone did not test for; the `Milestone` column shows `original → completing` and the completing milestone is in the [R1 completion chain](../milestones.md#r1-completion--assembly-hardening-and-the-client). **No requirement changed scope, priority or release** — only the record of whether it is done. See the [milestones current position](../milestones.md#current-position).
+> Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
+
+| ID          | Requirement                                           | MoSCoW | Rel.    | Milestone    | Status      |
+| ----------- | ----------------------------------------------------- | ------ | ------- | ------------ | ----------- |
+| REQ-FDN-001 | Layered architecture with enforced boundaries         | Must   | R0      | M0.1         | Implemented |
+| REQ-FDN-002 | Multi-company tenancy on a single instance            | Must   | R0      | M0.2 → M1.13 | In Progress |
+| REQ-FDN-003 | Projects with flat grouping labels                    | Must   | R0      | M0.2         | Implemented |
+| REQ-FDN-004 | Immutable internal identifiers                        | Must   | R0      | M0.2         | Implemented |
+| REQ-FDN-005 | Persistence behind repository ports; SQLite default   | Must   | R0      | M0.2         | Implemented |
+| REQ-FDN-006 | S3-compatible object storage behind an interface      | Must   | R0      | M0.3         | Implemented |
+| REQ-FDN-007 | Search behind a port; Pagefind is the default adapter | Must   | R0      | M0.3         | Implemented |
+| REQ-FDN-008 | Search scoping enforced server-side                   | Must   | R0      | M0.3         | Implemented |
+| REQ-FDN-009 | Versioned, idempotent, forward-only migrations        | Must   | R0      | M0.2         | Implemented |
+| REQ-FDN-010 | Server-side validation shared by UI, API and MCP      | Must   | R0      | M0.5         | Implemented |
+| REQ-FDN-011 | Public MIT repository with README                     | Must   | R0      | M0.6         | Implemented |
+| REQ-FDN-012 | Reference deployment stack and CI                     | Must   | R0      | M0.6         | Implemented |
+| REQ-FDN-013 | Two-level configuration, environment and company      | Must   | R0      | M0.3         | Implemented |
+| REQ-FDN-014 | Error-tracking integration                            | Should | R1      | M1.9 → M1.11 | In Progress |
+| REQ-FDN-015 | Per-company branding                                  | Should | R2      | M2.8         | Not Started |
+| REQ-FDN-016 | Self-hostable search adapter                          | Won't  | —       | —            | Rejected    |
+| REQ-FDN-017 | Kubernetes/Helm packaging                             | Could  | Backlog | —            | Not Started |
+| REQ-FDN-018 | MariaDB adapter                                       | Should | R2      | M2.8         | Not Started |
+| REQ-FDN-019 | PostgreSQL adapter                                    | Should | R2      | M2.8         | Not Started |
+| REQ-FDN-020 | Schema constrained to a portable SQL subset           | Must   | R0      | M0.2         | Implemented |
+| REQ-FDN-021 | Third-party data-flow statement                       | Must   | R0      | M0.6         | Implemented |
+| REQ-FDN-022 | Hosted search adapter                                 | Could  | R3      | —            | Not Started |
+| REQ-FDN-023 | Runtime assembly: every route served by the process   | Must   | R1      | M1.11        | Not Started |
+| REQ-FDN-024 | Startup self-check and readiness endpoint             | Must   | R1      | M1.11        | Not Started |
+| REQ-FDN-025 | Transactional write boundaries                        | Must   | R1      | M1.14        | Not Started |
+| REQ-FDN-026 | Web client shell built on the design system           | Must   | R1      | M1.15        | Not Started |
 
 ---
 
@@ -45,7 +52,7 @@ The six layers described in [ARCHITECTURE.md](../../../ARCHITECTURE.md) — doma
 
 ### REQ-FDN-002 — Multi-company tenancy on a single instance
 
-**Must** · R0 · [M0.2](../milestones.md#m02--persistence-foundation) · spec §6.2, §16.1 · [ADR-0002](../../adr/0002-multi-company-tenancy.md) · **Implemented** · Issue: — · PR: —
+**Must** · R0 · [M0.2](../milestones.md#m02--persistence-foundation) → [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · spec §6.2, §16.1 · [ADR-0002](../../adr/0002-multi-company-tenancy.md) · **In Progress** · Issue: — · PR: —
 
 One deployed instance hosts multiple Companies. A Company is the tenant boundary and owns its users, shared catalogue, branding and SMTP configuration.
 
@@ -54,6 +61,8 @@ One deployed instance hosts multiple Companies. A Company is the tenant boundary
 - Every tenant-scoped table carries `company_id`, directly or through an unambiguous parent chain to a Project.
 - No query path can return rows from a company other than the caller's; this is enforced in the persistence layer, not in individual services.
 - A test creates two companies with identically named projects and properties and demonstrates full isolation.
+
+> **Carried forward on 2026-08-18.** The schema carries the tenancy boundary correctly — every table reaches a `company_id` directly or through its project. The application does not enforce it on read: ten catalogue read paths take the company id from the request URL without checking the caller belongs to it, so cross-company reads succeed against a correctly modelled schema. Tenancy is a runtime property, not only a schema property; [REQ-SEC-016](REQ-SEC.md#req-sec-016--deny-by-default-authorisation-on-every-entry-point) at [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) restores it.
 
 ### REQ-FDN-003 — Projects with flat grouping labels
 
@@ -224,7 +233,7 @@ Infrastructure and credentials come from environment variables at instance level
 
 ### REQ-FDN-014 — Error-tracking integration
 
-**Should** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) · spec §15.5 · **Not Started** · Issue: — · PR: —
+**Should** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) → [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) · spec §15.5 · **In Progress** · Issue: — · PR: —
 
 Errors are reported to a configurable error-tracking service (`SENTRY_DSN`). Basic parameters sufficient for troubleshooting; no product analytics is collected on the Platform itself.
 
@@ -233,6 +242,8 @@ Errors are reported to a configurable error-tracking service (`SENTRY_DSN`). Bas
 - An unhandled server error produces a report with enough context to locate it.
 - The integration is optional: with no DSN configured, the application runs normally.
 - No documentation content and no personal data is included in reports.
+
+> **Found not implemented on 2026-08-18.** `SENTRY_DSN` is defined in the configuration loader, documented in the README table and present in `.env.example`. No code reads it and no error-tracking client is installed. Wired at [M1.11](../milestones.md#m111--runtime-assembly-and-first-run), where the composition root is the natural place for it.
 
 ### REQ-FDN-015 — Per-company branding
 
@@ -295,3 +306,66 @@ This is where the fuzzy-matching capability withdrawn from REQ-AUTH-007 returns.
 Selecting it changes what leaves the instance, so it changes REQ-FDN-021's statement, and it reintroduces the scoped-key obligation in REQ-FDN-008.
 
 > Replaces the previous arrangement, in which the hosted service was the default and the self-hostable adapter was the deferred `Could` (REQ-FDN-016). The two swapped places: the default is now the one with no external dependency, and the hosted option is the one an organisation opts into.
+
+### REQ-FDN-023 — Runtime assembly: every route served by the process
+
+**Must** · R1 · [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) · [ADR-0022](../../adr/0022-application-framework.md) · **Not Started** · Issue: — · PR: —
+
+The application process constructs its dependency graph once, at startup, and serves every route the API layer defines. A **composition root** — one module, called from the server entry point — opens the database connection, builds each repository over it, builds each application service over those, and passes them to the route registration functions. Nothing else constructs a repository or a service.
+
+This requirement exists because its absence was not detected for ten milestones. `registerAllRoutes` was written, exported, tested through per-test Fastify instances, and never called by the running server; `registerAuthRoutes` was never added to it. The application served a health check while the requirement files recorded a complete REST and MCP surface. The defect is not the missing call — it is that no test could observe it, because every test built its own application.
+
+**Acceptance**
+
+- A test starts the **real** application — the same `buildApp` the entry point uses, with the same wiring — and asserts that the set of served routes equals the set of routes the API layer defines. A handler that exists in source and is not registered fails the build.
+- At least one integration test per entry point (REST, MCP) runs against that real application rather than a locally assembled instance. Per-test assembly stays permitted for unit-level route tests; it may not be the only form of coverage for any entry point.
+- The composition root is the only place outside tests that names a concrete adapter. A repository constructed anywhere else fails review.
+- Nothing in the wiring path is duplicated between the server entry point and the test support code: the tests call the same function.
+
+> The general rule this encodes: **a test suite that assembles its own subject cannot tell you the subject is never assembled.** Wherever the application has a single composition point, one test must exercise that point rather than reproduce it.
+
+### REQ-FDN-024 — Startup self-check and readiness endpoint
+
+**Must** · R1 · [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) · **Not Started** · Issue: — · PR: —
+
+Startup performs, in order: configuration validation (REQ-FDN-013, already implemented), database reachability, schema-version check, and the first-run bootstrap (REQ-SEC-013). Any of them failing stops the process with a message naming the remedy, rather than starting an instance that answers requests it cannot serve.
+
+Liveness and readiness are separated. `GET /api/health` reports that the process is running — it is what a container runtime restarts on. `GET /api/ready` reports that migrations are applied and the database and object storage are reachable — it is what a load balancer gates traffic on. Neither requires authentication and neither discloses configuration.
+
+**Acceptance**
+
+- Starting against a database with pending migrations fails with a message naming `npm run db:migrate`; the process does not start and then serve 500s.
+- The first-run bootstrap runs as part of startup, not as a separate manual step, and remains subject to REQ-SEC-013's read-once rule — asserted by starting twice against the same database.
+- `/api/ready` returns unhealthy while the database is unreachable and healthy once it is, without a restart.
+- Neither endpoint reveals a version, a path, a driver name or any configuration value.
+
+### REQ-FDN-025 — Transactional write boundaries
+
+**Must** · R1 · [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · [ADR-0020](../../adr/0020-database-portability.md) · **Not Started** · Issue: — · PR: —
+
+Any operation that writes more than one row commits as a unit or not at all. Named explicitly because R1 shipped three multi-row operations with no transaction: publication (a snapshot assembled from six collections), flow-graph replacement (nodes and edges deleted and reinserted), and the batch write endpoint (REQ-IMP-005, hundreds of rows written one at a time, reporting per-item success).
+
+The boundary is the application service, not the repository: a repository method is a statement, a service method is the unit of work. The transaction is passed down, so a service composing three repository calls commits them together.
+
+**Acceptance**
+
+- A batch write that fails on item _n_ leaves the database exactly as it was before item 1, and says so in its response rather than reporting partial success.
+- Publication either produces a complete version with its changelog, or produces nothing — a snapshot without a changelog row is not a reachable state.
+- Flow-graph replacement cannot leave edges referencing deleted nodes, tested by forcing a failure between the two writes.
+- The transaction helper is dialect-portable (REQ-FDN-020): no SQLite-specific transaction handling that the R2 adapters cannot implement.
+
+### REQ-FDN-026 — Web client shell built on the design system
+
+**Must** · R1 · [M1.15](../milestones.md#m115--client-foundation) · [ADR-0008](../../adr/0008-design-system-boundary.md), [ADR-0011](../../adr/0011-ui-library-selection.md), [ADR-0012](../../adr/0012-data-fetching-strategy.md), [ADR-0013](../../adr/0013-state-management.md) · **Not Started** · Issue: — · PR: —
+
+The browser application: an authenticated shell with navigation chrome, company and project context, error and empty states, and the three state categories wired as ARCHITECTURE.md describes them — server state in TanStack Query with project-scoped keys, local state in per-slice Zustand stores, navigation state in the URL.
+
+The design system is populated: shadcn/ui components taken as source and kept close to upstream ([ADR-0011](../../adr/0011-ui-library-selection.md)), with the token set as the single source of every visual value. It is `export {}` today, which is why this needs a requirement rather than being implied by the screens that consume it — every authoring and consultation requirement in R1 depends on it existing first.
+
+**Acceptance**
+
+- A user authenticates in the browser, is forced to change a bootstrap password at first login (REQ-SEC-013), and reaches a project list containing exactly the projects they hold a grant on (REQ-SEC-003).
+- A component imported from a shadcn source path outside `@project/design-system` fails lint — the boundary in [ADR-0008](../../adr/0008-design-system-boundary.md) is enforced, not documented.
+- A query key cannot omit its project scope: switching project cannot serve a cached entity from the previous one, asserted by test.
+- No validation rule is implemented in a component (REQ-FDN-010). A form may mirror a rule for responsiveness; the error the user sees on submit comes from the API.
+- Every divergence from an upstream shadcn component is a reviewable diff with a stated reason, per [ADR-0011](../../adr/0011-ui-library-selection.md).

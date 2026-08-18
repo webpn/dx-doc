@@ -84,6 +84,14 @@ One entry per file. Use this to find _what exists and where_ before opening full
 - [M1.8](product/milestones.md#m18--versioning-and-publication) — Versioning and publication
 - [M1.9](product/milestones.md#m19--access-and-consultation) — Access and consultation
 - [M1.10](product/milestones.md#m110--pilot-cutover) — Pilot cutover
+- [M1.11](product/milestones.md#m111--runtime-assembly-and-first-run) — Runtime assembly and first-run
+- [M1.12](product/milestones.md#m112--access-administration-and-api-surface-completion) — Access administration and API surface completion
+- [M1.13](product/milestones.md#m113--tenancy-and-authorisation-hardening) — Tenancy and authorisation hardening
+- [M1.14](product/milestones.md#m114--write-integrity-audit-and-publication-correctness) — Write integrity, audit and publication correctness
+- [M1.15](product/milestones.md#m115--client-foundation) — Client foundation
+- [M1.16](product/milestones.md#m116--authoring-ui) — Authoring UI
+- [M1.17](product/milestones.md#m117--consultation-search-and-publication-ui) — Consultation, search and publication UI
+- [M1.18](product/milestones.md#m118--r1-acceptance) — R1 acceptance
 - [M2.1](product/milestones.md#m21--structured-expression) — Structured expression
 - [M2.2](product/milestones.md#m22--flows-moved-to-m16-on-2026-08-17) — ~~Flows~~ (moved to M1.6 on 2026-08-17)
 - [M2.3](product/milestones.md#m23--image-annotations) — Image annotations
@@ -215,6 +223,10 @@ One entry per file. Use this to find _what exists and where_ before opening full
 - [REQ-FDN-020](product/requirements/REQ-FDN.md#req-fdn-020--schema-constrained-to-a-portable-sql-subset) — Schema constrained to a portable SQL subset
 - [REQ-FDN-021](product/requirements/REQ-FDN.md#req-fdn-021--third-party-data-flow-statement) — Third-party data-flow statement
 - [REQ-FDN-022](product/requirements/REQ-FDN.md#req-fdn-022--hosted-search-adapter) — Hosted search adapter
+- [REQ-FDN-023](product/requirements/REQ-FDN.md#req-fdn-023--runtime-assembly-every-route-served-by-the-process) — Runtime assembly: every route served by the process
+- [REQ-FDN-024](product/requirements/REQ-FDN.md#req-fdn-024--startup-self-check-and-readiness-endpoint) — Startup self-check and readiness endpoint
+- [REQ-FDN-025](product/requirements/REQ-FDN.md#req-fdn-025--transactional-write-boundaries) — Transactional write boundaries
+- [REQ-FDN-026](product/requirements/REQ-FDN.md#req-fdn-026--web-client-shell-built-on-the-design-system) — Web client shell built on the design system
 
 ## [REQ-IMP](product/requirements/REQ-IMP.md) — Import
 
@@ -256,6 +268,7 @@ One entry per file. Use this to find _what exists and where_ before opening full
 - [REQ-NFR-012](product/requirements/REQ-NFR.md#req-nfr-012--localised-date-and-number-formats) — Localised date and number formats
 - [REQ-NFR-013](product/requirements/REQ-NFR.md#req-nfr-013--wcag-aa-as-a-design-principle-not-a-gate) — WCAG AA as a design principle, not a gate
 - [REQ-NFR-014](product/requirements/REQ-NFR.md#req-nfr-014--observability-sufficient-for-troubleshooting) — Observability sufficient for troubleshooting
+- [REQ-NFR-015](product/requirements/REQ-NFR.md#req-nfr-015--query-path-index-coverage) — Query-path index coverage
 
 ## [REQ-SEC](product/requirements/REQ-SEC.md) — Security, Authentication and Authorisation
 
@@ -274,6 +287,10 @@ One entry per file. Use this to find _what exists and where_ before opening full
 - [REQ-SEC-013](product/requirements/REQ-SEC.md#req-sec-013--account-lifecycle-and-first-run-bootstrap) — Account lifecycle and first-run bootstrap
 - [REQ-SEC-014](product/requirements/REQ-SEC.md#req-sec-014--instance-administration-capability) — Instance-administration capability
 - [REQ-SEC-015](product/requirements/REQ-SEC.md#req-sec-015--instance-administration-portal) — Instance-administration portal
+- [REQ-SEC-016](product/requirements/REQ-SEC.md#req-sec-016--deny-by-default-authorisation-on-every-entry-point) — Deny-by-default authorisation on every entry point
+- [REQ-SEC-017](product/requirements/REQ-SEC.md#req-sec-017--secret-material-never-returned-by-a-read-path) — Secret material never returned by a read path
+- [REQ-SEC-018](product/requirements/REQ-SEC.md#req-sec-018--parent-scope-verified-on-every-scoped-operation) — Parent scope verified on every scoped operation
+- [REQ-SEC-019](product/requirements/REQ-SEC.md#req-sec-019--transport-security-and-authentication-throttling) — Transport security and authentication throttling
 
 ## [REQ-VER](product/requirements/REQ-VER.md) — Versioning and Publication
 

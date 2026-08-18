@@ -2,44 +2,47 @@
 
 Entities, attributes, relationships and composition rules. Source: [functional specification](../functional-specification.md) §6, §19.3, Appendix A.
 
-Entry format and status legend: [requirements index](README.md). Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
+Entry format and status legend: [requirements index](README.md).
 
-| ID          | Requirement                                           | MoSCoW | Rel. | Milestone | Status      |
-| ----------- | ----------------------------------------------------- | ------ | ---- | --------- | ----------- |
-| REQ-DOM-001 | Page/Screen entity                                    | Must   | R1   | M1.1      | Implemented |
-| REQ-DOM-002 | Tracking entity with navigation event and attachment  | Must   | R1   | M1.1      | Implemented |
-| REQ-DOM-003 | Data Layer Property, full attribute set               | Must   | R1   | M1.1      | Implemented |
-| REQ-DOM-004 | `object` property type with parent-child hierarchy    | Must   | R1   | M1.1      | Implemented |
-| REQ-DOM-005 | `business_label` field                                | Must   | R1   | M1.1      | Implemented |
-| REQ-DOM-006 | Module entity, project-scoped, inheritable            | Must   | R1   | M1.1      | Implemented |
-| REQ-DOM-007 | Opt-in propagation of module changes                  | Must   | R1   | M1.1      | Implemented |
-| REQ-DOM-008 | Property removal with automatic module detachment     | Must   | R1   | M1.1      | Implemented |
-| REQ-DOM-009 | Tracking Template, editor-configurable                | Must   | R1   | M1.1      | Implemented |
-| REQ-DOM-010 | Specific Values with plain `[placeholder]` strings    | Must   | R1   | M1.1      | Implemented |
-| REQ-DOM-011 | Prose conditional valorisations                       | Won't  | —    | —         | Rejected    |
-| REQ-DOM-012 | Structured property conditions, four operators + note | Should | R2   | M2.1      | Not Started |
-| REQ-DOM-013 | Conditions targeting nested property paths            | Should | R2   | M2.1      | Not Started |
-| REQ-DOM-014 | Company-defined custom fields                         | Should | R2   | M2.1      | Not Started |
-| REQ-DOM-015 | Unified Destination entity, N:N with properties       | Must   | R1   | M1.1      | Implemented |
-| REQ-DOM-016 | Per-destination name override                         | Must   | R1   | M1.1      | Implemented |
-| REQ-DOM-017 | CDP Audience entity                                   | Should | R2   | M2.7      | Not Started |
-| REQ-DOM-018 | Survey entity                                         | Should | R2   | M2.7      | Not Started |
-| REQ-DOM-019 | Company catalogue, copy-on-project-creation           | Must   | R1   | M1.1      | Implemented |
-| REQ-DOM-020 | Project-scoped impact analysis                        | Should | R2   | M2.7      | Not Started |
-| REQ-DOM-021 | Project pairing and alignment report                  | Could  | R4   | M4.3      | Not Started |
-| REQ-DOM-022 | `derived_from` descriptive dependency field           | Should | R2   | M2.1      | Not Started |
-| REQ-DOM-023 | Non-blocking naming and format warnings               | Should | R2   | M2.1      | Not Started |
-| REQ-DOM-024 | Selective adoption of catalogue module changes        | Should | R2   | M2.7      | Not Started |
-| REQ-DOM-025 | Extension / Segment / Calculated Metric containers    | Should | R3   | M3.5      | Not Started |
-| REQ-DOM-026 | Recurring custom property standardisation hint        | Could  | R3   | M3.5      | Not Started |
-| REQ-DOM-027 | TrackingProperty entity carrying the `presence` enum  | Must   | R1   | M1.1      | Implemented |
-| REQ-DOM-028 | No cross-project references                           | Must   | R1   | M1.1      | Implemented |
+> **Carried forward on 2026-08-18.** A codebase review found that R1 milestones were closed on the strength of unit tests over application services, while the application itself was never assembled and no UI existed. Rows below that moved from `Implemented` to `In Progress` or `Not Started` have a service layer and no reachable entry point, or a defect the closing milestone did not test for; the `Milestone` column shows `original → completing` and the completing milestone is in the [R1 completion chain](../milestones.md#r1-completion--assembly-hardening-and-the-client). **No requirement changed scope, priority or release** — only the record of whether it is done. See the [milestones current position](../milestones.md#current-position).
+> Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
+
+| ID          | Requirement                                           | MoSCoW | Rel. | Milestone    | Status      |
+| ----------- | ----------------------------------------------------- | ------ | ---- | ------------ | ----------- |
+| REQ-DOM-001 | Page/Screen entity                                    | Must   | R1   | M1.1         | Implemented |
+| REQ-DOM-002 | Tracking entity with navigation event and attachment  | Must   | R1   | M1.1         | Implemented |
+| REQ-DOM-003 | Data Layer Property, full attribute set               | Must   | R1   | M1.1         | Implemented |
+| REQ-DOM-004 | `object` property type with parent-child hierarchy    | Must   | R1   | M1.1         | Implemented |
+| REQ-DOM-005 | `business_label` field                                | Must   | R1   | M1.1         | Implemented |
+| REQ-DOM-006 | Module entity, project-scoped, inheritable            | Must   | R1   | M1.1         | Implemented |
+| REQ-DOM-007 | Opt-in propagation of module changes                  | Must   | R1   | M1.1 → M1.16 | In Progress |
+| REQ-DOM-008 | Property removal with automatic module detachment     | Must   | R1   | M1.1         | Implemented |
+| REQ-DOM-009 | Tracking Template, editor-configurable                | Must   | R1   | M1.1 → M1.16 | In Progress |
+| REQ-DOM-010 | Specific Values with plain `[placeholder]` strings    | Must   | R1   | M1.1         | Implemented |
+| REQ-DOM-011 | Prose conditional valorisations                       | Won't  | —    | —            | Rejected    |
+| REQ-DOM-012 | Structured property conditions, four operators + note | Should | R2   | M2.1         | Not Started |
+| REQ-DOM-013 | Conditions targeting nested property paths            | Should | R2   | M2.1         | Not Started |
+| REQ-DOM-014 | Company-defined custom fields                         | Should | R2   | M2.1         | Not Started |
+| REQ-DOM-015 | Unified Destination entity, N:N with properties       | Must   | R1   | M1.1         | Implemented |
+| REQ-DOM-016 | Per-destination name override                         | Must   | R1   | M1.1         | Implemented |
+| REQ-DOM-017 | CDP Audience entity                                   | Should | R2   | M2.7         | Not Started |
+| REQ-DOM-018 | Survey entity                                         | Should | R2   | M2.7         | Not Started |
+| REQ-DOM-019 | Company catalogue, copy-on-project-creation           | Must   | R1   | M1.1 → M1.16 | In Progress |
+| REQ-DOM-020 | Project-scoped impact analysis                        | Should | R2   | M2.7         | Not Started |
+| REQ-DOM-021 | Project pairing and alignment report                  | Could  | R4   | M4.3         | Not Started |
+| REQ-DOM-022 | `derived_from` descriptive dependency field           | Should | R2   | M2.1         | Not Started |
+| REQ-DOM-023 | Non-blocking naming and format warnings               | Should | R2   | M2.1         | Not Started |
+| REQ-DOM-024 | Selective adoption of catalogue module changes        | Should | R2   | M2.7         | Not Started |
+| REQ-DOM-025 | Extension / Segment / Calculated Metric containers    | Should | R3   | M3.5         | Not Started |
+| REQ-DOM-026 | Recurring custom property standardisation hint        | Could  | R3   | M3.5         | Not Started |
+| REQ-DOM-027 | TrackingProperty entity carrying the `presence` enum  | Must   | R1   | M1.1         | Implemented |
+| REQ-DOM-028 | No cross-project references                           | Must   | R1   | M1.1         | Implemented |
 
 ---
 
 ### REQ-DOM-001 — Page/Screen entity
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.1, §8.1 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.1, §8.1 · **Implemented** · Issue: — · PR: —
 
 A page, screen, modal, popup, or page template of the product, organised in a hierarchy. Carries a short behavioural description, optional screenshots, and Figma coordinates (REQ-DEV-001). Where content is CMS-driven, only generic templates are catalogued.
 
@@ -52,7 +55,7 @@ A page, screen, modal, popup, or page template of the product, organised in a hi
 
 ### REQ-DOM-002 — Tracking entity with navigation event and attachment
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.7 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.7 · **Implemented** · Issue: — · PR: —
 
 A single tracked event. Attaches either to a specific Page or to a page template. Carries name, navigation event (screen view / popup view / element click / form submission / user error, extensible), applied modules, resulting property set (a set of TrackingProperty records, REQ-DOM-027), specific values, rich-text description, and associated flow edges.
 
@@ -64,7 +67,7 @@ A single tracked event. Attaches either to a specific Page or to a page template
 
 ### REQ-DOM-003 — Data Layer Property, full attribute set
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.4 · **Implemented** · Issue: — · PR: —
 
 The central entity. Attributes: `id`, `name`, `business_label`, `description`, `data_source` (`development` / `tag_manager` / `other`), `type`, `format_pattern`, `allowed_values`, `example_values`, `pii_flag`, `hashing_policy`, `status`, `introduced_in_version`, `analysis_notes`, `aep_field_group`, `parent_property`, `derived_from`, `destinations`.
 
@@ -78,7 +81,7 @@ The central entity. Attributes: `id`, `name`, `business_label`, `description`, `
 
 ### REQ-DOM-004 — `object` property type with parent-child hierarchy
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.4 · **Implemented** · Issue: — · PR: —
 
 A property of type `object` has child properties, addressed by path (`product.characteristics.colour`). Children are ordinary properties with `parent_property` set, inheriting every other attribute behaviour.
 
@@ -93,7 +96,7 @@ A property of type `object` has child properties, addressed by path (`product.ch
 
 ### REQ-DOM-005 — `business_label` field
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.4, §14.2 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.4, §14.2 · **Implemented** · Issue: — · PR: —
 
 A human-readable label alongside the technical name, reserved for the future business glossary. Ships in R1 even though nothing consumes it.
 
@@ -106,7 +109,7 @@ A human-readable label alongside the technical name, reserved for the future bus
 
 ### REQ-DOM-006 — Module entity, project-scoped, inheritable
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.5 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.5 · **Implemented** · Issue: — · PR: —
 
 A named, project-scoped bundle of Data Layer Properties used to add properties to a tracking in bulk. Modules contain properties only and are **not nestable**. They may be inherited from the company catalogue at project creation.
 
@@ -117,7 +120,7 @@ A named, project-scoped bundle of Data Layer Properties used to add properties t
 
 ### REQ-DOM-007 — Opt-in propagation of module changes
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.5 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) → [M1.16](../milestones.md#m116--authoring-ui) · spec §6.5 · **In Progress** · Issue: — · PR: —
 
 When a module's property set changes, the editor is asked — at save time or later on demand — whether to propagate to existing trackings using it. **The default is no propagation.**
 
@@ -129,9 +132,11 @@ When a module's property set changes, the editor is asked — at save time or la
 
 > Named as a demotion candidate if R1 overruns — see [milestones](../milestones.md#risk-mitigations-owned-by-milestones).
 
+> **Carried forward on 2026-08-18.** The default holds — a module edit does not reach existing trackings — but only because no propagation path exists at all: `updateModule` rewrites the module's property set and never touches a tracking. "Opt-in propagation" needs the opt-in half, and the preview of what it will affect, both of which are built at [M1.16](../milestones.md#m116--authoring-ui). Until then the correct reading of this requirement's status is _the safe default is implemented, the feature is not_.
+
 ### REQ-DOM-008 — Property removal with automatic module detachment
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.7 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.7 · **Implemented** · Issue: — · PR: —
 
 Any property may be removed from a tracking individually, whether it arrived via a module or was added directly. If **all** of a module's properties are removed, the module association is removed automatically, with a warning.
 
@@ -143,7 +148,7 @@ Any property may be removed from a tracking individually, whether it arrived via
 
 ### REQ-DOM-009 — Tracking Template, editor-configurable
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.6 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) → [M1.16](../milestones.md#m116--authoring-ui) · spec §6.6 · **In Progress** · Issue: — · PR: —
 
 A blueprint for new trackings: preselected modules, preconfigured custom properties, default specific values, prefilled description sections. Project-scoped, optionally inherited from the catalogue.
 
@@ -154,9 +159,11 @@ A blueprint for new trackings: preselected modules, preconfigured custom propert
 - Templates exist only for Trackings; no template mechanism exists for pages or flows.
 - The current _Page View_ and _Action_ templates are expressible as instances of this mechanism, with no hard-coded behaviour remaining.
 
+> **Carried forward on 2026-08-18.** The entity persists, including a `config_json` column — which nothing reads. There is no mechanism that pre-seeds a new tracking from a template, no default specific values, and no editor for the template, so the two things the requirement is actually about (configurable by an editor, with no software release) are absent. Built at [M1.16](../milestones.md#m116--authoring-ui). This is why it remains a demotion candidate: the entity is cheap, the mechanism is not.
+
 ### REQ-DOM-010 — Specific Values with plain `[placeholder]` strings
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.8 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.8 · **Implemented** · Issue: — · PR: —
 
 The concrete value a property must take within a given tracking. Attaches to a TrackingProperty (REQ-DOM-027) and is optional on it. Values may contain placeholders written as plain text in square brackets (`article_detail_[slug]`).
 
@@ -208,7 +215,7 @@ The "how to read this in the analytics platform" guidance is captured as a **sin
 
 ### REQ-DOM-015 — Unified Destination entity, N:N with properties
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.9 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.9 · **Implemented** · Issue: — · PR: —
 
 A single entity replaces the separate analytics-variable and analytics-event tables. Attributes: platform, variable type, identifier, name, reconciliation identifier, plus platform-specific attributes (Adobe eVar/prop/event; CJA XDM path and field group; GA4 custom dimension and scope; PostHog identifier). A per-destination note records downstream processing.
 
@@ -220,7 +227,7 @@ A single entity replaces the separate analytics-variable and analytics-event tab
 
 ### REQ-DOM-016 — Per-destination name override
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.9 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.9 · **Implemented** · Issue: — · PR: —
 
 The property↔destination relationship carries `destination_name_override`: the same property is frequently named one way as an Adobe eVar and another as a GA4 custom dimension.
 
@@ -257,7 +264,7 @@ The property↔destination relationship carries `destination_name_override`: the
 
 ### REQ-DOM-019 — Company catalogue, copy-on-project-creation
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.3 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) → [M1.16](../milestones.md#m116--authoring-ui) · spec §6.3 · **In Progress** · Issue: — · PR: —
 
 The company catalogue holds standard properties, modules, templates and free-page templates. At project creation the selected items are **copied** into the project. There is no live link.
 
@@ -271,6 +278,8 @@ The company catalogue holds standard properties, modules, templates and free-pag
 > Accepted consequence: the catalogue drifts from project reality over time. Conscious trade-off for project autonomy. The mitigation (REQ-DOM-026) is optional and deferred.
 >
 > **Name matching is the deliberate choice, and it has a stated cost.** Renaming a module on either side breaks the correspondence, and two items that coincidentally share a name are treated as the same item. That is acceptable because every feature built on the match is advisory and human-confirmed — REQ-DOM-024 proposes, an editor accepts. The alternative, a stored `catalogue_source_id`, buys precision at the cost of a link the model has otherwise gone to some trouble not to have.
+
+> **Carried forward on 2026-08-18.** `copyCatalogueToProject` is implemented and correct — an independent copy, no provenance link, matching the requirement. It is not copy-**on-project-creation**: nothing invokes it when a project is created, and until [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion) it had no route either. Wired into project creation and given its selection UI at [M1.16](../milestones.md#m116--authoring-ui).
 
 ### REQ-DOM-020 — Project-scoped impact analysis
 
@@ -326,7 +335,7 @@ A report highlighting custom properties recurring across many projects as candid
 
 ### REQ-DOM-027 — TrackingProperty entity carrying the `presence` enum
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.4 · **Implemented** · Issue: — · PR: —
 
 **TrackingProperty** is the record of one Data Layer Property being used by one Tracking. It is a first-class entity, not an implicit link: it carries `tracking`, `property`, `source` (`module` / `direct`, per REQ-DOM-008) and `presence`.
 
@@ -347,7 +356,7 @@ The entity is what the Tracking's "resulting property set" (REQ-DOM-002) is made
 
 ### REQ-DOM-028 — No cross-project references
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.2, §6.13 · [ADR-0010](../../adr/0010-project-scoped-isolation.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.2, §6.13 · [ADR-0010](../../adr/0010-project-scoped-isolation.md) · **Implemented** · Issue: — · PR: —
 
 An entity may only reference entities belonging to its own project. Properties are fully isolated: the `page_name` of a web project and of the corresponding app project are unrelated objects.
 

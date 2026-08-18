@@ -4,29 +4,35 @@ Identity, roles, grants, audit and data sensitivity. Source: [functional specifi
 
 Entry format and status legend: [requirements index](README.md).
 
-| ID          | Requirement                                       | MoSCoW | Rel. | Milestone | Status      |
-| ----------- | ------------------------------------------------- | ------ | ---- | --------- | ----------- |
-| REQ-SEC-001 | Email + password login                            | Must   | R0   | M0.4      | Implemented |
-| REQ-SEC-002 | Four company-scoped roles                         | Must   | R0   | M0.4      | Implemented |
-| REQ-SEC-003 | Per-project access grants                         | Must   | R0   | M0.4      | Implemented |
-| REQ-SEC-004 | OIDC SSO                                          | Should | R2   | M2.8      | Not Started |
-| REQ-SEC-005 | Project shared-password access with expiry        | Must   | R1   | M1.9      | Implemented |
-| REQ-SEC-006 | Append-only audit log, 24-month retention         | Must   | R1   | M1.9      | Implemented |
-| REQ-SEC-007 | SAML SSO                                          | Should | R2   | M2.8      | Not Started |
-| REQ-SEC-008 | Audit log UI, paginated list and CSV export       | Should | R2   | M2.8      | Not Started |
-| REQ-SEC-009 | Project archive and restore; no hard delete       | Should | R2   | M2.8      | Not Started |
-| REQ-SEC-010 | Company catalogue managed by the Admin role       | Must   | R1   | M1.1      | Implemented |
-| REQ-SEC-011 | Permission matrix enforced server-side            | Must   | R0   | M0.4      | Implemented |
-| REQ-SEC-012 | Non-publishable content never leaves the instance | Must   | R1   | M1.7      | Implemented |
-| REQ-SEC-013 | Account lifecycle and first-run bootstrap         | Must   | R0   | M0.4      | Implemented |
-| REQ-SEC-014 | Instance-administration capability                | Must   | R0   | M0.4      | Implemented |
-| REQ-SEC-015 | Instance-administration portal                    | Should | R2   | M2.8      | Not Started |
+> **Carried forward on 2026-08-18.** A codebase review found that R1 milestones were closed on the strength of unit tests over application services, while the application itself was never assembled and no UI existed. Rows below that moved from `Implemented` to `In Progress` or `Not Started` have a service layer and no reachable entry point, or a defect the closing milestone did not test for; the `Milestone` column shows `original → completing` and the completing milestone is in the [R1 completion chain](../milestones.md#r1-completion--assembly-hardening-and-the-client). **No requirement changed scope, priority or release** — only the record of whether it is done. See the [milestones current position](../milestones.md#current-position).
+
+| ID          | Requirement                                        | MoSCoW | Rel. | Milestone    | Status      |
+| ----------- | -------------------------------------------------- | ------ | ---- | ------------ | ----------- |
+| REQ-SEC-001 | Email + password login                             | Must   | R0   | M0.4 → M1.13 | In Progress |
+| REQ-SEC-002 | Four company-scoped roles                          | Must   | R0   | M0.4         | Implemented |
+| REQ-SEC-003 | Per-project access grants                          | Must   | R0   | M0.4 → M1.12 | In Progress |
+| REQ-SEC-004 | OIDC SSO                                           | Should | R2   | M2.8         | Not Started |
+| REQ-SEC-005 | Project shared-password access with expiry         | Must   | R1   | M1.9 → M1.13 | In Progress |
+| REQ-SEC-006 | Append-only audit log, 24-month retention          | Must   | R1   | M1.9 → M1.14 | In Progress |
+| REQ-SEC-007 | SAML SSO                                           | Should | R2   | M2.8         | Not Started |
+| REQ-SEC-008 | Audit log UI, paginated list and CSV export        | Should | R2   | M2.8         | Not Started |
+| REQ-SEC-009 | Project archive and restore; no hard delete        | Should | R2   | M2.8         | Not Started |
+| REQ-SEC-010 | Company catalogue managed by the Admin role        | Must   | R1   | M1.1 → M1.13 | In Progress |
+| REQ-SEC-011 | Permission matrix enforced server-side             | Must   | R0   | M0.4 → M1.13 | In Progress |
+| REQ-SEC-012 | Non-publishable content never leaves the instance  | Must   | R1   | M1.7 → M1.14 | In Progress |
+| REQ-SEC-013 | Account lifecycle and first-run bootstrap          | Must   | R0   | M0.4 → M1.12 | In Progress |
+| REQ-SEC-014 | Instance-administration capability                 | Must   | R0   | M0.4 → M1.12 | In Progress |
+| REQ-SEC-015 | Instance-administration portal                     | Should | R2   | M2.8         | Not Started |
+| REQ-SEC-016 | Deny-by-default authorisation on every entry point | Must   | R1   | M1.13        | Not Started |
+| REQ-SEC-017 | Secret material never returned by a read path      | Must   | R1   | M1.13        | Not Started |
+| REQ-SEC-018 | Parent scope verified on every scoped operation    | Must   | R1   | M1.13        | Not Started |
+| REQ-SEC-019 | Transport security and authentication throttling   | Must   | R1   | M1.13        | Not Started |
 
 ---
 
 ### REQ-SEC-001 — Email + password login
 
-**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec §17.1 · **Implemented** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) → [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · spec §17.1 · **In Progress** · Issue: — · PR: —
 
 Local authentication, required so the Platform is not tied to a single identity provider. Whether a company accepts local password login is part of its **supported login methods** setting (company-level, database — [ADR-0014](../../adr/0014-configuration-split.md)); sessions expire per `AUTH_SESSION_TTL` (instance-level, default 8h).
 
@@ -35,6 +41,8 @@ Local authentication, required so the Platform is not tied to a single identity 
 - Passwords are stored with a modern adaptive hash; no reversible storage anywhere.
 - Local login can be disabled per company once that company's SSO is in place, without disabling the instance administrator's ability to recover access (REQ-SEC-014).
 - Failed attempts do not disclose whether the address exists.
+
+> **Carried forward on 2026-08-18** for two transport-level defects, not for the login logic — which is correct, including the dummy-hash timing parity and the single non-disclosing failure message. The session cookie sets `secure: false` unconditionally, and no endpoint in the codebase is rate-limited. Both are covered by [REQ-SEC-019](#req-sec-019--transport-security-and-authentication-throttling) at [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening). The route is also unreachable until [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) registers it.
 
 ### REQ-SEC-002 — Four company-scoped roles
 
@@ -55,7 +63,7 @@ Admin, Project Manager, Editor, Viewer. A user belongs to **one company**, and t
 
 ### REQ-SEC-003 — Per-project access grants
 
-**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec §17.2 · [ADR-0010](../../adr/0010-project-scoped-isolation.md) · **Implemented** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) → [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion) · spec §17.2 · [ADR-0010](../../adr/0010-project-scoped-isolation.md) · **In Progress** · Issue: — · PR: —
 
 A user sees only the projects explicitly granted to them. Every permission is additionally scoped by the grant: no role confers access to an ungranted project.
 
@@ -66,6 +74,8 @@ A user sees only the projects explicitly granted to them. Every permission is ad
 - A test asserts the negative case for every entry point, not only the HTTP API.
 
 **Grant administration is deliberately one project at a time.** There is no bulk grant or revoke, no view of everything one user can reach across projects, and no group-derived assignment (REQ-SEC-002). At dozens of projects and hundreds of readers this is real administrative work, and it is accepted rather than overlooked: every access decision being explicit and individually made is the property the model is buying, and a bulk tool is the mechanism by which access quietly widens. Revisit only with that trade stated.
+
+> **Found not implemented on 2026-08-18.** `AccountRepository` exposes `listGrantsForUser` and no way to create, change or revoke a grant. `PermissionService.canOnProject` therefore consults a table that no application path can write to, `ProjectService.create` grants its creator nothing, and `LifecycleService.inviteUser` states explicitly that an invitation carries no grants. The permission model is not strict, it is closed: every project-scoped action denies for every user, including the project's creator, and the only rows in `project_grants` are the ones five test files insert directly. Grant administration lands at [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion), and the acceptance below gains the case that would have caught it — _a newly created project is readable by its creator with no manual database write_.
 
 ### REQ-SEC-004 — OIDC SSO
 
@@ -84,7 +94,7 @@ OIDC is the primary corporate authentication method. Each company connects its o
 
 ### REQ-SEC-005 — Project shared-password access with expiry
 
-**Must** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) · spec §4.3, §17.1 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) → [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · spec §4.3, §17.1 · **In Progress** · Issue: — · PR: —
 
 A project may be exposed read-only behind a shared password. Multiple passwords per project, each with an optional expiry. Granularity is the whole project. No per-reader audit is required for this mode: the access event is recorded in the audit log ([REQ-SEC-006](#req-sec-006--append-only-audit-log-24-month-retention)), but the reader is not individually identified — only that a shared-password session accessed the project.
 
@@ -95,9 +105,11 @@ A project may be exposed read-only behind a shared password. Multiple passwords 
 - Non-publishable free pages are invisible in this mode (REQ-SEC-012).
 - Revoking one password does not affect the others.
 
+> **Found incomplete on 2026-08-18.** Three gaps. The list endpoint returns the stored records whole, bcrypt hash included, to anyone holding `project.read` ([REQ-SEC-017](#req-sec-017--secret-material-never-returned-by-a-read-path)); deletion is authorised on the project and executed on the id alone, so any editor can revoke any project's password ([REQ-SEC-018](#req-sec-018--parent-scope-verified-on-every-scoped-operation)); and verification returns a boolean and issues nothing, so there is no reader session and no mechanism behind "a project may be exposed read-only" — [REQ-VIEW-001](REQ-VIEW.md#req-view-001--in-app-read-only-view) has nothing to consume. Expiry and multiple-passwords-per-project do work as specified. The scoped read-only session is built at [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening).
+
 ### REQ-SEC-006 — Append-only audit log, 24-month retention
 
-**Must** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) · spec §17.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · spec §17.4 · **In Progress** · Issue: — · PR: —
 
 Recorded: login and logout; entity creation, modification and deletion; publication; rollback; export; shared-password access; MCP calls; permission changes; integration configuration changes. Read events are deliberately not recorded. Retention is `AUDIT_RETENTION_MONTHS`, default 24.
 
@@ -107,6 +119,8 @@ Recorded: login and logout; entity creation, modification and deletion; publicat
 - Every event class named above has a test proving an entry is written.
 - A bulk operation produces one entry recording the operation, the selection size and the actor — not one entry per affected item (see REQ-AUTH-010).
 - Entries record the actor, and distinguish a human actor from an agent acting on their behalf.
+
+> **Found nearly absent on 2026-08-18.** `appendLog` has two call sites in the whole codebase, both about shared passwords. Of the event classes enumerated above — login, entity create/modify/delete, publication, rollback, export, shared-password access, MCP calls, permission changes, integration changes — exactly one is recorded. "Append-only" is also convention rather than constraint: the table has no trigger and the repository simply exposes inserts. Both halves land at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness), where the second acceptance criterion above — a test per event class — becomes the exit criterion rather than an aspiration.
 
 ### REQ-SEC-007 — SAML SSO
 
@@ -135,7 +149,7 @@ Projects cannot be hard-deleted. An Admin archives a project, which unpublishes 
 
 ### REQ-SEC-010 — Company catalogue is managed by the Admin role
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §4.2, §6.3 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) → [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · spec §4.2, §6.3 · **In Progress** · Issue: — · PR: —
 
 Creating and modifying the company-level catalogue (standard properties, modules, templates, free-page templates) is a power of the **Admin** role within the company. There is no fifth role and no separate flag.
 
@@ -151,9 +165,11 @@ Creating and modifying the company-level catalogue (standard properties, modules
 
 > This resolves a contradiction the record already contained rather than introducing a new position. [REQ-SEC-014](#req-sec-014--instance-administration-capability) states that _"everything else an Admin does — projects, integrations, **catalogue**, branding, audit log — stays with the Admin role"_, and [personas.md](../personas.md) describes the Admin as managing the company's catalogue. Only this entry said otherwise. The earlier interim position — a discrete flag — would have meant an Admin who cannot administer part of their own company, which is a distinction without a job behind it.
 
+> **Blocked by the catalogue read hole on 2026-08-18.** The write side is correct — catalogue mutations check `company.manage_catalogue` against the company on the stored record. The read side checks nothing, so while only an Admin can _manage_ the catalogue, any authenticated user of any company can _read_ it. A requirement about who owns the catalogue cannot be satisfied while the catalogue is world-readable across tenants. Closed with [REQ-SEC-016](#req-sec-016--deny-by-default-authorisation-on-every-entry-point) at [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening).
+
 ### REQ-SEC-011 — Permission matrix enforced server-side
 
-**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · spec Appendix B · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **Implemented** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) → [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · spec Appendix B · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **In Progress** · Issue: — · PR: —
 
 Every action in Appendix B is authorised in the backend. The UI hides what a user cannot do as a convenience; hiding is never the enforcement.
 
@@ -163,9 +179,11 @@ Every action in Appendix B is authorised in the backend. The UI hides what a use
 - An agent acting through MCP is bound by the consenting user's permissions, and additionally cannot publish, delete users or change permissions (see REQ-API-004).
 - Removing a UI control does not change the outcome of the equivalent direct API call.
 
+> **Found holed on 2026-08-18.** The matrix is enforced server-side and its rows are tested — but only where a project scope is present. Ten catalogue read paths take the company id from the request URL and check nothing at all, so the matrix is enforced over part of the surface and absent over the rest. The structural fix is [REQ-SEC-016](#req-sec-016--deny-by-default-authorisation-on-every-entry-point); this requirement's third acceptance criterion, _a test asserts the negative case for every entry point_, is what the cross-tenant matrix at [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) finally satisfies.
+
 ### REQ-SEC-012 — Non-publishable content never leaves the instance
 
-**Must** · R1 · **first enforced [M1.7](../milestones.md#m17--search), then standing** · spec §7.7, §16.4, §17.3 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · **first enforced [M1.7](../milestones.md#m17--search) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness), then standing** · spec §7.7, §16.4, §17.3 · **In Progress** · Issue: — · PR: —
 
 The documentation contains no personal data, but it does contain test credentials and internal references. These live on free pages flagged non-publishable, which must never appear in any published artefact, static site, Confluence export, git export, PDF, or search index.
 
@@ -182,9 +200,11 @@ The documentation contains no personal data, but it does contain test credential
 >
 > Marking it Implemented at M1.7 would close it before the channels it is about exist, which is the precise mechanism by which this class of requirement fails silently. REQ-NFR uses the same "verified continuously, not delivered once" pattern for the same reason.
 
+> **Found violated by publication on 2026-08-18.** The search path filters correctly (`if (fp.publishable)` before indexing). `publishVersion` does not: it filters free pages only by the caller's explicit exclusion list, so a page marked `publishable: false` — the page the requirement exists for, holding test credentials and internal references — is copied verbatim into the immutable version snapshot and served to every reader of that version, including shared-password readers. This is exactly the failure the Definition of Done's standing rule anticipates: **the milestone that added an output channel did not add its omission test.** Publication is that channel. Fixed at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness).
+
 ### REQ-SEC-013 — Account lifecycle and first-run bootstrap
 
-**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · **Implemented** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) → [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion) · **In Progress** · Issue: — · PR: —
 
 How identities come into being, and how they leave. Four parts:
 
@@ -210,9 +230,11 @@ How identities come into being, and how they leave. Four parts:
 >
 > This requirement did not exist in the first draft of the specification. Nothing described how the first identity came into being, while [M0.4](../milestones.md#m04--authentication-and-authorisation) required a passing test for every row of the permission matrix and [M0.6](../milestones.md#m06--public-repository-readiness) promised a clean machine reaching a running instance from the README alone. Neither is demonstrable without it.
 
+> **Found unreachable on 2026-08-18.** Two independent breaks. The bootstrap is never invoked: `start()` validates configuration and calls nothing else, so `BootstrapService` has no caller in the running application. And the administrator it would create is company-less by design (REQ-SEC-014), while the login route rejects a request without a company id and `getUserByEmail` matches `company_id IS NULL` only when passed null — so the only account the system can create could not authenticate even if it existed. Both are fixed at [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion); the read-once rule and its test are unaffected and stay as written.
+
 ### REQ-SEC-014 — Instance-administration capability
 
-**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) · **Implemented** · Issue: — · PR: —
+**Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) → [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion) · **In Progress** · Issue: — · PR: —
 
 A discrete `instance_admin` flag on a user, independent of the four company-scoped roles (REQ-SEC-002), marking the person who administers the **deployment** rather than a tenant within it. It is what gates the instance-administration portal (REQ-SEC-015) and it is held by the bootstrap administrator (REQ-SEC-013).
 
@@ -234,6 +256,8 @@ Three rules make it safe:
 
 > This is the distinction the system-administrator persona draws, made enforceable: **operating the deployment and administering a tenant are different jobs.** Before this, Admin was both — it created companies and also had the run of their content. Splitting them costs one boolean and makes "who can see our documentation?" answerable without qualification.
 
+> **Carried forward on 2026-08-18.** The flag, its semantics and its storage are implemented. What does not exist: the step-up re-authentication rule, the guaranteed local-password path, and — most simply — any way for its holder to log in, since the login route requires a company id and this user has none (REQ-SEC-013). Completed at [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion).
+
 ### REQ-SEC-015 — Instance-administration portal
 
 **Should** · R2 · [M2.8](../milestones.md#m28--platform-hardening) · **Not Started** · Issue: — · PR: —
@@ -245,3 +269,72 @@ Deliberately **not** a way into documentation content: the portal shows companie
 **R0 provides the capability and its authentication rules; this is the surface built on top.** Until it exists, company creation happens through the API (REQ-API-001) authenticated as an `instance_admin` — sufficient for one deployment with a handful of companies, and why the portal is a `Should` in R2 rather than a `Must` in R0.
 
 > The portal is what makes the instance administrator a real user of the Platform rather than only a person with shell access. It is also the natural place for anything else that is genuinely instance-wide and content-free — which, deliberately, is a very short list.
+
+### REQ-SEC-016 — Deny-by-default authorisation on every entry point
+
+**Must** · R1 · [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · [ADR-0010](../../adr/0010-project-scoped-isolation.md) · **Not Started** · Issue: — · PR: —
+
+Every read and every write passes through **one** authorisation gate that takes the actor, the company scope, the optional project scope, and the action — and denies unless a rule permits. An entity whose project scope is null (a company-catalogue property, module, destination, template or free page) is a **company-scoped** decision, never an unchecked one.
+
+This is REQ-SEC-011 restated as a structural requirement rather than a behavioural one, because the behavioural form did not hold. The review of 2026-08-18 found ten read paths — `listProperties`, `listModules`, `listDestinations`, `listTrackingTemplates`, `listFreePages` and their by-id counterparts — that check the caller's grant when a project id is present and check nothing when it is null, taking the company id from the request URL. Any authenticated user could read any tenant's catalogue, including free pages marked non-publishable, which is where REQ-SEC-012 says test credentials live. The write paths were correct, and the difference is instructive: they resolve the company from the stored record, the read paths trusted the URL.
+
+**The fix is one gate, not ten patches.** Five of the six tenancy defects found were the same defect — an authorisation decision expressed as a condition at each of ~30 call sites instead of as a gate each call site must pass. Patching the sites leaves the shape that produced them.
+
+**Acceptance**
+
+- A **cross-tenant test matrix** exercises every read and write entry point — REST, MCP, and direct application-service call — as a user of company B against company A's data. Every cell denies. The catalogue path is in the matrix; its absence is the defect this requirement exists for.
+- A service method that reaches a repository without passing through the gate fails review, and the gate is the only place a `CompanyAction` or `ProjectAction` is evaluated.
+- An unenumerated action denies. Adding an action without adding its rule cannot silently permit.
+- A company id taken from a request is never trusted as a scope: the scope is resolved from the stored record, or the record is checked against the claimed scope (REQ-SEC-018).
+- The negative case is tested for each entry point separately, not once for the HTTP API and inferred for the rest (REQ-SEC-003).
+
+### REQ-SEC-017 — Secret material never returned by a read path
+
+**Must** · R1 · [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · **Not Started** · Issue: — · PR: —
+
+No API response, MCP tool result, export artefact or log line contains a password hash, a session or service-token hash, a reset-token hash, or an encrypted company secret — in any field, under any role, including the roles that administer the thing the secret belongs to.
+
+Found in R1: `GET /projects/:id/shared-passwords` returns the stored records whole, bcrypt hash included, to any caller holding `project.read`. An offline attack on a project's shared password needs only a Viewer grant. The neighbouring cases are already correct and show the intended shape — session tokens are stored hashed and the raw value is returned exactly once, at creation, and never read back.
+
+**Acceptance**
+
+- A response-shape test asserts that no endpoint's response body contains a field whose name or value matches the known secret patterns, run across the whole route table rather than per endpoint — a new endpoint is covered on the day it is added.
+- Secrets are created-once, shown-once: a shared password and a service token (REQ-API-009) are returned in the response to their creation call and are unreadable afterwards.
+- Read models are explicit. A repository returning a row with a secret column maps to a read model that omits it, rather than a route remembering to delete the field.
+- REQ-SEC-004's masked-client-secret rule is a case of this requirement, not a separate one.
+
+### REQ-SEC-018 — Parent scope verified on every scoped operation
+
+**Must** · R1 · [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · **Not Started** · Issue: — · PR: —
+
+When an operation is authorised against one identifier and acts on another, the second must be proven to belong to the first. A permission checked on a project does not authorise acting on a record that merely happens to be named in the same request.
+
+Three instances in R1, all the same shape:
+
+- `deleteSharedPassword` checks `project.edit` on the `projectId` in the path and then deletes by the shared-password id alone — so an editor on any project can delete any other project's shared password.
+- `listAuditLogs` checks `company.read_audit_log` on the company id and then lists by project id without verifying the project belongs to that company.
+- `createModule` and its four siblings write `company_id` straight from the URL after authorising against a project, without verifying the project belongs to that company — attributing rows to a tenant the actor has no relationship with.
+
+**Acceptance**
+
+- Every operation taking two identifiers verifies the relationship between them, tested with a mismatched pair that must produce 404 or 403 — never a successful write and never a silent no-op.
+- A write derives its company scope from the parent record, not from the request path.
+- The mismatched-pair case is part of the REQ-SEC-016 cross-tenant matrix, so it is exercised for every entry point rather than for the three known instances.
+
+### REQ-SEC-019 — Transport security and authentication throttling
+
+**Must** · R1 · [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · **Not Started** · Issue: — · PR: —
+
+**Cookie flags derive from configuration.** The session cookie sets `secure` whenever `APP_URL` is `https`, rather than the unconditional `secure: false` R1 shipped. `httpOnly` and `sameSite` are already correct and stay.
+
+**Credential-testing endpoints are throttled.** Login (REQ-SEC-001), password reset (REQ-SEC-013) and shared-password verification (REQ-SEC-005) rate-limit by source and by target. Shared-password verification is the sharpest case: it is the one unauthenticated write endpoint in the API, and it runs one bcrypt comparison per password stored on the project, so an unthrottled request is an amplification primitive as well as a guessing oracle.
+
+Throttling must not become an oracle itself: a throttled response is identical whether or not the account or project exists, consistent with REQ-SEC-001's non-disclosure rule.
+
+**Acceptance**
+
+- A test asserts `secure` is set when `APP_URL` is `https` and unset when it is `http`, since local development over http must keep working.
+- Repeated failed logins for one address, and repeated failures from one source across addresses, are both throttled — the second is what makes the first more than cosmetic.
+- Shared-password verification is throttled per project and per source, and a throttled response is indistinguishable from a wrong-password response.
+- Throttling state does not leak across companies: exhausting one tenant's budget does not affect another's.
+- Every throttling trigger produces an audit entry (REQ-SEC-006).

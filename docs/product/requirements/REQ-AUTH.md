@@ -2,33 +2,36 @@
 
 Editing, assets, duplication, concurrency, history and search. Source: [functional specification](../functional-specification.md) §7, §19.4.
 
-Entry format and status legend: [requirements index](README.md). Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
+Entry format and status legend: [requirements index](README.md).
+
+> **Carried forward on 2026-08-18.** A codebase review found that R1 milestones were closed on the strength of unit tests over application services, while the application itself was never assembled and no UI existed. Rows below that moved from `Implemented` to `In Progress` or `Not Started` have a service layer and no reachable entry point, or a defect the closing milestone did not test for; the `Milestone` column shows `original → completing` and the completing milestone is in the [R1 completion chain](../milestones.md#r1-completion--assembly-hardening-and-the-client). **No requirement changed scope, priority or release** — only the record of whether it is done. See the [milestones current position](../milestones.md#current-position).
+> Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
 
 > Naming note: this prefix covers **authoring**. Authentication requirements are in [REQ-SEC](REQ-SEC.md).
 
-| ID           | Requirement                                          | MoSCoW | Rel. | Milestone | Status      |
-| ------------ | ---------------------------------------------------- | ------ | ---- | --------- | ----------- |
-| REQ-AUTH-001 | Markdown editor with the full block set              | Must   | R1   | M1.5      | Implemented |
-| REQ-AUTH-002 | Image upload, 10 MB cap, resize to 2000 px           | Must   | R1   | M1.5      | Implemented |
-| REQ-AUTH-003 | Free wiki pages with publishable flag                | Must   | R1   | M1.5      | Implemented |
-| REQ-AUTH-004 | Mermaid rendering and live preview                   | Must   | R1   | M1.6      | Implemented |
-| REQ-AUTH-005 | Optimistic concurrency with stale-write rejection    | Must   | R1   | M1.5      | Implemented |
-| REQ-AUTH-006 | Tracking duplication within a project                | Must   | R1   | M1.5      | Implemented |
-| REQ-AUTH-007 | Project-scoped full-text search                      | Must   | R1   | M1.7      | Implemented |
-| REQ-AUTH-008 | Page and flow duplication                            | Should | R2   | M2.7      | Not Started |
-| REQ-AUTH-009 | Cross-project tracking copy with guided mapping      | Should | R2   | M2.7      | Not Started |
-| REQ-AUTH-010 | Bulk operations on a multi-selection, with preview   | Should | R2   | M2.4      | Not Started |
-| REQ-AUTH-011 | Individual item archive and restore                  | Could  | R3   | M3.5      | Not Started |
-| REQ-AUTH-012 | Per-element change history ("blame")                 | Should | R2   | M2.7      | Not Started |
-| REQ-AUTH-013 | Global script-instruction template with placeholders | Should | R2   | M2.7      | Not Started |
-| REQ-AUTH-014 | Image annotation layer linked to triggers            | Should | R2   | M2.3      | Not Started |
-| REQ-AUTH-015 | Whole-project duplication                            | Could  | R3   | M3.5      | Not Started |
+| ID           | Requirement                                          | MoSCoW | Rel. | Milestone    | Status      |
+| ------------ | ---------------------------------------------------- | ------ | ---- | ------------ | ----------- |
+| REQ-AUTH-001 | Markdown editor with the full block set              | Must   | R1   | M1.5 → M1.16 | Not Started |
+| REQ-AUTH-002 | Image upload, 10 MB cap, resize to 2000 px           | Must   | R1   | M1.5 → M1.16 | Not Started |
+| REQ-AUTH-003 | Free wiki pages with publishable flag                | Must   | R1   | M1.5 → M1.16 | In Progress |
+| REQ-AUTH-004 | Mermaid rendering and live preview                   | Must   | R1   | M1.6 → M1.17 | In Progress |
+| REQ-AUTH-005 | Optimistic concurrency with stale-write rejection    | Must   | R1   | M1.5 → M1.14 | In Progress |
+| REQ-AUTH-006 | Tracking duplication within a project                | Must   | R1   | M1.5 → M1.16 | In Progress |
+| REQ-AUTH-007 | Project-scoped full-text search                      | Must   | R1   | M1.7 → M1.17 | In Progress |
+| REQ-AUTH-008 | Page and flow duplication                            | Should | R2   | M2.7         | Not Started |
+| REQ-AUTH-009 | Cross-project tracking copy with guided mapping      | Should | R2   | M2.7         | Not Started |
+| REQ-AUTH-010 | Bulk operations on a multi-selection, with preview   | Should | R2   | M2.4         | Not Started |
+| REQ-AUTH-011 | Individual item archive and restore                  | Could  | R3   | M3.5         | Not Started |
+| REQ-AUTH-012 | Per-element change history ("blame")                 | Should | R2   | M2.7         | Not Started |
+| REQ-AUTH-013 | Global script-instruction template with placeholders | Should | R2   | M2.7         | Not Started |
+| REQ-AUTH-014 | Image annotation layer linked to triggers            | Should | R2   | M2.3         | Not Started |
+| REQ-AUTH-015 | Whole-project duplication                            | Could  | R3   | M3.5         | Not Started |
 
 ---
 
 ### REQ-AUTH-001 — Markdown editor with the full block set
 
-**Must** · R1 · [M1.5](../milestones.md#m15--authoring) · spec §7.1, §16.1 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md#m15--authoring) → [M1.16](../milestones.md#m116--authoring-ui) · spec §7.1, §16.1 · **Not Started** · Issue: — · PR: —
 
 Content is stored as Markdown. Required blocks: headings, ordered and unordered lists, bold and italic, links, tables, code blocks, images, quotes and callouts. A ` ```mermaid ` fenced block is authorable and stored verbatim from R1 as a code block; **rendering** it as a diagram is REQ-AUTH-004, in R2.
 
@@ -42,7 +45,7 @@ Applies to tracking descriptions, page descriptions, flow descriptions, property
 
 ### REQ-AUTH-002 — Image upload, 10 MB cap, resize to 2000 px
 
-**Must** · R1 · [M1.5](../milestones.md#m15--authoring) · spec §7.2 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md#m15--authoring) → [M1.16](../milestones.md#m116--authoring-ui) · spec §7.2 · **Not Started** · Issue: — · PR: —
 
 Direct upload by drag-and-drop and clipboard paste. Maximum `UPLOAD_MAX_BYTES` (default 10 MB), automatic resize to `IMAGE_MAX_DIMENSION` (default 2000 px per side), stored in object storage (REQ-FDN-006).
 
@@ -54,7 +57,7 @@ Direct upload by drag-and-drop and clipboard paste. Maximum `UPLOAD_MAX_BYTES` (
 
 ### REQ-AUTH-003 — Free wiki pages with publishable flag
 
-**Must** · R1 · [M1.5](../milestones.md#m15--authoring) · spec §7.7 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md#m15--authoring) → [M1.16](../milestones.md#m116--authoring-ui) · spec §7.7 · **In Progress** · Issue: — · PR: —
 
 Hierarchically organised unstructured pages covering what the previous documentation template held outside the structured tables: data layer overview, script and SDK integration instructions, references, test URLs, test credentials.
 
@@ -66,7 +69,7 @@ Hierarchically organised unstructured pages covering what the previous documenta
 
 ### REQ-AUTH-004 — Mermaid rendering and live preview
 
-**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) · spec §7.1, §8.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §7.1, §8.4 · **In Progress** · Issue: — · PR: —
 
 Mermaid code blocks render, and render live while editing. This is both the format used for hand-written diagrams and the format auto-generated from the flow graph (REQ-NAV-006, also R1/M1.6).
 
@@ -78,9 +81,11 @@ Mermaid code blocks render, and render live while editing. This is both the form
 
 > **Demoted to R2 (M2.2) on 2026-08-12, then returned to R1 (M1.6) on 2026-08-17** when the Flow entity and its Mermaid generator (REQ-NAV-003…007) were moved into R1. The renderer is built once and serves both the auto-generated flow diagrams and hand-written blocks; it now ships with them rather than a release behind. The prior demotion note — that a ` ```mermaid ` block is a fenced code block, stored verbatim and searchable from R1 but not rendered — documents the state that held only while flows were R2.
 
+> **Carried forward on 2026-08-18.** `generateMermaidDiagram` produces a correct diagram string from the graph, with node shapes and edge labels. Nothing renders it — there is no renderer, no preview and no client. The generator half is done; the requirement is about the rendered result. [M1.17](../milestones.md#m117--consultation-search-and-publication-ui).
+
 ### REQ-AUTH-005 — Optimistic concurrency with stale-write rejection
 
-**Must** · R1 · [M1.5](../milestones.md#m15--authoring) · spec §7.5, §16.1 · [ADR-0016](../../adr/0016-concurrency-model.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md#m15--authoring) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · spec §7.5, §16.1 · [ADR-0016](../../adr/0016-concurrency-model.md) · **In Progress** · Issue: — · PR: —
 
 No pessimistic locking. A notice appears when a record being viewed is modified by someone else. A save is rejected if the record changed after the user opened it.
 
@@ -90,9 +95,11 @@ No pessimistic locking. A notice appears when a record being viewed is modified 
 - The check is server-side and applies to API and MCP writes identically, not only to the UI.
 - No lock can be left held by a departed session, because no lock exists.
 
+> **Carried forward on 2026-08-18.** Implemented on exactly one of roughly fifteen update paths: `updateTracking` takes `expectedUpdatedAt` and returns a `stale_write` conflict. Properties, modules, destinations, free pages, flows, triggers, pages and projects are all last-write-wins, so the requirement's own acceptance — _two editors opening the same record produce a rejected save_ — holds for one entity type out of nine. Extended to every mutable entity at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness), with the conflict surfaced comprehensibly in the UI at [M1.16](../milestones.md#m116--authoring-ui).
+
 ### REQ-AUTH-006 — Tracking duplication within a project
 
-**Must** · R1 · [M1.5](../milestones.md#m15--authoring) · spec §7.3 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md#m15--authoring) → [M1.16](../milestones.md#m116--authoring-ui) · spec §7.3 · **In Progress** · Issue: — · PR: —
 
 A duplicated tracking inherits everything: properties, modules, specific values, description, images, page attachment and destinations.
 
@@ -104,7 +111,7 @@ A duplicated tracking inherits everything: properties, modules, specific values,
 
 ### REQ-AUTH-007 — Project-scoped full-text search
 
-**Must** · R1 · [M1.7](../milestones.md#m17--search) · spec §7.8, §16.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.7](../milestones.md#m17--search) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §7.8, §16.4 · **In Progress** · Issue: — · PR: —
 
 Full-text search, scoped to a single project. Property names and tracking names rank above other text. **Specific values are indexed.** All textual content is indexed except non-publishable free pages.
 
@@ -128,6 +135,8 @@ Two acceptance criteria follow from it:
 The published index also makes the criterion above stronger than a filter: built from published content only, a non-publishable free page is absent by construction rather than by remembering to exclude it (REQ-SEC-012).
 
 > Sacrificing typo tolerance is the deliberate first-phase trade for a search stack with no external dependency. The property being bought — no documentation content leaving the instance (REQ-FDN-021) — is the one an operator cannot add later; typo tolerance is one an organisation can buy whenever it wants it, by selecting a different adapter.
+
+> **Carried forward on 2026-08-18.** The index is built correctly — properties, trackings, specific values, publishable free pages only — and the leak guards are in place. It cannot be queried: Pagefind has no server-side query API, so the adapter's `query` rejects by construction (documented honestly in the adapter itself), and the browser-side path it defers to does not exist. `GET /projects/:id/search` therefore fails for the default driver. The client-side query path, served through the grant-checked route, is built at [M1.17](../milestones.md#m117--consultation-search-and-publication-ui).
 
 ### REQ-AUTH-008 — Page and flow duplication
 

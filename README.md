@@ -4,7 +4,7 @@
 
 # dx-doc — Tracking Documentation Platform
 
-**Status:** Pre-R0 — repository scaffolding and documentation foundation
+**Status:** R1 (MVP) in its completion phase — backend complete, web client in progress
 
 ## What we are building
 
@@ -58,11 +58,20 @@ The detailed, enumerated definition of R1 scope lives in the [R1 minimum require
 
 ## Current Status
 
-**R0 (foundations) in progress.** The application is under active development:
+**R0 is complete. R1 is in its completion phase** ([M1.11–M1.18](docs/product/milestones.md#r1-completion--assembly-hardening-and-the-client)).
 
-- Stack (Vite + React, Fastify API) is wired; `dev`, `build`, `test`, `typecheck` all run.
-- Persistence (SQLite + migrations), authentication/authorisation, and the internal REST API are implemented behind the documented architecture.
-- R1 (the tracking-documentation MVP) is the next target.
+What exists:
+
+- The full R1 data model — pages, trackings, properties, modules, destinations, specific values, templates, free pages, flows and triggers — persisted through repository ports over SQLite, with the composition rules enforced in a dependency-free domain layer.
+- Application services carrying validation and permissions, ~60 REST route handlers, an MCP JSON-RPC surface, the publication and changelog pipeline, project-scoped search indexing, shared-password access and the audit-log store. Typecheck, lint, format and 148 tests are green.
+
+What does not yet exist, and is what M1.11–M1.18 build:
+
+- **The assembled application.** The server currently registers only `GET /api/health` and the static handler; the routes above are not yet wired into it ([M1.11](docs/product/milestones.md#m111--runtime-assembly-and-first-run)).
+- **The web client.** The React app is still scaffolding — no design system, no editor, no navigation ([M1.15](docs/product/milestones.md#m115--client-foundation)–[M1.17](docs/product/milestones.md#m117--consultation-search-and-publication-ui)).
+- **Access administration and tenancy hardening.** Project grants have no write path, and several read paths are not company-scoped ([M1.12](docs/product/milestones.md#m112--access-administration-and-api-surface-completion), [M1.13](docs/product/milestones.md#m113--tenancy-and-authorisation-hardening)).
+
+> **Not yet deployable.** Do not run this on an instance holding real documentation until [M1.13](docs/product/milestones.md#m113--tenancy-and-authorisation-hardening) closes: catalogue read paths are not tenant-scoped, and shared-password hashes are returned by a read endpoint. Both are recorded as [REQ-SEC-016](docs/product/requirements/REQ-SEC.md) … [REQ-SEC-019](docs/product/requirements/REQ-SEC.md).
 
 The source of truth for what is scheduled is [docs/product/milestones.md](docs/product/milestones.md).
 

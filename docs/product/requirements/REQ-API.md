@@ -2,28 +2,31 @@
 
 The REST API as the single entry point, the public API, and the MCP server. Source: [functional specification](../functional-specification.md) §12, §19.8, as resequenced by [ADR-0021](../../adr/0021-agent-driven-migration.md).
 
-Entry format and status legend: [requirements index](README.md). Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
+Entry format and status legend: [requirements index](README.md).
+
+> **Carried forward on 2026-08-18.** A codebase review found that R1 milestones were closed on the strength of unit tests over application services, while the application itself was never assembled and no UI existed. Rows below that moved from `Implemented` to `In Progress` or `Not Started` have a service layer and no reachable entry point, or a defect the closing milestone did not test for; the `Milestone` column shows `original → completing` and the completing milestone is in the [R1 completion chain](../milestones.md#r1-completion--assembly-hardening-and-the-client). **No requirement changed scope, priority or release** — only the record of whether it is done. See the [milestones current position](../milestones.md#current-position).
+> Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
 
 > **Resequenced.** The documented public API and the MCP read and write tools moved **R3 → R1**. They are no longer a late-release convenience: since [ADR-0021](../../adr/0021-agent-driven-migration.md) replaced the bespoke importer with an agent driving the API, they are the mechanism by which the products get imported. OAuth with user consent (REQ-API-005) stays in R3 — the import authenticates with a service-account token (REQ-API-009), not an interactive consent flow.
 
-| ID          | Requirement                                             | MoSCoW | Rel. | Milestone | Status      |
-| ----------- | ------------------------------------------------------- | ------ | ---- | --------- | ----------- |
-| REQ-API-001 | Internal REST API as the single entry point             | Must   | R0   | M0.5      | Implemented |
-| REQ-API-002 | Documented public API                                   | Must   | R1   | M1.2      | Implemented |
-| REQ-API-003 | MCP read tools                                          | Must   | R1   | M1.3      | Implemented |
-| REQ-API-004 | MCP write tools, draft only                             | Must   | R1   | M1.3      | Implemented |
-| REQ-API-005 | OAuth with user consent for MCP clients                 | Should | R3   | M3.4      | Not Started |
-| REQ-API-006 | MCP resources exposing naming guidelines                | Should | R1   | M1.3      | Implemented |
-| REQ-API-007 | Outbound webhooks on publication                        | Could  | R4   | M4.3      | Not Started |
-| REQ-API-008 | Bulk operations restricted to explicit identifier lists | Should | R2   | M2.4      | Not Started |
-| REQ-API-009 | Service-account API tokens                              | Must   | R1   | M1.2      | Implemented |
-| REQ-API-010 | Richer MCP read tools                                   | Should | R3   | M3.4      | Not Started |
+| ID          | Requirement                                             | MoSCoW | Rel. | Milestone    | Status      |
+| ----------- | ------------------------------------------------------- | ------ | ---- | ------------ | ----------- |
+| REQ-API-001 | Internal REST API as the single entry point             | Must   | R0   | M0.5 → M1.11 | In Progress |
+| REQ-API-002 | Documented public API                                   | Must   | R1   | M1.2 → M1.12 | Not Started |
+| REQ-API-003 | MCP read tools                                          | Must   | R1   | M1.3 → M1.12 | In Progress |
+| REQ-API-004 | MCP write tools, draft only                             | Must   | R1   | M1.3 → M1.12 | In Progress |
+| REQ-API-005 | OAuth with user consent for MCP clients                 | Should | R3   | M3.4         | Not Started |
+| REQ-API-006 | MCP resources exposing naming guidelines                | Should | R1   | M1.3 → M1.11 | In Progress |
+| REQ-API-007 | Outbound webhooks on publication                        | Could  | R4   | M4.3         | Not Started |
+| REQ-API-008 | Bulk operations restricted to explicit identifier lists | Should | R2   | M2.4         | Not Started |
+| REQ-API-009 | Service-account API tokens                              | Must   | R1   | M1.2 → M1.12 | In Progress |
+| REQ-API-010 | Richer MCP read tools                                   | Should | R3   | M3.4         | Not Started |
 
 ---
 
 ### REQ-API-001 — Internal REST API as the single entry point
 
-**Must** · R0 · [M0.5](../milestones.md#m05--rest-api-and-shared-validation) · spec §12.1, §16 · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **Implemented** · Issue: — · PR: —
+**Must** · R0 · [M0.5](../milestones.md#m05--rest-api-and-shared-validation) → [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) · spec §12.1, §16 · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **In Progress** · Issue: — · PR: —
 
 The REST API is the foundation of the system, not a feature. The web client, the MCP server, the export generators, the static-site builder and the import scripts all consume it. All validation lives behind it (REQ-FDN-010).
 
@@ -36,9 +39,11 @@ The REST API is the foundation of the system, not a feature. The web client, the
 
 > Weak programmatic access was pain point 6. Making the API the only entry point is what prevents it recurring: a capability that exists in the UI cannot fail to exist for machines. Import (REQ-IMP-002) is the first hard test of that claim, at week 5 rather than R3.
 
+> **Carried forward on 2026-08-18.** The routes exist and are individually tested; the running application does not serve them. `registerAllRoutes` has no call site, and `registerAuthRoutes` is not part of it, so `buildApp` registers `/api/health` and the static handler and nothing else. "Single entry point" is true of the design and false of the process. [REQ-FDN-023](REQ-FDN.md#req-fdn-023--runtime-assembly-every-route-served-by-the-process) makes the gap detectable; [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) closes it.
+
 ### REQ-API-002 — Documented public API
 
-**Must** · R1 · [M1.2](../milestones.md#m12--import-grade-api) · spec §12.1 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.2](../milestones.md#m12--import-grade-api) → [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion) · spec §12.1 · **Not Started** · Issue: — · PR: —
 
 A documented, stable public surface. The contract is generated from the implementation rather than maintained alongside it, so it cannot drift.
 
@@ -50,9 +55,11 @@ A documented, stable public surface. The contract is generated from the implemen
 
 > **Moved R3 → R1.** An agent cannot write an import script against an undocumented API, and the alternative — the agent reading the Platform's source — is exactly the coupling that makes the result unmaintainable.
 
+> **Found to have no artefact on 2026-08-18.** There is no OpenAPI document, no published contract and no generator anywhere in the repository — the requirement was marked `Implemented` against the route handlers themselves. Since M1.2's exit criterion is _a script written against the published documentation, with no reading of Platform source, succeeds_, and there is no published documentation, that criterion was never testable. Generated from the implementation and checked in CI at [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion).
+
 ### REQ-API-003 — MCP read tools
 
-**Must** · R1 · [M1.3](../milestones.md#m13--mcp-server) · spec §12.2 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.3](../milestones.md#m13--mcp-server) → [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion) · spec §12.2 · **In Progress** · Issue: — · PR: —
 
 A layer above the REST API. Clients are analysts' and editors' AI assistants, developers' IDEs, and — from M1.4 — the import agent.
 
@@ -67,7 +74,7 @@ R1 set, chosen for what import and verification need: list projects; retrieve a 
 
 ### REQ-API-004 — MCP write tools, draft only
 
-**Must** · R1 · [M1.3](../milestones.md#m13--mcp-server) · spec §12.2 · [ADR-0019](../../adr/0019-ai-coding-agent-model.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.3](../milestones.md#m13--mcp-server) → [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion) · spec §12.2 · [ADR-0019](../../adr/0019-ai-coding-agent-model.md) · **In Progress** · Issue: — · PR: —
 
 Write tools covering the R1 entity set (REQ-IMP-002) — not only the narrower list in specification §12.2, which predates import depending on them.
 
@@ -81,6 +88,8 @@ Writes always land in the draft. Agents may **not** publish versions, delete use
 
 > **Moved R3 → R1.** Import content is entirely agent-written, and from R1 onward agents and humans share the same draft — which is why attribution in the diff moved to R2 rather than staying in R3.
 
+> **Carried forward on 2026-08-18.** The draft-only restriction holds and is the right shape — publication, deletion and permission changes have no tool at all rather than a permission check. What is missing is coverage: 13 tools against roughly 60 endpoints, with no flows, triggers, versions, search, specific values or destinations, so "the full R1 entity set" is approximate. [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion) closes the gap and re-runs M1.3's exit criterion against the complete set.
+
 ### REQ-API-005 — OAuth with user consent for MCP clients
 
 **Should** · R3 · [M3.4](../milestones.md#m34--interactive-agent-access) · spec §12.2 · **Not Started** · Issue: — · PR: —
@@ -91,7 +100,7 @@ Stays in R3: this is the interactive-assistant path. Import authenticates with a
 
 ### REQ-API-006 — MCP resources exposing naming guidelines
 
-**Should** · R1 · [M1.3](../milestones.md#m13--mcp-server) · spec §12.2 · **Not Started** · Issue: — · PR: —
+**Should** · R1 · [M1.3](../milestones.md#m13--mcp-server) → [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) · spec §12.2 · **In Progress** · Issue: — · PR: —
 
 Naming and documentation guidelines exposed as MCP resources and prompts, so they are automatically available as context to agents rather than restated per conversation.
 
@@ -118,7 +127,7 @@ Bulk operations (REQ-AUTH-010) and batch writes (REQ-IMP-005) are exposed throug
 
 ### REQ-API-009 — Service-account API tokens
 
-**Must** · R1 · [M1.2](../milestones.md#m12--import-grade-api) · [ADR-0021](../../adr/0021-agent-driven-migration.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.2](../milestones.md#m12--import-grade-api) → [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion) · [ADR-0021](../../adr/0021-agent-driven-migration.md) · **In Progress** · Issue: — · PR: —
 
 Non-interactive authentication for scripted clients: a token bound to a user identity, with the same role and project grants, revocable independently of that user's session.
 
@@ -128,6 +137,8 @@ Non-interactive authentication for scripted clients: a token bound to a user ide
 - Token use is attributed in the audit log as a distinct actor kind, distinguishable from an interactive session (REQ-SEC-006).
 - Tokens are revocable individually and expire.
 - A token cannot publish a version — the same restriction as REQ-API-004.
+
+> **Carried forward on 2026-08-18.** What exists is a Bearer header resolved against the session store — authentication, not a service account. There is no issuance, no listing, no revocation, no scope and no expiry independent of a human's session, so a token cannot be given to the import (REQ-IMP-007) or rotated after it. Given its own lifecycle at [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion).
 
 ### REQ-API-010 — Richer MCP read tools
 

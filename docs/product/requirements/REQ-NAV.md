@@ -2,25 +2,28 @@
 
 Page hierarchy, recap views, flows and the sidebar. Source: [functional specification](../functional-specification.md) §8, §19.5.
 
-Entry format and status legend: [requirements index](README.md). Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
+Entry format and status legend: [requirements index](README.md).
 
-| ID          | Requirement                                    | MoSCoW | Rel. | Milestone | Status      |
-| ----------- | ---------------------------------------------- | ------ | ---- | --------- | ----------- |
-| REQ-NAV-001 | Page hierarchy with navigable sidebar          | Must   | R1   | M1.6      | Implemented |
-| REQ-NAV-002 | Automatic per-page tracking recap              | Must   | R1   | M1.6      | Implemented |
-| REQ-NAV-003 | Flow entity                                    | Must   | R1   | M1.6      | Implemented |
-| REQ-NAV-004 | Trigger nodes distinct from visual transitions | Must   | R1   | M1.6      | Implemented |
-| REQ-NAV-005 | Directed graph with labels and conditions      | Must   | R1   | M1.6      | Implemented |
-| REQ-NAV-006 | Automatic Mermaid generation from the graph    | Must   | R1   | M1.6      | Implemented |
-| REQ-NAV-007 | Sidebar exposing flows alongside the hierarchy | Must   | R1   | M1.6      | Implemented |
-| REQ-NAV-008 | Visual drag-and-drop graph editor              | Could  | R3   | M3.5      | Not Started |
-| REQ-NAV-009 | Cross-project search                           | Won't  | —    | —         | Rejected    |
+> **Carried forward on 2026-08-18.** A codebase review found that R1 milestones were closed on the strength of unit tests over application services, while the application itself was never assembled and no UI existed. Rows below that moved from `Implemented` to `In Progress` or `Not Started` have a service layer and no reachable entry point, or a defect the closing milestone did not test for; the `Milestone` column shows `original → completing` and the completing milestone is in the [R1 completion chain](../milestones.md#r1-completion--assembly-hardening-and-the-client). **No requirement changed scope, priority or release** — only the record of whether it is done. See the [milestones current position](../milestones.md#current-position).
+> Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
+
+| ID          | Requirement                                    | MoSCoW | Rel. | Milestone    | Status      |
+| ----------- | ---------------------------------------------- | ------ | ---- | ------------ | ----------- |
+| REQ-NAV-001 | Page hierarchy with navigable sidebar          | Must   | R1   | M1.6 → M1.17 | Not Started |
+| REQ-NAV-002 | Automatic per-page tracking recap              | Must   | R1   | M1.6 → M1.17 | Not Started |
+| REQ-NAV-003 | Flow entity                                    | Must   | R1   | M1.6 → M1.17 | In Progress |
+| REQ-NAV-004 | Trigger nodes distinct from visual transitions | Must   | R1   | M1.6 → M1.17 | In Progress |
+| REQ-NAV-005 | Directed graph with labels and conditions      | Must   | R1   | M1.6 → M1.17 | In Progress |
+| REQ-NAV-006 | Automatic Mermaid generation from the graph    | Must   | R1   | M1.6 → M1.17 | In Progress |
+| REQ-NAV-007 | Sidebar exposing flows alongside the hierarchy | Must   | R1   | M1.6 → M1.17 | Not Started |
+| REQ-NAV-008 | Visual drag-and-drop graph editor              | Could  | R3   | M3.5         | Not Started |
+| REQ-NAV-009 | Cross-project search                           | Won't  | —    | —            | Rejected    |
 
 ---
 
 ### REQ-NAV-001 — Page hierarchy with navigable sidebar
 
-**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) · spec §8.1, §8.5 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §8.1, §8.5 · **Not Started** · Issue: — · PR: —
 
 Pages and screens are organised in a hierarchy that drives a navigable sidebar. Where content is CMS-driven, only generic page templates are catalogued (_"single news page"_), not individual instances.
 
@@ -34,7 +37,7 @@ Pages and screens are organised in a hierarchy that drives a navigable sidebar. 
 
 ### REQ-NAV-002 — Automatic per-page tracking recap
 
-**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) · spec §8.2 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §8.2 · **Not Started** · Issue: — · PR: —
 
 Each page displays an automatic recap of every tracking attached to it — page views, popup views, actions — showing at minimum the tracking name and its specific values.
 
@@ -46,7 +49,7 @@ Each page displays an automatic recap of every tracking attached to it — page 
 
 ### REQ-NAV-003 — Flow entity
 
-**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) · spec §8.3 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §8.3 · **In Progress** · Issue: — · PR: —
 
 A named user journey: title, rich-text description, and a directed graph over the project's Pages. First-class but **purely representational** — it binds nothing and constrains nothing.
 
@@ -56,7 +59,7 @@ Because a Flow references Pages and Trackings it does not own, it participates i
 
 ### REQ-NAV-004 — Trigger nodes distinct from visual transitions
 
-**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) · spec §8.3 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §8.3 · **In Progress** · Issue: — · PR: —
 
 The graph has two node types. A plain Page→Page connection is **purely visual**: the user moves between screens and nothing is bound. A **Trigger** is the navigation, system or user action that causes a tracking to fire, carrying:
 
@@ -71,13 +74,13 @@ The graph has two node types. A plain Page→Page connection is **purely visual*
 
 ### REQ-NAV-005 — Directed graph with labels and conditions
 
-**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) · spec §8.3, §8.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §8.3, §8.4 · **In Progress** · Issue: — · PR: —
 
 Edges are authored through a form-based list within the flow page. (Moved from R2/M2.2 to R1/M1.6 on 2026-08-17.) Nodes and edges are relational tables, not a graph database (REQ-FDN-005).
 
 ### REQ-NAV-006 — Automatic Mermaid generation from the graph
 
-**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) · spec §8.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §8.4 · **In Progress** · Issue: — · PR: —
 
 The diagram is generated from the structured graph, not written. Hand-written Mermaid remains available inside any rich-text content for free-form diagrams not derived from the graph. Both rely on the renderer delivered by [REQ-AUTH-004](REQ-AUTH.md#req-auth-004--mermaid-rendering-and-live-preview) in the same milestone — it is built once and serves both.
 
@@ -85,7 +88,7 @@ The diagram is generated from the structured graph, not written. Hand-written Me
 
 ### REQ-NAV-007 — Sidebar exposing flows alongside the hierarchy
 
-**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) · spec §8.5 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §8.5 · **Not Started** · Issue: — · PR: —
 
 The sidebar exposes both the page hierarchy and the flows, so the inventory can be navigated either way.
 

@@ -2,7 +2,26 @@
 
 **Appendix to [scope.md](scope.md).** This is the enumerated definition of what R1 must deliver. It is the checklist that makes the R1 release criterion falsifiable rather than a matter of opinion: R1 is complete when every row below is satisfied, and not before.
 
-The list is the minimum set of capabilities a tracking-documentation platform must provide to be genuinely usable in place of the ad-hoc documents and wikis it replaces. **It is a checklist, not a survey of what any particular product contains** — the item-by-item verification at [M1.10](milestones.md#m110--pilot-cutover) is what confirms it, and anything found missing from this table belongs in it.
+The list is the minimum set of capabilities a tracking-documentation platform must provide to be genuinely usable in place of the ad-hoc documents and wikis it replaces. **It is a checklist, not a survey of what any particular product contains** — the item-by-item verification at [M1.18](milestones.md#m118--r1-acceptance) is what confirms it, and anything found missing from this table belongs in it.
+
+## How a row is satisfied
+
+**Revised 2026-08-18.** Every row below describes something **an editor does in a browser**. A row is satisfied when a person can do it on a deployed instance — not when a service method behind it passes a unit test, and not when a REST endpoint exists that could do it if something called it.
+
+This has to be said because it was read the other way. R1 was declared complete on 2026-08-17 against a codebase whose application was never assembled, whose client rendered the text "R0 scaffolding", and in which no user could be granted access to a project at all. Every row in the three structured-table sections below had a service method and a route handler; not one of them had a screen, and the route handlers were not served. The checklist did its job — it is exactly what made the gap demonstrable when someone looked — and what failed was the reading of it.
+
+The verification at [M1.18](milestones.md#m118--r1-acceptance) is therefore done **against the running application, row by row, naming the screen that satisfies each row.** The completing milestone for each section:
+
+| Section                                                             | Satisfied at                                                                                                                                                                                                          | What it needs first                                     |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| [Document structure, per project](#document-structure-per-project)  | [M1.16](milestones.md#m116--authoring-ui)                                                                                                                                                                             | project creation and catalogue copy wired into the UI   |
+| [The five documentation sections](#the-five-documentation-sections) | [M1.16](milestones.md#m116--authoring-ui), [M1.17](milestones.md#m117--consultation-search-and-publication-ui)                                                                                                        | the markdown editor, the page tree, the changelog view  |
+| [The structured tables](#the-structured-tables)                     | [M1.16](milestones.md#m116--authoring-ui)                                                                                                                                                                             | the tracking, property, module and destination editors  |
+| [Authoring behaviours](#authoring-behaviours)                       | [M1.16](milestones.md#m116--authoring-ui)                                                                                                                                                                             | templates, duplication, flows                           |
+| [Data layer conventions](#data-layer-conventions)                   | [M1.12](milestones.md#m112--access-administration-and-api-surface-completion)                                                                                                                                         | the MCP resource served by the running process          |
+| [What R1 adds beyond the minimum](#what-r1-adds-beyond-the-minimum) | [M1.13](milestones.md#m113--tenancy-and-authorisation-hardening), [M1.14](milestones.md#m114--write-integrity-audit-and-publication-correctness), [M1.17](milestones.md#m117--consultation-search-and-publication-ui) | reader sessions, audit coverage, the diff and search UI |
+
+**The single sentence this table exists to make true:** an editor, working only in a browser against a deployed instance, can build a complete tracking documentation for a product from an empty project — every row below — search it, publish it, and hand a reader a link.
 
 ## Document structure, per project
 
@@ -70,8 +89,8 @@ Everything above is the baseline. These are the capabilities that make R1 a genu
 - Draft → published versioning, selective publication, and an automatically generated diff and changelog ([REQ-VER-001](requirements/REQ-VER.md#req-ver-001--single-draft--published-model) … [REQ-VER-007](requirements/REQ-VER.md#req-ver-007--full-historical-version-consultation))
 - Search over specific values, so _"which tracking sets this value?"_ is answerable ([REQ-AUTH-007](requirements/REQ-AUTH.md#req-auth-007--project-scoped-full-text-search))
 - A complete API and MCP surface — anything doable in the UI is doable by a machine ([REQ-API-001](requirements/REQ-API.md#req-api-001--internal-rest-api-as-the-single-entry-point) … [REQ-API-004](requirements/REQ-API.md#req-api-004--mcp-write-tools-draft-only))
-- Read access without a licensed account, via project shared passwords ([REQ-SEC-005](requirements/REQ-SEC.md#req-sec-005--project-shared-password-access-with-expiry))
-- An append-only audit log ([REQ-SEC-006](requirements/REQ-SEC.md#req-sec-006--append-only-audit-log-24-month-retention))
+- Read access without a licensed account, via project shared passwords ([REQ-SEC-005](requirements/REQ-SEC.md#req-sec-005--project-shared-password-access-with-expiry)) — the password verifies but issues no reader session as of 2026-08-18, so there is nothing to read it with; completed at [M1.13](milestones.md#m113--tenancy-and-authorisation-hardening) and [M1.17](milestones.md#m117--consultation-search-and-publication-ui)
+- An append-only audit log ([REQ-SEC-006](requirements/REQ-SEC.md#req-sec-006--append-only-audit-log-24-month-retention)) — recording one event class of the ten it names as of 2026-08-18; completed at [M1.14](milestones.md#m114--write-integrity-audit-and-publication-correctness)
 - CDP audiences and feedback surveys as first-class entities — **moved to R2 / M2.7 on 2026-08-17**; not part of the R1 minimum ([REQ-DOM-017](requirements/REQ-DOM.md#req-dom-017--cdp-audience-entity), [REQ-DOM-018](requirements/REQ-DOM.md#req-dom-018--survey-entity))
 
 ## What R1 deliberately does not include

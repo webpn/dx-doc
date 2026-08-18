@@ -22,7 +22,19 @@ Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that sli
 
 ## Current position
 
-**Release 1 (MVP) is complete.** All milestones M1.1 through M1.10 are implemented, tested, and validated. Core tracking data models, import-grade REST APIs, MCP Streamable HTTP server, agent-driven pilot import harness, optimistic concurrency stale-write guards, rich-text markdown & tracking duplication, flow graphs with automated Mermaid diagram generation, project-scoped search, single-draft version publication pipeline with immutable snapshots & automated changelog diffing, shared-password project access with expiry, append-only audit logging, and pilot cutover requirements are all fully implemented and verified. Release 2 (R2) is next.
+**R1 is in its completion phase — [M1.11](#m111--runtime-assembly-and-first-run) through [M1.18](#m118--r1-acceptance).**
+
+M1.1–M1.10 delivered the **domain, application and transport layers**: the full R1 entity set with its composition rules, a SQLite persistence layer behind repository ports, application services carrying the validation and permission logic, ~60 REST route handlers, an MCP JSON-RPC handler, the publication pipeline, and the search, shared-password and audit-log machinery. That code is typechecked, linted and covered by 148 tests.
+
+**It is not yet an application.** A codebase review on 2026-08-18 established three things that the M1.10 exit criterion should have caught and did not:
+
+1. **Nothing is assembled.** `registerAllRoutes` has no call site; `buildApp` registers only `/api/health` and the static handler. No composition root constructs a repository or a service outside test files, the first-run bootstrap is never invoked, and `registerAuthRoutes` is not part of `registerAllRoutes`. Every test builds its own Fastify instance and wires the parts it needs, which is why the suite is green while the served application is a health check.
+2. **There is no UI.** `src/app/App.tsx` renders one route containing the text "R0 scaffolding"; `src/design-system/index.ts` is `export {}`. No editor, no design system, no data-fetching layer. Every R1 requirement whose subject is an editor, a sidebar, a diff view or a reader mode has a service method behind it and no screen.
+3. **The authorisation model has holes and the identity model has a dead end.** Catalogue reads (`projectId IS NULL`) skip the permission check in ten places, so any authenticated user can read any tenant's property, module, destination, template and free-page catalogue. Shared-password hashes are returned by a read path. No code path can create a `project_grant`, so no user can ever be granted access to a project. The bootstrap administrator is created company-less and the login route requires a company id, so the only account the system can create cannot log in.
+
+**The correction is planned, not improvised.** M1.11–M1.18 close it in dependency order: assemble the runtime, complete the access and API surface, fix the tenancy and authorisation defects, make writes durable and auditable, then build the client — foundation, authoring, consultation — and re-run the M1.10 acceptance for real. **Milestone IDs are stable, so M1.1–M1.10 keep theirs and are not renumbered or rewritten**; what changed is that requirements they claimed are now carried forward to the milestone that actually finishes them, and the [requirement files](requirements/README.md) are the record of that.
+
+**The R1 release criterion is unchanged and now falsifiable in one sentence:** an editor, working only in the browser against a deployed instance, can build a complete tracking documentation for a product — pages, trackings, properties, modules, destinations, specific values, flows and free pages — search it, publish it, and hand a reader a link. Nothing in R1 is complete until that is demonstrated at [M1.18](#m118--r1-acceptance).
 
 ---
 
@@ -270,7 +282,154 @@ Final import run, **item-by-item editorial verification of the first product**, 
 
 > The item-by-item verification is also the only chance to correct the minimum-requirements checklist itself. It was derived from the baseline documentation structure, and real products drift from any baseline — anything found in the real product that the checklist does not name belongs in it.
 
-> **R1 gate.** The import is complete and live. Two things must be recorded here and are not recoverable later:
+> **Superseded on 2026-08-18.** M1.10 was closed against a codebase in which the application was never assembled, no UI existed, and the import script it depends on was never committed. Its exit criterion — "every row of the minimum requirements is satisfied" — was not demonstrated, and could not have been. The milestone keeps its ID and its scope; its acceptance moves to [M1.18](#m118--r1-acceptance), which re-runs it against a running application. [REQ-IMP-007](requirements/REQ-IMP.md#req-imp-007--import-scripts-committed-and-re-runnable) and [REQ-IMP-008](requirements/REQ-IMP.md#req-imp-008--source-system-frozen-then-read-only-archive) move with it.
+
+---
+
+## R1 completion — assembly, hardening and the client
+
+_Target: weeks 9–16. No new product scope: every milestone here finishes a requirement M1.1–M1.10 already claimed, or fixes a defect that claim concealed. The order is a dependency chain, not a preference — nothing can be demonstrated in a browser until the runtime is assembled, and nothing can be demonstrated safely until the authorisation holes are closed._
+
+> **The rule that produced this section, and that applies to every milestone in it:** a requirement is `Implemented` when it is reachable by the user the requirement is written for, through the entry point the requirement names. A service method with a passing unit test and no route is not an implemented API requirement; a route with no screen is not an implemented authoring requirement. This is not new — it is what [the requirements index](requirements/README.md#status-legend) already says `Verified` means, applied to `Implemented` as well.
+
+### M1.11 — Runtime assembly and first-run
+
+**Goal:** the process that `npm start` launches is the application the code describes.
+
+**Delivers:** REQ-FDN-023, REQ-FDN-024, REQ-FDN-014 · **completes** REQ-API-001, REQ-SEC-013
+
+A **composition root** that opens the database connection, constructs every repository, service and permission checker once, and hands them to `registerAllRoutes` — including `registerAuthRoutes`, which is currently absent from it. First-run bootstrap invoked at startup, against the same configuration loader that already refuses to start on a missing variable (REQ-FDN-013). A readiness endpoint distinct from liveness: `/api/health` answers "the process is up", `/api/ready` answers "migrations are applied and the database is reachable". Error-tracking integration wired to `SENTRY_DSN` (REQ-FDN-014), which is configured but has no consumer.
+
+**Depends on:** M1.2, M1.3, M1.9
+
+**Exit:** a **route-table test** asserts that the routes the running application serves are exactly the routes the API layer defines — a handler that exists in source and is not registered fails the build, which is the specific defect this milestone exists to make impossible to reintroduce; `docker compose up -d --build` on a clean machine yields an instance where the bootstrap administrator can authenticate and reach an authorised endpoint, exercised end to end by a test that starts the real server rather than a per-test Fastify instance; starting against an unmigrated database fails loudly and names the remedy.
+
+> **This is the milestone whose absence made every later claim unfalsifiable.** Test suites that assemble their own application cannot detect that the application is never assembled. The route-table test is cheap and it is the only exit criterion here that is really about the future.
+
+### M1.12 — Access administration and API surface completion
+
+**Goal:** a person can be given access to a project, and every R1 capability has an endpoint.
+
+**Delivers:** REQ-API-002, REQ-API-009 · **completes** REQ-SEC-003, REQ-SEC-014, REQ-IMP-002, REQ-IMP-004, REQ-API-003, REQ-API-004, REQ-API-006
+
+**Project grants become administrable.** `AccountRepository` gains grant creation, update and revocation; `ProjectService.create` grants the creator on the project it just created; the grant endpoints enforce `project.manage_access` (REQ-SEC-003). Without this the permission model is not strict, it is closed: `canOnProject` consults a table nothing can write to.
+
+**The company-less administrator can log in.** The login route accepts an absent company id and resolves against `company_id IS NULL`, which is what the bootstrap administrator (REQ-SEC-013) and the instance-administration capability (REQ-SEC-014) already assume.
+
+**The remaining surface lands:** company CRUD, account lifecycle (invite, deactivate, password reset — three application services with no routes), asset upload against the S3 port (REQ-IMP-004, which has `UPLOAD_MAX_BYTES` and `IMAGE_MAX_DIMENSION` configured and no consumer), deletion for every entity that R1 allows an editor to delete, and the OpenAPI document generated from the implementation (REQ-API-002, which has no artefact of any kind today). **MCP parity** closes the gap between 13 tools and ~60 endpoints: flows, triggers, versions, search, specific values and destinations get tools, so REQ-API-003/004's "the full R1 entity set" is true rather than approximate.
+
+**Depends on:** M1.11
+
+**Exit:** a newly created project is readable by its creator with no manual database write — the negative case today; an Admin grants a Viewer on one project and that Viewer reaches it and no other; a deactivated user's session and service token both stop working within one request; an agent can construct a complete tracking — page, modules, properties, specific values, destinations, flow — through MCP tools alone, which is the M1.3 exit criterion re-run against the full entity set; the OpenAPI document is generated in CI and a request that contradicts it fails review.
+
+> **Service-account tokens (REQ-API-009) are today a Bearer header resolved against the session store.** That is authentication, not a service account: there is no issuance, no listing, no revocation and no expiry independent of a human's session. This milestone gives them their own lifecycle, because M1.4's import runs on them.
+
+### M1.13 — Tenancy and authorisation hardening
+
+**Goal:** the multi-tenancy boundary holds on every path, not only the ones with tests.
+
+**Delivers:** REQ-SEC-016, REQ-SEC-017, REQ-SEC-018, REQ-SEC-019 · **completes** REQ-SEC-001, REQ-SEC-005, REQ-SEC-010, REQ-SEC-011, REQ-FDN-002
+
+Six defects, all found on 2026-08-18, all in code M1.1–M1.9 shipped:
+
+- **Catalogue reads are unauthorised.** `listProperties`, `listModules`, `listDestinations`, `listTrackingTemplates`, `listFreePages` and their five by-id counterparts check the caller's grant when `projectId` is set and check **nothing** when it is null, taking the company id from the URL. Any authenticated user reads any tenant's catalogue. Free pages make it worse: a non-publishable free page is where REQ-SEC-012 says test credentials live.
+- **Write attribution is unchecked.** `createModule` and its four siblings write `company_id` from the URL without verifying the named project belongs to that company, so a user with an edit grant anywhere can attribute rows to any tenant.
+- **Shared-password hashes are returned** by `GET /projects/:id/shared-passwords`, to anyone holding `project.read`.
+- **`deleteSharedPassword` ignores its project scope** — the permission check uses `projectId`, the delete uses the id alone.
+- **`listAuditLogs` does not verify** that the requested project belongs to the company whose audit permission was checked.
+- **The session cookie sets `secure: false` unconditionally**, and no path in the codebase is rate-limited — including the unauthenticated shared-password verify endpoint, which runs one bcrypt comparison per stored password per request.
+
+The fix is not ten patches. A single **deny-by-default authorisation helper** (REQ-SEC-016) takes the actor, the company scope, the optional project scope and the action, and every service method routes through it; the catalogue branch stops being an implicit `else` that nobody wrote. Shared-password access also gains the reader session it never had: verifying a password issues a scoped, read-only session token, which is what [REQ-VIEW-001](requirements/REQ-VIEW.md#req-view-001--in-app-read-only-view) consumes at M1.17.
+
+**Depends on:** M1.12
+
+**Exit:** a **cross-tenant test matrix** runs every read and write entry point — REST, MCP and direct service call — as a user of company B against company A's data, and every cell is denied; the catalogue path is in that matrix, since its absence is the defect; no response body anywhere contains a password hash, a token hash or a secret, asserted by a response-shape test rather than by inspection; a shared-password verify endpoint under repeated failure is throttled and the throttling is tested; the session cookie carries `secure` whenever `APP_URL` is `https`, and a test asserts it.
+
+> **Why this is a milestone and not a patch set.** Five of the six defects are the same defect: an authorisation decision expressed as a condition at each call site rather than as a single gate every call site must pass. Fixing them individually leaves the shape that produced them, and there are ~30 such call sites in `TrackingService` alone.
+
+### M1.14 — Write integrity, audit and publication correctness
+
+**Goal:** a write is atomic, recorded, conflict-safe, and cannot leak content it excluded.
+
+**Delivers:** REQ-FDN-025, REQ-NFR-015 · **completes** REQ-SEC-006, REQ-SEC-012, REQ-AUTH-005, REQ-VER-003, REQ-VER-005, REQ-VER-006, REQ-IMP-005
+
+- **Audit coverage.** `appendLog` has two call sites today, both about shared passwords. REQ-SEC-006 enumerates login, entity create/modify/delete, publication, export, shared-password access, MCP calls and permission changes. Every class named there gets its entry and its test, and the log is made append-only in the schema rather than by convention.
+- **Optimistic concurrency everywhere.** `expectedUpdatedAt` exists on exactly one of ~15 update methods (`updateTracking`). REQ-AUTH-005 and [ADR-0016](../adr/0016-concurrency-model.md) say every mutable entity. Every update path takes the token and returns the same `stale_write` conflict.
+- **Publication stops leaking non-publishable content.** `publishVersion` filters free pages by the caller's explicit exclusion list only, so a page marked `publishable: false` lands in the immutable snapshot. The search path gets this right and publication does not — which is exactly the "each output channel carries its own REQ-SEC-012 test" rule in the Definition of Done, unobserved.
+- **The changelog covers what it claims.** The diff emits `property` and `tracking` entries only, while `ChangelogEntry` admits modules, destinations, pages and flows. Selective publication's referential-integrity rule (REQ-VER-003) is a comment with no code beneath it.
+- **Transactional boundaries** (REQ-FDN-025). `publishVersion` reads six collections and writes a snapshot, `setFlowGraph` replaces nodes and edges, and the batch endpoint (REQ-IMP-005) writes hundreds of rows — none in a transaction. A partial batch failure currently leaves partial data and reports success per item.
+- **Query-path indexes** (REQ-NFR-015). The migrations create no index at all: every foreign key and every `custom_id` lookup is a table scan. This is the milestone where REQ-NFR-001…004's targets stop being aspirational, because M1.17 measures them.
+
+**Depends on:** M1.13
+
+**Exit:** every event class in spec §17.4 has a test proving an audit entry, and no application path can update or delete one; two concurrent edits to any mutable entity produce a rejected save with a conflict message, tested per entity type rather than per service; a free page marked non-publishable is provably absent from a published version, queried directly out of the snapshot; a batch write that fails on item 40 of 100 leaves nothing behind; the reconciliation report and the search sync over the first imported product's volume meet REQ-NFR-002 and REQ-NFR-004.
+
+### M1.15 — Client foundation
+
+**Goal:** there is an application in the browser, and everything after this is a screen inside it.
+
+**Delivers:** REQ-FDN-026 · **completes** REQ-NFR-007, REQ-NFR-010, REQ-NFR-012
+
+The design system stops being `export {}`. shadcn/ui components brought in as source, kept close to upstream per [ADR-0011](../adr/0011-ui-library-selection.md) and [ADR-0008](../adr/0008-design-system-boundary.md), with the token set as the single source of visual values. The application shell: authenticated layout, company and project switcher, navigation chrome, error and empty states. **Server state through TanStack Query** ([ADR-0012](../adr/0012-data-fetching-strategy.md)) with project-scoped query keys so a cache entry cannot cross a project boundary; **local state through Zustand** ([ADR-0013](../adr/0013-state-management.md)), small per-slice stores. Login, logout, forced password change at first login (REQ-SEC-013), password reset, and the project list filtered to the caller's grants. Desktop-only layout (REQ-NFR-007), English with the translation seam in place (REQ-NFR-010), localised dates and numbers (REQ-NFR-012).
+
+**Depends on:** M1.12 — the screens need grants and lifecycle endpoints to be worth building
+
+**Exit:** the bootstrap administrator logs in through the browser, is forced to change the password, creates a company, creates a project, grants an editor, and that editor sees exactly that project on login — the whole path in a Playwright test against a real instance, with no API client and no seeded database; a component imported from a shadcn path outside `@project/design-system` fails lint.
+
+> **This is the first milestone whose exit criterion a non-developer can check**, and that is deliberate. Everything before it is verifiable only by test; from here the demonstration is somebody using the product.
+
+### M1.16 — Authoring UI
+
+**Goal:** an editor can build the whole tracking documentation without leaving the browser.
+
+**Delivers:** — · **completes** REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-005, REQ-AUTH-006, REQ-DOM-007, REQ-DOM-009, REQ-DOM-019, REQ-NFR-001, REQ-NFR-011
+
+The screens behind the M1.5 requirements, plus the two model capabilities whose service layer stops short of the requirement:
+
+- **Markdown editor** with the full block set (REQ-AUTH-001), engine per [ADR-0023](../adr/0023-rich-text-editor.md), storing ` ```mermaid ` blocks verbatim; **image upload** by drag-and-drop and paste against the M1.12 asset endpoint, 10 MB cap, resize to 2000 px (REQ-AUTH-002); **free pages** with the publishable flag visible and consequential in the UI (REQ-AUTH-003).
+- **Page editor**: hierarchy, description, screenshots, parent selection.
+- **Tracking editor**: navigation event, page attachment created inline, module attachment and detachment with the REQ-DOM-008 warning surfaced, per-property `presence`, specific values with placeholders preserved verbatim, destination mapping with per-mapping name override.
+- **Property, module and destination editors**, project-scoped and catalogue-scoped, with the **catalogue copy** flow (REQ-DOM-019) — implemented as a service method with no route and no screen.
+- **Tracking templates** (REQ-DOM-009): the entity stores a `config_json` that nothing reads. The requirement is an editor-configurable template that pre-seeds a new tracking, including its default specific values, with no software release. That mechanism is built here.
+- **Opt-in module propagation** (REQ-DOM-007): the default — a module edit does not reach existing trackings — holds today because no propagation path exists at all. The opt-in half is built here, with the preview of what it will touch.
+- **Tracking duplication** (REQ-AUTH-006) and **conflict handling** (REQ-AUTH-005): the stale-write rejection from M1.14 surfaced as a comprehensible conflict message, not a toast saying 409.
+
+**Depends on:** M1.14, M1.15
+
+**Exit:** an editor builds one complete page of the first imported product's documentation — page, screenshot, two trackings, their modules, properties, presence, specific values and destination mappings — using the browser only, and the result is indistinguishable in content from the source documentation; two editors on the same tracking produce a conflict message naming what changed; opening a tracking page meets REQ-NFR-001's 2-second target at the first imported product's volume.
+
+### M1.17 — Consultation, search and publication UI
+
+**Goal:** the documentation can be navigated, searched, published and read.
+
+**Delivers:** — · **completes** REQ-NAV-001 … REQ-NAV-007, REQ-AUTH-004, REQ-AUTH-007, REQ-VER-001, REQ-VER-002, REQ-VER-004, REQ-VER-007, REQ-VIEW-001, REQ-NFR-002, REQ-NFR-003, REQ-NFR-004, REQ-NFR-014
+
+- **Navigation** (REQ-NAV-001, 002, 007): the page hierarchy as a navigable sidebar, the automatic per-page recap answering "what is tracked here?" without a further click, and flows exposed alongside the hierarchy.
+- **Flows** (REQ-NAV-003…006, REQ-AUTH-004): the flow editor over the existing graph model, the generated Mermaid diagram **rendered** — `generateMermaidDiagram` produces a string today and nothing draws it — and hand-written ` ```mermaid ` blocks rendered by the same component.
+- **Search** (REQ-AUTH-007): the client-side Pagefind path the adapter was designed for. `PagefindSearchIndex.query` rejects by construction — Pagefind has no server-side query API — so `GET /projects/:id/search` fails for the default driver. The index artefact is served through the authorised, grant-checked route (REQ-FDN-008) and queried in the browser, with the two-index draft/published model from [ADR-0009](../adr/0009-search-abstraction.md) and its 30-second draft-freshness target.
+- **Publication** (REQ-VER-001, 002, 004, 007): the unpublished-changes indicator, the pre-publication diff — the feature [the risk register](#risk-mitigations-owned-by-milestones) names as load-bearing for adoption — selective exclusion with its referential warnings, version metadata, and full historical consultation.
+- **Reader mode** (REQ-VIEW-001): the in-app read-only view, reachable by an invited account and by the shared-password reader session built at M1.13, with non-publishable content absent (REQ-SEC-012) and every mutating affordance gone rather than disabled.
+- **Observability** (REQ-NFR-014): structured logs and the error-tracking integration from M1.11 exercised against real failures.
+
+**Depends on:** M1.16
+
+**Exit:** the first imported product's hierarchy is navigable end to end; searching a literal specific value returns the trackings that set it, within REQ-NFR-002's 4 seconds, and a user without a grant can fetch neither hits nor the index artefact; publishing produces a changelog nobody wrote by hand and a diff generated within REQ-NFR-003's 6 seconds; a reader with a shared password reaches the published documentation and no draft, no non-publishable page and no edit control.
+
+### M1.18 — R1 acceptance
+
+**Goal:** the release criterion is demonstrated, not asserted.
+
+**Delivers:** REQ-IMP-007, REQ-IMP-008 — otherwise the acceptance milestone for R1, re-running [M1.10](#m110--pilot-cutover)'s criterion against a running application.
+
+The import script M1.4 was closed without committing: written against the completed API and MCP surface, reviewed, committed, and run against real data ([ADR-0021](../adr/0021-agent-driven-migration.md) — the deliverable is a committed script, not an agent session). Then the M1.10 work as originally scoped: final import run, **item-by-item editorial verification of the first product**, editor onboarding, the source documentation frozen read-only, and a human publishing version 1.
+
+**Depends on:** M1.17 · **Gated by:** O8 (developer-handoff reference review)
+
+**Exit:** **an editor who has never seen the repository builds a complete tracking documentation for a product from an empty project, in the browser, and publishes it** — this single demonstration is the acceptance criterion for the whole release; every row of the [minimum requirements](minimum-requirements.md) is satisfied and demonstrated, each row named against the screen that satisfies it; the first imported product's documentation is imported and verified item-by-item; running the import script twice produces no duplicates; every R1 requirement is `Verified` in its requirement file, with no row `Implemented` on the strength of a unit test alone.
+
+> **The one process change this section is worth.** M1.10 was closed on the strength of a test suite. Its replacement is closed on the strength of somebody using the product, and the requirement files carry `Verified` rather than `Implemented` for every R1 row when it is. If that distinction had been enforced at M1.10 — it is already written down in [the status legend](requirements/README.md#status-legend) — this section would not exist.
+
+> **R1 gate.** A tracking documentation can be authored, searched, versioned, published and read, by people, in a browser, on a deployed instance. The import is complete and live. Two things must be recorded here and are not recoverable later:
 >
 > - **O13's answer.** The operations editors performed by hand during this import are the evidence base for R2's bulk operations.
 > - **Whether the import script generalises.** The first imported product is one of the products being imported, documented against a template that drifted over years. If the script needed heavy per-product adaptation, that is the signal that the remaining products are a longer job than one script run each — and it is worth knowing before committing to a schedule for them.
@@ -484,20 +643,30 @@ M0.1 ─→ M0.2 ─→ M0.4 ─┐
                                               ├─→ M1.6 ─────────────────────┤
                                               ├─→ M1.7 ─────────────────────┤
                                               └─→ M1.8 ─→ M1.9 ─────────────┘
+                                                                             │
+   R1 completion (strictly sequential — each step is the next one's premise) │
+                                                                             ↓
+   M1.11 ─→ M1.12 ─→ M1.13 ─→ M1.14 ─→ M1.15 ─→ M1.16 ─→ M1.17 ─→ M1.18
+   assemble  access   tenancy   write     client    author    consult   accept
+             + API    + authz   integrity foundation
 ```
 
-Four things sit on the critical path and are worth protecting:
+Six things sit on the critical path and are worth protecting:
 
 1. **M0.1 blocks everything.** It is a decision milestone with no code. It is also the cheapest place in the project to spend a week.
 2. **M1.2 → M1.3 → M1.4 is now a three-milestone chain, and it is the longest one in R1.** The import cannot start until the API is complete and the MCP tools exist. This chain replaced a single self-contained importer milestone, and it is the main reason R1 got harder rather than easier ([ADR-0021](../adr/0021-agent-driven-migration.md)).
-3. **M1.4 must not slip behind the UI.** Its value is diagnostic and it decays: an import that runs in week 6 can still change the data model, one that runs in week 8 cannot.
-4. **M2.5 blocks all of R2's distribution.** Every export milestone depends on the non-leakage guarantee. Building exports first and retrofitting the rendering profile means auditing every artefact twice.
+3. **M1.4 must not slip behind the UI.** Its value is diagnostic and it decays: an import that runs in week 6 can still change the data model, one that runs in week 8 cannot. It did slip — the script was never committed — and it is re-run at [M1.18](#m118--r1-acceptance) against a complete surface, which is a worse position than the original schedule and the reason this note stays.
+4. **M1.11 is the new M0.1: it blocks everything after it and it is cheap.** A composition root and a route-table test are a day of work that make every subsequent exit criterion demonstrable. Every milestone from M1.12 onward is unverifiable without it.
+5. **M1.13 must not slip behind M1.15.** The tenancy defects are in shipped code; the moment a UI exists, an instance becomes worth deploying, and a deployed instance with an unauthorised catalogue read path is a disclosure. Hardening before the client is a sequencing choice made once, not a preference to revisit under schedule pressure.
+6. **M2.5 blocks all of R2's distribution.** Every export milestone depends on the non-leakage guarantee. Building exports first and retrofitting the rendering profile means auditing every artefact twice.
+
+> **The R1 completion chain has no parallelism, and that is deliberate.** M1.15–M1.17 could nominally start against the current API, but building screens against an authorisation model that is about to change and a route table that is not served produces rework that costs more than the sequencing does. The one exception worth taking: design-system component work (M1.15) has no backend dependency and can start during M1.13–M1.14.
 
 ## Open decisions, by the milestone they gate
 
 | Decision                                                     | Gates | Last responsible moment |
 | ------------------------------------------------------------ | ----- | ----------------------- |
-| O8 — developer-handoff reference patterns                    | M1.10 | End of R1               |
+| O8 — developer-handoff reference patterns                    | M1.18 | End of R1               |
 | O3 — structured "how to read this in the analytics platform" | M2.1  | Start of R2             |
 | O1 — semantic layer ontology, IRIs, export formats           | M5.0  | End of R2               |
 | O2 — business glossary                                       | M5.0  | End of R2               |
@@ -517,29 +686,31 @@ Four things sit on the critical path and are worth protecting:
 
 | Risk (spec §22)                                                     | Owning milestone | Mitigation                                                                                                                                                                                                                                                                                                                                                                                   |
 | ------------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| R1 — Must set exceeds the R1 budget                                 | M1.4, M1.10      | Week 5–6 import checkpoint; named demotion candidates below                                                                                                                                                                                                                                                                                                                                  |
+| R1 — Must set exceeds the R1 budget                                 | M1.4, M1.18      | Week 5–6 import checkpoint; named demotion candidates below. **Materialised on 2026-08-18**, in the form the register did not anticipate: the budget was met on paper by closing milestones against unit tests instead of against the exit criteria. The countermeasure is M1.18's demonstration criterion, not a further demotion                                                           |
 | R2 — import exposes model ambiguities                               | M1.4             | Front-load the import ahead of the UI                                                                                                                                                                                                                                                                                                                                                        |
 | R3 — open-source work competes with features                        | M0.6             | One database adapter, one search implementation, one deployment path at launch                                                                                                                                                                                                                                                                                                               |
 | R4 — bus factor of one                                              | M2.6             | Git export as human-readable backup; second maintainer before R3                                                                                                                                                                                                                                                                                                                             |
 | R5 — semantic layer undefined                                       | M5.0             | Workshop before the end of R2; immutable IDs and `business_label` already shipped                                                                                                                                                                                                                                                                                                            |
-| R6 — adoption                                                       | M1.8, M1.10      | Invest in the pre-publication diff; onboard on the first imported product before extending                                                                                                                                                                                                                                                                                                   |
+| R6 — adoption                                                       | M1.8, M1.18      | Invest in the pre-publication diff; onboard on the first imported product before extending                                                                                                                                                                                                                                                                                                   |
 | R7 — ~~hosted search dependency~~ **search adapter capability gap** | M0.3, M1.7       | Risk replaced rather than mitigated: the default adapter has no hosted dependency, so nothing leaks off-instance and nothing needs procurement. What remains is reduced capability — typo tolerance given up until REQ-FDN-022. The rebuild cost of a built-not-updated index is bounded by the O14 model: coalesced async rebuilds on the draft, publication-triggered rebuilds for readers |
 | R8 — analytics API access not provisioned in time                   | M4.1             | Start provisioning during R2                                                                                                                                                                                                                                                                                                                                                                 |
-| **R9 — agent import produces plausible-looking wrong data**         | M1.4, M1.10      | Script reviewed before it runs at scale; reconciliation counts checked against source; first product verified item-by-item before the remaining products                                                                                                                                                                                                                                     |
+| **R9 — agent import produces plausible-looking wrong data**         | M1.4, M1.18      | Script reviewed before it runs at scale; reconciliation counts checked against source; first product verified item-by-item before the remaining products                                                                                                                                                                                                                                     |
 | **R10 — imported content lives in one unbacked SQLite file**        | M0.6             | File-level snapshot demonstrated in the reference stack; README states backup is the operator's job; git export closes it properly in R2                                                                                                                                                                                                                                                     |
 
 **If R1 overruns**, demote in this order and no further. Every item below is genuinely scheduled in R1, so demoting it relieves R1:
 
-| Order | Demote                                                                                                                          | From          | What is lost                                                                                                                                                                                                            |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | [REQ-FDN-014](requirements/REQ-FDN.md#req-fdn-014--error-tracking-integration) error tracking                                   | Should, M1.9  | Troubleshooting early on is by log reading. Cheapest to lose, easiest to add back                                                                                                                                       |
-| 2     | [REQ-API-006](requirements/REQ-API.md#req-api-006--mcp-resources-exposing-naming-guidelines) naming guidelines as MCP resources | Should, M1.3  | The agent writes without house conventions in context; imported content needs an editorial pass it would otherwise not need. Costs editor time across products, so prefer 1 first                                       |
-| 3     | [REQ-DOM-009](requirements/REQ-DOM.md#req-dom-009--tracking-template-editor-configurable) tracking templates                    | Must, M1.1    | Editors create trackings by duplication ([REQ-AUTH-006](requirements/REQ-AUTH.md#req-auth-006--tracking-duplication-within-a-project)) instead. Slower per tracking and less consistent, but nothing becomes impossible |
-| 4     | [REQ-DOM-007](requirements/REQ-DOM.md#req-dom-007--opt-in-propagation-of-module-changes) opt-in module propagation              | Must → Should | A module correction has to be reapplied by hand to existing trackings. Painful at pilot scale — this is the last resort, not the first                                                                                  |
+| Order | Demote                                                                                                                          | From                 | What is lost                                                                                                                                                                                                            |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | [REQ-FDN-014](requirements/REQ-FDN.md#req-fdn-014--error-tracking-integration) error tracking                                   | Should, M1.11        | Troubleshooting early on is by log reading. Cheapest to lose, easiest to add back                                                                                                                                       |
+| 2     | [REQ-API-006](requirements/REQ-API.md#req-api-006--mcp-resources-exposing-naming-guidelines) naming guidelines as MCP resources | Should, M1.3         | The agent writes without house conventions in context; imported content needs an editorial pass it would otherwise not need. Costs editor time across products, so prefer 1 first                                       |
+| 3     | [REQ-DOM-009](requirements/REQ-DOM.md#req-dom-009--tracking-template-editor-configurable) tracking templates                    | Must, M1.16          | Editors create trackings by duplication ([REQ-AUTH-006](requirements/REQ-AUTH.md#req-auth-006--tracking-duplication-within-a-project)) instead. Slower per tracking and less consistent, but nothing becomes impossible |
+| 4     | [REQ-DOM-007](requirements/REQ-DOM.md#req-dom-007--opt-in-propagation-of-module-changes) opt-in module propagation              | Must → Should, M1.16 | A module correction has to be reapplied by hand to existing trackings. Painful at pilot scale — this is the last resort, not the first                                                                                  |
 
 > **[REQ-AUTH-004](requirements/REQ-AUTH.md#req-auth-004--mermaid-rendering-and-live-preview) briefly left this list on 2026-08-12** by being demoted to R2, then **returned to R1/M1.6 on 2026-08-17** when flows (REQ-NAV-003…007) moved into R1 and needed the renderer it delivers. It is again a shipped R1 feature rather than a demotion candidate.
 
 **Do not demote** the import chain (M1.2–M1.4), the diff, selective publication, or the reconciliation report ([REQ-IMP-006](requirements/REQ-IMP.md#req-imp-006--reconciliation-report)) — the first three are load-bearing for the release criterion, and the fourth is the only mechanical check on agent-written content (risk R9).
+
+**Nothing in the R1 completion chain (M1.11–M1.18) is a demotion candidate, and the list above is not extended into it.** M1.11–M1.14 are corrections, not features: demoting a correction means shipping the defect. M1.15–M1.17 are the release criterion itself — an R1 without an authoring UI is not a reduced R1, it is the position the project is already in. If the chain overruns, the release date moves; the content does not.
 
 **Moved on 2026-08-17 (no longer a demotion candidate):** [REQ-DOM-017](requirements/REQ-DOM.md#req-dom-017--cdp-audience-entity) CDP Audience and [REQ-DOM-018](requirements/REQ-DOM.md#req-dom-018--survey-entity) Survey were removed from R1/M1.1 and scheduled for M2.7. They no longer sit on the R1 critical path, so this paragraph's warning about demoting them is moot; keeping them in R1 as a saving is no longer an option because they have already left.
 

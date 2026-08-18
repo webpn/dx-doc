@@ -4,24 +4,27 @@ Performance, availability, client support, internationalisation and observabilit
 
 Entry format and status legend: [requirements index](README.md).
 
+> **Carried forward on 2026-08-18.** A codebase review found that R1 milestones were closed on the strength of unit tests over application services, while the application itself was never assembled and no UI existed. Rows below that moved from `Implemented` to `In Progress` or `Not Started` have a service layer and no reachable entry point, or a defect the closing milestone did not test for; the `Milestone` column shows `original → completing` and the completing milestone is in the [R1 completion chain](../milestones.md#r1-completion--assembly-hardening-and-the-client). **No requirement changed scope, priority or release** — only the record of whether it is done. See the [milestones current position](../milestones.md#current-position).
+
 > These are **verified continuously, not delivered once**. Each has a milestone at which it first becomes measurable; from that point it is a standing acceptance condition for every later milestone, not a task that completes.
 
 | ID          | Requirement                                  | Target | First measurable | Status      |
 | ----------- | -------------------------------------------- | ------ | ---------------- | ----------- |
-| REQ-NFR-001 | Open a tracking page                         | < 2 s  | M1.5             | Not Started |
-| REQ-NFR-002 | Full-text search                             | < 4 s  | M1.7             | Not Started |
-| REQ-NFR-003 | Generate a diff between versions             | < 6 s  | M1.8             | Not Started |
-| REQ-NFR-004 | Load a very large project                    | < 3 s  | M1.6             | Not Started |
+| REQ-NFR-001 | Open a tracking page                         | < 2 s  | M1.5 → M1.16     | Not Started |
+| REQ-NFR-002 | Full-text search                             | < 4 s  | M1.7 → M1.17     | Not Started |
+| REQ-NFR-003 | Generate a diff between versions             | < 6 s  | M1.8 → M1.17     | Not Started |
+| REQ-NFR-004 | Load a very large project                    | < 3 s  | M1.6 → M1.17     | Not Started |
 | REQ-NFR-005 | Architecture must not require redundancy     | —      | R1               | Not Started |
 | REQ-NFR-006 | Backup is the operator's responsibility      | —      | M2.6             | Not Started |
-| REQ-NFR-007 | Desktop only; no responsive layout           | —      | M1.5             | Not Started |
+| REQ-NFR-007 | Desktop only; no responsive layout           | —      | M1.5 → M1.15     | Not Started |
 | REQ-NFR-008 | Browser support `browserslist >5%`           | —      | M0.1             | Implemented |
 | REQ-NFR-009 | No offline mode                              | —      | —                | Accepted    |
-| REQ-NFR-010 | English by default, with translation support | —      | M1.5             | Not Started |
-| REQ-NFR-011 | Content is single-language                   | —      | M1.1             | Not Started |
-| REQ-NFR-012 | Localised date and number formats            | —      | M1.5             | Not Started |
+| REQ-NFR-010 | English by default, with translation support | —      | M1.5 → M1.15     | Not Started |
+| REQ-NFR-011 | Content is single-language                   | —      | M1.1 → M1.16     | Not Started |
+| REQ-NFR-012 | Localised date and number formats            | —      | M1.5 → M1.15     | Not Started |
 | REQ-NFR-013 | WCAG AA as a design principle, not a gate    | —      | — (review only)  | Accepted    |
-| REQ-NFR-014 | Observability sufficient for troubleshooting | —      | M1.9             | Not Started |
+| REQ-NFR-014 | Observability sufficient for troubleshooting | —      | M1.9 → M1.17     | Not Started |
+| REQ-NFR-015 | Query-path index coverage                    | —      | M1.14            | Not Started |
 
 ---
 
@@ -31,10 +34,10 @@ Entry format and status legend: [requirements index](README.md).
 
 | Operation                        | Target | Measured at |
 | -------------------------------- | ------ | ----------- |
-| Open a tracking page             | < 2 s  | M1.5        |
-| Full-text search                 | < 4 s  | M1.7        |
-| Generate a diff between versions | < 6 s  | M1.8        |
-| Load a very large project        | < 3 s  | M1.6        |
+| Open a tracking page             | < 2 s  | M1.16       |
+| Full-text search                 | < 4 s  | M1.17       |
+| Generate a diff between versions | < 6 s  | M1.17       |
+| Load a very large project        | < 3 s  | M1.17       |
 
 **Acceptance**
 
@@ -126,3 +129,20 @@ Revisit if a public-sector deployer or a customer requiring a conformance statem
 **Should** · R1 · spec §15.5 · **Not Started**
 
 Basic parameters through an error-tracking service (REQ-FDN-014). **No product analytics is collected on the Platform itself** — a documentation tool for analytics that instruments its own users would be an awkward position to defend, and it is not needed.
+
+### REQ-NFR-015 — Query-path index coverage
+
+**Must** · R1 · [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · spec §15.1 · **Not Started**
+
+Every column a query filters or joins on carries an index. Stated as a requirement because R1's nine migrations create **no index at all**: the only indexes in the schema are the ones SQLite creates for primary keys and unique constraints, so every foreign-key lookup — `properties.project_id`, `trackings.project_id`, `audit_logs.company_id`, `project_grants.user_id`, every `custom_id` — is a table scan.
+
+At pilot volume this is invisible, which is precisely the problem: it stays invisible until the first imported product is loaded, at which point it appears as REQ-NFR-001…004 missing their targets, in a place where the cause is not obvious. The related shape is the N+1 query: the search sync, the reconciliation report and the catalogue copy all issue one query per item in a loop.
+
+**Acceptance**
+
+- A test enumerates the schema's foreign keys and asserts an index exists for each, so a migration adding a table without its indexes fails rather than being noticed later.
+- The queries behind REQ-NFR-001…004 are checked with `EXPLAIN QUERY PLAN` at the first imported product's volume, and none performs a scan of a table with more than a trivial row count.
+- The known N+1 paths — search sync, reconciliation report, catalogue copy, batch write — issue a bounded number of queries independent of item count.
+- Index definitions live in migrations (REQ-FDN-009) and use only the portable subset (REQ-FDN-020), so the R2 adapters inherit them.
+
+> Kept out of REQ-FDN because it is a standing performance condition, not a foundation delivered once — the same "verified continuously" pattern as the rest of this file.

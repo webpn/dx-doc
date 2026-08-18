@@ -8,8 +8,8 @@ Traceable requirements derived from the [functional specification](../functional
 
 | Prefix                  | Area                                                                           | Spec            | Count |
 | ----------------------- | ------------------------------------------------------------------------------ | --------------- | ----- |
-| [REQ-FDN](REQ-FDN.md)   | Foundations — platform, persistence, abstractions, configuration, distribution | §16, §18, §19.1 | 22    |
-| [REQ-SEC](REQ-SEC.md)   | Security, authentication and authorisation                                     | §17, Appendix B | 15    |
+| [REQ-FDN](REQ-FDN.md)   | Foundations — platform, persistence, abstractions, configuration, distribution | §16, §18, §19.1 | 26    |
+| [REQ-SEC](REQ-SEC.md)   | Security, authentication and authorisation                                     | §17, Appendix B | 19    |
 | [REQ-DOM](REQ-DOM.md)   | Domain model — entities, attributes, composition rules                         | §6, Appendix A  | 28    |
 | [REQ-AUTH](REQ-AUTH.md) | Authoring — editor, assets, duplication, concurrency, search                   | §7              | 15    |
 | [REQ-NAV](REQ-NAV.md)   | Structure and navigation — hierarchy, recap, flows, sidebar                    | §8              | 9     |
@@ -18,26 +18,28 @@ Traceable requirements derived from the [functional specification](../functional
 | [REQ-DEV](REQ-DEV.md)   | Developer handoff — snippets, Figma and dashboard links                        | §11             | 7     |
 | [REQ-API](REQ-API.md)   | API and MCP                                                                    | §12             | 10    |
 | [REQ-IMP](REQ-IMP.md)   | Import — ingesting content from other systems                                  | §13             | 9     |
-| [REQ-NFR](REQ-NFR.md)   | Non-functional — performance, availability, i18n, observability                | §15             | 14    |
+| [REQ-NFR](REQ-NFR.md)   | Non-functional — performance, availability, i18n, observability                | §15             | 15    |
 | [REQ-DQ](REQ-DQ.md)     | Data quality and deferred modules                                              | §14             | 8     |
 
-**159 requirements total.**
+**168 requirements total.**
+
+> **Nine added on 2026-08-18**, all R1, all from the codebase review recorded in the [milestones current position](../milestones.md#current-position). None adds product scope: [REQ-FDN-023](REQ-FDN.md#req-fdn-023--runtime-assembly-every-route-served-by-the-process) (runtime assembly), [REQ-FDN-024](REQ-FDN.md#req-fdn-024--startup-self-check-and-readiness-endpoint) (startup self-check), [REQ-FDN-025](REQ-FDN.md#req-fdn-025--transactional-write-boundaries) (transactions), [REQ-FDN-026](REQ-FDN.md#req-fdn-026--web-client-shell-built-on-the-design-system) (client shell), [REQ-SEC-016](REQ-SEC.md#req-sec-016--deny-by-default-authorisation-on-every-entry-point) … [REQ-SEC-019](REQ-SEC.md#req-sec-019--transport-security-and-authentication-throttling) (the tenancy and transport defects) and [REQ-NFR-015](REQ-NFR.md#req-nfr-015--query-path-index-coverage) (index coverage). Seven of the nine state something that was previously assumed rather than required — which is why they were not enforced, and why they are IDs now instead of review habits.
 
 > Three prefixes were added beyond the original list: **REQ-DOM** (§6 has ~28 requirements of its own and does not belong inside Foundations), **REQ-NFR** (§15 was previously unrepresented), and **REQ-DQ** (§14's deferred modules need IDs so milestones can reference them). **REQ-AUTH** means _authoring_; authentication lives in **REQ-SEC**.
 
 ## Distribution by release
 
-| Release | Requirements | Focus                                                                                          |
-| ------- | ------------ | ---------------------------------------------------------------------------------------------- |
-| R0      | 23           | Foundations, auth and account lifecycle, API, public repository, data-flow statement           |
-| R1      | 67           | Full data model, editor, versioning, import API + MCP, flows                                   |
-| R2      | 35           | Bulk operations, distribution channels, MariaDB/Postgres adapters, instance portal, SSO (OIDC) |
-| R3      | 15           | Snippets, Confluence, interactive agent access, hosted search adapter                          |
-| R4      | 6            | Data quality, Figma import, webhooks                                                           |
-| Backlog | 6            | Kubernetes/Helm packaging, semantic layer, lifecycle status, insights (no scheduled release)   |
-| —       | 8            | Explicitly rejected (recorded, not gaps)                                                       |
+| Release | Requirements | Focus                                                                                                                                                                                                   |
+| ------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R0      | 23           | Foundations, auth and account lifecycle, API, public repository, data-flow statement                                                                                                                    |
+| R1      | 76           | Full data model, editor, versioning, import API + MCP, flows, **plus the completion chain M1.11–M1.18: runtime assembly, access administration, tenancy hardening, write integrity and the web client** |
+| R2      | 35           | Bulk operations, distribution channels, MariaDB/Postgres adapters, instance portal, SSO (OIDC)                                                                                                          |
+| R3      | 15           | Snippets, Confluence, interactive agent access, hosted search adapter                                                                                                                                   |
+| R4      | 6            | Data quality, Figma import, webhooks                                                                                                                                                                    |
+| Backlog | 6            | Kubernetes/Helm packaging, semantic layer, lifecycle status, insights (no scheduled release)                                                                                                            |
+| —       | 8            | Explicitly rejected (recorded, not gaps)                                                                                                                                                                |
 
-R1 carries 67 requirements in six weeks. On 2026-08-17 the Net moves brought flows in and SSO out: REQ-NAV-003…007 (flow entity, triggers, graph, Mermaid generation, flow sidebar) and REQ-AUTH-004 (Mermaid rendering) moved from R2 into R1/M1.6, while REQ-SEC-004 (OIDC SSO) moved from R1/M1.9 to R2/M2.8 to join SAML SSO. Earlier moves: REQ-AUTH-004 had moved to R2 on 2026-08-12 and REQ-VIEW-002 (view selector) to R2 on 2026-08-13 to align with open decision O3, both of which are now reflected in the totals above. That concentration is risk R1 in the register, and it is why the [milestones](../milestones.md) name demotion candidates in advance rather than improvising under pressure.
+R1 carries 76 requirements. The first 67 were scoped for six weeks and were declared complete in eight; the review of 2026-08-18 established that the declaration was premature, and the [R1 completion chain](../milestones.md#r1-completion--assembly-hardening-and-the-client) adds nine requirements and eight milestones to finish them — assembly, tenancy hardening, write integrity and the client the first 67 assumed. The honest reading of the original estimate is that it omitted the web client entirely. On 2026-08-17 the Net moves brought flows in and SSO out: REQ-NAV-003…007 (flow entity, triggers, graph, Mermaid generation, flow sidebar) and REQ-AUTH-004 (Mermaid rendering) moved from R2 into R1/M1.6, while REQ-SEC-004 (OIDC SSO) moved from R1/M1.9 to R2/M2.8 to join SAML SSO. Earlier moves: REQ-AUTH-004 had moved to R2 on 2026-08-12 and REQ-VIEW-002 (view selector) to R2 on 2026-08-13 to align with open decision O3, both of which are now reflected in the totals above. That concentration is risk R1 in the register, and it is why the [milestones](../milestones.md) name demotion candidates in advance rather than improvising under pressure.
 
 > **Two decisions moved requirements after the first draft.** [ADR-0020](../../adr/0020-database-portability.md) replaced the MariaDB-only stance with repository ports and a SQLite default, adding three REQ-FDN entries and moving two database adapters into R2. [ADR-0021](../../adr/0021-agent-driven-migration.md) replaced the bespoke Notion importer with an agent driving a complete API, which rewrote REQ-IMP and pulled the documented public API, MCP read tools, MCP write tools and MCP resources from R3 into R1. Net effect on R1: six requirements out, ten in.
 
@@ -73,7 +75,11 @@ What the requirement means, and any rationale that is not obvious from the state
 | **Blocked**     | Cannot proceed until a named open decision closes.                                      |
 | **Rejected**    | Consciously excluded. The entry stays, with the reason.                                 |
 
-R0 requirements are **Implemented** / **Verified**; R1+ requirements are **Not Started** (or **Accepted**/**Rejected** for design decisions).
+**Applied strictly since 2026-08-18.** A requirement is `Implemented` when it is reachable by the user it is written for, through the entry point it names — not when a service method behind it passes a unit test. A route with no screen does not implement an authoring requirement; a handler the running process never registers does not implement an API requirement. This is what the legend already said, read literally; ten R1 milestones were closed without reading it that way, which is what the [R1 completion chain](../milestones.md#r1-completion--assembly-hardening-and-the-client) now corrects.
+
+`Verified` keeps its stronger meaning and is the bar for closing R1: every R1 row is `Verified` at [M1.18](../milestones.md#m118--r1-acceptance), demonstrated against a running instance by a person, with no row `Implemented` on the strength of a test alone.
+
+R0 requirements are **Implemented** / **Verified** except where [M1.11](../milestones.md#m111--runtime-assembly-and-first-run)–[M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) carry them forward (REQ-FDN-002, REQ-SEC-001/003/011/013/014, REQ-API-001 — each with the reason recorded on its entry). R1 requirements are **In Progress** where a service layer exists behind them and **Not Started** otherwise; R2+ requirements are **Not Started** (or **Accepted**/**Rejected** for design decisions).
 
 ## Keeping this current
 

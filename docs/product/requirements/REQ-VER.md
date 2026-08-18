@@ -2,28 +2,31 @@
 
 Draft model, selective publication, diff, changelog, history and rollback. Source: [functional specification](../functional-specification.md) §9, §19.6.
 
-Entry format and status legend: [requirements index](README.md). Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
+Entry format and status legend: [requirements index](README.md).
 
-| ID          | Requirement                                        | MoSCoW | Rel. | Milestone | Status      |
-| ----------- | -------------------------------------------------- | ------ | ---- | --------- | ----------- |
-| REQ-VER-001 | Single draft → published model                     | Must   | R1   | M1.8      | Implemented |
-| REQ-VER-002 | Unpublished-changes indicator                      | Must   | R1   | M1.8      | Implemented |
-| REQ-VER-003 | Selective publication of trackings and pages/flows | Must   | R1   | M1.8      | Implemented |
-| REQ-VER-004 | Version metadata                                   | Must   | R1   | M1.8      | Implemented |
-| REQ-VER-005 | Diff by entity, property and specific value        | Must   | R1   | M1.8      | Implemented |
-| REQ-VER-006 | Automatically generated changelog                  | Must   | R1   | M1.8      | Implemented |
-| REQ-VER-007 | Full historical version consultation               | Must   | R1   | M1.8      | Implemented |
-| REQ-VER-008 | Full rollback                                      | Should | R2   | M2.7      | Not Started |
-| REQ-VER-009 | Publication email notifications                    | Should | R2   | M2.7      | Not Started |
-| REQ-VER-010 | Agent-vs-human attribution in the diff             | Should | R2   | M2.7      | Not Started |
-| REQ-VER-011 | Selective rollback                                 | Could  | R3   | M3.5      | Not Started |
-| REQ-VER-012 | Branches, merges, approval, scheduled deprecation  | Won't  | —    | —         | Rejected    |
+> **Carried forward on 2026-08-18.** A codebase review found that R1 milestones were closed on the strength of unit tests over application services, while the application itself was never assembled and no UI existed. Rows below that moved from `Implemented` to `In Progress` or `Not Started` have a service layer and no reachable entry point, or a defect the closing milestone did not test for; the `Milestone` column shows `original → completing` and the completing milestone is in the [R1 completion chain](../milestones.md#r1-completion--assembly-hardening-and-the-client). **No requirement changed scope, priority or release** — only the record of whether it is done. See the [milestones current position](../milestones.md#current-position).
+> Acceptance criteria are written for R0 and R1 requirements; R2+ entries are catalogued and their criteria are elaborated when the release is planned.
+
+| ID          | Requirement                                        | MoSCoW | Rel. | Milestone    | Status      |
+| ----------- | -------------------------------------------------- | ------ | ---- | ------------ | ----------- |
+| REQ-VER-001 | Single draft → published model                     | Must   | R1   | M1.8 → M1.17 | In Progress |
+| REQ-VER-002 | Unpublished-changes indicator                      | Must   | R1   | M1.8 → M1.17 | Not Started |
+| REQ-VER-003 | Selective publication of trackings and pages/flows | Must   | R1   | M1.8 → M1.14 | In Progress |
+| REQ-VER-004 | Version metadata                                   | Must   | R1   | M1.8 → M1.17 | In Progress |
+| REQ-VER-005 | Diff by entity, property and specific value        | Must   | R1   | M1.8 → M1.14 | In Progress |
+| REQ-VER-006 | Automatically generated changelog                  | Must   | R1   | M1.8 → M1.14 | In Progress |
+| REQ-VER-007 | Full historical version consultation               | Must   | R1   | M1.8 → M1.17 | In Progress |
+| REQ-VER-008 | Full rollback                                      | Should | R2   | M2.7         | Not Started |
+| REQ-VER-009 | Publication email notifications                    | Should | R2   | M2.7         | Not Started |
+| REQ-VER-010 | Agent-vs-human attribution in the diff             | Should | R2   | M2.7         | Not Started |
+| REQ-VER-011 | Selective rollback                                 | Could  | R3   | M3.5         | Not Started |
+| REQ-VER-012 | Branches, merges, approval, scheduled deprecation  | Won't  | —    | —            | Rejected    |
 
 ---
 
 ### REQ-VER-001 — Single draft → published model
 
-**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) · spec §9.1 · [ADR-0005](../../adr/0005-draft-to-published-versioning.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §9.1 · [ADR-0005](../../adr/0005-draft-to-published-versioning.md) · **In Progress** · Issue: — · PR: —
 
 One draft stream per project. All edits accumulate in the draft. Publishing creates a Version. No parallel branches, no merges, no approval workflow — editors publish autonomously.
 
@@ -37,7 +40,7 @@ One draft stream per project. All edits accumulate in the draft. Publishing crea
 
 ### REQ-VER-002 — Unpublished-changes indicator
 
-**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) · spec §9.1 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §9.1 · **Not Started** · Issue: — · PR: —
 
 Editors see clearly which changes are not yet published.
 
@@ -48,7 +51,7 @@ Editors see clearly which changes are not yet published.
 
 ### REQ-VER-003 — Selective publication of trackings and pages/flows
 
-**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) · spec §9.2 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · spec §9.2 · **In Progress** · Issue: — · PR: —
 
 At publication the editor may exclude individual Trackings and individual Pages/Flows. Properties and Modules cannot be selectively excluded — their changes always publish.
 
@@ -66,9 +69,11 @@ At publication the editor may exclude individual Trackings and individual Pages/
 >
 > The page-and-tracking case is not that: it is one reference, checked in one direction, and excluding a page is the natural way to hold back an unfinished feature — which makes its trackings exactly what an editor would forget to exclude alongside it. Proposing the exclusion is the convenience; refusing the conflict is the guarantee.
 
+> **Carried forward on 2026-08-18.** Exclusion by id works for trackings, pages and flows, and properties and modules correctly cannot be excluded. The referential-integrity rule — a flow may not publish while referencing excluded pages or trackings — exists in the source as a comment with no code beneath it, so the acceptance _a published tracking never references an unpublished property_ is unenforced. Implemented at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness).
+
 ### REQ-VER-004 — Version metadata
 
-**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) · spec §9.3 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §9.3 · **In Progress** · Issue: — · PR: —
 
 A system-granted progressive number, the publication date, an optional free-form title, and optional free-text release notes.
 
@@ -81,7 +86,7 @@ A system-granted progressive number, the publication date, an optional free-form
 
 ### REQ-VER-005 — Diff by entity, property and specific value
 
-**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) · spec §9.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · spec §9.4 · **In Progress** · Issue: — · PR: —
 
 Granularity: per entity (tracking, page, flow, property, module, destination, audience, survey — added, modified, removed); per property within a tracking; per specific value; textual diff on rich-text descriptions. **No image diff.**
 
@@ -91,9 +96,11 @@ Granularity: per entity (tracking, page, flow, property, module, destination, au
 - A bulk operation's effects appear as ordinary per-entity changes, not as an opaque single entry.
 - Image changes are reported as "image changed" without attempting a visual diff.
 
+> **Carried forward on 2026-08-18.** The diff compares properties and trackings, by `updated_at` equality, at entity granularity. `ChangelogEntry` already admits modules, destinations, pages and flows — none is ever emitted — and there is no property-level or specific-value-level granularity and no text diff on rich content. What exists is roughly a third of the requirement. Completed at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) and surfaced at [M1.17](../milestones.md#m117--consultation-search-and-publication-ui).
+
 ### REQ-VER-006 — Automatically generated changelog
 
-**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) · spec §9.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · spec §9.4 · **In Progress** · Issue: — · PR: —
 
 The changelog is generated from the diff. The changelog view lists all versions with name, date, description and the set of changed elements.
 
@@ -106,7 +113,7 @@ The changelog is generated from the diff. The changelog view lists all versions 
 
 ### REQ-VER-007 — Full historical version consultation
 
-**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) · spec §9.5 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §9.5 · **In Progress** · Issue: — · PR: —
 
 Any historical version can be consulted in full, not only as a list of changes.
 
