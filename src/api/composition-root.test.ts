@@ -20,6 +20,7 @@ import { applyMigrations } from '../../tests/support/apply-migrations';
 
 import { registerAccessRoutes } from './access/routes';
 import { registerAuthRoutes } from './auth/routes';
+import { registerCompanyRoutes } from './company/routes';
 import {
   assembleComposition,
   checkStartup,
@@ -28,7 +29,6 @@ import {
   type Composition,
   type ServedRoute,
 } from './composition-root';
-import { registerCompanyRoutes } from './company/routes';
 import { registerLifecycleRoutes } from './lifecycle/routes';
 import { registerMcpRoutes } from './mcp/routes';
 import type { McpServerHandler } from './mcp/server';

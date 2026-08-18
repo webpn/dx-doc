@@ -14,8 +14,8 @@ import {
   openSqliteConnection,
   type Connection,
 } from '@project/infrastructure/persistence/sqlite-kysely';
-import { SqliteServiceTokenRepository } from '@project/infrastructure/persistence/sqlite-service-token-repository';
 import { SqliteProjectRepository } from '@project/infrastructure/persistence/sqlite-project-repository';
+import { SqliteServiceTokenRepository } from '@project/infrastructure/persistence/sqlite-service-token-repository';
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
 import {
   SqliteDestinationRepository,

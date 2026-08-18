@@ -6,8 +6,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { applyMigrations } from '../../../tests/support/apply-migrations';
 
-import { SqliteServiceTokenRepository } from './sqlite-service-token-repository';
 import { closeSqliteConnection, openSqliteConnection, type Connection } from './sqlite-kysely';
+import { SqliteServiceTokenRepository } from './sqlite-service-token-repository';
 
 function t(): string {
   return new Date().toISOString();

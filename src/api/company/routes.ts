@@ -1,6 +1,6 @@
-import type { CompanyService } from '@project/application/company/company-service';
 import type { ServiceTokenService } from '@project/application/auth/service-token-service';
 import type { SessionService } from '@project/application/auth/session-service';
+import type { CompanyService } from '@project/application/company/company-service';
 import type { CompanyCreateInput } from '@project/application/validation/schemas';
 import type { FastifyInstance } from 'fastify';
 
