@@ -24,6 +24,8 @@ Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that sli
 
 **R1 is in its completion phase — [M1.11](#m111--runtime-assembly-and-first-run) through [M1.18](#m118--r1-acceptance).**
 
+> **M1.11 shipped on 2026-08-18.** The runtime is now an application, not a health check: `npm start` assembles the dependency graph once, runs the startup self-check and first-run bootstrap, and serves the whole route surface — auth, project/page/tracking, MCP, liveness `/api/health` and readiness `/api/ready`. The route-table test (the milestone's exit criterion) makes an unwired handler fail the build, and the bootstrap administrator authenticates end-to-end on the real server. This closes finding (1) below. Findings (2) no UI and (3) the authorisation holes remain, for M1.15 and M1.13 respectively. Current position is [M1.12](#m112--access-administration-and-api-surface-completion).
+
 M1.1–M1.10 delivered the **domain, application and transport layers**: the full R1 entity set with its composition rules, a SQLite persistence layer behind repository ports, application services carrying the validation and permission logic, ~60 REST route handlers, an MCP JSON-RPC handler, the publication pipeline, and the search, shared-password and audit-log machinery. That code is typechecked, linted and covered by 148 tests.
 
 **It is not yet an application.** A codebase review on 2026-08-18 established three things that the M1.10 exit criterion should have caught and did not:
@@ -305,6 +307,8 @@ A **composition root** that opens the database connection, constructs every repo
 **Exit:** a **route-table test** asserts that the routes the running application serves are exactly the routes the API layer defines — a handler that exists in source and is not registered fails the build, which is the specific defect this milestone exists to make impossible to reintroduce; `docker compose up -d --build` on a clean machine yields an instance where the bootstrap administrator can authenticate and reach an authorised endpoint, exercised end to end by a test that starts the real server rather than a per-test Fastify instance; starting against an unmigrated database fails loudly and names the remedy.
 
 > **This is the milestone whose absence made every later claim unfalsifiable.** Test suites that assemble their own application cannot detect that the application is never assembled. The route-table test is cheap and it is the only exit criterion here that is really about the future.
+
+> **Closed on 2026-08-18.** `src/api/composition-root.ts` is the single composition root; `start()` and the test suite call the same `assembleComposition`, substituting only the database file, search index and object-storage seams for tests. It opens the connection, builds every repository and service once, registers `@fastify/cookie` and `registerAllRoutes` (which now reaches `registerAuthRoutes`), and mounts `/api/health` (liveness) and `/api/ready` (readiness). `checkStartup` runs reachability, migration and bootstrap in order; a pending migration names `npm run db:migrate` and the process fails loudly. Error tracking is behind `SENTRY_DSN` (REQ-FDN-014). The route-table test asserts the served set equals the API layer's defined set, and the end-to-end suite covers company-less bootstrap login on the real server, the against-an-unmigrated-database failure, read-once bootstrap across restarts, and readiness flipping without a restart.
 
 ### M1.12 — Access administration and API surface completion
 

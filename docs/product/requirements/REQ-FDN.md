@@ -22,7 +22,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-FDN-011 | Public MIT repository with README                     | Must   | R0      | M0.6         | Implemented |
 | REQ-FDN-012 | Reference deployment stack and CI                     | Must   | R0      | M0.6         | Implemented |
 | REQ-FDN-013 | Two-level configuration, environment and company      | Must   | R0      | M0.3         | Implemented |
-| REQ-FDN-014 | Error-tracking integration                            | Should | R1      | M1.9 → M1.11 | In Progress |
+| REQ-FDN-014 | Error-tracking integration                            | Should | R1      | M1.9 → M1.11 | Implemented |
 | REQ-FDN-015 | Per-company branding                                  | Should | R2      | M2.8         | Not Started |
 | REQ-FDN-016 | Self-hostable search adapter                          | Won't  | —       | —            | Rejected    |
 | REQ-FDN-017 | Kubernetes/Helm packaging                             | Could  | Backlog | —            | Not Started |
@@ -31,8 +31,8 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-FDN-020 | Schema constrained to a portable SQL subset           | Must   | R0      | M0.2         | Implemented |
 | REQ-FDN-021 | Third-party data-flow statement                       | Must   | R0      | M0.6         | Implemented |
 | REQ-FDN-022 | Hosted search adapter                                 | Could  | R3      | —            | Not Started |
-| REQ-FDN-023 | Runtime assembly: every route served by the process   | Must   | R1      | M1.11        | Not Started |
-| REQ-FDN-024 | Startup self-check and readiness endpoint             | Must   | R1      | M1.11        | Not Started |
+| REQ-FDN-023 | Runtime assembly: every route served by the process   | Must   | R1      | M1.11        | Implemented |
+| REQ-FDN-024 | Startup self-check and readiness endpoint             | Must   | R1      | M1.11        | Implemented |
 | REQ-FDN-025 | Transactional write boundaries                        | Must   | R1      | M1.14        | Not Started |
 | REQ-FDN-026 | Web client shell built on the design system           | Must   | R1      | M1.15        | Not Started |
 
@@ -233,7 +233,7 @@ Infrastructure and credentials come from environment variables at instance level
 
 ### REQ-FDN-014 — Error-tracking integration
 
-**Should** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) → [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) · spec §15.5 · **In Progress** · Issue: — · PR: —
+**Should** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) → [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) · spec §15.5 · **Implemented** · Issue: — · PR: —
 
 Errors are reported to a configurable error-tracking service (`SENTRY_DSN`). Basic parameters sufficient for troubleshooting; no product analytics is collected on the Platform itself.
 
@@ -244,6 +244,8 @@ Errors are reported to a configurable error-tracking service (`SENTRY_DSN`). Bas
 - No documentation content and no personal data is included in reports.
 
 > **Found not implemented on 2026-08-18.** `SENTRY_DSN` is defined in the configuration loader, documented in the README table and present in `.env.example`. No code reads it and no error-tracking client is installed. Wired at [M1.11](../milestones.md#m111--runtime-assembly-and-first-run), where the composition root is the natural place for it.
+
+> **Implemented at [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) on 2026-08-18.** `@sentry/node` is added and reached only when a non-empty `SENTRY_DSN` is configured; with no DSN the integration is a no-op and the SDK is never imported. A `beforeSend` hook strips request bodies, cookies, headers and user identity, keeping only the method + URL, and `tracesSampleRate` stays 0 — error tracking for troubleshooting, not analytics. The composition root registers a Fastify error handler and the server entry point installs the `unhandledRejection` capture. The optional-without-DSN path is covered by a unit test (REQ-FDN-014 acceptance) and the scrub is documented in `src/infrastructure/error-tracking/sentry.ts`.
 
 ### REQ-FDN-015 — Per-company branding
 
@@ -309,7 +311,7 @@ Selecting it changes what leaves the instance, so it changes REQ-FDN-021's state
 
 ### REQ-FDN-023 — Runtime assembly: every route served by the process
 
-**Must** · R1 · [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) · [ADR-0022](../../adr/0022-application-framework.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) · [ADR-0022](../../adr/0022-application-framework.md) · **Implemented** · Issue: — · PR: —
 
 The application process constructs its dependency graph once, at startup, and serves every route the API layer defines. A **composition root** — one module, called from the server entry point — opens the database connection, builds each repository over it, builds each application service over those, and passes them to the route registration functions. Nothing else constructs a repository or a service.
 
@@ -322,11 +324,13 @@ This requirement exists because its absence was not detected for ten milestones.
 - The composition root is the only place outside tests that names a concrete adapter. A repository constructed anywhere else fails review.
 - Nothing in the wiring path is duplicated between the server entry point and the test support code: the tests call the same function.
 
+> **Implemented at [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) on 2026-08-18.** `src/api/composition-root.ts` is the single composition root: it opens the connection, builds every repository/service/permission checker once, registers `@fastify/cookie` and `registerAllRoutes` (which now reaches `registerAuthRoutes`), and mounts `/api/health` and `/api/ready`. Both the `start()` entry point and the test suite call `assembleComposition` with the same wiring; tests only substitute the database file, search index and object-storage seams. The route-table test (`src/api/composition-root.test.ts`) asserts the served route set equals the API layer's defined set — including that every individually-defined register function is wired — so an unwired handler fails the build, and it also pins the milestone-critical surface (health, ready, login/logout/change-password, mcp).
+
 > The general rule this encodes: **a test suite that assembles its own subject cannot tell you the subject is never assembled.** Wherever the application has a single composition point, one test must exercise that point rather than reproduce it.
 
 ### REQ-FDN-024 — Startup self-check and readiness endpoint
 
-**Must** · R1 · [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) · **Implemented** · Issue: — · PR: —
 
 Startup performs, in order: configuration validation (REQ-FDN-013, already implemented), database reachability, schema-version check, and the first-run bootstrap (REQ-SEC-013). Any of them failing stops the process with a message naming the remedy, rather than starting an instance that answers requests it cannot serve.
 
@@ -338,6 +342,8 @@ Liveness and readiness are separated. `GET /api/health` reports that the process
 - The first-run bootstrap runs as part of startup, not as a separate manual step, and remains subject to REQ-SEC-013's read-once rule — asserted by starting twice against the same database.
 - `/api/ready` returns unhealthy while the database is unreachable and healthy once it is, without a restart.
 - Neither endpoint reveals a version, a path, a driver name or any configuration value.
+
+> **Implemented at [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) on 2026-08-18.** `checkStartup` in `src/api/composition-root.ts` runs, in order, database reachability, the schema-version check (pending migrations throw a `StartupError` naming `npm run db:migrate`) and the first-run bootstrap (REQ-SEC-013). `/api/health` is the liveness probe; `/api/ready` re-checks reachability, migrations and storage per request and answers 200/503 with no version, path, driver or config disclosure. Startup never runs migrations — the explicit `npm run db:migrate` step (REQ-FDN-009) is named as the remedy. End-to-end coverage in `src/api/composition-root.test.ts`: unmigrated DB fails loudly, bootstrap applies read-once across restarts, and readiness flips unhealthy when the database is closed mid-run without a restart.
 
 ### REQ-FDN-025 — Transactional write boundaries
 

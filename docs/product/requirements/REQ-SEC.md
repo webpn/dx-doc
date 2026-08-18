@@ -232,6 +232,8 @@ How identities come into being, and how they leave. Four parts:
 
 > **Found unreachable on 2026-08-18.** Two independent breaks. The bootstrap is never invoked: `start()` validates configuration and calls nothing else, so `BootstrapService` has no caller in the running application. And the administrator it would create is company-less by design (REQ-SEC-014), while the login route rejects a request without a company id and `getUserByEmail` matches `company_id IS NULL` only when passed null — so the only account the system can create could not authenticate even if it existed. Both are fixed at [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion); the read-once rule and its test are unaffected and stay as written.
 
+> **Progress at [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) on 2026-08-18.** The two "unreachable" breaks above are closed: `checkStartup` invokes `BootstrapService` at startup (read-once, asserted across restarts) and the login route accepts an absent or empty `companyId`, resolving the company-less administrator against `company_id IS NULL`. The bootstrap administrator authenticates end-to-end on the real server and is forced to change the first password. The remaining parts — invitation, password reset, deactivation, and the grant path — stay **In Progress** and land at [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion) with their routes.
+
 ### REQ-SEC-014 — Instance-administration capability
 
 **Must** · R0 · [M0.4](../milestones.md#m04--authentication-and-authorisation) → [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion) · **In Progress** · Issue: — · PR: —

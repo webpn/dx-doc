@@ -11,7 +11,7 @@ Entry format and status legend: [requirements index](README.md).
 
 | ID          | Requirement                                             | MoSCoW | Rel. | Milestone    | Status      |
 | ----------- | ------------------------------------------------------- | ------ | ---- | ------------ | ----------- |
-| REQ-API-001 | Internal REST API as the single entry point             | Must   | R0   | M0.5 → M1.11 | In Progress |
+| REQ-API-001 | Internal REST API as the single entry point             | Must   | R0   | M0.5 → M1.11 | Implemented |
 | REQ-API-002 | Documented public API                                   | Must   | R1   | M1.2 → M1.12 | Not Started |
 | REQ-API-003 | MCP read tools                                          | Must   | R1   | M1.3 → M1.12 | In Progress |
 | REQ-API-004 | MCP write tools, draft only                             | Must   | R1   | M1.3 → M1.12 | In Progress |
@@ -26,7 +26,7 @@ Entry format and status legend: [requirements index](README.md).
 
 ### REQ-API-001 — Internal REST API as the single entry point
 
-**Must** · R0 · [M0.5](../milestones.md#m05--rest-api-and-shared-validation) → [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) · spec §12.1, §16 · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **In Progress** · Issue: — · PR: —
+**Must** · R0 · [M0.5](../milestones.md#m05--rest-api-and-shared-validation) → [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) · spec §12.1, §16 · [ADR-0007](../../adr/0007-api-as-single-entry-point.md) · **Implemented** · Issue: — · PR: —
 
 The REST API is the foundation of the system, not a feature. The web client, the MCP server, the export generators, the static-site builder and the import scripts all consume it. All validation lives behind it (REQ-FDN-010).
 
@@ -40,6 +40,8 @@ The REST API is the foundation of the system, not a feature. The web client, the
 > Weak programmatic access was pain point 6. Making the API the only entry point is what prevents it recurring: a capability that exists in the UI cannot fail to exist for machines. Import (REQ-IMP-002) is the first hard test of that claim, at week 5 rather than R3.
 
 > **Carried forward on 2026-08-18.** The routes exist and are individually tested; the running application does not serve them. `registerAllRoutes` has no call site, and `registerAuthRoutes` is not part of it, so `buildApp` registers `/api/health` and the static handler and nothing else. "Single entry point" is true of the design and false of the process. [REQ-FDN-023](REQ-FDN.md#req-fdn-023--runtime-assembly-every-route-served-by-the-process) makes the gap detectable; [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) closes it.
+>
+> **Completed at [M1.11](../milestones.md#m111--runtime-assembly-and-first-run) on 2026-08-18.** `registerAuthRoutes` is now part of `registerAllRoutes`, and the composition root serves every defined route from the `npm start` process (`/api/health`, `/api/ready`, auth, project/page/tracking, and the MCP endpoint), guarded by the route-table test. The remaining acceptance criterion — authorisation applied on every route — is delivered separately at [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) under [REQ-SEC-011](REQ-SEC.md#req-sec-011--permission-matrix-enforced-server-side).
 
 ### REQ-API-002 — Documented public API
 
