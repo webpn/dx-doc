@@ -1,6 +1,24 @@
-import type { PageRecord, PageRepository } from '@project/application/ports/page-repository';
+import type {
+  PageDeletionBlockers,
+  PageRecord,
+  PageRepository,
+} from '@project/application/ports/page-repository';
 
 import type { Db } from './sqlite-kysely';
+
+async function count(
+  db: Db,
+  table: 'pages' | 'trackings' | 'flow_nodes',
+  column: 'parent_id' | 'page_id',
+  id: string,
+): Promise<number> {
+  const result = await db
+    .selectFrom(table)
+    .select((eb) => eb.fn.countAll<number | string>().as('count'))
+    .where(column, '=', id)
+    .executeTakeFirstOrThrow();
+  return Number(result.count);
+}
 
 interface PageRow {
   id: string;
@@ -87,5 +105,19 @@ export class SqlitePageRepository implements PageRepository {
       })
       .where('id', '=', page.id)
       .execute();
+  }
+
+  /** ADR-0025: a page blocks deletion if anything still depends on it. */
+  async getPageDeletionBlockers(id: string): Promise<PageDeletionBlockers> {
+    const [childPages, trackings, flowNodes] = await Promise.all([
+      count(this.db, 'pages', 'parent_id', id),
+      count(this.db, 'trackings', 'page_id', id),
+      count(this.db, 'flow_nodes', 'page_id', id),
+    ]);
+    return { childPages, trackings, flowNodes };
+  }
+
+  async deletePage(id: string): Promise<void> {
+    await this.db.deleteFrom('pages').where('id', '=', id).execute();
   }
 }

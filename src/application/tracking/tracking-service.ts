@@ -106,7 +106,8 @@ export type TrackingServiceError =
   | { kind: 'validation'; issues: ValidationIssue[] }
   | { kind: 'hierarchy_cycle' }
   | { kind: 'cross_project_reference' }
-  | { kind: 'stale_write'; currentUpdatedAt: string };
+  | { kind: 'stale_write'; currentUpdatedAt: string }
+  | { kind: 'in_use'; reason: string };
 
 export class TrackingService {
   constructor(
@@ -315,6 +316,40 @@ export class TrackingService {
     return ok({ ok: true });
   }
 
+  async deleteProperty(
+    actorId: string,
+    propertyId: string,
+  ): Promise<Result<{ ok: true }, TrackingServiceError>> {
+    const prop = await this.properties.getPropertyById(propertyId);
+    if (!prop) return err({ kind: 'not_found' });
+
+    if (prop.projectId !== null) {
+      if (!(await this.permissions.canOnProject(actorId, prop.projectId, 'project.edit'))) {
+        return err({ kind: 'forbidden' });
+      }
+    } else {
+      if (
+        !(await this.permissions.canInCompany(actorId, prop.companyId, 'company.manage_catalogue'))
+      ) {
+        return err({ kind: 'forbidden' });
+      }
+    }
+
+    const blockers = await this.properties.getPropertyDeletionBlockers(propertyId);
+    const reasons: string[] = [];
+    if (blockers.trackings > 0) reasons.push(`${String(blockers.trackings)} tracking(s)`);
+    if (blockers.modules > 0) reasons.push(`${String(blockers.modules)} module(s)`);
+    if (blockers.childProperties > 0) {
+      reasons.push(`${String(blockers.childProperties)} child propert(y/ies)`);
+    }
+    if (reasons.length > 0) {
+      return err({ kind: 'in_use', reason: `still referenced by ${reasons.join(', ')}` });
+    }
+
+    await this.properties.deleteProperty(propertyId);
+    return ok({ ok: true });
+  }
+
   // --- MODULES ---
   async createModule(
     actorId: string,
@@ -427,6 +462,37 @@ export class TrackingService {
       await this.modules.setModuleProperties(moduleId, parsed.value.propertyIds, nowIso);
     }
 
+    return ok({ ok: true });
+  }
+
+  async deleteModule(
+    actorId: string,
+    moduleId: string,
+  ): Promise<Result<{ ok: true }, TrackingServiceError>> {
+    const mod = await this.modules.getModuleById(moduleId);
+    if (!mod) return err({ kind: 'not_found' });
+
+    if (mod.projectId !== null) {
+      if (!(await this.permissions.canOnProject(actorId, mod.projectId, 'project.edit'))) {
+        return err({ kind: 'forbidden' });
+      }
+    } else {
+      if (
+        !(await this.permissions.canInCompany(actorId, mod.companyId, 'company.manage_catalogue'))
+      ) {
+        return err({ kind: 'forbidden' });
+      }
+    }
+
+    const count = await this.modules.countTrackingsUsingModule(moduleId);
+    if (count > 0) {
+      return err({
+        kind: 'in_use',
+        reason: `${String(count)} tracking(s) still reference this module`,
+      });
+    }
+
+    await this.modules.deleteModule(moduleId);
     return ok({ ok: true });
   }
 
@@ -549,6 +615,37 @@ export class TrackingService {
     return ok({ ok: true });
   }
 
+  async deleteDestination(
+    actorId: string,
+    destinationId: string,
+  ): Promise<Result<{ ok: true }, TrackingServiceError>> {
+    const dest = await this.destinations.getDestinationById(destinationId);
+    if (!dest) return err({ kind: 'not_found' });
+
+    if (dest.projectId !== null) {
+      if (!(await this.permissions.canOnProject(actorId, dest.projectId, 'project.edit'))) {
+        return err({ kind: 'forbidden' });
+      }
+    } else {
+      if (
+        !(await this.permissions.canInCompany(actorId, dest.companyId, 'company.manage_catalogue'))
+      ) {
+        return err({ kind: 'forbidden' });
+      }
+    }
+
+    const count = await this.destinations.countPropertiesUsingDestination(destinationId);
+    if (count > 0) {
+      return err({
+        kind: 'in_use',
+        reason: `${String(count)} property mapping(s) still reference this destination`,
+      });
+    }
+
+    await this.destinations.deleteDestination(destinationId);
+    return ok({ ok: true });
+  }
+
   async setPropertyDestinations(
     actorId: string,
     propertyId: string,
@@ -666,6 +763,29 @@ export class TrackingService {
     return ok({ ok: true });
   }
 
+  async deleteNavigationEvent(
+    actorId: string,
+    eventId: string,
+  ): Promise<Result<{ ok: true }, TrackingServiceError>> {
+    const event = await this.navEvents.getNavigationEventById(eventId);
+    if (!event) return err({ kind: 'not_found' });
+
+    if (!(await this.permissions.canOnProject(actorId, event.projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const usage = await this.navEvents.countUsageOfNavigationEvent(eventId);
+    if (usage.trackings > 0 || usage.templates > 0) {
+      return err({
+        kind: 'in_use',
+        reason: `${String(usage.trackings)} tracking(s) and ${String(usage.templates)} template(s) still reference this navigation event`,
+      });
+    }
+
+    await this.navEvents.deleteNavigationEvent(eventId);
+    return ok({ ok: true });
+  }
+
   // --- TRACKING TEMPLATES ---
   async createTrackingTemplate(
     actorId: string,
@@ -780,6 +900,29 @@ export class TrackingService {
     return ok({ ok: true });
   }
 
+  async deleteTrackingTemplate(
+    actorId: string,
+    templateId: string,
+  ): Promise<Result<{ ok: true }, TrackingServiceError>> {
+    const tpl = await this.templates.getTemplateById(templateId);
+    if (!tpl) return err({ kind: 'not_found' });
+
+    if (tpl.projectId !== null) {
+      if (!(await this.permissions.canOnProject(actorId, tpl.projectId, 'project.edit'))) {
+        return err({ kind: 'forbidden' });
+      }
+    } else {
+      if (
+        !(await this.permissions.canInCompany(actorId, tpl.companyId, 'company.manage_catalogue'))
+      ) {
+        return err({ kind: 'forbidden' });
+      }
+    }
+
+    await this.templates.deleteTemplate(templateId);
+    return ok({ ok: true });
+  }
+
   // --- FREE PAGES ---
   async createFreePage(
     actorId: string,
@@ -884,6 +1027,29 @@ export class TrackingService {
       updatedAt: nowIso,
     });
 
+    return ok({ ok: true });
+  }
+
+  async deleteFreePage(
+    actorId: string,
+    freePageId: string,
+  ): Promise<Result<{ ok: true }, TrackingServiceError>> {
+    const fp = await this.freePages.getFreePageById(freePageId);
+    if (!fp) return err({ kind: 'not_found' });
+
+    if (fp.projectId !== null) {
+      if (!(await this.permissions.canOnProject(actorId, fp.projectId, 'project.edit'))) {
+        return err({ kind: 'forbidden' });
+      }
+    } else {
+      if (
+        !(await this.permissions.canInCompany(actorId, fp.companyId, 'company.manage_catalogue'))
+      ) {
+        return err({ kind: 'forbidden' });
+      }
+    }
+
+    await this.freePages.deleteFreePage(freePageId);
     return ok({ ok: true });
   }
 
@@ -1007,6 +1173,21 @@ export class TrackingService {
       updatedAt: nowIso,
     });
 
+    return ok({ ok: true });
+  }
+
+  async deleteTracking(
+    actorId: string,
+    trackingId: string,
+  ): Promise<Result<{ ok: true }, TrackingServiceError>> {
+    const tracking = await this.trackings.getTrackingById(trackingId);
+    if (!tracking) return err({ kind: 'not_found' });
+
+    if (!(await this.permissions.canOnProject(actorId, tracking.projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    await this.trackings.deleteTracking(trackingId);
     return ok({ ok: true });
   }
 
@@ -1147,6 +1328,22 @@ export class TrackingService {
     ]);
 
     return ok({ specificValueId: svId });
+  }
+
+  /** A leaf value; deletion is unconditional (ADR-0025). */
+  async deleteSpecificValue(
+    actorId: string,
+    specificValueId: string,
+  ): Promise<Result<{ ok: true }, TrackingServiceError>> {
+    const projectId = await this.trackings.getProjectIdForSpecificValue(specificValueId);
+    if (projectId === null) return err({ kind: 'not_found' });
+
+    if (!(await this.permissions.canOnProject(actorId, projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    await this.trackings.deleteSpecificValue(specificValueId);
+    return ok({ ok: true });
   }
 
   async applyModuleToTracking(
@@ -1482,6 +1679,21 @@ export class TrackingService {
     return ok({ ok: true });
   }
 
+  async deleteFlow(
+    actorId: string,
+    flowId: string,
+  ): Promise<Result<{ ok: true }, TrackingServiceError>> {
+    const flow = await this.flows.getFlowById(flowId);
+    if (!flow) return err({ kind: 'not_found' });
+
+    if (!(await this.permissions.canOnProject(actorId, flow.projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    await this.flows.deleteFlow(flowId);
+    return ok({ ok: true });
+  }
+
   async setFlowGraph(
     actorId: string,
     flowId: string,
@@ -1613,6 +1825,29 @@ export class TrackingService {
       await this.triggers.setTriggerTrackings(triggerId, parsed.value.trackingIds, nowIso);
     }
 
+    return ok({ ok: true });
+  }
+
+  async deleteTrigger(
+    actorId: string,
+    triggerId: string,
+  ): Promise<Result<{ ok: true }, TrackingServiceError>> {
+    const trg = await this.triggers.getTriggerById(triggerId);
+    if (!trg) return err({ kind: 'not_found' });
+
+    if (!(await this.permissions.canOnProject(actorId, trg.projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const count = await this.triggers.countFlowNodesUsingTrigger(triggerId);
+    if (count > 0) {
+      return err({
+        kind: 'in_use',
+        reason: `${String(count)} flow node(s) still reference this trigger`,
+      });
+    }
+
+    await this.triggers.deleteTrigger(triggerId);
     return ok({ ok: true });
   }
 

@@ -63,6 +63,7 @@ export function unauthenticated(reply: FastifyReply): FastifyReply {
 interface ServiceErrorShape {
   kind: string;
   issues?: ValidationIssue[];
+  reason?: string;
 }
 
 /**
@@ -82,6 +83,13 @@ export function replyServiceError(reply: FastifyReply, error: ServiceErrorShape)
     case 'duplicate_custom_id':
       return reply.code(409).send({
         error: { code: 'DUPLICATE_CUSTOM_ID', message: 'custom_id is already in use' },
+      });
+    case 'in_use':
+      return reply.code(409).send({
+        error: {
+          code: 'IN_USE',
+          message: `Cannot delete: ${(error as { reason?: string }).reason ?? 'still in use'} (ADR-0025)`,
+        },
       });
     case 'stale_write':
       return reply.code(409).send({

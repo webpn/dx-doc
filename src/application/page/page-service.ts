@@ -15,7 +15,8 @@ export type PageServiceError =
   | { kind: 'not_found' }
   | { kind: 'validation'; issues: ValidationIssue[] }
   | { kind: 'duplicate_custom_id' }
-  | { kind: 'cross_project_parent' };
+  | { kind: 'cross_project_parent' }
+  | { kind: 'in_use'; reason: string };
 
 /**
  * Page/Screen CRUD within a project (REQ-DOM-001, REQ-API-001). Writes are
@@ -128,6 +129,33 @@ export class PageService {
     if (data.parentId !== undefined) page.parentId = data.parentId ?? null;
     page.updatedAt = this.now().toISOString();
     await this.pages.updatePage(page);
+    return ok({ ok: true });
+  }
+
+  /**
+   * Delete a page. Refused when child pages, attached trackings, or flow
+   * nodes still reference it (ADR-0025) — the editor detaches or deletes
+   * those first through the endpoints that already exist.
+   */
+  async delete(actorId: string, pageId: string): Promise<Result<{ ok: true }, PageServiceError>> {
+    const page = await this.pages.getPageById(pageId);
+    if (page === null) {
+      return err({ kind: 'not_found' });
+    }
+    if (!(await this.permissions.canOnProject(actorId, page.projectId, 'project.edit'))) {
+      return err({ kind: 'forbidden' });
+    }
+
+    const blockers = await this.pages.getPageDeletionBlockers(pageId);
+    const reasons: string[] = [];
+    if (blockers.childPages > 0) reasons.push(`${String(blockers.childPages)} child page(s)`);
+    if (blockers.trackings > 0) reasons.push(`${String(blockers.trackings)} tracking(s)`);
+    if (blockers.flowNodes > 0) reasons.push(`${String(blockers.flowNodes)} flow node(s)`);
+    if (reasons.length > 0) {
+      return err({ kind: 'in_use', reason: `still referenced by ${reasons.join(', ')}` });
+    }
+
+    await this.pages.deletePage(pageId);
     return ok({ ok: true });
   }
 }

@@ -105,6 +105,15 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     return { ok: true };
   });
 
+  app.delete('/api/properties/:id', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const { id } = request.params as { id: string };
+    const result = await trackingService.deleteProperty(actor.userId, id);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return { ok: true };
+  });
+
   // ── MODULES ───────────────────────────────────────────────────
   app.post('/api/companies/:companyId/modules', async (request, reply) => {
     const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
@@ -161,6 +170,15 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
       id,
       request.body as ModuleUpdateInput,
     );
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return { ok: true };
+  });
+
+  app.delete('/api/modules/:id', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const { id } = request.params as { id: string };
+    const result = await trackingService.deleteModule(actor.userId, id);
     if (!result.ok) return replyServiceError(reply, result.error);
     return { ok: true };
   });
@@ -225,6 +243,17 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     return { ok: true };
   });
 
+  app.delete('/api/destinations/:id', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
+
+    const { id } = request.params as { id: string };
+    const result = await trackingService.deleteDestination(userId, id);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return { ok: true };
+  });
+
   app.put('/api/properties/:id/destinations', async (request, reply) => {
     const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
     if (!actor) return unauthenticated(reply);
@@ -285,6 +314,17 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     return { ok: true };
   });
 
+  app.delete('/api/navigation-events/:id', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
+
+    const { id } = request.params as { id: string };
+    const result = await trackingService.deleteNavigationEvent(userId, id);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return { ok: true };
+  });
+
   // ── TRACKING TEMPLATES ────────────────────────────────────────
   app.post('/api/companies/:companyId/tracking-templates', async (request, reply) => {
     const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
@@ -331,6 +371,15 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     return { ok: true };
   });
 
+  app.delete('/api/tracking-templates/:id', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const { id } = request.params as { id: string };
+    const result = await trackingService.deleteTrackingTemplate(actor.userId, id);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return { ok: true };
+  });
+
   // ── FREE PAGES ────────────────────────────────────────────────
   app.post('/api/companies/:companyId/free-pages', async (request, reply) => {
     const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
@@ -373,6 +422,15 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
       id,
       request.body as FreePageUpdateInput,
     );
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return { ok: true };
+  });
+
+  app.delete('/api/free-pages/:id', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const { id } = request.params as { id: string };
+    const result = await trackingService.deleteFreePage(actor.userId, id);
     if (!result.ok) return replyServiceError(reply, result.error);
     return { ok: true };
   });
@@ -426,6 +484,15 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
       id,
       request.body as TrackingUpdateInput,
     );
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return { ok: true };
+  });
+
+  app.delete('/api/trackings/:id', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const { id } = request.params as { id: string };
+    const result = await trackingService.deleteTracking(actor.userId, id);
     if (!result.ok) return replyServiceError(reply, result.error);
     return { ok: true };
   });
@@ -500,6 +567,15 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     );
     if (!result.ok) return replyServiceError(reply, result.error);
     return reply.code(201).send({ id: result.value.specificValueId });
+  });
+
+  app.delete('/api/specific-values/:id', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const { id } = request.params as { id: string };
+    const result = await trackingService.deleteSpecificValue(actor.userId, id);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return { ok: true };
   });
 
   // ── CATALOGUE COPY (REQ-DOM-019) ──────────────────────────────
@@ -611,6 +687,15 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     return { ok: true };
   });
 
+  app.delete('/api/flows/:id', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const { id } = request.params as { id: string };
+    const result = await trackingService.deleteFlow(actor.userId, id);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return { ok: true };
+  });
+
   app.post('/api/projects/:projectId/triggers', async (request, reply) => {
     const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
     if (!actor) return unauthenticated(reply);
@@ -659,6 +744,15 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
       id,
       request.body as TriggerUpdateInput,
     );
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return { ok: true };
+  });
+
+  app.delete('/api/triggers/:id', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const { id } = request.params as { id: string };
+    const result = await trackingService.deleteTrigger(actor.userId, id);
     if (!result.ok) return replyServiceError(reply, result.error);
     return { ok: true };
   });

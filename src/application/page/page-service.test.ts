@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PermissionService } from '../auth/permissions';
 import type { AccountRepository } from '../ports/account-repository';
-import type { PageRecord, PageRepository } from '../ports/page-repository';
+import type { PageDeletionBlockers, PageRecord, PageRepository } from '../ports/page-repository';
 import type { ProjectRecord, ProjectRepository } from '../ports/project-repository';
 
 import { PageService } from './page-service';
@@ -22,6 +22,8 @@ class StubPermissions extends PermissionService {
 class FakePages implements PageRepository {
   pages = new Map<string, PageRecord>();
   customToId = new Map<string, string>();
+  blockers: PageDeletionBlockers = { childPages: 0, trackings: 0, flowNodes: 0 };
+  deleted: string[] = [];
 
   createPage(page: PageRecord): Promise<void> {
     this.pages.set(page.id, page);
@@ -64,6 +66,16 @@ class FakePages implements PageRepository {
     if (page.customId) {
       this.customToId.set(page.customId, page.id);
     }
+    return Promise.resolve();
+  }
+
+  getPageDeletionBlockers(): Promise<PageDeletionBlockers> {
+    return Promise.resolve(this.blockers);
+  }
+
+  deletePage(id: string): Promise<void> {
+    this.pages.delete(id);
+    this.deleted.push(id);
     return Promise.resolve();
   }
 }
@@ -239,5 +251,64 @@ describe('PageService.update + get', () => {
   it('returns not_found for a missing page', async () => {
     const { service } = build();
     expect(await service.get('u1', 'missing')).toEqual({ ok: false, error: { kind: 'not_found' } });
+  });
+});
+
+describe('PageService.delete (ADR-0025)', () => {
+  it('deletes an unreferenced page', async () => {
+    const { pages, service } = build();
+    const created = await service.create('u1', 'proj-1', { name: 'Home', slug: 'home' });
+    const id = created.ok ? created.value.pageId : '';
+
+    expect(await service.delete('u1', id)).toEqual({ ok: true, value: { ok: true } });
+    expect(await pages.getPageById(id)).toBeNull();
+  });
+
+  it('refuses to delete a page with child pages, trackings or flow nodes', async () => {
+    const { pages, service } = build();
+    const created = await service.create('u1', 'proj-1', { name: 'Home', slug: 'home' });
+    const id = created.ok ? created.value.pageId : '';
+    pages.blockers = { childPages: 2, trackings: 1, flowNodes: 3 };
+
+    const result = await service.delete('u1', id);
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        kind: 'in_use',
+        reason: 'still referenced by 2 child page(s), 1 tracking(s), 3 flow node(s)',
+      },
+    });
+    expect(pages.deleted).toEqual([]);
+  });
+
+  it('returns not_found for a missing page', async () => {
+    const { service } = build();
+    expect(await service.delete('u1', 'missing')).toEqual({
+      ok: false,
+      error: { kind: 'not_found' },
+    });
+  });
+
+  it('forbids deletion without an edit grant', async () => {
+    const pages = new FakePages();
+    const projects = new FakeProjects();
+    projects.projects.set('proj-1', { ...FIXED_PROJECT, id: 'proj-1' });
+    await pages.createPage({
+      id: 'pg1',
+      projectId: 'proj-1',
+      parentId: null,
+      name: 'Home',
+      slug: 'home',
+      customId: null,
+      createdAt: FIXED_NOW.toISOString(),
+      updatedAt: FIXED_NOW.toISOString(),
+    });
+    const service = new PageService(pages, projects, new StubPermissions({ project: false }));
+
+    expect(await service.delete('viewer', 'pg1')).toEqual({
+      ok: false,
+      error: { kind: 'forbidden' },
+    });
   });
 });

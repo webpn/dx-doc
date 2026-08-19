@@ -431,4 +431,434 @@ describe('TrackingService (M1.1 Application Service)', () => {
     expect(auditRes.value.some((l) => l.action === 'shared_password.created')).toBe(true);
     expect(auditRes.value.some((l) => l.action === 'shared_password.authenticated')).toBe(true);
   });
+
+  describe('entity deletion (ADR-0025)', () => {
+    it('deletes an unused property; refuses one used by a tracking, a module, or with a child', async () => {
+      const unused = await trackingService.createProperty(editorId, companyId, projectId, {
+        name: 'unused_prop',
+      });
+      if (!unused.ok) throw new Error('create failed');
+      expect(await trackingService.deleteProperty(editorId, unused.value.propertyId)).toEqual({
+        ok: true,
+        value: { ok: true },
+      });
+
+      const parent = await trackingService.createProperty(editorId, companyId, projectId, {
+        name: 'parent_prop',
+      });
+      const child = await trackingService.createProperty(editorId, companyId, projectId, {
+        name: 'child_prop',
+      });
+      if (!parent.ok || !child.ok) throw new Error('create failed');
+      await trackingService.updateProperty(editorId, child.value.propertyId, {
+        parentPropertyId: parent.value.propertyId,
+      });
+      const blockedByChild = await trackingService.deleteProperty(
+        editorId,
+        parent.value.propertyId,
+      );
+      expect(blockedByChild.ok).toBe(false);
+      if (!blockedByChild.ok) expect(blockedByChild.error.kind).toBe('in_use');
+
+      const modProp = await trackingService.createProperty(editorId, companyId, projectId, {
+        name: 'in_module_prop',
+      });
+      if (!modProp.ok) throw new Error('create failed');
+      await trackingService.createModule(editorId, companyId, projectId, {
+        name: 'Some Module',
+        propertyIds: [modProp.value.propertyId],
+      });
+      const blockedByModule = await trackingService.deleteProperty(
+        editorId,
+        modProp.value.propertyId,
+      );
+      expect(blockedByModule.ok).toBe(false);
+      if (!blockedByModule.ok) expect(blockedByModule.error.kind).toBe('in_use');
+    });
+
+    it('deletes an unused module; refuses one attached to a tracking; cascades its own membership rows', async () => {
+      const prop = await trackingService.createProperty(editorId, companyId, projectId, {
+        name: 'mod_prop',
+      });
+      if (!prop.ok) throw new Error('create failed');
+      const mod = await trackingService.createModule(editorId, companyId, projectId, {
+        name: 'Cascade Module',
+        propertyIds: [prop.value.propertyId],
+      });
+      if (!mod.ok) throw new Error('create failed');
+
+      await navRepo.createNavigationEvent({
+        id: 'nav-mod-del',
+        projectId,
+        name: 'Mod Del Event',
+        description: null,
+        active: true,
+        createdAt: t(),
+        updatedAt: t(),
+      });
+      const trk = await trackingService.createTracking(editorId, projectId, {
+        name: 'Mod Del Tracking',
+        slug: 'mod-del-tracking',
+        navigationEventId: 'nav-mod-del',
+      });
+      if (!trk.ok) throw new Error('create failed');
+      await trackingService.applyModuleToTracking(
+        editorId,
+        trk.value.trackingId,
+        mod.value.moduleId,
+      );
+
+      const blocked = await trackingService.deleteModule(editorId, mod.value.moduleId);
+      expect(blocked.ok).toBe(false);
+      if (!blocked.ok) expect(blocked.error.kind).toBe('in_use');
+
+      // Detach, then deletion succeeds and its own module_properties rows go with it.
+      await trackingService.removePropertyFromTracking(
+        editorId,
+        trk.value.trackingId,
+        prop.value.propertyId,
+      );
+      expect(await trackingService.deleteModule(editorId, mod.value.moduleId)).toEqual({
+        ok: true,
+        value: { ok: true },
+      });
+      const remainingMembership = await connection.kysely
+        .selectFrom('module_properties')
+        .selectAll()
+        .where('module_id', '=', mod.value.moduleId)
+        .execute();
+      expect(remainingMembership).toEqual([]);
+      // The property itself survives — only the module's membership of it is gone.
+      expect((await trackingService.getProperty(editorId, prop.value.propertyId)).ok).toBe(true);
+    });
+
+    it('deletes an unmapped destination; refuses one a property is mapped to', async () => {
+      const prop = await trackingService.createProperty(editorId, companyId, projectId, {
+        name: 'dest_prop',
+      });
+      if (!prop.ok) throw new Error('create failed');
+      const dest = await trackingService.createDestination(editorId, companyId, projectId, {
+        platform: 'ga4',
+        variableType: 'event_param',
+        identifier: 'item_id',
+        name: 'Item ID',
+      });
+      if (!dest.ok) throw new Error('create failed');
+
+      await trackingService.setPropertyDestinations(editorId, prop.value.propertyId, [
+        { destinationId: dest.value.destinationId, destinationNameOverride: null },
+      ]);
+      const blocked = await trackingService.deleteDestination(editorId, dest.value.destinationId);
+      expect(blocked.ok).toBe(false);
+      if (!blocked.ok) expect(blocked.error.kind).toBe('in_use');
+
+      await trackingService.setPropertyDestinations(editorId, prop.value.propertyId, []);
+      expect(await trackingService.deleteDestination(editorId, dest.value.destinationId)).toEqual({
+        ok: true,
+        value: { ok: true },
+      });
+    });
+
+    it('deletes an unused navigation event; refuses one a tracking references', async () => {
+      await navRepo.createNavigationEvent({
+        id: 'nav-del-unused',
+        projectId,
+        name: 'Unused',
+        description: null,
+        active: true,
+        createdAt: t(),
+        updatedAt: t(),
+      });
+      expect(await trackingService.deleteNavigationEvent(editorId, 'nav-del-unused')).toEqual({
+        ok: true,
+        value: { ok: true },
+      });
+
+      await navRepo.createNavigationEvent({
+        id: 'nav-del-used',
+        projectId,
+        name: 'Used',
+        description: null,
+        active: true,
+        createdAt: t(),
+        updatedAt: t(),
+      });
+      await trackingService.createTracking(editorId, projectId, {
+        name: 'Uses Nav',
+        slug: 'uses-nav',
+        navigationEventId: 'nav-del-used',
+      });
+      const blocked = await trackingService.deleteNavigationEvent(editorId, 'nav-del-used');
+      expect(blocked.ok).toBe(false);
+      if (!blocked.ok) expect(blocked.error.kind).toBe('in_use');
+    });
+
+    it('deletes a tracking template unconditionally', async () => {
+      const tpl = await trackingService.createTrackingTemplate(editorId, companyId, projectId, {
+        name: 'A Template',
+      });
+      if (!tpl.ok) throw new Error('create failed');
+      expect(await trackingService.deleteTrackingTemplate(editorId, tpl.value.templateId)).toEqual({
+        ok: true,
+        value: { ok: true },
+      });
+    });
+
+    it('deletes a free page unconditionally', async () => {
+      const fp = await trackingService.createFreePage(editorId, companyId, projectId, {
+        title: 'A Free Page',
+        slug: 'a-free-page',
+        content: 'content',
+        publishable: false,
+      });
+      if (!fp.ok) throw new Error('create failed');
+      expect(await trackingService.deleteFreePage(editorId, fp.value.freePageId)).toEqual({
+        ok: true,
+        value: { ok: true },
+      });
+    });
+
+    it('deletes a tracking unconditionally, cascading its own modules/properties/specific-values/trigger association', async () => {
+      const prop = await trackingService.createProperty(editorId, companyId, projectId, {
+        name: 'trk_del_prop',
+      });
+      if (!prop.ok) throw new Error('create failed');
+      const mod = await trackingService.createModule(editorId, companyId, projectId, {
+        name: 'Trk Del Module',
+      });
+      if (!mod.ok) throw new Error('create failed');
+      await navRepo.createNavigationEvent({
+        id: 'nav-trk-del',
+        projectId,
+        name: 'Trk Del Event',
+        description: null,
+        active: true,
+        createdAt: t(),
+        updatedAt: t(),
+      });
+      const trk = await trackingService.createTracking(editorId, projectId, {
+        name: 'Trk To Delete',
+        slug: 'trk-to-delete',
+        navigationEventId: 'nav-trk-del',
+      });
+      if (!trk.ok) throw new Error('create failed');
+      const trackingId = trk.value.trackingId;
+
+      await trackingService.applyModuleToTracking(editorId, trackingId, mod.value.moduleId);
+      // Attach the property directly (no dedicated "attach one property" service call).
+      await trkRepo.setTrackingProperties([
+        {
+          id: 'tp-trk-del',
+          trackingId,
+          propertyId: prop.value.propertyId,
+          source: 'direct',
+          presence: 'always',
+          createdAt: t(),
+          updatedAt: t(),
+        },
+      ]);
+      const svRes = await trackingService.setSpecificValue(editorId, 'tp-trk-del', { value: 'x' });
+      expect(svRes.ok).toBe(true);
+
+      const trg = await trackingService.createTrigger(editorId, projectId, {
+        name: 'Trk Del Trigger',
+        trackingIds: [trackingId],
+      });
+      if (!trg.ok) throw new Error('create failed');
+
+      expect(await trackingService.deleteTracking(editorId, trackingId)).toEqual({
+        ok: true,
+        value: { ok: true },
+      });
+
+      expect(
+        await connection.kysely
+          .selectFrom('tracking_modules')
+          .selectAll()
+          .where('tracking_id', '=', trackingId)
+          .execute(),
+      ).toEqual([]);
+      expect(
+        await connection.kysely
+          .selectFrom('tracking_properties')
+          .selectAll()
+          .where('tracking_id', '=', trackingId)
+          .execute(),
+      ).toEqual([]);
+      expect(
+        await connection.kysely
+          .selectFrom('trigger_trackings')
+          .selectAll()
+          .where('tracking_id', '=', trackingId)
+          .execute(),
+      ).toEqual([]);
+      // The module, property, and trigger themselves survive.
+      expect((await trackingService.getModule(editorId, mod.value.moduleId)).ok).toBe(true);
+      expect((await trackingService.getProperty(editorId, prop.value.propertyId)).ok).toBe(true);
+      expect((await trackingService.getTrigger(editorId, trg.value.triggerId)).ok).toBe(true);
+    });
+
+    it('deletes a specific value unconditionally, and reports not_found once gone', async () => {
+      const prop = await trackingService.createProperty(editorId, companyId, projectId, {
+        name: 'sv_del_prop',
+      });
+      if (!prop.ok) throw new Error('create failed');
+      await navRepo.createNavigationEvent({
+        id: 'nav-sv-del',
+        projectId,
+        name: 'SV Del Event',
+        description: null,
+        active: true,
+        createdAt: t(),
+        updatedAt: t(),
+      });
+      const trk = await trackingService.createTracking(editorId, projectId, {
+        name: 'SV Del Tracking',
+        slug: 'sv-del-tracking',
+        navigationEventId: 'nav-sv-del',
+      });
+      if (!trk.ok) throw new Error('create failed');
+      // Attach the property directly via the repository (no dedicated "attach one property" service call outside modules).
+      await trkRepo.setTrackingProperties([
+        {
+          id: 'tp-sv-del',
+          trackingId: trk.value.trackingId,
+          propertyId: prop.value.propertyId,
+          source: 'direct',
+          presence: 'always',
+          createdAt: t(),
+          updatedAt: t(),
+        },
+      ]);
+      const sv = await trackingService.setSpecificValue(editorId, 'tp-sv-del', { value: 'abc' });
+      if (!sv.ok) throw new Error('create failed');
+
+      expect(await trackingService.deleteSpecificValue(editorId, sv.value.specificValueId)).toEqual(
+        { ok: true, value: { ok: true } },
+      );
+      expect(await trackingService.deleteSpecificValue(editorId, sv.value.specificValueId)).toEqual(
+        {
+          ok: false,
+          error: { kind: 'not_found' },
+        },
+      );
+    });
+
+    it('deletes a flow, cascading its own nodes and edges', async () => {
+      await connection.kysely
+        .insertInto('pages')
+        .values({
+          id: 'page-flow-del',
+          project_id: projectId,
+          name: 'Flow Del Page',
+          slug: 'flow-del-page',
+          created_at: t(),
+          updated_at: t(),
+        })
+        .execute();
+      const flow = await trackingService.createFlow(editorId, projectId, {
+        name: 'Flow To Delete',
+        slug: 'flow-to-delete',
+      });
+      if (!flow.ok) throw new Error('create failed');
+      await trackingService.setFlowGraph(editorId, flow.value.flowId, {
+        nodes: [
+          { id: 'fd-node-1', nodeType: 'page', pageId: 'page-flow-del' },
+          { id: 'fd-node-2', nodeType: 'page', pageId: 'page-flow-del' },
+        ],
+        edges: [{ fromNodeId: 'fd-node-1', toNodeId: 'fd-node-2' }],
+      });
+
+      expect(await trackingService.deleteFlow(editorId, flow.value.flowId)).toEqual({
+        ok: true,
+        value: { ok: true },
+      });
+      expect(
+        await connection.kysely
+          .selectFrom('flow_nodes')
+          .selectAll()
+          .where('flow_id', '=', flow.value.flowId)
+          .execute(),
+      ).toEqual([]);
+      expect(
+        await connection.kysely
+          .selectFrom('flow_edges')
+          .selectAll()
+          .where('flow_id', '=', flow.value.flowId)
+          .execute(),
+      ).toEqual([]);
+    });
+
+    it('deletes an unplaced trigger; refuses one placed on a flow diagram; cascades its own tracking associations', async () => {
+      await navRepo.createNavigationEvent({
+        id: 'nav-trg-del',
+        projectId,
+        name: 'Trg Del Event',
+        description: null,
+        active: true,
+        createdAt: t(),
+        updatedAt: t(),
+      });
+      const trk = await trackingService.createTracking(editorId, projectId, {
+        name: 'Trg Del Tracking',
+        slug: 'trg-del-tracking',
+        navigationEventId: 'nav-trg-del',
+      });
+      if (!trk.ok) throw new Error('create failed');
+
+      const trg = await trackingService.createTrigger(editorId, projectId, {
+        name: 'Del Trigger',
+        trackingIds: [trk.value.trackingId],
+      });
+      if (!trg.ok) throw new Error('create failed');
+
+      expect(await trackingService.deleteTrigger(editorId, trg.value.triggerId)).toEqual({
+        ok: true,
+        value: { ok: true },
+      });
+
+      const trg2 = await trackingService.createTrigger(editorId, projectId, {
+        name: 'Placed Trigger',
+      });
+      if (!trg2.ok) throw new Error('create failed');
+      const flow = await trackingService.createFlow(editorId, projectId, {
+        name: 'Holds Trigger',
+        slug: 'holds-trigger',
+      });
+      if (!flow.ok) throw new Error('create failed');
+      await trackingService.setFlowGraph(editorId, flow.value.flowId, {
+        nodes: [{ id: 'trg-node', nodeType: 'trigger', triggerId: trg2.value.triggerId }],
+        edges: [],
+      });
+      const blocked = await trackingService.deleteTrigger(editorId, trg2.value.triggerId);
+      expect(blocked.ok).toBe(false);
+      if (!blocked.ok) expect(blocked.error.kind).toBe('in_use');
+    });
+
+    it('forbids deletion without an edit grant', async () => {
+      const prop = await trackingService.createProperty(editorId, companyId, projectId, {
+        name: 'forbidden_del_prop',
+      });
+      if (!prop.ok) throw new Error('create failed');
+
+      // A user with no grant on the project at all.
+      const outsider = 'user-outsider';
+      await connection.kysely
+        .insertInto('users')
+        .values({
+          id: outsider,
+          company_id: companyId,
+          role_id: null,
+          email: 'outsider@corp.com',
+          created_at: t(),
+          updated_at: t(),
+        })
+        .execute();
+
+      expect(await trackingService.deleteProperty(outsider, prop.value.propertyId)).toEqual({
+        ok: false,
+        error: { kind: 'forbidden' },
+      });
+    });
+  });
 });

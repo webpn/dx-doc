@@ -18,6 +18,13 @@ import type {
   Trigger,
 } from '@project/domain/entities';
 
+/** ADR-0025: what blocks a Property's deletion. */
+export interface PropertyDeletionBlockers {
+  trackings: number;
+  modules: number;
+  childProperties: number;
+}
+
 export interface PropertyRepository {
   createProperty(property: DataLayerProperty): Promise<void>;
   getPropertyById(id: string): Promise<DataLayerProperty | null>;
@@ -33,6 +40,9 @@ export interface PropertyRepository {
   ): Promise<DataLayerProperty | null>;
   listProperties(companyId: string, projectId: string | null): Promise<DataLayerProperty[]>;
   updateProperty(property: DataLayerProperty): Promise<void>;
+  getPropertyDeletionBlockers(id: string): Promise<PropertyDeletionBlockers>;
+  /** Deletes the property's own `property_destinations` rows, then the property. */
+  deleteProperty(id: string): Promise<void>;
 }
 
 export interface ModuleRepository {
@@ -47,6 +57,10 @@ export interface ModuleRepository {
   updateModule(module: Module): Promise<void>;
   setModuleProperties(moduleId: string, propertyIds: string[], nowIso: string): Promise<void>;
   getModulePropertyIds(moduleId: string): Promise<string[]>;
+  /** ADR-0025: number of trackings this module is attached to. */
+  countTrackingsUsingModule(id: string): Promise<number>;
+  /** Deletes the module's own `module_properties` rows, then the module. */
+  deleteModule(id: string): Promise<void>;
 }
 
 export interface DestinationRepository {
@@ -68,6 +82,9 @@ export interface DestinationRepository {
     nowIso: string,
   ): Promise<void>;
   getPropertyDestinations(propertyId: string): Promise<PropertyDestinationMapping[]>;
+  /** ADR-0025: number of properties mapped to this destination. */
+  countPropertiesUsingDestination(id: string): Promise<number>;
+  deleteDestination(id: string): Promise<void>;
 }
 
 export interface TrackingTemplateRepository {
@@ -80,6 +97,8 @@ export interface TrackingTemplateRepository {
   ): Promise<TrackingTemplate | null>;
   listTemplates(companyId: string, projectId: string | null): Promise<TrackingTemplate[]>;
   updateTemplate(template: TrackingTemplate): Promise<void>;
+  /** Nothing references a template (ADR-0025); deletion is unconditional. */
+  deleteTemplate(id: string): Promise<void>;
 }
 
 export interface FreePageRepository {
@@ -97,6 +116,8 @@ export interface FreePageRepository {
   ): Promise<FreePage | null>;
   listFreePages(companyId: string, projectId: string | null): Promise<FreePage[]>;
   updateFreePage(page: FreePage): Promise<void>;
+  /** Nothing references a free page (ADR-0025); deletion is unconditional. */
+  deleteFreePage(id: string): Promise<void>;
 }
 
 export interface NavigationEventRepository {
@@ -104,6 +125,9 @@ export interface NavigationEventRepository {
   getNavigationEventById(id: string): Promise<NavigationEvent | null>;
   listNavigationEvents(projectId: string): Promise<NavigationEvent[]>;
   updateNavigationEvent(event: NavigationEvent): Promise<void>;
+  /** ADR-0025: trackings and templates that reference this navigation event. */
+  countUsageOfNavigationEvent(id: string): Promise<{ trackings: number; templates: number }>;
+  deleteNavigationEvent(id: string): Promise<void>;
 }
 
 export interface TrackingRepository {
@@ -128,6 +152,18 @@ export interface TrackingRepository {
   setSpecificValues(specificValues: SpecificValue[]): Promise<void>;
   getSpecificValuesForTrackingProperty(trackingPropertyId: string): Promise<SpecificValue[]>;
   getSpecificValuesForTracking(trackingId: string): Promise<SpecificValue[]>;
+  /** Resolves the owning tracking's project, for a specific value's permission check. */
+  getProjectIdForSpecificValue(id: string): Promise<string | null>;
+  /** A leaf value; nothing references it (ADR-0025). */
+  deleteSpecificValue(id: string): Promise<void>;
+
+  /**
+   * ADR-0025: a tracking blocks nothing — every table that names a
+   * `tracking_id` records the tracking's own configuration. Deletes its
+   * `tracking_modules`, `tracking_properties` (+ their `specific_values`)
+   * and `trigger_trackings` rows, then the tracking itself.
+   */
+  deleteTracking(id: string): Promise<void>;
 }
 
 export interface FlowRepository {
@@ -142,6 +178,12 @@ export interface FlowRepository {
   getFlowNodes(flowId: string): Promise<FlowNode[]>;
   setFlowEdges(edges: FlowEdge[]): Promise<void>;
   getFlowEdges(flowId: string): Promise<FlowEdge[]>;
+
+  /**
+   * ADR-0025: nothing references a flow itself. Deletes its own
+   * `flow_edges` and `flow_nodes` (edges first), then the flow.
+   */
+  deleteFlow(id: string): Promise<void>;
 }
 
 export interface TriggerRepository {
@@ -151,6 +193,10 @@ export interface TriggerRepository {
   updateTrigger(trigger: Trigger): Promise<void>;
   setTriggerTrackings(triggerId: string, trackingIds: string[], nowIso: string): Promise<void>;
   getTriggerTrackingIds(triggerId: string): Promise<string[]>;
+  /** ADR-0025: number of flow diagrams this trigger is placed on. */
+  countFlowNodesUsingTrigger(id: string): Promise<number>;
+  /** Deletes the trigger's own `trigger_trackings` rows, then the trigger. */
+  deleteTrigger(id: string): Promise<void>;
 }
 
 export interface VersionRepository {

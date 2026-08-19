@@ -106,4 +106,87 @@ describe('SqlitePageRepository (against the real schema)', () => {
     expect(reloaded?.name).toBe('Homepage');
     expect(reloaded?.parentId).toBe('pg2');
   });
+
+  describe('deletion (ADR-0025)', () => {
+    it('deletes a page with nothing referencing it', async () => {
+      await repo.createPage(page({}));
+
+      await repo.deletePage('pg1');
+
+      expect(await repo.getPageById('pg1')).toBeNull();
+    });
+
+    it('reports zero blockers for an unreferenced page', async () => {
+      await repo.createPage(page({}));
+
+      expect(await repo.getPageDeletionBlockers('pg1')).toEqual({
+        childPages: 0,
+        trackings: 0,
+        flowNodes: 0,
+      });
+    });
+
+    it('counts a child page as a blocker', async () => {
+      await repo.createPage(page({}));
+      await repo.createPage(page({ id: 'pg2', parentId: 'pg1', name: 'Child', slug: 'child' }));
+
+      expect((await repo.getPageDeletionBlockers('pg1')).childPages).toBe(1);
+    });
+
+    it('counts an attached tracking as a blocker', async () => {
+      await repo.createPage(page({}));
+      await connection.kysely
+        .insertInto('navigation_events')
+        .values({
+          id: 'nav-1',
+          project_id: 'proj-1',
+          name: 'page_view',
+          created_at: t(),
+          updated_at: t(),
+        })
+        .execute();
+      await connection.kysely
+        .insertInto('trackings')
+        .values({
+          id: 'trk-1',
+          project_id: 'proj-1',
+          page_id: 'pg1',
+          navigation_event_id: 'nav-1',
+          name: 'View',
+          slug: 'view',
+          created_at: t(),
+          updated_at: t(),
+        })
+        .execute();
+
+      expect((await repo.getPageDeletionBlockers('pg1')).trackings).toBe(1);
+    });
+
+    it('counts a flow node placed on the page as a blocker', async () => {
+      await repo.createPage(page({}));
+      await connection.kysely
+        .insertInto('flows')
+        .values({
+          id: 'flow-1',
+          project_id: 'proj-1',
+          name: 'Checkout',
+          slug: 'checkout',
+          created_at: t(),
+          updated_at: t(),
+        })
+        .execute();
+      await connection.kysely
+        .insertInto('flow_nodes')
+        .values({
+          id: 'node-1',
+          flow_id: 'flow-1',
+          node_type: 'page',
+          page_id: 'pg1',
+          created_at: t(),
+        })
+        .execute();
+
+      expect((await repo.getPageDeletionBlockers('pg1')).flowNodes).toBe(1);
+    });
+  });
 });

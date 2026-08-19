@@ -74,4 +74,22 @@ export function registerPageRoutes(app: FastifyInstance, options: PageRoutesOpti
     }
     return { ok: true };
   });
+
+  app.delete('/api/pages/:id', async (request, reply) => {
+    const actor = await authenticateRequest(
+      request,
+      options.sessions,
+      options.serviceTokens,
+      options.cookieName,
+    );
+    if (actor === null) {
+      return unauthenticated(reply);
+    }
+    const { id } = request.params as { id: string };
+    const result = await options.pages.delete(actor.userId, id);
+    if (!result.ok) {
+      return replyServiceError(reply, result.error);
+    }
+    return { ok: true };
+  });
 }

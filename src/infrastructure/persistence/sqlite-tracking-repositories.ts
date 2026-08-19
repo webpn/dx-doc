@@ -5,6 +5,7 @@ import type {
   FreePageRepository,
   ModuleRepository,
   NavigationEventRepository,
+  PropertyDeletionBlockers,
   PropertyRepository,
   SharedPasswordRepository,
   TrackingRepository,
@@ -163,6 +164,38 @@ export class SqlitePropertyRepository implements PropertyRepository {
       })
       .where('id', '=', property.id)
       .execute();
+  }
+
+  /** ADR-0025: what blocks this property's deletion. */
+  async getPropertyDeletionBlockers(id: string): Promise<PropertyDeletionBlockers> {
+    const [trackings, modules, childProperties] = await Promise.all([
+      this.db
+        .selectFrom('tracking_properties')
+        .select((eb) => eb.fn.countAll<number | string>().as('count'))
+        .where('property_id', '=', id)
+        .executeTakeFirstOrThrow(),
+      this.db
+        .selectFrom('module_properties')
+        .select((eb) => eb.fn.countAll<number | string>().as('count'))
+        .where('property_id', '=', id)
+        .executeTakeFirstOrThrow(),
+      this.db
+        .selectFrom('properties')
+        .select((eb) => eb.fn.countAll<number | string>().as('count'))
+        .where('parent_property_id', '=', id)
+        .executeTakeFirstOrThrow(),
+    ]);
+    return {
+      trackings: Number(trackings.count),
+      modules: Number(modules.count),
+      childProperties: Number(childProperties.count),
+    };
+  }
+
+  /** Deletes the property's own `property_destinations` rows, then the property. */
+  async deleteProperty(id: string): Promise<void> {
+    await this.db.deleteFrom('property_destinations').where('property_id', '=', id).execute();
+    await this.db.deleteFrom('properties').where('id', '=', id).execute();
   }
 
   private toEntity(row: {
@@ -350,6 +383,22 @@ export class SqliteModuleRepository implements ModuleRepository {
       .execute();
     return rows.map((r) => r.property_id);
   }
+
+  /** ADR-0025: number of trackings this module is attached to. */
+  async countTrackingsUsingModule(id: string): Promise<number> {
+    const result = await this.db
+      .selectFrom('tracking_modules')
+      .select((eb) => eb.fn.countAll<number | string>().as('count'))
+      .where('module_id', '=', id)
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
+  }
+
+  /** Deletes the module's own `module_properties` rows, then the module. */
+  async deleteModule(id: string): Promise<void> {
+    await this.db.deleteFrom('module_properties').where('module_id', '=', id).execute();
+    await this.db.deleteFrom('modules').where('id', '=', id).execute();
+  }
 }
 
 export class SqliteDestinationRepository implements DestinationRepository {
@@ -515,6 +564,20 @@ export class SqliteDestinationRepository implements DestinationRepository {
       updatedAt: row.updated_at,
     };
   }
+
+  /** ADR-0025: number of properties mapped to this destination. */
+  async countPropertiesUsingDestination(id: string): Promise<number> {
+    const result = await this.db
+      .selectFrom('property_destinations')
+      .select((eb) => eb.fn.countAll<number | string>().as('count'))
+      .where('destination_id', '=', id)
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
+  }
+
+  async deleteDestination(id: string): Promise<void> {
+    await this.db.deleteFrom('destinations').where('id', '=', id).execute();
+  }
 }
 
 export class SqliteNavigationEventRepository implements NavigationEventRepository {
@@ -583,6 +646,30 @@ export class SqliteNavigationEventRepository implements NavigationEventRepositor
       })
       .where('id', '=', event.id)
       .execute();
+  }
+
+  /** ADR-0025: trackings and templates that reference this navigation event. */
+  async countUsageOfNavigationEvent(id: string): Promise<{ trackings: number; templates: number }> {
+    const [trackings, templates] = await Promise.all([
+      this.db
+        .selectFrom('trackings')
+        .select((eb) => eb.fn.countAll<number | string>().as('count'))
+        .where('navigation_event_id', '=', id)
+        .executeTakeFirstOrThrow(),
+      this.db
+        .selectFrom('tracking_templates')
+        .select((eb) => eb.fn.countAll<number | string>().as('count'))
+        .where('navigation_event_id', '=', id)
+        .executeTakeFirstOrThrow(),
+    ]);
+    return {
+      trackings: Number(trackings.count),
+      templates: Number(templates.count),
+    };
+  }
+
+  async deleteNavigationEvent(id: string): Promise<void> {
+    await this.db.deleteFrom('navigation_events').where('id', '=', id).execute();
   }
 }
 
@@ -817,6 +904,58 @@ export class SqliteTrackingRepository implements TrackingRepository {
     }));
   }
 
+  /** Resolves the owning tracking's project, for a specific value's permission check. */
+  async getProjectIdForSpecificValue(id: string): Promise<string | null> {
+    const row = await this.db
+      .selectFrom('specific_values')
+      .innerJoin(
+        'tracking_properties',
+        'tracking_properties.id',
+        'specific_values.tracking_property_id',
+      )
+      .innerJoin('trackings', 'trackings.id', 'tracking_properties.tracking_id')
+      .select('trackings.project_id')
+      .where('specific_values.id', '=', id)
+      .executeTakeFirst();
+    return row?.project_id ?? null;
+  }
+
+  /** A leaf value; nothing references it (ADR-0025). */
+  async deleteSpecificValue(id: string): Promise<void> {
+    await this.db.deleteFrom('specific_values').where('id', '=', id).execute();
+  }
+
+  /**
+   * ADR-0025: a tracking blocks nothing — every table that names a
+   * `tracking_id` records the tracking's own configuration. Deletes its
+   * `tracking_modules`, `tracking_properties` (+ their `specific_values`)
+   * and `trigger_trackings` rows, then the tracking itself.
+   */
+  async deleteTracking(id: string): Promise<void> {
+    // First, get all tracking_property IDs for this tracking
+    const trackingProperties = await this.db
+      .selectFrom('tracking_properties')
+      .select('id')
+      .where('tracking_id', '=', id)
+      .execute();
+
+    // Delete specific_values for each tracking_property
+    for (const tp of trackingProperties) {
+      await this.db
+        .deleteFrom('specific_values')
+        .where('tracking_property_id', '=', tp.id)
+        .execute();
+    }
+
+    // Delete owned rows
+    await this.db.deleteFrom('tracking_properties').where('tracking_id', '=', id).execute();
+    await this.db.deleteFrom('tracking_modules').where('tracking_id', '=', id).execute();
+    await this.db.deleteFrom('trigger_trackings').where('tracking_id', '=', id).execute();
+
+    // Finally delete the tracking
+    await this.db.deleteFrom('trackings').where('id', '=', id).execute();
+  }
+
   private toTrackingEntity(row: {
     id: string;
     project_id: string;
@@ -961,6 +1100,11 @@ export class SqliteTrackingTemplateRepository implements TrackingTemplateReposit
       .where('id', '=', template.id)
       .execute();
   }
+
+  /** Nothing references a template (ADR-0025); deletion is unconditional. */
+  async deleteTemplate(id: string): Promise<void> {
+    await this.db.deleteFrom('tracking_templates').where('id', '=', id).execute();
+  }
 }
 
 export class SqliteFreePageRepository implements FreePageRepository {
@@ -1086,6 +1230,11 @@ export class SqliteFreePageRepository implements FreePageRepository {
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };
+  }
+
+  /** Nothing references a free page (ADR-0025); deletion is unconditional. */
+  async deleteFreePage(id: string): Promise<void> {
+    await this.db.deleteFrom('free_pages').where('id', '=', id).execute();
   }
 }
 
@@ -1253,6 +1402,16 @@ export class SqliteFlowRepository implements FlowRepository {
       updatedAt: row.updated_at,
     };
   }
+
+  /**
+   * ADR-0025: nothing references a flow itself. Deletes its own
+   * `flow_edges` and `flow_nodes` (edges first), then the flow.
+   */
+  async deleteFlow(id: string): Promise<void> {
+    await this.db.deleteFrom('flow_edges').where('flow_id', '=', id).execute();
+    await this.db.deleteFrom('flow_nodes').where('flow_id', '=', id).execute();
+    await this.db.deleteFrom('flows').where('id', '=', id).execute();
+  }
 }
 
 export class SqliteTriggerRepository implements TriggerRepository {
@@ -1350,6 +1509,22 @@ export class SqliteTriggerRepository implements TriggerRepository {
       .where('trigger_id', '=', triggerId)
       .execute();
     return rows.map((r) => r.tracking_id);
+  }
+
+  /** ADR-0025: number of flow diagrams this trigger is placed on. */
+  async countFlowNodesUsingTrigger(id: string): Promise<number> {
+    const result = await this.db
+      .selectFrom('flow_nodes')
+      .select((eb) => eb.fn.countAll<number | string>().as('count'))
+      .where('trigger_id', '=', id)
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
+  }
+
+  /** Deletes the trigger's own `trigger_trackings` rows, then the trigger. */
+  async deleteTrigger(id: string): Promise<void> {
+    await this.db.deleteFrom('trigger_trackings').where('trigger_id', '=', id).execute();
+    await this.db.deleteFrom('triggers').where('id', '=', id).execute();
   }
 }
 
