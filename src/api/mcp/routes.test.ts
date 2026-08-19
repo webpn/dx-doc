@@ -177,6 +177,7 @@ describe('MCP Server (M1.3, REQ-API-003, REQ-API-004, REQ-API-006, D37, D38)', (
       hasher,
       projectRepo,
       permissions,
+      connection.kysely,
     );
 
     const mcpHandler = new McpServerHandler(

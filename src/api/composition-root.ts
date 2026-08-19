@@ -228,6 +228,7 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
     hasher,
     projects,
     permissions,
+    connection.kysely,
     search,
   );
   const assetService = new AssetService(

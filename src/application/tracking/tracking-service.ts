@@ -43,6 +43,7 @@ import type {
 import { generateMermaidDiagram } from '@project/domain/mermaid';
 import { err, ok, type Result } from '@project/shared/result';
 
+import type { Db } from '../../infrastructure/persistence/sqlite-kysely';
 import type { PermissionService } from '../auth/permissions';
 import type { PasswordHasher } from '../ports/password-hasher';
 import type { ProjectRepository } from '../ports/project-repository';
@@ -126,10 +127,14 @@ export class TrackingService {
     private readonly passwordHasher: PasswordHasher,
     private readonly projects: ProjectRepository,
     private readonly permissions: PermissionService,
+    private readonly db: Db, // Used for transaction support (REQ-FDN-025)
     private readonly searchIndex?: SearchIndex,
     private readonly now: () => Date = () => new Date(),
     private readonly newId: () => string = () => randomUUID(),
-  ) {}
+  ) {
+    // db is used for transaction support in publishVersion and setFlowGraph
+    void this.db;
+  }
 
   // --- PROPERTIES ---
   async createProperty(
@@ -2308,8 +2313,45 @@ export class TrackingService {
       createdAt: nowIso,
     }));
 
-    await this.flows.setFlowNodes(domainNodes);
-    await this.flows.setFlowEdges(domainEdges);
+    await this.db.transaction().execute(async (trx) => {
+      await trx.deleteFrom('flow_nodes').where('flow_id', '=', flowId).execute();
+      await trx.deleteFrom('flow_edges').where('flow_id', '=', flowId).execute();
+
+      if (domainNodes.length > 0) {
+        await trx
+          .insertInto('flow_nodes')
+          .values(
+            domainNodes.map((n) => ({
+              id: n.id,
+              flow_id: n.flowId,
+              node_type: n.nodeType,
+              page_id: n.pageId,
+              trigger_id: n.triggerId,
+              position_x: n.positionX,
+              position_y: n.positionY,
+              created_at: n.createdAt,
+            })),
+          )
+          .execute();
+      }
+
+      if (domainEdges.length > 0) {
+        await trx
+          .insertInto('flow_edges')
+          .values(
+            domainEdges.map((e) => ({
+              id: e.id,
+              flow_id: e.flowId,
+              from_node_id: e.fromNodeId,
+              to_node_id: e.toNodeId,
+              label: e.label,
+              condition_description: e.conditionDescription,
+              created_at: e.createdAt,
+            })),
+          )
+          .execute();
+      }
+    });
 
     return ok({ ok: true });
   }
@@ -2798,36 +2840,46 @@ export class TrackingService {
     }
 
     const versionId = this.newId();
-    await this.versions.createVersion({
-      id: versionId,
-      projectId,
-      versionNumber: nextNumber,
-      title: parsed.value.title ?? null,
-      releaseNotes: parsed.value.releaseNotes ?? null,
-      changelog,
-      snapshot,
-      createdBy: actorId,
-      createdAt: nowIso,
-    });
 
     const project = await this.projects.getProjectById(projectId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId: project.companyId,
-        projectId,
-        actorId,
-        action: 'version.published',
-        entityType: 'version',
-        entityId: versionId,
-        details: {
-          versionNumber: nextNumber,
-          title: parsed.value.title,
-          changelogEntryCount: changelog.length,
-        },
-        createdAt: nowIso,
-      });
-    }
+
+    await this.db.transaction().execute(async (trx) => {
+      await trx
+        .insertInto('versions')
+        .values({
+          id: versionId,
+          project_id: projectId,
+          version_number: nextNumber,
+          title: parsed.value.title ?? null,
+          release_notes: parsed.value.releaseNotes ?? null,
+          changelog_json: JSON.stringify(changelog),
+          snapshot_json: JSON.stringify(snapshot),
+          created_by: actorId,
+          created_at: nowIso,
+        })
+        .execute();
+
+      if (project) {
+        await trx
+          .insertInto('audit_logs')
+          .values({
+            id: this.newId(),
+            company_id: project.companyId,
+            project_id: projectId,
+            actor_id: actorId,
+            action: 'version.published',
+            entity_type: 'version',
+            entity_id: versionId,
+            details_json: JSON.stringify({
+              versionNumber: nextNumber,
+              title: parsed.value.title,
+              changelogEntryCount: changelog.length,
+            }),
+            created_at: nowIso,
+          })
+          .execute();
+      }
+    });
 
     return ok({ versionId, versionNumber: nextNumber });
   }
@@ -2978,5 +3030,90 @@ export class TrackingService {
     }
     const logs = await this.auditLogs.listLogsForCompany(companyId);
     return ok(logs);
+  }
+
+  async batchCreate(
+    actorId: string,
+    companyId: string,
+    projectId: string | null,
+    input: {
+      properties?: PropertyCreateInput[];
+      modules?: ModuleCreateInput[];
+      destinations?: DestinationCreateInput[];
+      trackings?: TrackingCreateInput[];
+    },
+  ): Promise<{
+    results: {
+      properties: { index: number; success: boolean; id?: string; error?: unknown }[];
+      modules: { index: number; success: boolean; id?: string; error?: unknown }[];
+      destinations: { index: number; success: boolean; id?: string; error?: unknown }[];
+      trackings: { index: number; success: boolean; id?: string; error?: unknown }[];
+    };
+  }> {
+    const results: {
+      properties: { index: number; success: boolean; id?: string; error?: unknown }[];
+      modules: { index: number; success: boolean; id?: string; error?: unknown }[];
+      destinations: { index: number; success: boolean; id?: string; error?: unknown }[];
+      trackings: { index: number; success: boolean; id?: string; error?: unknown }[];
+    } = {
+      properties: [],
+      modules: [],
+      destinations: [],
+      trackings: [],
+    };
+
+    if (input.properties) {
+      let i = 0;
+      for (const item of input.properties) {
+        const res = await this.createProperty(actorId, companyId, projectId, item);
+        if (res.ok) {
+          results.properties.push({ index: i, success: true, id: res.value.propertyId });
+        } else {
+          results.properties.push({ index: i, success: false, error: res.error });
+        }
+        i++;
+      }
+    }
+
+    if (input.modules) {
+      let i = 0;
+      for (const item of input.modules) {
+        const res = await this.createModule(actorId, companyId, projectId, item);
+        if (res.ok) {
+          results.modules.push({ index: i, success: true, id: res.value.moduleId });
+        } else {
+          results.modules.push({ index: i, success: false, error: res.error });
+        }
+        i++;
+      }
+    }
+
+    if (input.destinations) {
+      let i = 0;
+      for (const item of input.destinations) {
+        const res = await this.createDestination(actorId, companyId, projectId, item);
+        if (res.ok) {
+          results.destinations.push({ index: i, success: true, id: res.value.destinationId });
+        } else {
+          results.destinations.push({ index: i, success: false, error: res.error });
+        }
+        i++;
+      }
+    }
+
+    if (input.trackings && projectId !== null) {
+      let i = 0;
+      for (const item of input.trackings) {
+        const res = await this.createTracking(actorId, projectId, item);
+        if (res.ok) {
+          results.trackings.push({ index: i, success: true, id: res.value.trackingId });
+        } else {
+          results.trackings.push({ index: i, success: false, error: res.error });
+        }
+        i++;
+      }
+    }
+
+    return { results };
   }
 }

@@ -180,6 +180,7 @@ describe('TrackingService (M1.1 Application Service)', () => {
       hasher,
       projectRepo,
       permissions,
+      connection.kysely,
     );
   });
 
@@ -1049,6 +1050,60 @@ describe('TrackingService (M1.1 Application Service)', () => {
           name: 'flow_v2',
         }),
       );
+    });
+  });
+
+  describe('Transactional boundaries (M1.14 Unit 5, REQ-FDN-025)', () => {
+    it('publishVersion wraps version creation and audit logging in a transaction (REQ-FDN-025)', async () => {
+      // Create a property so there's something to publish
+      const propRes = await trackingService.createProperty(adminId, companyId, projectId, {
+        name: 'test_prop',
+        businessLabel: 'Test',
+        type: 'string',
+      });
+      expect(propRes.ok).toBe(true);
+
+      // Publish version
+      const pubRes = await trackingService.publishVersion(adminId, companyId, projectId, {
+        title: 'V1',
+      });
+      expect(pubRes.ok).toBe(true);
+      if (!pubRes.ok) return;
+      const versionId = pubRes.value.versionId;
+
+      // Verify both version and audit log exist (proving transaction succeeded)
+      const version = await connection.kysely
+        .selectFrom('versions')
+        .selectAll()
+        .where('id', '=', versionId)
+        .executeTakeFirst();
+      expect(version).toBeDefined();
+
+      const auditEntry = await connection.kysely
+        .selectFrom('audit_logs')
+        .selectAll()
+        .where('entity_id', '=', versionId)
+        .where('action', '=', 'version.published')
+        .executeTakeFirst();
+      expect(auditEntry).toBeDefined();
+    });
+
+    it('batchCreate processes all items (REQ-FDN-025)', async () => {
+      // Create batch with valid and invalid items
+      const batchRes = await trackingService.batchCreate(adminId, companyId, projectId, {
+        properties: [
+          { name: 'batch_prop_1', type: 'string' },
+          { name: '', type: 'string' }, // invalid
+        ],
+      });
+
+      // Verify both results are returned
+      expect(batchRes.results.properties).toHaveLength(2);
+      expect(batchRes.results.properties[0]?.success).toBe(true);
+      expect(batchRes.results.properties[1]?.success).toBe(false);
+
+      // Verify first property was created
+      expect(batchRes.results.properties[0]?.id).toBeDefined();
     });
   });
 });

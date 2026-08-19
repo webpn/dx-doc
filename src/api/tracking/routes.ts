@@ -916,69 +916,18 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     };
 
     const projectId = body.projectId ?? null;
-    const results: {
-      properties: { index: number; success: boolean; id?: string; error?: unknown }[];
-      modules: { index: number; success: boolean; id?: string; error?: unknown }[];
-      destinations: { index: number; success: boolean; id?: string; error?: unknown }[];
-      trackings: { index: number; success: boolean; id?: string; error?: unknown }[];
-    } = {
-      properties: [],
-      modules: [],
-      destinations: [],
-      trackings: [],
-    };
+    const input: {
+      properties?: PropertyCreateInput[];
+      modules?: ModuleCreateInput[];
+      destinations?: DestinationCreateInput[];
+      trackings?: TrackingCreateInput[];
+    } = {};
+    if (body.properties) input.properties = body.properties;
+    if (body.modules) input.modules = body.modules;
+    if (body.destinations) input.destinations = body.destinations;
+    if (body.trackings) input.trackings = body.trackings;
 
-    if (body.properties) {
-      let i = 0;
-      for (const item of body.properties) {
-        const res = await trackingService.createProperty(userId, companyId, projectId, item);
-        if (res.ok) {
-          results.properties.push({ index: i, success: true, id: res.value.propertyId });
-        } else {
-          results.properties.push({ index: i, success: false, error: res.error });
-        }
-        i++;
-      }
-    }
-
-    if (body.modules) {
-      let i = 0;
-      for (const item of body.modules) {
-        const res = await trackingService.createModule(userId, companyId, projectId, item);
-        if (res.ok) {
-          results.modules.push({ index: i, success: true, id: res.value.moduleId });
-        } else {
-          results.modules.push({ index: i, success: false, error: res.error });
-        }
-        i++;
-      }
-    }
-
-    if (body.destinations) {
-      let i = 0;
-      for (const item of body.destinations) {
-        const res = await trackingService.createDestination(userId, companyId, projectId, item);
-        if (res.ok) {
-          results.destinations.push({ index: i, success: true, id: res.value.destinationId });
-        } else {
-          results.destinations.push({ index: i, success: false, error: res.error });
-        }
-        i++;
-      }
-    }
-
-    if (body.trackings && projectId !== null) {
-      let i = 0;
-      for (const item of body.trackings) {
-        const res = await trackingService.createTracking(userId, projectId, item);
-        if (res.ok) {
-          results.trackings.push({ index: i, success: true, id: res.value.trackingId });
-        } else {
-          results.trackings.push({ index: i, success: false, error: res.error });
-        }
-        i++;
-      }
-    }
+    const { results } = await trackingService.batchCreate(userId, companyId, projectId, input);
 
     return reply.code(200).send({ results });
   });
