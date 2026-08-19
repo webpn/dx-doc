@@ -23,6 +23,8 @@ export interface PageRepository {
   getPageByProjectAndSlug(projectId: string, slug: string): Promise<PageRecord | null>;
   /** Idempotency lookup keyed on the orthogonal `custom_id` (REQ-IMP-003). */
   getPageByCustomId(projectId: string, customId: string): Promise<PageRecord | null>;
+  /** List all pages for a project to build hierarchy (M1.12). */
+  listPagesByProject(projectId: string): Promise<PageRecord[]>;
   updatePage(page: PageRecord): Promise<void>;
   /** ADR-0025: counts of what would block deletion, checked before it. */
   getPageDeletionBlockers(id: string): Promise<PageDeletionBlockers>;

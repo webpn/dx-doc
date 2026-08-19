@@ -98,9 +98,32 @@ export class PermissionService {
     return COMPANY_ACTION_ROLES[action].includes(role.name);
   }
 
-  /** Holders of the instance-administration capability (REQ-SEC-014). */
+  /** Instance administration capability (REQ-SEC-014). */
   async canAdministerInstance(userId: string): Promise<boolean> {
     const user = await this.accounts.getUserById(userId);
     return user !== null && user.instanceAdmin && user.active;
+  }
+
+  /** Deny-by-default authorisation helper (M1.13 hardening). */
+  async canOnProjectOrCompany(
+    userId: string,
+    action: ProjectAction,
+    projectId?: string,
+    companyId?: string,
+  ): Promise<boolean> {
+    // Instance scope first
+    if (action.startsWith('instance')) {
+      return this.canAdministerInstance(userId);
+    }
+    // Company scope for company-wide actions
+    if (action.startsWith('company.') && companyId) {
+      const companyAction = action as CompanyAction;
+      return this.canInCompany(userId, companyId, companyAction);
+    }
+    // Project scope for project actions
+    if (action.startsWith('project.') && projectId) {
+      return this.canOnProject(userId, projectId, action);
+    }
+    return false;
   }
 }

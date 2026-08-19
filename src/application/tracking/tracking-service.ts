@@ -731,6 +731,18 @@ export class TrackingService {
     return ok(list);
   }
 
+  async getNavigationEvent(
+    actorId: string,
+    eventId: string,
+  ): Promise<Result<NavigationEvent, TrackingServiceError>> {
+    const event = await this.navEvents.getNavigationEventById(eventId);
+    if (!event) return err({ kind: 'not_found' });
+    if (!(await this.permissions.canOnProject(actorId, event.projectId, 'project.read'))) {
+      return err({ kind: 'forbidden' });
+    }
+    return ok(event);
+  }
+
   async updateNavigationEvent(
     actorId: string,
     eventId: string,

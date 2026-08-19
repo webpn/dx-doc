@@ -93,6 +93,16 @@ export class SqlitePageRepository implements PageRepository {
     return row ? toPage(row) : null;
   }
 
+  async listPagesByProject(projectId: string): Promise<PageRecord[]> {
+    const rows = await this.db
+      .selectFrom('pages')
+      .selectAll()
+      .where('project_id', '=', projectId)
+      .orderBy('name', 'asc')
+      .execute();
+    return rows.map(toPage);
+  }
+
   async updatePage(page: PageRecord): Promise<void> {
     await this.db
       .updateTable('pages')

@@ -61,6 +61,11 @@ class FakePages implements PageRepository {
     return Promise.resolve(page);
   }
 
+  listPagesByProject(projectId: string): Promise<PageRecord[]> {
+    const result = Array.from(this.pages.values()).filter((p) => p.projectId === projectId);
+    return Promise.resolve(result);
+  }
+
   updatePage(page: PageRecord): Promise<void> {
     this.pages.set(page.id, page);
     if (page.customId) {

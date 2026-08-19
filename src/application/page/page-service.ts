@@ -99,6 +99,17 @@ export class PageService {
     return ok(page);
   }
 
+  async listForProject(
+    actorId: string,
+    projectId: string,
+  ): Promise<Result<PageRecord[], PageServiceError>> {
+    if (!(await this.permissions.canOnProject(actorId, projectId, 'project.read'))) {
+      return err({ kind: 'forbidden' });
+    }
+    const pages = await this.pages.listPagesByProject(projectId);
+    return ok(pages);
+  }
+
   async update(
     actorId: string,
     pageId: string,

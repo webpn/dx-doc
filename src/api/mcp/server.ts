@@ -3,10 +3,14 @@ import type { ProjectService } from '@project/application/project/project-servic
 import type { TrackingService } from '@project/application/tracking/tracking-service';
 import type {
   DestinationCreateInput,
+  FlowCreateInput,
+  FlowGraphInput,
   ModuleCreateInput,
+  NavigationEventCreateInput,
   PageCreateInput,
   PropertyCreateInput,
   TrackingCreateInput,
+  TriggerCreateInput,
 } from '@project/application/validation/schemas';
 
 import type { McpRequest, McpResource, McpResourceContent, McpResponse, McpTool } from './types';
@@ -115,6 +119,151 @@ export const MCP_TOOLS: McpTool[] = [
         projectId: { type: 'string', description: 'Project ID' },
       },
       required: ['companyId', 'projectId'],
+    },
+  },
+  {
+    name: 'list_navigation_events',
+    description: 'List navigation events (M1.12)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: { type: 'string', description: 'Project ID' },
+      },
+      required: ['projectId'],
+    },
+  },
+  {
+    name: 'get_navigation_event',
+    description: 'Get a single navigation event by ID',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        navigationEventId: { type: 'string', description: 'Navigation Event ID' },
+      },
+      required: ['navigationEventId'],
+    },
+  },
+  {
+    name: 'get_destination',
+    description: 'Get a single destination by ID',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        destinationId: { type: 'string', description: 'Destination ID' },
+      },
+      required: ['destinationId'],
+    },
+  },
+  {
+    name: 'list_destinations',
+    description: 'List destinations in a project or company catalogue',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        companyId: { type: 'string', description: 'Company ID' },
+        projectId: { type: 'string', description: 'Project ID (optional, omit for catalogue)' },
+      },
+      required: ['companyId'],
+    },
+  },
+  {
+    name: 'get_property_destinations',
+    description: 'Get destination mappings for a property (M1.12)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        propertyId: { type: 'string', description: 'Property ID' },
+      },
+      required: ['propertyId'],
+    },
+  },
+  {
+    name: 'list_modules',
+    description: 'List modules in a project or company catalogue',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        companyId: { type: 'string', description: 'Company ID' },
+        projectId: { type: 'string', description: 'Project ID (optional, omit for catalogue)' },
+      },
+      required: ['companyId'],
+    },
+  },
+  {
+    name: 'get_module',
+    description: 'Get a single module by ID',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        moduleId: { type: 'string', description: 'Module ID' },
+      },
+      required: ['moduleId'],
+    },
+  },
+  {
+    name: 'list_flows',
+    description: 'List flows for a project (M1.12)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: { type: 'string', description: 'Project ID' },
+      },
+      required: ['projectId'],
+    },
+  },
+  {
+    name: 'get_flow',
+    description: 'Get a single flow by ID with its nodes and edges',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        flowId: { type: 'string', description: 'Flow ID' },
+      },
+      required: ['flowId'],
+    },
+  },
+  {
+    name: 'list_triggers',
+    description: 'List triggers for a project (M1.12)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: { type: 'string', description: 'Project ID' },
+      },
+      required: ['projectId'],
+    },
+  },
+  {
+    name: 'get_trigger',
+    description: 'Get a single trigger by ID',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        triggerId: { type: 'string', description: 'Trigger ID' },
+      },
+      required: ['triggerId'],
+    },
+  },
+  {
+    name: 'list_versions',
+    description: 'List published versions of a project (M1.12)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: { type: 'string', description: 'Project ID' },
+      },
+      required: ['projectId'],
+    },
+  },
+  {
+    name: 'get_version',
+    description: 'Get a specific published version',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        versionId: { type: 'string', description: 'Version ID' },
+      },
+      required: ['versionId'],
     },
   },
 
@@ -228,6 +377,104 @@ export const MCP_TOOLS: McpTool[] = [
       required: ['trackingId', 'propertyId'],
     },
   },
+  {
+    name: 'create_navigation_event',
+    description: 'Create a Navigation Event required for trackings (M1.12)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: { type: 'string', description: 'Project ID' },
+        name: { type: 'string', description: 'Event name' },
+        description: { type: 'string', description: 'Event description (optional)' },
+        active: { type: 'boolean', description: 'Whether event is active (default: true)' },
+      },
+      required: ['projectId', 'name'],
+    },
+  },
+  {
+    name: 'set_property_destinations',
+    description: 'Map a property to destinations (M1.12)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        propertyId: { type: 'string', description: 'Property ID' },
+        destinationIds: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Destination IDs to map',
+        },
+        nameOverrides: {
+          type: 'object',
+          additionalProperties: { type: 'string' },
+          description: 'Per-destination name overrides (destinationId -> override name)',
+        },
+      },
+      required: ['propertyId', 'destinationIds'],
+    },
+  },
+  {
+    name: 'set_specific_value',
+    description: 'Set a specific value for a property in a tracking (M1.12)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        trackingId: { type: 'string', description: 'Tracking ID' },
+        propertyId: { type: 'string', description: 'Property ID' },
+        value: { type: 'string', description: 'Specific value' },
+      },
+      required: ['trackingId', 'propertyId', 'value'],
+    },
+  },
+  {
+    name: 'create_flow',
+    description: 'Create a Flow in draft (M1.12)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: { type: 'string', description: 'Project ID' },
+        name: { type: 'string', description: 'Flow name' },
+        description: { type: 'string', description: 'Flow description (optional)' },
+        customId: { type: 'string', description: 'External source custom_id (optional)' },
+      },
+      required: ['projectId', 'name'],
+    },
+  },
+  {
+    name: 'set_flow_graph',
+    description: 'Set the nodes and edges of a flow (M1.12)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        flowId: { type: 'string', description: 'Flow ID' },
+        nodes: {
+          type: 'array',
+          items: { type: 'object' },
+          description: 'Flow nodes',
+        },
+        edges: {
+          type: 'array',
+          items: { type: 'object' },
+          description: 'Flow edges',
+        },
+      },
+      required: ['flowId', 'nodes', 'edges'],
+    },
+  },
+  {
+    name: 'create_trigger',
+    description: 'Create a Trigger in draft (M1.12)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: { type: 'string', description: 'Project ID' },
+        name: { type: 'string', description: 'Trigger name' },
+        type: { type: 'string', description: 'Trigger type' },
+        trackingId: { type: 'string', description: 'Associated Tracking ID (optional)' },
+        customId: { type: 'string', description: 'External source custom_id (optional)' },
+      },
+      required: ['projectId', 'name', 'type'],
+    },
+  },
 ];
 
 export class McpServerHandler {
@@ -328,6 +575,17 @@ export class McpServerHandler {
           };
         }
 
+        case 'get_page_structure': {
+          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+          const res = await this.pages.listForProject(userId, projectId);
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
         case 'list_trackings': {
           const projectId = typeof args.projectId === 'string' ? args.projectId : '';
           const res = await this.trackingService.listTrackingsForProject(userId, projectId);
@@ -381,6 +639,152 @@ export class McpServerHandler {
             companyId,
             projectId,
           );
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'list_navigation_events': {
+          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+          const res = await this.trackingService.listNavigationEvents(userId, projectId);
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'get_navigation_event': {
+          const navigationEventId =
+            typeof args.navigationEventId === 'string' ? args.navigationEventId : '';
+          const res = await this.trackingService.getNavigationEvent(userId, navigationEventId);
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'get_destination': {
+          const destinationId = typeof args.destinationId === 'string' ? args.destinationId : '';
+          const res = await this.trackingService.getDestination(userId, destinationId);
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'list_destinations': {
+          const companyId = typeof args.companyId === 'string' ? args.companyId : '';
+          const projectId = typeof args.projectId === 'string' ? args.projectId : null;
+          const res = await this.trackingService.listDestinations(userId, companyId, projectId);
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'get_property_destinations': {
+          const propertyId = typeof args.propertyId === 'string' ? args.propertyId : '';
+          const res = await this.trackingService.getPropertyDestinations(userId, propertyId);
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'list_modules': {
+          const companyId = typeof args.companyId === 'string' ? args.companyId : '';
+          const projectId = typeof args.projectId === 'string' ? args.projectId : null;
+          const res = await this.trackingService.listModules(userId, companyId, projectId);
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'get_module': {
+          const moduleId = typeof args.moduleId === 'string' ? args.moduleId : '';
+          const res = await this.trackingService.getModule(userId, moduleId);
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'list_flows': {
+          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+          const res = await this.trackingService.listFlowsForProject(userId, projectId);
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'get_flow': {
+          const flowId = typeof args.flowId === 'string' ? args.flowId : '';
+          const res = await this.trackingService.getFlow(userId, flowId);
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'list_triggers': {
+          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+          const res = await this.trackingService.listTriggersForProject(userId, projectId);
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'get_trigger': {
+          const triggerId = typeof args.triggerId === 'string' ? args.triggerId : '';
+          const res = await this.trackingService.getTrigger(userId, triggerId);
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'list_versions': {
+          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+          const res = await this.trackingService.listVersionsForProject(userId, projectId);
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'get_version': {
+          const versionId = typeof args.versionId === 'string' ? args.versionId : '';
+          const res = await this.trackingService.getVersion(userId, versionId);
           if (!res.ok) return this.formatError(id, res.error);
           return {
             jsonrpc: '2.0',
@@ -494,6 +898,118 @@ export class McpServerHandler {
             userId,
             trackingId,
             propertyId,
+          );
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'create_navigation_event': {
+          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+          const res = await this.trackingService.createNavigationEvent(
+            userId,
+            projectId,
+            args as unknown as NavigationEventCreateInput,
+          );
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'set_property_destinations': {
+          const propertyId = typeof args.propertyId === 'string' ? args.propertyId : '';
+          const destinationIds = Array.isArray(args.destinationIds) ? args.destinationIds : [];
+          const nameOverrides = (args.nameOverrides ?? {}) as Record<string, string>;
+          const mappings = (destinationIds as string[]).map((destId) => ({
+            destinationId: destId,
+            destinationNameOverride: nameOverrides[destId] ?? null,
+          }));
+          const res = await this.trackingService.setPropertyDestinations(
+            userId,
+            propertyId,
+            mappings,
+          );
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'set_specific_value': {
+          const trackingId = typeof args.trackingId === 'string' ? args.trackingId : '';
+          const propertyId = typeof args.propertyId === 'string' ? args.propertyId : '';
+          const value = typeof args.value === 'string' ? args.value : '';
+          // Find the TrackingProperty ID by getting the tracking and finding the property
+          const trackingRes = await this.trackingService.getTracking(userId, trackingId);
+          if (!trackingRes.ok) return this.formatError(id, trackingRes.error);
+          const trackingProp = trackingRes.value.properties.find(
+            (p) => p.propertyId === propertyId,
+          );
+          if (!trackingProp) {
+            return {
+              jsonrpc: '2.0',
+              id,
+              error: {
+                code: -32001,
+                message: 'Property not found on tracking',
+              },
+            };
+          }
+          const res = await this.trackingService.setSpecificValue(userId, trackingProp.id, {
+            value,
+          });
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'create_flow': {
+          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+          const res = await this.trackingService.createFlow(
+            userId,
+            projectId,
+            args as unknown as FlowCreateInput,
+          );
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'set_flow_graph': {
+          const flowId = typeof args.flowId === 'string' ? args.flowId : '';
+          const res = await this.trackingService.setFlowGraph(
+            userId,
+            flowId,
+            args as unknown as FlowGraphInput,
+          );
+          if (!res.ok) return this.formatError(id, res.error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+          };
+        }
+
+        case 'create_trigger': {
+          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+          const res = await this.trackingService.createTrigger(
+            userId,
+            projectId,
+            args as unknown as TriggerCreateInput,
           );
           if (!res.ok) return this.formatError(id, res.error);
           return {
