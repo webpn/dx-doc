@@ -4,6 +4,7 @@
 
 export type { ObjectStorage } from './ports/storage';
 export type { IndexableDocument, SearchIndex, SearchResult } from './ports/search';
+export type { ImageProcessor, ProcessedImage } from './ports/image-processor';
 
 export { COMPANY_ROLE_NAMES, isCompanyRoleName } from './auth/roles';
 export type { CompanyRoleName } from './auth/roles';

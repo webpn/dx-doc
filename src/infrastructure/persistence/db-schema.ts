@@ -63,6 +63,7 @@ export interface Database {
   project_shared_passwords: ProjectSharedPasswordsTable;
   audit_logs: AuditLogsTable;
   api_service_tokens: ApiServiceTokensTable;
+  assets: AssetsTable;
 }
 
 /**
@@ -300,6 +301,20 @@ export const SCHEMA_DEFINITIONS: DatabaseSchemaDefinition = {
     'created_at',
     'expires_at',
     'revoked_at',
+  ],
+  assets: [
+    'id',
+    'company_id',
+    'project_id',
+    'custom_id',
+    'storage_key',
+    'content_type',
+    'size_bytes',
+    'width',
+    'height',
+    'original_filename',
+    'created_at',
+    'updated_at',
   ],
 };
 
@@ -673,6 +688,21 @@ export interface ApiServiceTokensTable {
   created_at: string;
   expires_at: string;
   revoked_at: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+}
+
+export interface AssetsTable {
+  id: string;
+  company_id: string;
+  project_id: string;
+  custom_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  storage_key: string;
+  content_type: string;
+  size_bytes: number;
+  width: number;
+  height: number;
+  original_filename: string;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
+  updated_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
 export type { Generated };

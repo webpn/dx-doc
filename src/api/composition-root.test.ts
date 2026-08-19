@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+import type { AssetService } from '@project/application/asset/asset-service';
 import type { AuthService } from '@project/application/auth/auth-service';
 import type { GrantService } from '@project/application/auth/grant-service';
 import type { LifecycleService } from '@project/application/auth/lifecycle-service';
@@ -19,6 +20,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { applyMigrations } from '../../tests/support/apply-migrations';
 
 import { registerAccessRoutes } from './access/routes';
+import { registerAssetRoutes } from './assets/routes';
 import { registerAuthRoutes } from './auth/routes';
 import { registerCompanyRoutes } from './company/routes';
 import {
@@ -89,6 +91,7 @@ afterEach(async () => {
 const stubProject = {} as ProjectService;
 const stubPage = {} as PageService;
 const stubTracking = {} as TrackingService;
+const stubAsset = {} as AssetService;
 const stubAuth = {} as AuthService;
 const stubSessions = {} as SessionService;
 const stubServiceTokens = {} as ServiceTokenService;
@@ -128,6 +131,7 @@ const ALL_ROUTES = captureRoutes((app) => {
     projectService: stubProject,
     pageService: stubPage,
     trackingService: stubTracking,
+    assetService: stubAsset,
     auth: stubAuth,
     sessions: stubSessions,
     serviceTokens: stubServiceTokens,
@@ -176,6 +180,14 @@ const INDIVIDUAL_ROUTES = [
   ...captureRoutes((app) => {
     registerMcpRoutes(app, {
       mcpHandler: {} as McpServerHandler,
+      sessions: stubSessions,
+      serviceTokens: stubServiceTokens,
+      cookieName: SESSION_COOKIE_NAME,
+    });
+  }),
+  ...captureRoutes((app) => {
+    registerAssetRoutes(app, {
+      assets: stubAsset,
       sessions: stubSessions,
       serviceTokens: stubServiceTokens,
       cookieName: SESSION_COOKIE_NAME,

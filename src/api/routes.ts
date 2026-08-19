@@ -1,3 +1,4 @@
+import type { AssetService } from '@project/application/asset/asset-service';
 import type { AuthService } from '@project/application/auth/auth-service';
 import type { GrantService } from '@project/application/auth/grant-service';
 import type { LifecycleService } from '@project/application/auth/lifecycle-service';
@@ -10,6 +11,7 @@ import type { TrackingService } from '@project/application/tracking/tracking-ser
 import type { FastifyInstance } from 'fastify';
 
 import { registerAccessRoutes } from './access/routes';
+import { registerAssetRoutes } from './assets/routes';
 import { registerAuthRoutes } from './auth/routes';
 import { registerCompanyRoutes } from './company/routes';
 import { registerLifecycleRoutes } from './lifecycle/routes';
@@ -24,6 +26,7 @@ export interface ApiRoutesOptions {
   projectService: ProjectService;
   pageService: PageService;
   trackingService: TrackingService;
+  assetService: AssetService;
   auth: AuthService;
   sessions: SessionService;
   serviceTokens: ServiceTokenService;
@@ -44,6 +47,7 @@ export function registerAllRoutes(app: FastifyInstance, options: ApiRoutesOption
     projectService,
     pageService,
     trackingService,
+    assetService,
     auth,
     sessions,
     serviceTokens,
@@ -77,6 +81,7 @@ export function registerAllRoutes(app: FastifyInstance, options: ApiRoutesOption
     cookieName,
   });
 
+  registerAssetRoutes(app, { assets: assetService, sessions, serviceTokens, cookieName });
   registerAccessRoutes(app, { grants: grantService, sessions, serviceTokens, cookieName });
   registerLifecycleRoutes(app, { lifecycle, sessions, serviceTokens, cookieName });
   registerCompanyRoutes(app, { companies: companyService, sessions, serviceTokens, cookieName });

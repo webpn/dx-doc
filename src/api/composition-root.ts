@@ -20,7 +20,9 @@ import { existsSync, mkdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import cookie from '@fastify/cookie';
+import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
+import { AssetService } from '@project/application/asset/asset-service';
 import { AuthService } from '@project/application/auth/auth-service';
 import { BootstrapService } from '@project/application/auth/bootstrap-service';
 import { GrantService } from '@project/application/auth/grant-service';
@@ -30,6 +32,7 @@ import { ServiceTokenService } from '@project/application/auth/service-token-ser
 import { SessionService } from '@project/application/auth/session-service';
 import { CompanyService } from '@project/application/company/company-service';
 import { PageService } from '@project/application/page/page-service';
+import type { ImageProcessor } from '@project/application/ports/image-processor';
 import type { SearchIndex } from '@project/application/ports/search';
 import type { ObjectStorage } from '@project/application/ports/storage';
 import { ProjectService } from '@project/application/project/project-service';
@@ -44,8 +47,10 @@ import {
   createErrorTracking,
   type ErrorTracking,
 } from '@project/infrastructure/error-tracking/sentry';
+import { SharpImageProcessor } from '@project/infrastructure/images/sharp-image-processor';
 import { pendingMigrations } from '@project/infrastructure/persistence/migrations';
 import { SqliteAccountRepository } from '@project/infrastructure/persistence/sqlite-account-repository';
+import { SqliteAssetRepository } from '@project/infrastructure/persistence/sqlite-asset-repository';
 import { SqliteCompanyRepository } from '@project/infrastructure/persistence/sqlite-company-repository';
 import {
   closeSqliteConnection,
@@ -93,6 +98,8 @@ export interface CompositionOptions {
   searchIndex?: SearchIndex;
   /** Override the object storage adapter (tests use the in-memory one). */
   storage?: ObjectStorage;
+  /** Override the image processor (ADR-0026); the default is `sharp`-backed. */
+  imageProcessor?: ImageProcessor;
 }
 
 export interface ServedRoute {
@@ -164,6 +171,7 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
   const versions = new SqliteVersionRepository(connection.kysely);
   const sharedPasswords = new SqliteSharedPasswordRepository(connection.kysely);
   const auditLogs = new SqliteAuditLogRepository(connection.kysely);
+  const assetRepository = new SqliteAssetRepository(connection.kysely);
 
   const hasher = new BcryptPasswordHasher();
   const sessionTtlMs = parseDurationToMs(config.AUTH_SESSION_TTL);
@@ -194,6 +202,11 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
   const search =
     options.searchIndex ?? new PagefindSearchIndex(path.resolve(config.SEARCH_INDEX_PATH));
   const storage = options.storage ?? createS3ObjectStorage(config);
+  const imageProcessor = options.imageProcessor ?? new SharpImageProcessor();
+  // Assets are served directly from storage, not proxied through an
+  // authenticated route (ADR-0026).
+  const assetPublicBaseUrl =
+    config.STORAGE_PUBLIC_BASE_URL ?? `${config.STORAGE_S3_ENDPOINT}/${config.STORAGE_S3_BUCKET}`;
 
   const projectService = new ProjectService(projects, permissions, accounts);
   const pageService = new PageService(pages, projects, permissions);
@@ -216,6 +229,16 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
     permissions,
     search,
   );
+  const assetService = new AssetService(
+    assetRepository,
+    projects,
+    permissions,
+    storage,
+    imageProcessor,
+    config.UPLOAD_MAX_BYTES,
+    config.IMAGE_MAX_DIMENSION,
+    assetPublicBaseUrl,
+  );
 
   const errorTracking = createErrorTracking(config.SENTRY_DSN);
 
@@ -234,6 +257,7 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
   });
 
   app.register(cookie);
+  app.register(multipart);
 
   // Liveness: the process is up (REQ-FDN-024).
   app.get('/api/health', () => ({ status: 'ok' }));
@@ -253,6 +277,7 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
     projectService,
     pageService,
     trackingService,
+    assetService,
     auth,
     sessions: sessionService,
     serviceTokens: serviceTokenService,

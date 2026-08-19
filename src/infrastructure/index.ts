@@ -19,6 +19,8 @@ export type { InstanceConfig, InstanceVariableDef } from './config/instance-conf
 export { InMemoryObjectStorage } from './storage/in-memory-storage';
 export { createS3ObjectStorage, S3ObjectStorage } from './storage/s3-storage';
 
+export { SharpImageProcessor } from './images/sharp-image-processor';
+
 export { InMemorySearchIndex } from './search/in-memory-search';
 export { PagefindSearchIndex, PagefindQueryUnsupportedError } from './search/pagefind-search';
 
@@ -28,6 +30,7 @@ export { SqliteAccountRepository } from './persistence/sqlite-account-repository
 export { SqliteSessionRepository } from './persistence/sqlite-session-repository';
 export { SqlitePasswordResetTokenRepository } from './persistence/sqlite-reset-token-repository';
 export { SqliteCompanyRepository } from './persistence/sqlite-company-repository';
+export { SqliteAssetRepository } from './persistence/sqlite-asset-repository';
 export { SqliteProjectRepository } from './persistence/sqlite-project-repository';
 export { SqlitePageRepository } from './persistence/sqlite-page-repository';
 export {

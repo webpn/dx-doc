@@ -64,6 +64,7 @@ interface ServiceErrorShape {
   kind: string;
   issues?: ValidationIssue[];
   reason?: string;
+  maxBytes?: number;
 }
 
 /**
@@ -132,6 +133,20 @@ export function replyServiceError(reply: FastifyReply, error: ServiceErrorShape)
     case 'weak_password':
       return reply.code(400).send({
         error: { code: 'WEAK_PASSWORD', message: 'New password is too short' },
+      });
+    case 'too_large':
+      return reply.code(413).send({
+        error: {
+          code: 'TOO_LARGE',
+          message: `File exceeds the ${String((error as { maxBytes?: number }).maxBytes ?? 0)}-byte upload cap (REQ-AUTH-002)`,
+        },
+      });
+    case 'unsupported_format':
+      return reply.code(400).send({
+        error: {
+          code: 'UNSUPPORTED_FORMAT',
+          message: 'Only jpeg, png, webp and gif images are accepted',
+        },
       });
     default:
       return reply.code(500).send({ error: { code: 'INTERNAL', message: 'Internal error' } });
