@@ -17,6 +17,7 @@ import * as m009 from '../../db/migrations/009_access_and_audit';
 import * as m010 from '../../db/migrations/010_service_tokens_and_audit_kind';
 import * as m011 from '../../db/migrations/011_assets';
 import * as m012 from '../../db/migrations/012_audit_company_nullable';
+import * as m013 from '../../db/migrations/013_query_path_indexes';
 import type { Connection } from '../../src/infrastructure/persistence/sqlite-kysely';
 
 const staticMigrations: Record<string, Migration> = {
@@ -32,6 +33,7 @@ const staticMigrations: Record<string, Migration> = {
   '010_service_tokens_and_audit_kind': m010,
   '011_assets': m011,
   '012_audit_company_nullable': m012,
+  '013_query_path_indexes': m013,
 };
 
 class StaticMigrationProvider implements MigrationProvider {

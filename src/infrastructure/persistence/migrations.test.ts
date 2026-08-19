@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+import { sql } from 'kysely';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { applyMigrations } from '../../../tests/support/apply-migrations';
@@ -22,6 +23,7 @@ const MIGRATION_NAMES = [
   '010_service_tokens_and_audit_kind',
   '011_assets',
   '012_audit_company_nullable',
+  '013_query_path_indexes',
 ];
 
 describe('migration introspection (REQ-FDN-024 readiness)', () => {
@@ -65,5 +67,34 @@ describe('migration introspection (REQ-FDN-024 readiness)', () => {
 
     const pending = await pendingMigrations(connection);
     expect(pending).toEqual(MIGRATION_NAMES.slice(1));
+  });
+
+  it('creates query-path indexes for foreign keys and custom_id columns (M1.14, REQ-NFR-015)', async () => {
+    await applyMigrations(connection);
+
+    // Query for index existence in sqlite_master using raw SQL
+    const indexes = await sql<{ name: string }>`
+      select name from sqlite_master where type = 'index' and name like 'idx_%'
+    `.execute(connection.kysely);
+
+    const indexNames = indexes.rows.map((row) => row.name);
+
+    // Verify key foreign key indexes exist
+    expect(indexNames).toContain('idx_roles_company_id');
+    expect(indexNames).toContain('idx_projects_company_id');
+    expect(indexNames).toContain('idx_properties_project_id');
+    expect(indexNames).toContain('idx_trackings_project_id');
+    expect(indexNames).toContain('idx_module_properties_property_id');
+    expect(indexNames).toContain('idx_flow_nodes_flow_id');
+    expect(indexNames).toContain('idx_audit_logs_project_id');
+
+    // Verify custom_id indexes exist
+    expect(indexNames).toContain('idx_pages_custom_id');
+    expect(indexNames).toContain('idx_properties_custom_id');
+    expect(indexNames).toContain('idx_trackings_custom_id');
+    expect(indexNames).toContain('idx_flows_custom_id');
+
+    // Verify comprehensive coverage
+    expect(indexNames.length).toBeGreaterThan(40); // At least 40+ indexes created
   });
 });
