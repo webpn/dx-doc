@@ -920,6 +920,17 @@ export class SqliteTrackingRepository implements TrackingRepository {
     return row?.project_id ?? null;
   }
 
+  /** Resolves the owning tracking's project, for a tracking property's permission check. */
+  async getProjectIdForTrackingProperty(trackingPropertyId: string): Promise<string | null> {
+    const row = await this.db
+      .selectFrom('tracking_properties')
+      .innerJoin('trackings', 'trackings.id', 'tracking_properties.tracking_id')
+      .select('trackings.project_id')
+      .where('tracking_properties.id', '=', trackingPropertyId)
+      .executeTakeFirst();
+    return row?.project_id ?? null;
+  }
+
   /** A leaf value; nothing references it (ADR-0025). */
   async deleteSpecificValue(id: string): Promise<void> {
     await this.db.deleteFrom('specific_values').where('id', '=', id).execute();

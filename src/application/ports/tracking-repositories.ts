@@ -147,6 +147,7 @@ export interface TrackingRepository {
   setTrackingProperties(trackingProperties: TrackingProperty[]): Promise<void>;
   getTrackingProperties(trackingId: string): Promise<TrackingProperty[]>;
   removeTrackingProperty(trackingPropertyId: string): Promise<void>;
+  getProjectIdForTrackingProperty(trackingPropertyId: string): Promise<string | null>;
 
   // Specific values
   setSpecificValues(specificValues: SpecificValue[]): Promise<void>;

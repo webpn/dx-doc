@@ -197,6 +197,22 @@ export class TrackingService {
     };
 
     await this.properties.createProperty(propRecord);
+
+    const project = await this.projects.getProjectById(propRecord.companyId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: propRecord.companyId,
+        projectId: propRecord.projectId,
+        actorId,
+        action: 'property.created',
+        entityType: 'property',
+        entityId: propertyId,
+        details: { name: propRecord.name, dataSource: propRecord.dataSource },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ propertyId });
   }
 
@@ -313,6 +329,22 @@ export class TrackingService {
     };
 
     await this.properties.updateProperty(updated);
+
+    const project = await this.projects.getProjectById(prop.companyId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: prop.companyId,
+        projectId: prop.projectId,
+        actorId,
+        action: 'property.updated',
+        entityType: 'property',
+        entityId: propertyId,
+        details: { name: updated.name, dataSource: updated.dataSource },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -346,7 +378,25 @@ export class TrackingService {
       return err({ kind: 'in_use', reason: `still referenced by ${reasons.join(', ')}` });
     }
 
+    const nowIso = this.now().toISOString();
+
     await this.properties.deleteProperty(propertyId);
+
+    const project = await this.projects.getProjectById(prop.companyId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: prop.companyId,
+        projectId: prop.projectId,
+        actorId,
+        action: 'property.deleted',
+        entityType: 'property',
+        entityId: propertyId,
+        details: { name: prop.name },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -388,6 +438,21 @@ export class TrackingService {
 
     if (parsed.value.propertyIds.length > 0) {
       await this.modules.setModuleProperties(moduleId, parsed.value.propertyIds, nowIso);
+    }
+
+    const project = await this.projects.getProjectById(companyId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId,
+        projectId,
+        actorId,
+        action: 'module.created',
+        entityType: 'module',
+        entityId: moduleId,
+        details: { name: parsed.value.name, propertyCount: parsed.value.propertyIds.length },
+        createdAt: nowIso,
+      });
     }
 
     return ok({ moduleId });
@@ -462,6 +527,24 @@ export class TrackingService {
       await this.modules.setModuleProperties(moduleId, parsed.value.propertyIds, nowIso);
     }
 
+    const project = await this.projects.getProjectById(mod.companyId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: mod.companyId,
+        projectId: mod.projectId,
+        actorId,
+        action: 'module.updated',
+        entityType: 'module',
+        entityId: moduleId,
+        details: {
+          name: parsed.value.name ?? mod.name,
+          propertyIdsChanged: parsed.value.propertyIds !== undefined,
+        },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -492,7 +575,25 @@ export class TrackingService {
       });
     }
 
+    const nowIso = this.now().toISOString();
+
     await this.modules.deleteModule(moduleId);
+
+    const project = await this.projects.getProjectById(mod.companyId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: mod.companyId,
+        projectId: mod.projectId,
+        actorId,
+        action: 'module.deleted',
+        entityType: 'module',
+        entityId: moduleId,
+        details: { name: mod.name },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -536,6 +637,25 @@ export class TrackingService {
       createdAt: nowIso,
       updatedAt: nowIso,
     });
+
+    const project = await this.projects.getProjectById(companyId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId,
+        projectId,
+        actorId,
+        action: 'destination.created',
+        entityType: 'destination',
+        entityId: destinationId,
+        details: {
+          name: parsed.value.name,
+          platform: parsed.value.platform,
+          variableType: parsed.value.variableType,
+        },
+        createdAt: nowIso,
+      });
+    }
 
     return ok({ destinationId });
   }
@@ -612,6 +732,21 @@ export class TrackingService {
       updatedAt: nowIso,
     });
 
+    const project = await this.projects.getProjectById(dest.companyId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: dest.companyId,
+        projectId: dest.projectId,
+        actorId,
+        action: 'destination.updated',
+        entityType: 'destination',
+        entityId: destinationId,
+        details: { name: dest.name, platform: dest.platform },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -642,7 +777,25 @@ export class TrackingService {
       });
     }
 
+    const nowIso = this.now().toISOString();
+
     await this.destinations.deleteDestination(destinationId);
+
+    const project = await this.projects.getProjectById(dest.companyId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: dest.companyId,
+        projectId: dest.projectId,
+        actorId,
+        action: 'destination.deleted',
+        entityType: 'destination',
+        entityId: destinationId,
+        details: { name: dest.name },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -717,6 +870,21 @@ export class TrackingService {
       updatedAt: nowIso,
     });
 
+    const project = await this.projects.getProjectById(projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId,
+        actorId,
+        action: 'navigation_event.created',
+        entityType: 'navigation_event',
+        entityId: eventId,
+        details: { name: parsed.value.name, active: parsed.value.active },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ eventId });
   }
 
@@ -772,6 +940,21 @@ export class TrackingService {
       updatedAt: nowIso,
     });
 
+    const project = await this.projects.getProjectById(event.projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId: event.projectId,
+        actorId,
+        action: 'navigation_event.updated',
+        entityType: 'navigation_event',
+        entityId: eventId,
+        details: { name: event.name, active: event.active },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -794,7 +977,25 @@ export class TrackingService {
       });
     }
 
+    const nowIso = this.now().toISOString();
+
     await this.navEvents.deleteNavigationEvent(eventId);
+
+    const project = await this.projects.getProjectById(event.projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId: event.projectId,
+        actorId,
+        action: 'navigation_event.deleted',
+        entityType: 'navigation_event',
+        entityId: eventId,
+        details: { name: event.name },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -835,6 +1036,21 @@ export class TrackingService {
       createdAt: nowIso,
       updatedAt: nowIso,
     });
+
+    const project = await this.projects.getProjectById(companyId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId,
+        projectId,
+        actorId,
+        action: 'tracking_template.created',
+        entityType: 'tracking_template',
+        entityId: templateId,
+        details: { name: parsed.value.name },
+        createdAt: nowIso,
+      });
+    }
 
     return ok({ templateId });
   }
@@ -909,6 +1125,21 @@ export class TrackingService {
       updatedAt: nowIso,
     });
 
+    const project = await this.projects.getProjectById(tpl.companyId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: tpl.companyId,
+        projectId: tpl.projectId,
+        actorId,
+        action: 'tracking_template.updated',
+        entityType: 'tracking_template',
+        entityId: templateId,
+        details: { name: tpl.name },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -932,6 +1163,24 @@ export class TrackingService {
     }
 
     await this.templates.deleteTemplate(templateId);
+
+    const nowIso = this.now().toISOString();
+
+    const project = await this.projects.getProjectById(tpl.companyId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: tpl.companyId,
+        projectId: tpl.projectId,
+        actorId,
+        action: 'tracking_template.deleted',
+        entityType: 'tracking_template',
+        entityId: templateId,
+        details: { name: tpl.name },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -972,6 +1221,21 @@ export class TrackingService {
       createdAt: nowIso,
       updatedAt: nowIso,
     });
+
+    const project = await this.projects.getProjectById(companyId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId,
+        projectId,
+        actorId,
+        action: 'free_page.created',
+        entityType: 'free_page',
+        entityId: freePageId,
+        details: { title: parsed.value.title, slug: parsed.value.slug },
+        createdAt: nowIso,
+      });
+    }
 
     return ok({ freePageId });
   }
@@ -1039,6 +1303,21 @@ export class TrackingService {
       updatedAt: nowIso,
     });
 
+    const project = await this.projects.getProjectById(fp.companyId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: fp.companyId,
+        projectId: fp.projectId,
+        actorId,
+        action: 'free_page.updated',
+        entityType: 'free_page',
+        entityId: freePageId,
+        details: { title: fp.title, slug: fp.slug },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -1062,6 +1341,23 @@ export class TrackingService {
     }
 
     await this.freePages.deleteFreePage(freePageId);
+
+    const project = await this.projects.getProjectById(fp.companyId);
+    if (project) {
+      const nowIso = this.now().toISOString();
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: fp.companyId,
+        projectId: fp.projectId,
+        actorId,
+        action: 'free_page.deleted',
+        entityType: 'free_page',
+        entityId: freePageId,
+        details: { title: fp.title, slug: fp.slug },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -1100,6 +1396,21 @@ export class TrackingService {
       createdAt: nowIso,
       updatedAt: nowIso,
     });
+
+    const project = await this.projects.getProjectById(projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId,
+        actorId,
+        action: 'tracking.created',
+        entityType: 'tracking',
+        entityId: trackingId,
+        details: { name: parsed.value.name, slug: parsed.value.slug },
+        createdAt: nowIso,
+      });
+    }
 
     return ok({ trackingId });
   }
@@ -1185,6 +1496,21 @@ export class TrackingService {
       updatedAt: nowIso,
     });
 
+    const project = await this.projects.getProjectById(tracking.projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId: tracking.projectId,
+        actorId,
+        action: 'tracking.updated',
+        entityType: 'tracking',
+        entityId: trackingId,
+        details: { name: tracking.name, slug: tracking.slug },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -1200,6 +1526,23 @@ export class TrackingService {
     }
 
     await this.trackings.deleteTracking(trackingId);
+
+    const project = await this.projects.getProjectById(tracking.projectId);
+    if (project) {
+      const nowIso = this.now().toISOString();
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId: tracking.projectId,
+        actorId,
+        action: 'tracking.deleted',
+        entityType: 'tracking',
+        entityId: trackingId,
+        details: { name: tracking.name },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -1312,11 +1655,26 @@ export class TrackingService {
       },
     ]);
 
+    const project = await this.projects.getProjectById(tracking.projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId: tracking.projectId,
+        actorId,
+        action: 'tracking_property.presence_updated',
+        entityType: 'tracking_property',
+        entityId: target.id,
+        details: { propertyId, presence: parsed.value.presence },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
   async setSpecificValue(
-    _actorId: string,
+    actorId: string,
     trackingPropertyId: string,
     input: SpecificValueCreateInput,
   ): Promise<Result<{ specificValueId: string }, TrackingServiceError>> {
@@ -1339,6 +1697,23 @@ export class TrackingService {
       },
     ]);
 
+    const projectId = await this.trackings.getProjectIdForTrackingProperty(trackingPropertyId);
+    if (projectId === null) return err({ kind: 'not_found' });
+    const project = await this.projects.getProjectById(projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId,
+        actorId,
+        action: 'specific_value.created',
+        entityType: 'specific_value',
+        entityId: svId,
+        details: { trackingPropertyId, value: parsed.value.value },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ specificValueId: svId });
   }
 
@@ -1355,6 +1730,23 @@ export class TrackingService {
     }
 
     await this.trackings.deleteSpecificValue(specificValueId);
+
+    const project = await this.projects.getProjectById(projectId);
+    if (project) {
+      const nowIso = this.now().toISOString();
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId,
+        actorId,
+        action: 'specific_value.deleted',
+        entityType: 'specific_value',
+        entityId: specificValueId,
+        details: {},
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -1383,6 +1775,14 @@ export class TrackingService {
     const existingModIds = await this.trackings.getTrackingModuleIds(trackingId);
 
     const nowIso = this.now().toISOString();
+    const existingPropIds = new Set(existingTps.map((tp) => tp.propertyId));
+    let addedPropertyCount = 0;
+    for (const propId of modPropIds) {
+      if (!existingPropIds.has(propId)) {
+        addedPropertyCount++;
+      }
+    }
+
     const nextState = applyModuleToTracking(
       {
         trackingId,
@@ -1397,6 +1797,21 @@ export class TrackingService {
 
     await this.trackings.setTrackingModules(trackingId, nextState.appliedModuleIds, nowIso);
     await this.trackings.setTrackingProperties(nextState.trackingProperties);
+
+    const project = await this.projects.getProjectById(tracking.projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId: tracking.projectId,
+        actorId,
+        action: 'module_applied_to_tracking',
+        entityType: 'module_applied_to_tracking',
+        entityId: trackingId,
+        details: { moduleId, addedPropertyCount },
+        createdAt: nowIso,
+      });
+    }
 
     return ok({ trackingId });
   }
@@ -1439,6 +1854,21 @@ export class TrackingService {
 
     const nowIso = this.now().toISOString();
     await this.trackings.setTrackingModules(trackingId, result.updatedAppliedModuleIds, nowIso);
+
+    const project = await this.projects.getProjectById(tracking.projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId: tracking.projectId,
+        actorId,
+        action: 'module_removed_from_tracking',
+        entityType: 'module_removed_from_tracking',
+        entityId: trackingId,
+        details: { propertyId, warnModuleDetached: result.warnModuleDetached },
+        createdAt: nowIso,
+      });
+    }
 
     return ok({
       trackingId,
@@ -1605,6 +2035,21 @@ export class TrackingService {
       updatedAt: nowIso,
     });
 
+    const project = await this.projects.getProjectById(projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId,
+        actorId,
+        action: 'flow.created',
+        entityType: 'flow',
+        entityId: flowId,
+        details: { name: parsed.value.name, slug: parsed.value.slug },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ flowId });
   }
 
@@ -1688,6 +2133,21 @@ export class TrackingService {
       updatedAt: nowIso,
     });
 
+    const project = await this.projects.getProjectById(flow.projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId: flow.projectId,
+        actorId,
+        action: 'flow.updated',
+        entityType: 'flow',
+        entityId: flowId,
+        details: { name: flow.name, slug: flow.slug },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -1703,6 +2163,23 @@ export class TrackingService {
     }
 
     await this.flows.deleteFlow(flowId);
+
+    const project = await this.projects.getProjectById(flow.projectId);
+    if (project) {
+      const nowIso = this.now().toISOString();
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId: flow.projectId,
+        actorId,
+        action: 'flow.deleted',
+        entityType: 'flow',
+        entityId: flowId,
+        details: { name: flow.name },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -1778,6 +2255,21 @@ export class TrackingService {
       await this.triggers.setTriggerTrackings(triggerId, parsed.value.trackingIds, nowIso);
     }
 
+    const project = await this.projects.getProjectById(projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId,
+        actorId,
+        action: 'trigger.created',
+        entityType: 'trigger',
+        entityId: triggerId,
+        details: { name: parsed.value.name, trackingCount: parsed.value.trackingIds.length },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ triggerId });
   }
 
@@ -1837,6 +2329,21 @@ export class TrackingService {
       await this.triggers.setTriggerTrackings(triggerId, parsed.value.trackingIds, nowIso);
     }
 
+    const project = await this.projects.getProjectById(trg.projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId: trg.projectId,
+        actorId,
+        action: 'trigger.updated',
+        entityType: 'trigger',
+        entityId: triggerId,
+        details: { name: trg.name, trackingIdsChanged: parsed.value.trackingIds !== undefined },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -1859,7 +2366,25 @@ export class TrackingService {
       });
     }
 
+    const nowIso = this.now().toISOString();
+
     await this.triggers.deleteTrigger(triggerId);
+
+    const project = await this.projects.getProjectById(trg.projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId: trg.projectId,
+        actorId,
+        action: 'trigger.deleted',
+        entityType: 'trigger',
+        entityId: triggerId,
+        details: { name: trg.name },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 
@@ -2062,6 +2587,25 @@ export class TrackingService {
       createdBy: actorId,
       createdAt: nowIso,
     });
+
+    const project = await this.projects.getProjectById(projectId);
+    if (project) {
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId,
+        actorId,
+        action: 'version.published',
+        entityType: 'version',
+        entityId: versionId,
+        details: {
+          versionNumber: nextNumber,
+          title: parsed.value.title,
+          changelogEntryCount: changelog.length,
+        },
+        createdAt: nowIso,
+      });
+    }
 
     return ok({ versionId, versionNumber: nextNumber });
   }
