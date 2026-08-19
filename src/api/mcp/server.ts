@@ -14,6 +14,8 @@ import type {
   PageCreateInput,
   PropertyCreateInput,
   TrackingCreateInput,
+  FreePageCreateInput,
+  TrackingTemplateCreateInput,
   TriggerCreateInput,
 } from '@project/application/validation/schemas';
 
@@ -265,6 +267,81 @@ export const MCP_TOOLS: McpTool[] = [
         versionId: { type: 'string', description: 'Version ID' },
       },
       required: ['versionId'],
+    },
+  },
+  {
+    name: 'list_tracking_templates',
+    description: 'List tracking templates in a project or company catalogue',
+    inputSchema: {
+      type: 'object',
+      properties: { companyId: { type: 'string' }, projectId: { type: 'string' } },
+      required: ['companyId'],
+    },
+  },
+  {
+    name: 'get_tracking_template',
+    description: 'Get a tracking template by ID',
+    inputSchema: {
+      type: 'object',
+      properties: { templateId: { type: 'string' } },
+      required: ['templateId'],
+    },
+  },
+  {
+    name: 'list_free_pages',
+    description: 'List free pages in a project or company catalogue',
+    inputSchema: {
+      type: 'object',
+      properties: { companyId: { type: 'string' }, projectId: { type: 'string' } },
+      required: ['companyId'],
+    },
+  },
+  {
+    name: 'get_free_page',
+    description: 'Get a free page by ID',
+    inputSchema: {
+      type: 'object',
+      properties: { freePageId: { type: 'string' } },
+      required: ['freePageId'],
+    },
+  },
+  {
+    name: 'create_tracking_template',
+    description: 'Create a tracking template in draft',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        companyId: { type: 'string' },
+        projectId: { type: 'string' },
+        name: { type: 'string' },
+        configJson: { type: 'string' },
+      },
+      required: ['companyId', 'name'],
+    },
+  },
+  {
+    name: 'create_free_page',
+    description: 'Create a free page in draft',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        companyId: { type: 'string' },
+        projectId: { type: 'string' },
+        title: { type: 'string' },
+        slug: { type: 'string' },
+        content: { type: 'string' },
+        publishable: { type: 'boolean' },
+      },
+      required: ['companyId', 'title', 'slug'],
+    },
+  },
+  {
+    name: 'search_project',
+    description: 'Search an authorized project index',
+    inputSchema: {
+      type: 'object',
+      properties: { projectId: { type: 'string' }, query: { type: 'string' } },
+      required: ['projectId', 'query'],
     },
   },
 
@@ -842,6 +919,64 @@ export class McpServerHandler {
         };
       }
 
+      case 'list_tracking_templates': {
+        const companyId = typeof args.companyId === 'string' ? args.companyId : '';
+        const projectId = typeof args.projectId === 'string' ? args.projectId : null;
+        const res = await this.trackingService.listTrackingTemplates(userId, companyId, projectId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'get_tracking_template': {
+        const templateId = typeof args.templateId === 'string' ? args.templateId : '';
+        const res = await this.trackingService.getTrackingTemplate(userId, templateId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'list_free_pages': {
+        const companyId = typeof args.companyId === 'string' ? args.companyId : '';
+        const projectId = typeof args.projectId === 'string' ? args.projectId : null;
+        const res = await this.trackingService.listFreePages(userId, companyId, projectId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'get_free_page': {
+        const freePageId = typeof args.freePageId === 'string' ? args.freePageId : '';
+        const res = await this.trackingService.getFreePage(userId, freePageId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'search_project': {
+        const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+        const query = typeof args.query === 'string' ? args.query : '';
+        const res = await this.trackingService.searchProject(userId, projectId, query);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
       // --- WRITE TOOLS (DRAFT ONLY) ---
       case 'create_page': {
         const projectId = typeof args.projectId === 'string' ? args.projectId : '';
@@ -911,6 +1046,40 @@ export class McpServerHandler {
           userId,
           projectId,
           args as unknown as TrackingCreateInput,
+        );
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'create_tracking_template': {
+        const companyId = typeof args.companyId === 'string' ? args.companyId : '';
+        const projectId = typeof args.projectId === 'string' ? args.projectId : null;
+        const res = await this.trackingService.createTrackingTemplate(
+          userId,
+          companyId,
+          projectId,
+          args as unknown as TrackingTemplateCreateInput,
+        );
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'create_free_page': {
+        const companyId = typeof args.companyId === 'string' ? args.companyId : '';
+        const projectId = typeof args.projectId === 'string' ? args.projectId : null;
+        const res = await this.trackingService.createFreePage(
+          userId,
+          companyId,
+          projectId,
+          args as unknown as FreePageCreateInput,
         );
         if (!res.ok) return this.formatError(id, res.error);
         return {

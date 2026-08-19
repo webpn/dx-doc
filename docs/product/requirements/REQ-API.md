@@ -13,8 +13,8 @@ Entry format and status legend: [requirements index](README.md).
 | ----------- | ------------------------------------------------------- | ------ | ---- | ------------ | ----------- |
 | REQ-API-001 | Internal REST API as the single entry point             | Must   | R0   | M0.5 → M1.11 | Implemented |
 | REQ-API-002 | Documented public API                                   | Must   | R1   | M1.2 → M1.12 | Not Started |
-| REQ-API-003 | MCP read tools                                          | Must   | R1   | M1.3 → M1.12 | In Progress |
-| REQ-API-004 | MCP write tools, draft only                             | Must   | R1   | M1.3 → M1.12 | In Progress |
+| REQ-API-003 | MCP read tools                                          | Must   | R1   | M1.3 → M1.12 | Implemented |
+| REQ-API-004 | MCP write tools, draft only                             | Must   | R1   | M1.3 → M1.12 | Implemented |
 | REQ-API-005 | OAuth with user consent for MCP clients                 | Should | R3   | M3.4         | Not Started |
 | REQ-API-006 | MCP resources exposing naming guidelines                | Should | R1   | M1.3 → M1.11 | In Progress |
 | REQ-API-007 | Outbound webhooks on publication                        | Could  | R4   | M4.3         | Not Started |

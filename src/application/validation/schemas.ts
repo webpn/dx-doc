@@ -208,6 +208,7 @@ export const navigationEventUpdateSchema = navigationEventCreateSchema.partial()
 export type NavigationEventUpdateInput = z.infer<typeof navigationEventUpdateSchema>;
 
 export const trackingCreateSchema = z.object({
+  templateId: z.string().min(1).optional(),
   pageId: z.string().min(1).optional(),
   navigationEventId: z.string().min(1, 'navigationEventId is required'),
   name: z

@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PagefindQueryUnsupportedError, PagefindSearchIndex } from './pagefind-search';
+import { PagefindSearchIndex } from './pagefind-search';
 
 const documents = [
   { id: 't1', title: 'Add to cart', text: 'Fires on add-to-cart click.' },
@@ -45,14 +45,17 @@ describe('PagefindSearchIndex', () => {
     expect(existsSync(path.join(dir, 'proj-1'))).toBe(false);
   });
 
-  it('documents that server-side query is unsupported by the default adapter', async () => {
+  it('queries the latest indexed project documents for REST search', async () => {
     const search = new PagefindSearchIndex(dir);
 
-    await expect(search.query('proj-1', 'cart')).rejects.toBeInstanceOf(
-      PagefindQueryUnsupportedError,
-    );
-    await expect(search.query('proj-1', 'cart')).rejects.toThrow(
-      /browser against the served index/,
-    );
+    await search.indexProject('proj-1', documents);
+
+    await expect(search.query('proj-1', 'cart')).resolves.toEqual([
+      {
+        documentId: 't1',
+        title: 'Add to cart',
+        snippet: 'Fires on add-to-cart click.',
+      },
+    ]);
   });
 });

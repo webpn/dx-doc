@@ -113,6 +113,34 @@ export type TrackingServiceError =
 
 type SharedPasswordReadModel = Omit<ProjectSharedPassword, 'passwordHash'>;
 
+interface TrackingTemplateConfig {
+  description?: string;
+  pageId?: string;
+  navigationEventId?: string;
+  moduleIds?: string[];
+}
+
+function parseTrackingTemplateConfig(configJson: string | null): TrackingTemplateConfig {
+  if (configJson === null) return {};
+  try {
+    const parsed: unknown = JSON.parse(configJson);
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+    const record = parsed as Record<string, unknown>;
+    const config: TrackingTemplateConfig = {};
+    if (typeof record.description === 'string') config.description = record.description;
+    if (typeof record.pageId === 'string') config.pageId = record.pageId;
+    if (typeof record.navigationEventId === 'string') {
+      config.navigationEventId = record.navigationEventId;
+    }
+    if (Array.isArray(record.moduleIds) && record.moduleIds.every((id) => typeof id === 'string')) {
+      config.moduleIds = record.moduleIds;
+    }
+    return config;
+  } catch {
+    return {};
+  }
+}
+
 export class TrackingService {
   constructor(
     private readonly properties: PropertyRepository,
@@ -1513,7 +1541,17 @@ export class TrackingService {
       return err({ kind: 'forbidden' });
     }
 
-    const navEvent = await this.navEvents.getNavigationEventById(parsed.value.navigationEventId);
+    let templateConfig: TrackingTemplateConfig = {};
+    if (parsed.value.templateId !== undefined) {
+      const template = await this.templates.getTemplateById(parsed.value.templateId);
+      if (!template || (template.projectId !== null && template.projectId !== projectId)) {
+        return err({ kind: 'not_found' });
+      }
+      templateConfig = parseTrackingTemplateConfig(template.configJson);
+    }
+
+    const navigationEventId = templateConfig.navigationEventId ?? parsed.value.navigationEventId;
+    const navEvent = await this.navEvents.getNavigationEventById(navigationEventId);
     if (navEvent?.projectId !== projectId) {
       return err({ kind: 'not_found' });
     }
@@ -1524,15 +1562,19 @@ export class TrackingService {
     await this.trackings.createTracking({
       id: trackingId,
       projectId,
-      pageId: parsed.value.pageId ?? null,
-      navigationEventId: parsed.value.navigationEventId,
+      pageId: templateConfig.pageId ?? parsed.value.pageId ?? null,
+      navigationEventId,
       name: parsed.value.name,
       slug: parsed.value.slug,
-      description: parsed.value.description ?? null,
+      description: templateConfig.description ?? parsed.value.description ?? null,
       customId: parsed.value.customId ?? null,
       createdAt: nowIso,
       updatedAt: nowIso,
     });
+
+    if (templateConfig.moduleIds !== undefined && templateConfig.moduleIds.length > 0) {
+      await this.trackings.setTrackingModules(trackingId, templateConfig.moduleIds, nowIso);
+    }
 
     const project = await this.projects.getProjectById(projectId);
     if (project) {

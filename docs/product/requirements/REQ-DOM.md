@@ -17,7 +17,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-DOM-006 | Module entity, project-scoped, inheritable            | Must   | R1   | M1.1         | Implemented |
 | REQ-DOM-007 | Opt-in propagation of module changes                  | Must   | R1   | M1.1 → M1.16 | In Progress |
 | REQ-DOM-008 | Property removal with automatic module detachment     | Must   | R1   | M1.1         | Implemented |
-| REQ-DOM-009 | Tracking Template, editor-configurable                | Must   | R1   | M1.1 → M1.16 | In Progress |
+| REQ-DOM-009 | Tracking Template, editor-configurable                | Must   | R1   | M1.1 → M1.16 | Implemented |
 | REQ-DOM-010 | Specific Values with plain `[placeholder]` strings    | Must   | R1   | M1.1         | Implemented |
 | REQ-DOM-011 | Prose conditional valorisations                       | Won't  | —    | —            | Rejected    |
 | REQ-DOM-012 | Structured property conditions, four operators + note | Should | R2   | M2.1         | Not Started |
@@ -159,7 +159,7 @@ A blueprint for new trackings: preselected modules, preconfigured custom propert
 - Templates exist only for Trackings; no template mechanism exists for pages or flows.
 - The current _Page View_ and _Action_ templates are expressible as instances of this mechanism, with no hard-coded behaviour remaining.
 
-> **Carried forward on 2026-08-18.** The entity persists, including a `config_json` column — which nothing reads. There is no mechanism that pre-seeds a new tracking from a template, no default specific values, and no editor for the template, so the two things the requirement is actually about (configurable by an editor, with no software release) are absent. Built at [M1.16](../milestones.md#m116--authoring-ui). This is why it remains a demotion candidate: the entity is cheap, the mechanism is not.
+> **Application behavior implemented on 2026-08-19.** `createTracking` accepts an optional `templateId`, validates the template scope, and applies JSON defaults for description, page, navigation event and modules. Existing trackings are not changed when a template is modified. Template editing UI remains deferred to [M1.16](../milestones.md#m116--authoring-ui).
 
 ### REQ-DOM-010 — Specific Values with plain `[placeholder]` strings
 

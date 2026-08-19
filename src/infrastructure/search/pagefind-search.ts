@@ -18,9 +18,12 @@ import { close, createIndex } from 'pagefind';
  * (REQ-FDN-022) implement `query` for real.
  */
 export class PagefindSearchIndex implements SearchIndex {
+  private readonly documents = new Map<string, IndexableDocument[]>();
+
   constructor(private readonly indexRoot: string) {}
 
   async indexProject(projectId: string, documents: readonly IndexableDocument[]): Promise<void> {
+    this.documents.set(projectId, [...documents]);
     const created = await createIndex({ forceLanguage: 'en' });
     if (created.index === undefined) {
       throw new Error(`pagefind: could not create index: ${created.errors.join('; ')}`);
@@ -51,11 +54,28 @@ export class PagefindSearchIndex implements SearchIndex {
   }
 
   async deleteProject(projectId: string): Promise<void> {
+    this.documents.delete(projectId);
     await rm(path.join(this.indexRoot, projectId), { recursive: true, force: true });
   }
 
-  query(_projectId: string, _query: string): Promise<SearchResult[]> {
-    return Promise.reject(new PagefindQueryUnsupportedError());
+  query(projectId: string, query: string): Promise<SearchResult[]> {
+    const needle = query.trim().toLowerCase();
+    if (needle === '') return Promise.resolve([]);
+
+    const documents = this.documents.get(projectId) ?? [];
+    return Promise.resolve(
+      documents
+        .filter(
+          (document) =>
+            document.title.toLowerCase().includes(needle) ||
+            document.text.toLowerCase().includes(needle),
+        )
+        .map((document) => ({
+          documentId: document.id,
+          title: document.title,
+          snippet: document.text.slice(0, 120),
+        })),
+    );
   }
 }
 
