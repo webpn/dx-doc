@@ -23,6 +23,20 @@ export interface ProjectRoutesOptions {
  * server and direct calls.
  */
 export function registerProjectRoutes(app: FastifyInstance, options: ProjectRoutesOptions): void {
+  app.get('/api/companies/:companyId/projects', async (request, reply) => {
+    const actor = await authenticateRequest(
+      request,
+      options.sessions,
+      options.serviceTokens,
+      options.cookieName,
+    );
+    if (actor === null) return unauthenticated(reply);
+    const { companyId } = request.params as { companyId: string };
+    const result = await options.projects.list(actor.userId, companyId);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return result.value;
+  });
+
   app.post('/api/projects', async (request, reply) => {
     const actor = await authenticateRequest(
       request,
