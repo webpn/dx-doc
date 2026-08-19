@@ -897,4 +897,158 @@ describe('TrackingService (M1.1 Application Service)', () => {
       }
     });
   });
+
+  describe('Publication (REQ-VER-003, REQ-VER-005, REQ-VER-006)', () => {
+    it('excludes non-publishable free pages from published versions', async () => {
+      // Create publishable and non-publishable free pages
+      const fpPublishable = await trackingService.createFreePage(editorId, companyId, projectId, {
+        title: 'Public Page',
+        slug: 'public',
+        content: 'Public content',
+      });
+      if (!fpPublishable.ok) throw new Error('create publishable failed');
+
+      const fpNonPublishable = await trackingService.createFreePage(
+        editorId,
+        companyId,
+        projectId,
+        {
+          title: 'Draft Page',
+          slug: 'draft',
+          content: 'Draft content',
+          publishable: false,
+        },
+      );
+      if (!fpNonPublishable.ok) throw new Error('create non-publishable failed');
+
+      // Publish version
+      const vRes = await trackingService.publishVersion(editorId, companyId, projectId, {
+        title: 'v1.0',
+      });
+      if (!vRes.ok) throw new Error('publish failed');
+
+      // Verify published version excludes non-publishable page
+      const vData = await trackingService.getVersion(editorId, vRes.value.versionId);
+      if (!vData.ok) throw new Error('get version failed');
+      expect(vData.value.snapshot.freePages).toHaveLength(1);
+      const fp0 = vData.value.snapshot.freePages[0];
+      if (!fp0) throw new Error('expected published page');
+      expect(fp0.id).toBe(fpPublishable.value.freePageId);
+    });
+
+    it('generates comprehensive changelog covering all entity types (REQ-VER-005, REQ-VER-006)', async () => {
+      // 1. Publish v1 with mixed entities
+      const navId = 'nav-changelog';
+      await navRepo.createNavigationEvent({
+        id: navId,
+        projectId,
+        name: 'view',
+        description: null,
+        active: true,
+        createdAt: t(),
+        updatedAt: t(),
+      });
+
+      const prop = await trackingService.createProperty(editorId, companyId, projectId, {
+        name: 'prop_v1',
+      });
+      if (!prop.ok) throw new Error('create prop failed');
+
+      const mod = await trackingService.createModule(editorId, companyId, projectId, {
+        name: 'mod_v1',
+      });
+      if (!mod.ok) throw new Error('create mod failed');
+
+      const dest = await trackingService.createDestination(editorId, companyId, projectId, {
+        platform: 'ga4',
+        variableType: 'string',
+        identifier: 'id',
+        name: 'dest_v1',
+      });
+      if (!dest.ok) throw new Error('create dest failed');
+
+      const fp = await trackingService.createFreePage(editorId, companyId, projectId, {
+        title: 'page_v1',
+        slug: 'page-v1',
+        content: 'content',
+      });
+      if (!fp.ok) throw new Error('create fp failed');
+
+      const flow = await trackingService.createFlow(editorId, projectId, {
+        name: 'flow_v1',
+        slug: 'flow-v1',
+      });
+      if (!flow.ok) throw new Error('create flow failed');
+
+      const v1Res = await trackingService.publishVersion(editorId, companyId, projectId, {
+        title: 'v1',
+      });
+      if (!v1Res.ok) throw new Error('publish v1 failed');
+
+      // 2. Publish v2 with changes to all entity types
+      await trackingService.updateProperty(editorId, prop.value.propertyId, { name: 'prop_v2' });
+      await trackingService.updateModule(editorId, mod.value.moduleId, { name: 'mod_v2' });
+      await trackingService.updateDestination(editorId, dest.value.destinationId, {
+        name: 'dest_v2',
+      });
+      await trackingService.updateFreePage(editorId, fp.value.freePageId, { title: 'page_v2' });
+      await trackingService.updateFlow(editorId, flow.value.flowId, { name: 'flow_v2' });
+
+      const v2Res = await trackingService.publishVersion(editorId, companyId, projectId, {
+        title: 'v2',
+      });
+      if (!v2Res.ok) throw new Error('publish v2 failed');
+
+      // 3. Verify changelog covers all entity types
+      const v2Data = await trackingService.getVersion(editorId, v2Res.value.versionId);
+      if (!v2Data.ok) throw new Error('get v2 failed');
+
+      const changelog = v2Data.value.changelog;
+      const entityTypes = new Set(changelog.map((e) => e.entityType));
+
+      // Verify all entity types are in changelog
+      expect(entityTypes.has('property')).toBe(true);
+      expect(entityTypes.has('module')).toBe(true);
+      expect(entityTypes.has('destination')).toBe(true);
+      expect(entityTypes.has('page')).toBe(true);
+      expect(entityTypes.has('flow')).toBe(true);
+
+      // Verify modifications are recorded
+      expect(changelog).toContainEqual(
+        expect.objectContaining({
+          type: 'modified',
+          entityType: 'property',
+          name: 'prop_v2',
+        }),
+      );
+      expect(changelog).toContainEqual(
+        expect.objectContaining({
+          type: 'modified',
+          entityType: 'module',
+          name: 'mod_v2',
+        }),
+      );
+      expect(changelog).toContainEqual(
+        expect.objectContaining({
+          type: 'modified',
+          entityType: 'destination',
+          name: 'dest_v2',
+        }),
+      );
+      expect(changelog).toContainEqual(
+        expect.objectContaining({
+          type: 'modified',
+          entityType: 'page',
+          name: 'page_v2',
+        }),
+      );
+      expect(changelog).toContainEqual(
+        expect.objectContaining({
+          type: 'modified',
+          entityType: 'flow',
+          name: 'flow_v2',
+        }),
+      );
+    });
+  });
 });

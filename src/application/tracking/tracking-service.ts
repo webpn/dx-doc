@@ -2583,7 +2583,9 @@ export class TrackingService {
     const dests = await this.destinations.listDestinations(companyId, projectId);
 
     const allFps = await this.freePages.listFreePages(companyId, projectId);
-    const includedFps = allFps.filter((fp) => !parsed.value.excludedPageIds.includes(fp.id));
+    const includedFps = allFps.filter(
+      (fp) => fp.publishable && !parsed.value.excludedPageIds.includes(fp.id),
+    );
 
     const allTrks = await this.trackings.listTrackingsForProject(projectId);
     const includedTrks = allTrks.filter((t) => !parsed.value.excludedTrackingIds.includes(t.id));
@@ -2664,13 +2666,134 @@ export class TrackingService {
           });
         }
       }
+
+      // Compare modules
+      const prevModMap = new Map(prev.modules.map((m) => [m.id, m]));
+      for (const m of mods) {
+        const old = prevModMap.get(m.id);
+        if (!old) {
+          changelog.push({ type: 'added', entityType: 'module', entityId: m.id, name: m.name });
+        } else if (old.updatedAt !== m.updatedAt) {
+          changelog.push({
+            type: 'modified',
+            entityType: 'module',
+            entityId: m.id,
+            name: m.name,
+          });
+        }
+      }
+      for (const old of prev.modules) {
+        if (!mods.some((m) => m.id === old.id)) {
+          changelog.push({
+            type: 'removed',
+            entityType: 'module',
+            entityId: old.id,
+            name: old.name,
+          });
+        }
+      }
+
+      // Compare destinations
+      const prevDestMap = new Map(prev.destinations.map((d) => [d.id, d]));
+      for (const d of dests) {
+        const old = prevDestMap.get(d.id);
+        if (!old) {
+          changelog.push({
+            type: 'added',
+            entityType: 'destination',
+            entityId: d.id,
+            name: d.name,
+          });
+        } else if (old.updatedAt !== d.updatedAt) {
+          changelog.push({
+            type: 'modified',
+            entityType: 'destination',
+            entityId: d.id,
+            name: d.name,
+          });
+        }
+      }
+      for (const old of prev.destinations) {
+        if (!dests.some((d) => d.id === old.id)) {
+          changelog.push({
+            type: 'removed',
+            entityType: 'destination',
+            entityId: old.id,
+            name: old.name,
+          });
+        }
+      }
+
+      // Compare pages
+      const prevFpMap = new Map(prev.freePages.map((fp) => [fp.id, fp]));
+      for (const fp of includedFps) {
+        const old = prevFpMap.get(fp.id);
+        if (!old) {
+          changelog.push({ type: 'added', entityType: 'page', entityId: fp.id, name: fp.title });
+        } else if (old.updatedAt !== fp.updatedAt) {
+          changelog.push({
+            type: 'modified',
+            entityType: 'page',
+            entityId: fp.id,
+            name: fp.title,
+          });
+        }
+      }
+      for (const old of prev.freePages) {
+        if (!includedFps.some((fp) => fp.id === old.id)) {
+          changelog.push({
+            type: 'removed',
+            entityType: 'page',
+            entityId: old.id,
+            name: old.title,
+          });
+        }
+      }
+
+      // Compare flows
+      const prevFlowMap = new Map(prev.flows.map((f) => [f.id, f]));
+      for (const f of includedFlows) {
+        const old = prevFlowMap.get(f.id);
+        if (!old) {
+          changelog.push({ type: 'added', entityType: 'flow', entityId: f.id, name: f.name });
+        } else if (old.updatedAt !== f.updatedAt) {
+          changelog.push({
+            type: 'modified',
+            entityType: 'flow',
+            entityId: f.id,
+            name: f.name,
+          });
+        }
+      }
+      for (const old of prev.flows) {
+        if (!includedFlows.some((f) => f.id === old.id)) {
+          changelog.push({
+            type: 'removed',
+            entityType: 'flow',
+            entityId: old.id,
+            name: old.name,
+          });
+        }
+      }
     } else {
       // First version
       for (const p of props) {
         changelog.push({ type: 'added', entityType: 'property', entityId: p.id, name: p.name });
       }
+      for (const m of mods) {
+        changelog.push({ type: 'added', entityType: 'module', entityId: m.id, name: m.name });
+      }
+      for (const d of dests) {
+        changelog.push({ type: 'added', entityType: 'destination', entityId: d.id, name: d.name });
+      }
+      for (const fp of includedFps) {
+        changelog.push({ type: 'added', entityType: 'page', entityId: fp.id, name: fp.title });
+      }
       for (const t of includedTrks) {
         changelog.push({ type: 'added', entityType: 'tracking', entityId: t.id, name: t.name });
+      }
+      for (const f of includedFlows) {
+        changelog.push({ type: 'added', entityType: 'flow', entityId: f.id, name: f.name });
       }
     }
 
