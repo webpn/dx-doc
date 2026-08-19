@@ -10,6 +10,8 @@ import type { ServiceTokenService } from '@project/application/auth/service-toke
 import type { SessionService } from '@project/application/auth/session-service';
 import type { CompanyService } from '@project/application/company/company-service';
 import type { PageService } from '@project/application/page/page-service';
+import type { AccountRepository } from '@project/application/ports/account-repository';
+import type { AuditLogRepository } from '@project/application/ports/tracking-repositories';
 import type { ProjectService } from '@project/application/project/project-service';
 import type { TrackingService } from '@project/application/tracking/tracking-service';
 import { InMemorySearchIndex } from '@project/infrastructure/search/in-memory-search';
@@ -98,6 +100,8 @@ const stubServiceTokens = {} as ServiceTokenService;
 const stubLifecycle = {} as LifecycleService;
 const stubCompany = {} as CompanyService;
 const stubGrants = {} as GrantService;
+const stubAuditLogs = {} as AuditLogRepository;
+const stubAccounts = {} as AccountRepository;
 
 function captureRoutes(register: (app: FastifyInstance) => void): ServedRoute[] {
   const app = Fastify();
@@ -138,8 +142,10 @@ const ALL_ROUTES = captureRoutes((app) => {
     lifecycle: stubLifecycle,
     companyService: stubCompany,
     grantService: stubGrants,
+    accounts: stubAccounts,
     cookieName: SESSION_COOKIE_NAME,
     sessionTtlMs: 1000,
+    auditLogs: stubAuditLogs,
   });
 });
 
@@ -149,6 +155,7 @@ const INDIVIDUAL_ROUTES = [
     registerAuthRoutes(app, {
       auth: stubAuth,
       sessions: stubSessions,
+      accounts: stubAccounts,
       cookieName: SESSION_COOKIE_NAME,
       sessionTtlMs: 1000,
     });

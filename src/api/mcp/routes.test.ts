@@ -135,13 +135,14 @@ describe('MCP Server (M1.3, REQ-API-003, REQ-API-004, REQ-API-006, D37, D38)', (
       .execute();
 
     const accounts = new SqliteAccountRepository(connection.kysely);
+    const auditLogRepo = new SqliteAuditLogRepository(connection.kysely);
     const sessionRepo = new SqliteSessionRepository(connection.kysely);
-    sessions = new SessionService(sessionRepo, TTL_MS);
+    sessions = new SessionService(sessionRepo, TTL_MS, auditLogRepo);
     const serviceTokens = new ServiceTokenService(
       new SqliteServiceTokenRepository(connection.kysely),
       accounts,
     );
-    auth = new AuthService(accounts, hasher, sessions);
+    auth = new AuthService(accounts, hasher, sessions, auditLogRepo);
     const permissions = new PermissionService(accounts);
 
     const projectRepo = new SqliteProjectRepository(connection.kysely);
@@ -157,7 +158,6 @@ describe('MCP Server (M1.3, REQ-API-003, REQ-API-004, REQ-API-006, D37, D38)', (
     const triggerRepo = new SqliteTriggerRepository(connection.kysely);
     const versionRepo = new SqliteVersionRepository(connection.kysely);
     const sharedPasswordRepo = new SqliteSharedPasswordRepository(connection.kysely);
-    const auditLogRepo = new SqliteAuditLogRepository(connection.kysely);
 
     const projectService = new ProjectService(projectRepo, permissions, accounts);
     const pageService = new PageService(pageRepo, projectRepo, permissions);
@@ -179,7 +179,13 @@ describe('MCP Server (M1.3, REQ-API-003, REQ-API-004, REQ-API-006, D37, D38)', (
       permissions,
     );
 
-    const mcpHandler = new McpServerHandler(projectService, pageService, trackingService);
+    const mcpHandler = new McpServerHandler(
+      projectService,
+      pageService,
+      trackingService,
+      auditLogRepo,
+      accounts,
+    );
 
     app = Fastify();
     await app.register(cookie);
@@ -188,6 +194,7 @@ describe('MCP Server (M1.3, REQ-API-003, REQ-API-004, REQ-API-006, D37, D38)', (
     registerAuthRoutes(app, {
       auth,
       sessions,
+      accounts,
       cookieName,
       sessionTtlMs: TTL_MS,
     });

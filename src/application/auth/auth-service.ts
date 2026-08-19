@@ -1,7 +1,10 @@
+import { randomUUID } from 'node:crypto';
+
 import { err, ok, type Result } from '@project/shared';
 
 import type { AccountRepository } from '../ports/account-repository';
 import type { PasswordHasher } from '../ports/password-hasher';
+import type { AuditLogRepository } from '../ports/tracking-repositories';
 
 import type { NewSession, SessionService } from './session-service';
 
@@ -31,7 +34,9 @@ export class AuthService {
     private readonly accounts: AccountRepository,
     private readonly hasher: PasswordHasher,
     private readonly sessions: SessionService,
+    private readonly auditLogs: AuditLogRepository,
     private readonly now: () => Date = () => new Date(),
+    private readonly newId: () => string = () => randomUUID(),
   ) {}
 
   /**
@@ -50,6 +55,21 @@ export class AuthService {
     }
 
     const session = await this.sessions.create(user.id);
+
+    const nowIso = this.now().toISOString();
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: user.companyId ?? null,
+      projectId: null,
+      actorId: user.id,
+      action: 'session.login',
+      entityType: 'session',
+      entityId: session.sessionId,
+      details: { email: user.email },
+      createdAt: nowIso,
+      actorKind: 'session',
+    });
+
     return {
       ok: true,
       session,
@@ -86,6 +106,21 @@ export class AuthService {
     user.passwordMustChange = false;
     user.updatedAt = this.now().toISOString();
     await this.accounts.updateUser(user);
+
+    const nowIso = this.now().toISOString();
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: user.companyId ?? null,
+      projectId: null,
+      actorId: userId,
+      action: 'user.password_changed',
+      entityType: 'user',
+      entityId: userId,
+      details: {},
+      createdAt: nowIso,
+      actorKind: 'session',
+    });
+
     return ok({ ok: true });
   }
 

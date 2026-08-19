@@ -6,6 +6,8 @@ import type { ServiceTokenService } from '@project/application/auth/service-toke
 import type { SessionService } from '@project/application/auth/session-service';
 import type { CompanyService } from '@project/application/company/company-service';
 import type { PageService } from '@project/application/page/page-service';
+import type { AccountRepository } from '@project/application/ports/account-repository';
+import type { AuditLogRepository } from '@project/application/ports/tracking-repositories';
 import type { ProjectService } from '@project/application/project/project-service';
 import type { TrackingService } from '@project/application/tracking/tracking-service';
 import type { FastifyInstance } from 'fastify';
@@ -33,8 +35,10 @@ export interface ApiRoutesOptions {
   lifecycle: LifecycleService;
   companyService: CompanyService;
   grantService: GrantService;
+  accounts: AccountRepository;
   cookieName: string;
   sessionTtlMs: number;
+  auditLogs: AuditLogRepository;
 }
 
 /**
@@ -54,11 +58,12 @@ export function registerAllRoutes(app: FastifyInstance, options: ApiRoutesOption
     lifecycle,
     companyService,
     grantService,
+    accounts,
     cookieName,
     sessionTtlMs,
   } = options;
 
-  registerAuthRoutes(app, { auth, sessions, cookieName, sessionTtlMs });
+  registerAuthRoutes(app, { auth, sessions, accounts, cookieName, sessionTtlMs });
 
   registerProjectRoutes(app, {
     projects: projectService,
@@ -87,7 +92,13 @@ export function registerAllRoutes(app: FastifyInstance, options: ApiRoutesOption
   registerCompanyRoutes(app, { companies: companyService, sessions, serviceTokens, cookieName });
   registerTokenRoutes(app, { tokens: serviceTokens, sessions, serviceTokens, cookieName });
 
-  const mcpHandler = new McpServerHandler(projectService, pageService, trackingService);
+  const mcpHandler = new McpServerHandler(
+    projectService,
+    pageService,
+    trackingService,
+    options.auditLogs,
+    options.accounts,
+  );
   registerMcpRoutes(app, {
     mcpHandler,
     sessions,

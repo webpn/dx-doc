@@ -1,3 +1,4 @@
+import type { AuditLogEntry } from '@project/domain/entities';
 import { describe, expect, it } from 'vitest';
 
 import type {
@@ -16,6 +17,7 @@ import type {
   PasswordResetTokenRepository,
 } from '../ports/reset-token-repository';
 import type { SessionRecord, SessionRepository } from '../ports/session-repository';
+import type { AuditLogRepository } from '../ports/tracking-repositories';
 
 import { LifecycleService } from './lifecycle-service';
 import { PermissionService } from './permissions';
@@ -23,6 +25,18 @@ import { hashSessionToken } from './tokens';
 
 const FIXED_NOW = new Date('2026-06-01T00:00:00.000Z');
 const TTL_MS = 60 * 60 * 1000;
+
+class FakeAuditLogs implements AuditLogRepository {
+  appendLog(_entry: AuditLogEntry): Promise<void> {
+    return Promise.resolve();
+  }
+  listLogsForCompany(_companyId: string, _limit?: number): Promise<AuditLogEntry[]> {
+    return Promise.resolve([]);
+  }
+  listLogsForProject(_projectId: string, _limit?: number): Promise<AuditLogEntry[]> {
+    return Promise.resolve([]);
+  }
+}
 
 class FakeHasher implements PasswordHasher {
   hash(plaintext: string): Promise<string> {
@@ -178,6 +192,7 @@ function buildHarness(): Harness {
   const sessions = new FakeSessions();
   const email = new FakeEmail();
   const permissions = new PermissionService(accounts);
+  const auditLogs = new FakeAuditLogs();
   const lifecycle = new LifecycleService(
     accounts,
     hasher,
@@ -187,6 +202,7 @@ function buildHarness(): Harness {
     email,
     'https://dx.test',
     TTL_MS,
+    auditLogs,
     () => FIXED_NOW,
   );
 

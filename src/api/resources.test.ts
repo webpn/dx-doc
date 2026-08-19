@@ -21,6 +21,7 @@ import { SqlitePageRepository } from '@project/infrastructure/persistence/sqlite
 import { SqliteProjectRepository } from '@project/infrastructure/persistence/sqlite-project-repository';
 import { SqliteServiceTokenRepository } from '@project/infrastructure/persistence/sqlite-service-token-repository';
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
+import { SqliteAuditLogRepository } from '@project/infrastructure/persistence/sqlite-tracking-repositories';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -90,13 +91,14 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
       .execute();
 
     const accounts = new SqliteAccountRepository(connection.kysely);
+    const auditLogRepo = new SqliteAuditLogRepository(connection.kysely);
     const sessionsRepo = new SqliteSessionRepository(connection.kysely);
-    const sessions = new SessionService(sessionsRepo, TTL_MS);
+    const sessions = new SessionService(sessionsRepo, TTL_MS, auditLogRepo);
     const serviceTokens = new ServiceTokenService(
       new SqliteServiceTokenRepository(connection.kysely),
       accounts,
     );
-    const auth = new AuthService(accounts, hasher, sessions);
+    const auth = new AuthService(accounts, hasher, sessions, auditLogRepo);
     const permissions = new PermissionService(accounts);
     const companyRepo = new SqliteCompanyRepository(connection.kysely);
     projects = new ProjectService(
@@ -116,7 +118,13 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
 
     app = Fastify();
     await app.register(cookie);
-    registerAuthRoutes(app, { auth, sessions, cookieName: 'dxdoc_session', sessionTtlMs: TTL_MS });
+    registerAuthRoutes(app, {
+      auth,
+      sessions,
+      accounts,
+      cookieName: 'dxdoc_session',
+      sessionTtlMs: TTL_MS,
+    });
     registerProjectRoutes(app, { projects, sessions, serviceTokens, cookieName: 'dxdoc_session' });
     registerPageRoutes(app, { pages, sessions, serviceTokens, cookieName: 'dxdoc_session' });
     registerTokenRoutes(app, {

@@ -25,6 +25,7 @@ import { SqliteProjectRepository } from '@project/infrastructure/persistence/sql
 import { SqlitePasswordResetTokenRepository } from '@project/infrastructure/persistence/sqlite-reset-token-repository';
 import { SqliteServiceTokenRepository } from '@project/infrastructure/persistence/sqlite-service-token-repository';
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
+import { SqliteAuditLogRepository } from '@project/infrastructure/persistence/sqlite-tracking-repositories';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -110,13 +111,18 @@ describe('Access administration and service tokens over HTTP (M1.12 first half)'
     viewerId = 'u-viewer';
 
     accounts = new SqliteAccountRepository(connection.kysely);
-    const sessions = new SessionService(new SqliteSessionRepository(connection.kysely), TTL_MS);
+    const auditLogRepo = new SqliteAuditLogRepository(connection.kysely);
+    const sessions = new SessionService(
+      new SqliteSessionRepository(connection.kysely),
+      TTL_MS,
+      auditLogRepo,
+    );
     const serviceTokens = new ServiceTokenService(
       new SqliteServiceTokenRepository(connection.kysely),
       accounts,
     );
     const permissions = new PermissionService(accounts);
-    const auth = new AuthService(accounts, hasher, sessions);
+    const auth = new AuthService(accounts, hasher, sessions, auditLogRepo);
     email = new CapturingEmail();
     const lifecycle = new LifecycleService(
       accounts,
@@ -127,6 +133,7 @@ describe('Access administration and service tokens over HTTP (M1.12 first half)'
       email,
       APP_URL,
       RESET_TTL_MS,
+      auditLogRepo,
     );
     const companyService = new CompanyService(
       accounts,
@@ -144,7 +151,13 @@ describe('Access administration and service tokens over HTTP (M1.12 first half)'
 
     app = Fastify();
     await app.register(cookie);
-    registerAuthRoutes(app, { auth, sessions, cookieName: 'dxdoc_session', sessionTtlMs: TTL_MS });
+    registerAuthRoutes(app, {
+      auth,
+      sessions,
+      accounts,
+      cookieName: 'dxdoc_session',
+      sessionTtlMs: TTL_MS,
+    });
     registerProjectRoutes(app, { projects, sessions, serviceTokens, cookieName: 'dxdoc_session' });
     registerPageRoutes(app, { pages, sessions, serviceTokens, cookieName: 'dxdoc_session' });
     registerAccessRoutes(app, { grants, sessions, serviceTokens, cookieName: 'dxdoc_session' });

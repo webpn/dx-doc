@@ -226,7 +226,7 @@ export interface ProjectSharedPassword {
 
 export interface AuditLogEntry {
   id: string;
-  companyId: string;
+  companyId: string | null;
   projectId: string | null;
   actorId: string;
   action: string;

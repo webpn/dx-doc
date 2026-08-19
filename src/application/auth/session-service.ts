@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import type { SessionRecord, SessionRepository } from '../ports/session-repository';
+import type { AuditLogRepository } from '../ports/tracking-repositories';
 
 import { generateSessionToken, hashSessionToken } from './tokens';
 
@@ -19,6 +20,7 @@ export class SessionService {
   constructor(
     private readonly sessions: SessionRepository,
     private readonly ttlMs: number,
+    private readonly auditLogs: AuditLogRepository,
     private readonly now: () => Date = () => new Date(),
     private readonly newId: () => string = () => randomUUID(),
   ) {}
@@ -49,7 +51,21 @@ export class SessionService {
     return record.userId;
   }
 
-  async destroy(token: string): Promise<void> {
+  async destroy(token: string, userId: string | null, companyId: string | null): Promise<void> {
     await this.sessions.deleteByTokenHash(hashSessionToken(token));
+
+    const nowIso = this.now().toISOString();
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId,
+      projectId: null,
+      actorId: userId ?? 'unknown',
+      action: 'session.logout',
+      entityType: 'session',
+      entityId: null,
+      details: {},
+      createdAt: nowIso,
+      actorKind: 'session',
+    });
   }
 }

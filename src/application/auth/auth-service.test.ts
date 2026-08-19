@@ -1,3 +1,4 @@
+import type { AuditLogEntry } from '@project/domain/entities';
 import { describe, expect, it } from 'vitest';
 
 import type {
@@ -11,11 +12,24 @@ import type {
 } from '../ports/account-repository';
 import type { PasswordHasher } from '../ports/password-hasher';
 import type { SessionRecord, SessionRepository } from '../ports/session-repository';
+import type { AuditLogRepository } from '../ports/tracking-repositories';
 
 import { AuthService } from './auth-service';
 import { SessionService } from './session-service';
 
 const FIXED_NOW = new Date('2026-06-01T00:00:00.000Z');
+
+class FakeAuditLogs implements AuditLogRepository {
+  appendLog(_entry: AuditLogEntry): Promise<void> {
+    return Promise.resolve();
+  }
+  listLogsForCompany(_companyId: string, _limit?: number): Promise<AuditLogEntry[]> {
+    return Promise.resolve([]);
+  }
+  listLogsForProject(_projectId: string, _limit?: number): Promise<AuditLogEntry[]> {
+    return Promise.resolve([]);
+  }
+}
 
 class FakeHasher implements PasswordHasher {
   hash(plaintext: string): Promise<string> {
@@ -119,7 +133,8 @@ describe('AuthService.changePassword (REQ-SEC-013)', () => {
     const auth = new AuthService(
       accounts,
       new FakeHasher(),
-      new SessionService(new FakeSessions(), 1000),
+      new SessionService(new FakeSessions(), 1000, new FakeAuditLogs()),
+      new FakeAuditLogs(),
       () => FIXED_NOW,
     );
     return { accounts, auth };

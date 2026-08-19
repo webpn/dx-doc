@@ -669,7 +669,7 @@ export interface ProjectSharedPasswordsTable {
 
 export interface AuditLogsTable {
   id: string;
-  company_id: string;
+  company_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   project_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   actor_id: string;
   action: string;

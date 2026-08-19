@@ -7,6 +7,7 @@ import type { EmailSender } from '../ports/email-sender';
 import type { PasswordHasher } from '../ports/password-hasher';
 import type { PasswordResetTokenRepository } from '../ports/reset-token-repository';
 import type { SessionRepository } from '../ports/session-repository';
+import type { AuditLogRepository } from '../ports/tracking-repositories';
 
 import type { PermissionService } from './permissions';
 import { generateSessionToken, hashSessionToken } from './tokens';
@@ -36,6 +37,7 @@ export class LifecycleService {
     private readonly email: EmailSender,
     private readonly appUrl: string,
     private readonly resetTtlMs: number,
+    private readonly auditLogs: AuditLogRepository,
     private readonly now: () => Date = () => new Date(),
     private readonly newId: () => string = () => randomUUID(),
   ) {}
@@ -62,6 +64,20 @@ export class LifecycleService {
       passwordHash: null,
       createdAt: this.now().toISOString(),
     });
+
+    const nowIso = this.now().toISOString();
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId,
+      projectId: null,
+      actorId,
+      action: 'user.invited',
+      entityType: 'user',
+      entityId: userId,
+      details: { email: trimmed },
+      createdAt: nowIso,
+    });
+
     return ok({ userId });
   }
 
@@ -85,6 +101,20 @@ export class LifecycleService {
     await this.accounts.updateUser(target);
     // End every session immediately; login also rejects deactivated users.
     await this.sessions.deleteAllForUser(targetUserId);
+
+    const nowIso = this.now().toISOString();
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId,
+      projectId: null,
+      actorId,
+      action: 'user.deactivated',
+      entityType: 'user',
+      entityId: targetUserId,
+      details: { email: target.email },
+      createdAt: nowIso,
+    });
+
     return ok({ ok: true });
   }
 
@@ -108,6 +138,20 @@ export class LifecycleService {
     target.instanceAdmin = value;
     target.updatedAt = this.now().toISOString();
     await this.accounts.updateUser(target);
+
+    const nowIso = this.now().toISOString();
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: target.companyId ?? null,
+      projectId: null,
+      actorId,
+      action: 'user.instance_admin_changed',
+      entityType: 'user',
+      entityId: targetUserId,
+      details: { value },
+      createdAt: nowIso,
+    });
+
     return ok({ ok: true });
   }
 

@@ -12,6 +12,7 @@ import {
   type Connection,
 } from '@project/infrastructure/persistence/sqlite-kysely';
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
+import { SqliteAuditLogRepository } from '@project/infrastructure/persistence/sqlite-tracking-repositories';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -74,12 +75,23 @@ describe('auth routes (email + password)', () => {
       .execute();
 
     const accounts = new SqliteAccountRepository(connection.kysely);
-    const sessions = new SessionService(new SqliteSessionRepository(connection.kysely), TTL_MS);
-    const auth = new AuthService(accounts, hasher, sessions);
+    const auditLogs = new SqliteAuditLogRepository(connection.kysely);
+    const sessions = new SessionService(
+      new SqliteSessionRepository(connection.kysely),
+      TTL_MS,
+      auditLogs,
+    );
+    const auth = new AuthService(accounts, hasher, sessions, auditLogs);
 
     app = Fastify();
     await app.register(cookie);
-    registerAuthRoutes(app, { auth, sessions, cookieName: 'dxdoc_session', sessionTtlMs: TTL_MS });
+    registerAuthRoutes(app, {
+      auth,
+      sessions,
+      accounts,
+      cookieName: 'dxdoc_session',
+      sessionTtlMs: TTL_MS,
+    });
   });
 
   afterEach(async () => {

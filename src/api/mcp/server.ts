@@ -1,4 +1,8 @@
+import { randomUUID } from 'node:crypto';
+
 import type { PageService } from '@project/application/page/page-service';
+import type { AccountRepository } from '@project/application/ports/account-repository';
+import type { AuditLogRepository } from '@project/application/ports/tracking-repositories';
 import type { ProjectService } from '@project/application/project/project-service';
 import type { TrackingService } from '@project/application/tracking/tracking-service';
 import type {
@@ -15,9 +19,6 @@ import type {
 
 import type { McpRequest, McpResource, McpResourceContent, McpResponse, McpTool } from './types';
 
-/**
- * Naming and documentation guidelines exposed as MCP resource (REQ-API-006).
- */
 export const NAMING_GUIDELINES_RESOURCE: McpResource = {
   uri: 'dxdoc://guidelines/naming',
   name: 'Data Layer Naming and Documentation Guidelines',
@@ -482,6 +483,8 @@ export class McpServerHandler {
     private readonly projects: ProjectService,
     private readonly pages: PageService,
     private readonly trackingService: TrackingService,
+    private readonly auditLogs: AuditLogRepository,
+    private readonly accounts: AccountRepository,
   ) {}
 
   async handleRequest(userId: string, req: McpRequest): Promise<McpResponse> {
@@ -561,471 +564,35 @@ export class McpServerHandler {
     name: string | undefined,
     args: Record<string, unknown>,
   ): Promise<McpResponse> {
+    const isWriteTool =
+      name !== undefined &&
+      (name.startsWith('create_') ||
+        name.startsWith('set_') ||
+        name.startsWith('apply_') ||
+        name.startsWith('remove_'));
+
     try {
-      switch (name) {
-        // --- READ TOOLS ---
-        case 'list_projects': {
-          const companyId = typeof args.companyId === 'string' ? args.companyId : '';
-          const res = await this.projects.list(userId, companyId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
+      const result = await this.executeToolInternal(userId, id, name, args);
 
-        case 'get_page_structure': {
-          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
-          const res = await this.pages.listForProject(userId, projectId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'list_trackings': {
-          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
-          const res = await this.trackingService.listTrackingsForProject(userId, projectId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'get_tracking': {
-          const trackingId = typeof args.trackingId === 'string' ? args.trackingId : '';
-          const res = await this.trackingService.getTracking(userId, trackingId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'list_properties': {
-          const companyId = typeof args.companyId === 'string' ? args.companyId : '';
-          const projectId = typeof args.projectId === 'string' ? args.projectId : null;
-          const res = await this.trackingService.listProperties(userId, companyId, projectId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'get_property': {
-          const propertyId = typeof args.propertyId === 'string' ? args.propertyId : '';
-          const res = await this.trackingService.getProperty(userId, propertyId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'get_reconciliation_report': {
-          const companyId = typeof args.companyId === 'string' ? args.companyId : '';
-          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
-          const res = await this.trackingService.generateReconciliationReport(
-            userId,
-            companyId,
-            projectId,
-          );
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'list_navigation_events': {
-          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
-          const res = await this.trackingService.listNavigationEvents(userId, projectId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'get_navigation_event': {
-          const navigationEventId =
-            typeof args.navigationEventId === 'string' ? args.navigationEventId : '';
-          const res = await this.trackingService.getNavigationEvent(userId, navigationEventId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'get_destination': {
-          const destinationId = typeof args.destinationId === 'string' ? args.destinationId : '';
-          const res = await this.trackingService.getDestination(userId, destinationId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'list_destinations': {
-          const companyId = typeof args.companyId === 'string' ? args.companyId : '';
-          const projectId = typeof args.projectId === 'string' ? args.projectId : null;
-          const res = await this.trackingService.listDestinations(userId, companyId, projectId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'get_property_destinations': {
-          const propertyId = typeof args.propertyId === 'string' ? args.propertyId : '';
-          const res = await this.trackingService.getPropertyDestinations(userId, propertyId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'list_modules': {
-          const companyId = typeof args.companyId === 'string' ? args.companyId : '';
-          const projectId = typeof args.projectId === 'string' ? args.projectId : null;
-          const res = await this.trackingService.listModules(userId, companyId, projectId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'get_module': {
-          const moduleId = typeof args.moduleId === 'string' ? args.moduleId : '';
-          const res = await this.trackingService.getModule(userId, moduleId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'list_flows': {
-          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
-          const res = await this.trackingService.listFlowsForProject(userId, projectId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'get_flow': {
-          const flowId = typeof args.flowId === 'string' ? args.flowId : '';
-          const res = await this.trackingService.getFlow(userId, flowId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'list_triggers': {
-          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
-          const res = await this.trackingService.listTriggersForProject(userId, projectId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'get_trigger': {
-          const triggerId = typeof args.triggerId === 'string' ? args.triggerId : '';
-          const res = await this.trackingService.getTrigger(userId, triggerId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'list_versions': {
-          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
-          const res = await this.trackingService.listVersionsForProject(userId, projectId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'get_version': {
-          const versionId = typeof args.versionId === 'string' ? args.versionId : '';
-          const res = await this.trackingService.getVersion(userId, versionId);
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        // --- WRITE TOOLS (DRAFT ONLY) ---
-        case 'create_page': {
-          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
-          const res = await this.pages.create(
-            userId,
-            projectId,
-            args as unknown as PageCreateInput,
-          );
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'create_property': {
-          const companyId = typeof args.companyId === 'string' ? args.companyId : '';
-          const projectId = typeof args.projectId === 'string' ? args.projectId : null;
-          const res = await this.trackingService.createProperty(
-            userId,
-            companyId,
-            projectId,
-            args as unknown as PropertyCreateInput,
-          );
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'create_module': {
-          const companyId = typeof args.companyId === 'string' ? args.companyId : '';
-          const projectId = typeof args.projectId === 'string' ? args.projectId : null;
-          const res = await this.trackingService.createModule(
-            userId,
-            companyId,
-            projectId,
-            args as unknown as ModuleCreateInput,
-          );
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'create_destination': {
-          const companyId = typeof args.companyId === 'string' ? args.companyId : '';
-          const projectId = typeof args.projectId === 'string' ? args.projectId : null;
-          const res = await this.trackingService.createDestination(
-            userId,
-            companyId,
-            projectId,
-            args as unknown as DestinationCreateInput,
-          );
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'create_tracking': {
-          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
-          const res = await this.trackingService.createTracking(
-            userId,
-            projectId,
-            args as unknown as TrackingCreateInput,
-          );
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'apply_module_to_tracking': {
-          const trackingId = typeof args.trackingId === 'string' ? args.trackingId : '';
-          const moduleId = typeof args.moduleId === 'string' ? args.moduleId : '';
-          const res = await this.trackingService.applyModuleToTracking(
-            userId,
-            trackingId,
-            moduleId,
-          );
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'remove_property_from_tracking': {
-          const trackingId = typeof args.trackingId === 'string' ? args.trackingId : '';
-          const propertyId = typeof args.propertyId === 'string' ? args.propertyId : '';
-          const res = await this.trackingService.removePropertyFromTracking(
-            userId,
-            trackingId,
-            propertyId,
-          );
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'create_navigation_event': {
-          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
-          const res = await this.trackingService.createNavigationEvent(
-            userId,
-            projectId,
-            args as unknown as NavigationEventCreateInput,
-          );
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'set_property_destinations': {
-          const propertyId = typeof args.propertyId === 'string' ? args.propertyId : '';
-          const destinationIds = Array.isArray(args.destinationIds) ? args.destinationIds : [];
-          const nameOverrides = (args.nameOverrides ?? {}) as Record<string, string>;
-          const mappings = (destinationIds as string[]).map((destId) => ({
-            destinationId: destId,
-            destinationNameOverride: nameOverrides[destId] ?? null,
-          }));
-          const res = await this.trackingService.setPropertyDestinations(
-            userId,
-            propertyId,
-            mappings,
-          );
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'set_specific_value': {
-          const trackingId = typeof args.trackingId === 'string' ? args.trackingId : '';
-          const propertyId = typeof args.propertyId === 'string' ? args.propertyId : '';
-          const value = typeof args.value === 'string' ? args.value : '';
-          // Find the TrackingProperty ID by getting the tracking and finding the property
-          const trackingRes = await this.trackingService.getTracking(userId, trackingId);
-          if (!trackingRes.ok) return this.formatError(id, trackingRes.error);
-          const trackingProp = trackingRes.value.properties.find(
-            (p) => p.propertyId === propertyId,
-          );
-          if (!trackingProp) {
-            return {
-              jsonrpc: '2.0',
-              id,
-              error: {
-                code: -32001,
-                message: 'Property not found on tracking',
-              },
-            };
-          }
-          const res = await this.trackingService.setSpecificValue(userId, trackingProp.id, {
-            value,
-          });
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'create_flow': {
-          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
-          const res = await this.trackingService.createFlow(
-            userId,
-            projectId,
-            args as unknown as FlowCreateInput,
-          );
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'set_flow_graph': {
-          const flowId = typeof args.flowId === 'string' ? args.flowId : '';
-          const res = await this.trackingService.setFlowGraph(
-            userId,
-            flowId,
-            args as unknown as FlowGraphInput,
-          );
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        case 'create_trigger': {
-          const projectId = typeof args.projectId === 'string' ? args.projectId : '';
-          const res = await this.trackingService.createTrigger(
-            userId,
-            projectId,
-            args as unknown as TriggerCreateInput,
-          );
-          if (!res.ok) return this.formatError(id, res.error);
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
-          };
-        }
-
-        default:
-          return {
-            jsonrpc: '2.0',
-            id,
-            error: { code: -32601, message: `Tool not found: ${String(name)}` },
-          };
+      // Log MCP tool call for write operations
+      if (isWriteTool) {
+        const nowIso = new Date().toISOString();
+        const user = await this.accounts.getUserById(userId);
+        await this.auditLogs.appendLog({
+          id: randomUUID(),
+          companyId: user?.companyId ?? null,
+          projectId: null,
+          actorId: userId,
+          action: 'mcp.tool_called',
+          entityType: 'mcp_tool',
+          entityId: name,
+          details: { toolName: name, args: JSON.stringify(args) },
+          createdAt: nowIso,
+          actorKind: 'service_token',
+        });
       }
+
+      return result;
     } catch (err) {
       return {
         jsonrpc: '2.0',
@@ -1035,6 +602,468 @@ export class McpServerHandler {
           message: err instanceof Error ? err.message : 'Internal MCP execution error',
         },
       };
+    }
+  }
+
+  private async executeToolInternal(
+    userId: string,
+    id: string | number | null,
+    name: string | undefined,
+    args: Record<string, unknown>,
+  ): Promise<McpResponse> {
+    switch (name) {
+      // --- READ TOOLS ---
+      case 'list_projects': {
+        const companyId = typeof args.companyId === 'string' ? args.companyId : '';
+        const res = await this.projects.list(userId, companyId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'get_page_structure': {
+        const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+        const res = await this.pages.listForProject(userId, projectId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'list_trackings': {
+        const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+        const res = await this.trackingService.listTrackingsForProject(userId, projectId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'get_tracking': {
+        const trackingId = typeof args.trackingId === 'string' ? args.trackingId : '';
+        const res = await this.trackingService.getTracking(userId, trackingId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'list_properties': {
+        const companyId = typeof args.companyId === 'string' ? args.companyId : '';
+        const projectId = typeof args.projectId === 'string' ? args.projectId : null;
+        const res = await this.trackingService.listProperties(userId, companyId, projectId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'get_property': {
+        const propertyId = typeof args.propertyId === 'string' ? args.propertyId : '';
+        const res = await this.trackingService.getProperty(userId, propertyId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'get_reconciliation_report': {
+        const companyId = typeof args.companyId === 'string' ? args.companyId : '';
+        const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+        const res = await this.trackingService.generateReconciliationReport(
+          userId,
+          companyId,
+          projectId,
+        );
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'list_navigation_events': {
+        const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+        const res = await this.trackingService.listNavigationEvents(userId, projectId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'get_navigation_event': {
+        const navigationEventId =
+          typeof args.navigationEventId === 'string' ? args.navigationEventId : '';
+        const res = await this.trackingService.getNavigationEvent(userId, navigationEventId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'get_destination': {
+        const destinationId = typeof args.destinationId === 'string' ? args.destinationId : '';
+        const res = await this.trackingService.getDestination(userId, destinationId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'list_destinations': {
+        const companyId = typeof args.companyId === 'string' ? args.companyId : '';
+        const projectId = typeof args.projectId === 'string' ? args.projectId : null;
+        const res = await this.trackingService.listDestinations(userId, companyId, projectId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'get_property_destinations': {
+        const propertyId = typeof args.propertyId === 'string' ? args.propertyId : '';
+        const res = await this.trackingService.getPropertyDestinations(userId, propertyId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'list_modules': {
+        const companyId = typeof args.companyId === 'string' ? args.companyId : '';
+        const projectId = typeof args.projectId === 'string' ? args.projectId : null;
+        const res = await this.trackingService.listModules(userId, companyId, projectId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'get_module': {
+        const moduleId = typeof args.moduleId === 'string' ? args.moduleId : '';
+        const res = await this.trackingService.getModule(userId, moduleId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'list_flows': {
+        const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+        const res = await this.trackingService.listFlowsForProject(userId, projectId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'get_flow': {
+        const flowId = typeof args.flowId === 'string' ? args.flowId : '';
+        const res = await this.trackingService.getFlow(userId, flowId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'list_triggers': {
+        const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+        const res = await this.trackingService.listTriggersForProject(userId, projectId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'get_trigger': {
+        const triggerId = typeof args.triggerId === 'string' ? args.triggerId : '';
+        const res = await this.trackingService.getTrigger(userId, triggerId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'list_versions': {
+        const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+        const res = await this.trackingService.listVersionsForProject(userId, projectId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'get_version': {
+        const versionId = typeof args.versionId === 'string' ? args.versionId : '';
+        const res = await this.trackingService.getVersion(userId, versionId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      // --- WRITE TOOLS (DRAFT ONLY) ---
+      case 'create_page': {
+        const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+        const res = await this.pages.create(userId, projectId, args as unknown as PageCreateInput);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'create_property': {
+        const companyId = typeof args.companyId === 'string' ? args.companyId : '';
+        const projectId = typeof args.projectId === 'string' ? args.projectId : null;
+        const res = await this.trackingService.createProperty(
+          userId,
+          companyId,
+          projectId,
+          args as unknown as PropertyCreateInput,
+        );
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'create_module': {
+        const companyId = typeof args.companyId === 'string' ? args.companyId : '';
+        const projectId = typeof args.projectId === 'string' ? args.projectId : null;
+        const res = await this.trackingService.createModule(
+          userId,
+          companyId,
+          projectId,
+          args as unknown as ModuleCreateInput,
+        );
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'create_destination': {
+        const companyId = typeof args.companyId === 'string' ? args.companyId : '';
+        const projectId = typeof args.projectId === 'string' ? args.projectId : null;
+        const res = await this.trackingService.createDestination(
+          userId,
+          companyId,
+          projectId,
+          args as unknown as DestinationCreateInput,
+        );
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'create_tracking': {
+        const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+        const res = await this.trackingService.createTracking(
+          userId,
+          projectId,
+          args as unknown as TrackingCreateInput,
+        );
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'apply_module_to_tracking': {
+        const trackingId = typeof args.trackingId === 'string' ? args.trackingId : '';
+        const moduleId = typeof args.moduleId === 'string' ? args.moduleId : '';
+        const res = await this.trackingService.applyModuleToTracking(userId, trackingId, moduleId);
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'remove_property_from_tracking': {
+        const trackingId = typeof args.trackingId === 'string' ? args.trackingId : '';
+        const propertyId = typeof args.propertyId === 'string' ? args.propertyId : '';
+        const res = await this.trackingService.removePropertyFromTracking(
+          userId,
+          trackingId,
+          propertyId,
+        );
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'create_navigation_event': {
+        const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+        const res = await this.trackingService.createNavigationEvent(
+          userId,
+          projectId,
+          args as unknown as NavigationEventCreateInput,
+        );
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'set_property_destinations': {
+        const propertyId = typeof args.propertyId === 'string' ? args.propertyId : '';
+        const destinationIds = Array.isArray(args.destinationIds) ? args.destinationIds : [];
+        const nameOverrides = (args.nameOverrides ?? {}) as Record<string, string>;
+        const mappings = (destinationIds as string[]).map((destId) => ({
+          destinationId: destId,
+          destinationNameOverride: nameOverrides[destId] ?? null,
+        }));
+        const res = await this.trackingService.setPropertyDestinations(
+          userId,
+          propertyId,
+          mappings,
+        );
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'set_specific_value': {
+        const trackingId = typeof args.trackingId === 'string' ? args.trackingId : '';
+        const propertyId = typeof args.propertyId === 'string' ? args.propertyId : '';
+        const value = typeof args.value === 'string' ? args.value : '';
+        // Find the TrackingProperty ID by getting the tracking and finding the property
+        const trackingRes = await this.trackingService.getTracking(userId, trackingId);
+        if (!trackingRes.ok) return this.formatError(id, trackingRes.error);
+        const trackingProp = trackingRes.value.properties.find((p) => p.propertyId === propertyId);
+        if (!trackingProp) {
+          return {
+            jsonrpc: '2.0',
+            id,
+            error: {
+              code: -32001,
+              message: 'Property not found on tracking',
+            },
+          };
+        }
+        const res = await this.trackingService.setSpecificValue(userId, trackingProp.id, {
+          value,
+        });
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'create_flow': {
+        const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+        const res = await this.trackingService.createFlow(
+          userId,
+          projectId,
+          args as unknown as FlowCreateInput,
+        );
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'set_flow_graph': {
+        const flowId = typeof args.flowId === 'string' ? args.flowId : '';
+        const res = await this.trackingService.setFlowGraph(
+          userId,
+          flowId,
+          args as unknown as FlowGraphInput,
+        );
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      case 'create_trigger': {
+        const projectId = typeof args.projectId === 'string' ? args.projectId : '';
+        const res = await this.trackingService.createTrigger(
+          userId,
+          projectId,
+          args as unknown as TriggerCreateInput,
+        );
+        if (!res.ok) return this.formatError(id, res.error);
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: { content: [{ type: 'text', text: JSON.stringify(res.value) }] },
+        };
+      }
+
+      default:
+        return {
+          jsonrpc: '2.0',
+          id,
+          error: { code: -32601, message: `Tool not found: ${String(name)}` },
+        };
     }
   }
 

@@ -1,10 +1,12 @@
 import type { AuthService } from '@project/application/auth/auth-service';
 import type { SessionService } from '@project/application/auth/session-service';
+import type { AccountRepository } from '@project/application/ports/account-repository';
 import type { FastifyInstance } from 'fastify';
 
 export interface AuthRoutesOptions {
   auth: AuthService;
   sessions: SessionService;
+  accounts: AccountRepository;
   cookieName: string;
   sessionTtlMs: number;
 }
@@ -59,7 +61,13 @@ export function registerAuthRoutes(app: FastifyInstance, options: AuthRoutesOpti
     const cookies = request.cookies as Record<string, string | undefined>;
     const token = cookies[options.cookieName];
     if (token !== undefined) {
-      await options.sessions.destroy(token);
+      const userId = await options.sessions.resolve(token);
+      let companyId: string | null = null;
+      if (userId !== null) {
+        const user = await options.accounts.getUserById(userId);
+        companyId = user?.companyId ?? null;
+      }
+      await options.sessions.destroy(token, userId, companyId);
     }
     reply.clearCookie(options.cookieName, { path: '/' });
     return { ok: true };

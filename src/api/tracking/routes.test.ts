@@ -134,13 +134,14 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
       .execute();
 
     const accounts = new SqliteAccountRepository(connection.kysely);
+    const auditLogRepo = new SqliteAuditLogRepository(connection.kysely);
     const sessionRepo = new SqliteSessionRepository(connection.kysely);
-    sessions = new SessionService(sessionRepo, TTL_MS);
+    sessions = new SessionService(sessionRepo, TTL_MS, auditLogRepo);
     const serviceTokens = new ServiceTokenService(
       new SqliteServiceTokenRepository(connection.kysely),
       accounts,
     );
-    auth = new AuthService(accounts, hasher, sessions);
+    auth = new AuthService(accounts, hasher, sessions, auditLogRepo);
     const permissions = new PermissionService(accounts);
 
     const projectRepo = new SqliteProjectRepository(connection.kysely);
@@ -155,7 +156,6 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     const triggerRepo = new SqliteTriggerRepository(connection.kysely);
     const versionRepo = new SqliteVersionRepository(connection.kysely);
     const sharedPasswordRepo = new SqliteSharedPasswordRepository(connection.kysely);
-    const auditLogRepo = new SqliteAuditLogRepository(connection.kysely);
 
     const searchIndex = new InMemorySearchIndex();
 
@@ -185,6 +185,7 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     registerAuthRoutes(app, {
       auth,
       sessions,
+      accounts,
       cookieName,
       sessionTtlMs: TTL_MS,
     });

@@ -1733,7 +1733,7 @@ export class SqliteAuditLogRepository implements AuditLogRepository {
 
   private toEntity(row: {
     id: string;
-    company_id: string;
+    company_id: string | null;
     project_id: string | null;
     actor_id: string;
     actor_kind: string | null;

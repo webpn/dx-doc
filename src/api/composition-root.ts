@@ -175,10 +175,10 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
 
   const hasher = new BcryptPasswordHasher();
   const sessionTtlMs = parseDurationToMs(config.AUTH_SESSION_TTL);
-  const sessionService = new SessionService(sessions, sessionTtlMs);
+  const sessionService = new SessionService(sessions, sessionTtlMs, auditLogs);
   const serviceTokenService = new ServiceTokenService(serviceTokens, accounts);
   const permissions = new PermissionService(accounts);
-  const auth = new AuthService(accounts, hasher, sessionService);
+  const auth = new AuthService(accounts, hasher, sessionService, auditLogs);
   const bootstrap = new BootstrapService(accounts, hasher);
   // Email delivery is fire-and-forget; an instance without SMTP configured
   // uses the no-op sender rather than failing resets (REQ-SEC-013).
@@ -196,6 +196,7 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
     emailSender,
     config.APP_URL,
     passwordResetTtlMs,
+    auditLogs,
   );
   const companyService = new CompanyService(accounts, companies, permissions);
 
@@ -284,8 +285,10 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
     lifecycle,
     companyService,
     grantService,
+    accounts,
     cookieName: SESSION_COOKIE_NAME,
     sessionTtlMs,
+    auditLogs,
   });
 
   // Error tracking (REQ-FDN-014): capture unhandled server errors at the
