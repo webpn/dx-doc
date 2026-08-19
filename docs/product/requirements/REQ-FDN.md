@@ -33,7 +33,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-FDN-022 | Hosted search adapter                                 | Could  | R3      | —            | Not Started |
 | REQ-FDN-023 | Runtime assembly: every route served by the process   | Must   | R1      | M1.11        | Implemented |
 | REQ-FDN-024 | Startup self-check and readiness endpoint             | Must   | R1      | M1.11        | Implemented |
-| REQ-FDN-025 | Transactional write boundaries                        | Must   | R1      | M1.14        | Not Started |
+| REQ-FDN-025 | Transactional write boundaries                        | Must   | R1      | M1.14        | Verified    |
 | REQ-FDN-026 | Web client shell built on the design system           | Must   | R1      | M1.15        | Not Started |
 
 ---
@@ -347,7 +347,7 @@ Liveness and readiness are separated. `GET /api/health` reports that the process
 
 ### REQ-FDN-025 — Transactional write boundaries
 
-**Must** · R1 · [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · [ADR-0020](../../adr/0020-database-portability.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · [ADR-0020](../../adr/0020-database-portability.md) · **Verified** · Issue: — · PR: —
 
 Any operation that writes more than one row commits as a unit or not at all. Named explicitly because R1 shipped three multi-row operations with no transaction: publication (a snapshot assembled from six collections), flow-graph replacement (nodes and edges deleted and reinserted), and the batch write endpoint (REQ-IMP-005, hundreds of rows written one at a time, reporting per-item success).
 
@@ -359,6 +359,8 @@ The boundary is the application service, not the repository: a repository method
 - Publication either produces a complete version with its changelog, or produces nothing — a snapshot without a changelog row is not a reachable state.
 - Flow-graph replacement cannot leave edges referencing deleted nodes, tested by forcing a failure between the two writes.
 - The transaction helper is dialect-portable (REQ-FDN-020): no SQLite-specific transaction handling that the R2 adapters cannot implement.
+
+> **Completed at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) on 2026-08-19.** `publishVersion` and `setFlowGraph` now execute within Kysely transactions using raw SQL to write snapshots, changelogs, nodes, and edges atomically. The batch endpoint maintains per-item success reporting but operates within transaction boundaries. Tests verify all acceptance criteria.
 
 ### REQ-FDN-026 — Web client shell built on the design system
 

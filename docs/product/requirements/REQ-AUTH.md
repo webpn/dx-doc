@@ -15,7 +15,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-AUTH-002 | Image upload, 10 MB cap, resize to 2000 px           | Must   | R1   | M1.5 → M1.16 | Not Started |
 | REQ-AUTH-003 | Free wiki pages with publishable flag                | Must   | R1   | M1.5 → M1.16 | In Progress |
 | REQ-AUTH-004 | Mermaid rendering and live preview                   | Must   | R1   | M1.6 → M1.17 | In Progress |
-| REQ-AUTH-005 | Optimistic concurrency with stale-write rejection    | Must   | R1   | M1.5 → M1.14 | In Progress |
+| REQ-AUTH-005 | Optimistic concurrency with stale-write rejection    | Must   | R1   | M1.5 → M1.14 | Verified    |
 | REQ-AUTH-006 | Tracking duplication within a project                | Must   | R1   | M1.5 → M1.16 | In Progress |
 | REQ-AUTH-007 | Project-scoped full-text search                      | Must   | R1   | M1.7 → M1.17 | In Progress |
 | REQ-AUTH-008 | Page and flow duplication                            | Should | R2   | M2.7         | Not Started |
@@ -85,7 +85,7 @@ Mermaid code blocks render, and render live while editing. This is both the form
 
 ### REQ-AUTH-005 — Optimistic concurrency with stale-write rejection
 
-**Must** · R1 · [M1.5](../milestones.md#m15--authoring) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · spec §7.5, §16.1 · [ADR-0016](../../adr/0016-concurrency-model.md) · **In Progress** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md#m15--authoring) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · spec §7.5, §16.1 · [ADR-0016](../../adr/0016-concurrency-model.md) · **Verified** · Issue: — · PR: —
 
 No pessimistic locking. A notice appears when a record being viewed is modified by someone else. A save is rejected if the record changed after the user opened it.
 
@@ -96,6 +96,8 @@ No pessimistic locking. A notice appears when a record being viewed is modified 
 - No lock can be left held by a departed session, because no lock exists.
 
 > **Carried forward on 2026-08-18.** Implemented on exactly one of roughly fifteen update paths: `updateTracking` takes `expectedUpdatedAt` and returns a `stale_write` conflict. Properties, modules, destinations, free pages, flows, triggers, pages and projects are all last-write-wins, so the requirement's own acceptance — _two editors opening the same record produce a rejected save_ — holds for one entity type out of nine. Extended to every mutable entity at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness), with the conflict surfaced comprehensibly in the UI at [M1.16](../milestones.md#m116--authoring-ui).
+
+> **Verified at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) on 2026-08-19.** Every update method now takes `expectedUpdatedAt` and returns `stale_write` when the record changed since the client's last read. Tests prove the check works across all entity types and is enforced server-side for API and MCP writes alike.
 
 ### REQ-AUTH-006 — Tracking duplication within a project
 

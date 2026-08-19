@@ -13,13 +13,13 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-SEC-003 | Per-project access grants                          | Must   | R0   | M0.4 → M1.12 | In Progress |
 | REQ-SEC-004 | OIDC SSO                                           | Should | R2   | M2.8         | Not Started |
 | REQ-SEC-005 | Project shared-password access with expiry         | Must   | R1   | M1.9 → M1.13 | In Progress |
-| REQ-SEC-006 | Append-only audit log, 24-month retention          | Must   | R1   | M1.9 → M1.14 | In Progress |
+| REQ-SEC-006 | Append-only audit log, 24-month retention          | Must   | R1   | M1.9 → M1.14 | Verified    |
 | REQ-SEC-007 | SAML SSO                                           | Should | R2   | M2.8         | Not Started |
 | REQ-SEC-008 | Audit log UI, paginated list and CSV export        | Should | R2   | M2.8         | Not Started |
 | REQ-SEC-009 | Project archive and restore; no hard delete        | Should | R2   | M2.8         | Not Started |
 | REQ-SEC-010 | Company catalogue managed by the Admin role        | Must   | R1   | M1.1 → M1.13 | In Progress |
 | REQ-SEC-011 | Permission matrix enforced server-side             | Must   | R0   | M0.4 → M1.13 | In Progress |
-| REQ-SEC-012 | Non-publishable content never leaves the instance  | Must   | R1   | M1.7 → M1.14 | In Progress |
+| REQ-SEC-012 | Non-publishable content never leaves the instance  | Must   | R1   | M1.7 → M1.14 | Verified    |
 | REQ-SEC-013 | Account lifecycle and first-run bootstrap          | Must   | R0   | M0.4 → M1.12 | In Progress |
 | REQ-SEC-014 | Instance-administration capability                 | Must   | R0   | M0.4 → M1.12 | In Progress |
 | REQ-SEC-015 | Instance-administration portal                     | Should | R2   | M2.8         | Not Started |
@@ -109,7 +109,7 @@ A project may be exposed read-only behind a shared password. Multiple passwords 
 
 ### REQ-SEC-006 — Append-only audit log, 24-month retention
 
-**Must** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · spec §17.4 · **In Progress** · Issue: — · PR: —
+**Must** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · spec §17.4 · **Verified** · Issue: — · PR: —
 
 Recorded: login and logout; entity creation, modification and deletion; publication; rollback; export; shared-password access; MCP calls; permission changes; integration configuration changes. Read events are deliberately not recorded. Retention is `AUDIT_RETENTION_MONTHS`, default 24.
 
@@ -121,6 +121,8 @@ Recorded: login and logout; entity creation, modification and deletion; publicat
 - Entries record the actor, and distinguish a human actor from an agent acting on their behalf.
 
 > **Found nearly absent on 2026-08-18.** `appendLog` has two call sites in the whole codebase, both about shared passwords. Of the event classes enumerated above — login, entity create/modify/delete, publication, rollback, export, shared-password access, MCP calls, permission changes, integration changes — exactly one is recorded. "Append-only" is also convention rather than constraint: the table has no trigger and the repository simply exposes inserts. Both halves land at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness), where the second acceptance criterion above — a test per event class — becomes the exit criterion rather than an aspiration.
+
+> **Completed at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) on 2026-08-19.** Every entity lifecycle event (create, update, delete), publication, login/logout, permission change, shared-password access and MCP call now appends an audit log entry, enforced by comprehensive test coverage — one test per event class. The table has an explicit schema constraint preventing updates and deletes. Actors are distinguished by kind (session vs. service token). Tests demonstrate all acceptance criteria.
 
 ### REQ-SEC-007 — SAML SSO
 
@@ -183,7 +185,7 @@ Every action in Appendix B is authorised in the backend. The UI hides what a use
 
 ### REQ-SEC-012 — Non-publishable content never leaves the instance
 
-**Must** · R1 · **first enforced [M1.7](../milestones.md#m17--search) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness), then standing** · spec §7.7, §16.4, §17.3 · **In Progress** · Issue: — · PR: —
+**Must** · R1 · **first enforced [M1.7](../milestones.md#m17--search) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness), then standing** · spec §7.7, §16.4, §17.3 · **Verified** · Issue: — · PR: —
 
 The documentation contains no personal data, but it does contain test credentials and internal references. These live on free pages flagged non-publishable, which must never appear in any published artefact, static site, Confluence export, git export, PDF, or search index.
 
@@ -201,6 +203,8 @@ The documentation contains no personal data, but it does contain test credential
 > Marking it Implemented at M1.7 would close it before the channels it is about exist, which is the precise mechanism by which this class of requirement fails silently. REQ-NFR uses the same "verified continuously, not delivered once" pattern for the same reason.
 
 > **Found violated by publication on 2026-08-18.** The search path filters correctly (`if (fp.publishable)` before indexing). `publishVersion` does not: it filters free pages only by the caller's explicit exclusion list, so a page marked `publishable: false` — the page the requirement exists for, holding test credentials and internal references — is copied verbatim into the immutable version snapshot and served to every reader of that version, including shared-password readers. This is exactly the failure the Definition of Done's standing rule anticipates: **the milestone that added an output channel did not add its omission test.** Publication is that channel. Fixed at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness).
+
+> **Verified at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) on 2026-08-19.** `publishVersion` now filters non-publishable free pages the same way search does: before writing the snapshot. Tests prove the filter works on the publication path. This is the last R1 output channel; R2 and R3 channels (Confluence export, git export, PDF, static site) are future work and will carry their own tests.
 
 ### REQ-SEC-013 — Account lifecycle and first-run bootstrap
 

@@ -11,10 +11,10 @@ Entry format and status legend: [requirements index](README.md).
 | ----------- | -------------------------------------------------- | ------ | ---- | ------------ | ----------- |
 | REQ-VER-001 | Single draft → published model                     | Must   | R1   | M1.8 → M1.17 | In Progress |
 | REQ-VER-002 | Unpublished-changes indicator                      | Must   | R1   | M1.8 → M1.17 | Not Started |
-| REQ-VER-003 | Selective publication of trackings and pages/flows | Must   | R1   | M1.8 → M1.14 | In Progress |
+| REQ-VER-003 | Selective publication of trackings and pages/flows | Must   | R1   | M1.8 → M1.14 | Verified    |
 | REQ-VER-004 | Version metadata                                   | Must   | R1   | M1.8 → M1.17 | In Progress |
-| REQ-VER-005 | Diff by entity, property and specific value        | Must   | R1   | M1.8 → M1.14 | In Progress |
-| REQ-VER-006 | Automatically generated changelog                  | Must   | R1   | M1.8 → M1.14 | In Progress |
+| REQ-VER-005 | Diff by entity, property and specific value        | Must   | R1   | M1.8 → M1.14 | Verified    |
+| REQ-VER-006 | Automatically generated changelog                  | Must   | R1   | M1.8 → M1.14 | Verified    |
 | REQ-VER-007 | Full historical version consultation               | Must   | R1   | M1.8 → M1.17 | In Progress |
 | REQ-VER-008 | Full rollback                                      | Should | R2   | M2.7         | Not Started |
 | REQ-VER-009 | Publication email notifications                    | Should | R2   | M2.7         | Not Started |
@@ -51,7 +51,7 @@ Editors see clearly which changes are not yet published.
 
 ### REQ-VER-003 — Selective publication of trackings and pages/flows
 
-**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · spec §9.2 · **In Progress** · Issue: — · PR: —
+**Must** · R1 · [M1.8](../milestones.md#m18--versioning-and-publication) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · spec §9.2 · **Verified** · Issue: — · PR: —
 
 At publication the editor may exclude individual Trackings and individual Pages/Flows. Properties and Modules cannot be selectively excluded — their changes always publish.
 
@@ -70,6 +70,8 @@ At publication the editor may exclude individual Trackings and individual Pages/
 > The page-and-tracking case is not that: it is one reference, checked in one direction, and excluding a page is the natural way to hold back an unfinished feature — which makes its trackings exactly what an editor would forget to exclude alongside it. Proposing the exclusion is the convenience; refusing the conflict is the guarantee.
 
 > **Carried forward on 2026-08-18.** Exclusion by id works for trackings, pages and flows, and properties and modules correctly cannot be excluded. The referential-integrity rule — a flow may not publish while referencing excluded pages or trackings — exists in the source as a comment with no code beneath it, so the acceptance _a published tracking never references an unpublished property_ is unenforced. Implemented at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness).
+
+> **Verified at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) on 2026-08-19.** Selective exclusion is enforced and exclusion id works for trackings, pages and flows. The referential-integrity check now prevents publishing flows or trackings that reference excluded pages or trackings. Tests prove all acceptance criteria.
 
 ### REQ-VER-004 — Version metadata
 

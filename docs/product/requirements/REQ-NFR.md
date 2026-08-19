@@ -24,7 +24,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-NFR-012 | Localised date and number formats            | —      | M1.5 → M1.15     | Not Started |
 | REQ-NFR-013 | WCAG AA as a design principle, not a gate    | —      | — (review only)  | Accepted    |
 | REQ-NFR-014 | Observability sufficient for troubleshooting | —      | M1.9 → M1.17     | Not Started |
-| REQ-NFR-015 | Query-path index coverage                    | —      | M1.14            | Not Started |
+| REQ-NFR-015 | Query-path index coverage                    | —      | M1.14            | Verified    |
 
 ---
 
