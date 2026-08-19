@@ -380,6 +380,32 @@ The fix is not ten patches. A single **deny-by-default authorisation helper** (R
 
 The design system stops being `export {}`. shadcn/ui components brought in as source, kept close to upstream per [ADR-0011](../adr/0011-ui-library-selection.md) and [ADR-0008](../adr/0008-design-system-boundary.md), with the token set as the single source of visual values. The application shell: authenticated layout, company and project switcher, navigation chrome, error and empty states. **Server state through TanStack Query** ([ADR-0012](../adr/0012-data-fetching-strategy.md)) with project-scoped query keys so a cache entry cannot cross a project boundary; **local state through Zustand** ([ADR-0013](../adr/0013-state-management.md)), small per-slice stores. Login, logout, forced password change at first login (REQ-SEC-013), password reset, and the project list filtered to the caller's grants. Desktop-only layout (REQ-NFR-007), English with the translation seam in place (REQ-NFR-010), localised dates and numbers (REQ-NFR-012).
 
+#### M1.15 implementation plan
+
+The work is deliberately limited to the client foundation. Authoring, consultation, publication and reader-mode screens remain in M1.16 and M1.17.
+
+1. **Design-system foundation:** define the central visual tokens; add accessible shadcn/ui-based primitives for buttons, inputs, labels, alerts, dialogs, menus, cards, tables, skeletons and application layout; export them only through `@project/design-system`; record every deliberate upstream divergence.
+2. **API client:** add a typed browser client for authentication, companies and projects; normalize API errors; keep HTTP and cookie handling outside React components; add request tests for success, validation, unauthorized and forbidden responses.
+3. **Server-state foundation:** add TanStack Query with retries disabled in tests; define query-key helpers whose company and project scopes are explicit; add authenticated-user, company and accessible-project queries plus login, logout, password-change and project mutations with targeted invalidation.
+4. **Authentication flow:** implement login, logout, forced first-login password change and password-reset request/reset routes; expose loading, validation, authentication-error, network-error and success states.
+5. **Authenticated shell:** implement the desktop application frame, header, company/project context, navigation chrome, current-user actions, loading states, empty states and error states. URL state remains the source of truth for selected company and project.
+6. **Project access surface:** implement the project list using server state returned by the API, showing only projects accessible to the actor; switching projects changes the URL and uses project-scoped query keys.
+7. **Acceptance path:** run the real browser flow from bootstrap login through forced password change, company and project creation, editor grant and editor project-list visibility. No seeded database or direct API setup is permitted in the M1.15 acceptance test.
+
+#### M1.15 UI design validation
+
+UI decisions are validated through a repeatable design-review surface rather than code inspection alone.
+
+- A `/design-review` route presents every foundation primitive in default, hover, focus, disabled, loading, empty, validation-error and network-error states.
+- Visual review is performed at the supported desktop width and at the minimum supported width, with screenshots retained for meaningful design changes.
+- Keyboard review covers tab order, visible focus, Enter/Space activation, Escape handling, dialog focus trapping and menu navigation.
+- Accessibility review checks landmarks, accessible names, error associations, status announcements, contrast and non-color status cues using the browser accessibility tree.
+- Component tests verify behavior and state transitions; snapshots are not the primary visual specification.
+- Playwright covers the real M1.15 acceptance path against a running instance and verifies that the visible project list matches the authenticated grants.
+- Each non-obvious design decision records the user problem, chosen pattern, alternatives, accessibility implications, responsive behavior and whether the pattern belongs in the design system or a feature component.
+
+The M1.15 review artifact is the combination of the design-review route, component tests, screenshots, accessibility observations and the Playwright acceptance result. A non-developer can therefore validate both the visual decision and the underlying behavior without reading the implementation.
+
 **Depends on:** M1.12 — the screens need grants and lifecycle endpoints to be worth building
 
 **Exit:** the bootstrap administrator logs in through the browser, is forced to change the password, creates a company, creates a project, grants an editor, and that editor sees exactly that project on login — the whole path in a Playwright test against a real instance, with no API client and no seeded database; a component imported from a shadcn path outside `@project/design-system` fails lint.
