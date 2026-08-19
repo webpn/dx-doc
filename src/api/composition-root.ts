@@ -304,7 +304,7 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
   // ── Production static serving + SPA fallback ────────────────────────────
   const distDir = path.resolve(process.cwd(), 'dist');
   if (existsSync(distDir) && statSync(distDir).isDirectory()) {
-    void app.register(fastifyStatic, { root: distDir, serve: false });
+    void app.register(fastifyStatic, { root: distDir });
     app.setNotFoundHandler((request, reply) => {
       if (request.method === 'GET' && !request.url.startsWith('/api')) {
         return reply.sendFile('index.html');

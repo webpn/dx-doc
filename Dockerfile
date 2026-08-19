@@ -5,7 +5,7 @@
 # `glibc` (Debian) is used rather than Alpine so better-sqlite3 works; and the
 # build toolchain is installed because there is no linux-arm64 prebuilt binary
 # (on Apple Silicon) so node-gyp compiles it during `npm ci`.
-FROM node:20-slim
+FROM node:22-slim
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends python3 make g++ \
