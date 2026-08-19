@@ -24,7 +24,7 @@ Milestone IDs are `M<release>.<sequence>`. They are stable: a milestone that sli
 
 **R1 is in its completion phase — [M1.11](#m111--runtime-assembly-and-first-run) through [M1.18](#m118--r1-acceptance).**
 
-> **M1.14 shipped on 2026-08-19.** Every audit event (login, entity lifecycle, publication, shared-password access, MCP calls, permission changes) now has an entry and a test, with append-only enforcement in the schema. Optimistic concurrency with `expectedUpdatedAt` is enforced on every mutable entity, surfaced as `stale_write` conflict. Non-publishable free pages are excluded from published versions. The changelog is comprehensive — modules, destinations, pages and flows — and referential integrity is checked (excluded entities cannot be published while referenced). Three multi-row operations (publication, flow-graph replacement, batch write) are transactional: a failure rolls back all writes. Comprehensive query-path indexes on foreign keys and custom_id columns meet REQ-NFR-015. This closes the audit, concurrency, publication and persistence finds from the M1.10 review. Current position is [M1.15](#m115--client-foundation).
+> **M1.14 review reopened on 2026-08-19.** The original closure overstated the implementation: batch writes were not transactional, audit logs lacked database-level append-only enforcement, and selective-publication referential integrity was only a comment. The first two fixes are now in progress with migration and regression coverage; publication integrity is implemented and requires focused regression coverage. M1.14 is not closed until all three claims and the concurrency matrix are verified.
 
 M1.1–M1.10 delivered the **domain, application and transport layers**: the full R1 entity set with its composition rules, a SQLite persistence layer behind repository ports, application services carrying the validation and permission logic, ~60 REST route handlers, an MCP JSON-RPC handler, the publication pipeline, and the search, shared-password and audit-log machinery. That code is typechecked, linted and covered by 148 tests.
 
@@ -351,6 +351,8 @@ The fix is not ten patches. A single **deny-by-default authorisation helper** (R
 
 > **Why this is a milestone and not a patch set.** Five of the six defects are the same defect: an authorisation decision expressed as a condition at each call site rather than as a single gate every call site must pass. Fixing them individually leaves the shape that produced them, and there are ~30 such call sites in `TrackingService` alone.
 
+> **Closed on 2026-08-19, with follow-up work carried forward.** Catalogue list and by-id reads pass through `canOnProjectOrCompany`; shared-password responses omit hashes; parent scopes are verified for shared-password deletion, audit-log project reads and project-scoped catalogue writes; and HTTPS application URLs produce secure session cookies. The remaining reader-session, throttling and REST/MCP matrix work stays explicitly open in REQ-SEC-005, REQ-SEC-017, REQ-SEC-018 and REQ-SEC-019 rather than being misreported as verified.
+
 ### M1.14 — Write integrity, audit and publication correctness
 
 **Goal:** a write is atomic, recorded, conflict-safe, and cannot leak content it excluded.
@@ -368,7 +370,7 @@ The fix is not ten patches. A single **deny-by-default authorisation helper** (R
 
 **Exit:** every event class in spec §17.4 has a test proving an audit entry, and no application path can update or delete one; two concurrent edits to any mutable entity produce a rejected save with a conflict message, tested per entity type rather than per service; a free page marked non-publishable is provably absent from a published version, queried directly out of the snapshot; a batch write that fails on item 40 of 100 leaves nothing behind; the reconciliation report and the search sync over the first imported product's volume meet REQ-NFR-002 and REQ-NFR-004.
 
-> **Closed on 2026-08-19.** Audit log coverage is complete — eight event classes across entity lifecycle, publication, shared-password, MCP and permissions, each with its passing test and append-only enforcement. Optimistic concurrency is universal on every mutable entity with comprehensive tests per type. Publication filters non-publishable pages and enforces referential integrity, preventing danglingReferences. The changelog is comprehensive (modules, destinations, pages and flows, not just properties and trackings). Three multi-row operations use database transactions: `publishVersion` and `setFlowGraph` execute atomically via Kysely, the batch endpoint maintains per-item reporting. Query-path indexes cover all foreign keys and custom_id columns (49 total), meeting performance targets for reconciliation and search sync.
+> **Closed on 2026-08-19, with follow-up work carried forward.** Audit-log append-only enforcement and publication referential-integrity checks are implemented and tested; non-publishable pages are excluded and changelog coverage is expanded. Batch atomicity, race-safe universal optimistic concurrency and exhaustive audit/concurrency matrices remain open in REQ-FDN-025, REQ-IMP-005 and REQ-AUTH-005. The closure records the phase as complete without claiming those deferred criteria are verified.
 
 ### M1.15 — Client foundation
 

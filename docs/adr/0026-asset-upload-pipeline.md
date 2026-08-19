@@ -78,7 +78,7 @@ follows the configuration surface as it already exists
 how the content that embeds these URLs works: a Markdown `![](url)` is
 rendered by the reader's browser with no opportunity to attach an
 `Authorization` header. This is a narrower guarantee than
-[REQ-FDN-008](../product/requirements/REQ-FDN.md#req-fdn-008--search-behind-an-authorised-route)'s
+[REQ-FDN-008](../product/requirements/REQ-FDN.md#req-fdn-008--search-scoping-enforced-server-side)'s
 authorised route for the search index artifact — that trade is accepted
 here because an image is not itself the documentation content REQ-SEC-012
 protects (a non-publishable free page's _text_ is never in an asset), and
@@ -167,7 +167,7 @@ to reach the port that decision already established, not whether to.
   incoming references from any other R1 entity, so deletion is
   unconditional).
 - `sharp`'s native binary must be present in the Docker build
-  ([REQ-FDN-012](../product/requirements/REQ-FDN.md#req-fdn-012--reference-deployment-stack)) —
+  ([REQ-FDN-012](../product/requirements/REQ-FDN.md#req-fdn-012--reference-deployment-stack-and-ci)) —
   it ships prebuilt binaries for the standard Linux/musl targets `npm
 install` already resolves, so no Dockerfile change beyond the existing
   `npm ci` step is expected, but this is verified when the reference stack

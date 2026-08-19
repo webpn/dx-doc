@@ -105,7 +105,7 @@ A project may be exposed read-only behind a shared password. Multiple passwords 
 - Non-publishable free pages are invisible in this mode (REQ-SEC-012).
 - Revoking one password does not affect the others.
 
-> **Found incomplete on 2026-08-18.** Three gaps. The list endpoint returns the stored records whole, bcrypt hash included, to anyone holding `project.read` ([REQ-SEC-017](#req-sec-017--secret-material-never-returned-by-a-read-path)); deletion is authorised on the project and executed on the id alone, so any editor can revoke any project's password ([REQ-SEC-018](#req-sec-018--parent-scope-verified-on-every-scoped-operation)); and verification returns a boolean and issues nothing, so there is no reader session and no mechanism behind "a project may be exposed read-only" — [REQ-VIEW-001](REQ-VIEW.md#req-view-001--in-app-read-only-view) has nothing to consume. Expiry and multiple-passwords-per-project do work as specified. The scoped read-only session is built at [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening).
+> **Partially hardened on 2026-08-19.** Shared-password list responses now omit the bcrypt hash, and deletion verifies that the password belongs to the project whose permission was checked. Expiry and multiple-passwords-per-project continue to work as specified. Verification still returns a boolean and issues no reader session; that remaining capability belongs to [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening).
 
 ### REQ-SEC-006 — Append-only audit log, 24-month retention
 
@@ -181,7 +181,7 @@ Every action in Appendix B is authorised in the backend. The UI hides what a use
 - An agent acting through MCP is bound by the consenting user's permissions, and additionally cannot publish, delete users or change permissions (see REQ-API-004).
 - Removing a UI control does not change the outcome of the equivalent direct API call.
 
-> **Found holed on 2026-08-18.** The matrix is enforced server-side and its rows are tested — but only where a project scope is present. Ten catalogue read paths take the company id from the request URL and check nothing at all, so the matrix is enforced over part of the surface and absent over the rest. The structural fix is [REQ-SEC-016](#req-sec-016--deny-by-default-authorisation-on-every-entry-point); this requirement's third acceptance criterion, _a test asserts the negative case for every entry point_, is what the cross-tenant matrix at [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) finally satisfies.
+> **Catalogue gap closed on 2026-08-19.** Catalogue list and by-id reads now pass through the shared authorization gate, with a cross-tenant test matrix covering all ten paths. Remaining M1.13 matrix work includes the other scoped operations and REST/MCP parity.
 
 ### REQ-SEC-012 — Non-publishable content never leaves the instance
 
@@ -278,11 +278,11 @@ Deliberately **not** a way into documentation content: the portal shows companie
 
 ### REQ-SEC-016 — Deny-by-default authorisation on every entry point
 
-**Must** · R1 · [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · [ADR-0010](../../adr/0010-project-scoped-isolation.md) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · [ADR-0010](../../adr/0010-project-scoped-isolation.md) · **Verified** · Issue: — · PR: —
 
 Every read and every write passes through **one** authorisation gate that takes the actor, the company scope, the optional project scope, and the action — and denies unless a rule permits. An entity whose project scope is null (a company-catalogue property, module, destination, template or free page) is a **company-scoped** decision, never an unchecked one.
 
-This is REQ-SEC-011 restated as a structural requirement rather than a behavioural one, because the behavioural form did not hold. The review of 2026-08-18 found ten read paths — `listProperties`, `listModules`, `listDestinations`, `listTrackingTemplates`, `listFreePages` and their by-id counterparts — that check the caller's grant when a project id is present and check nothing when it is null, taking the company id from the request URL. Any authenticated user could read any tenant's catalogue, including free pages marked non-publishable, which is where REQ-SEC-012 says test credentials live. The write paths were correct, and the difference is instructive: they resolve the company from the stored record, the read paths trusted the URL.
+This is REQ-SEC-011 restated as a structural requirement rather than a behavioural one, because the behavioural form did not hold. The review of 2026-08-18 found ten read paths — `listProperties`, `listModules`, `listDestinations`, `listTrackingTemplates`, `listFreePages` and their by-id counterparts — that checked the caller's grant when a project id was present and checked nothing when it was null, taking the company id from the request URL. The catalogue reads now pass through `canOnProjectOrCompany`, using the stored entity company for by-id reads and the requested company scope for lists; catalogue access is denied unless the caller is that company's Admin. A direct-service cross-tenant matrix covers all ten paths, including non-publishable free pages. The write paths already resolved the company from the stored record, while the read paths trusted the URL.
 
 **The fix is one gate, not ten patches.** Five of the six tenancy defects found were the same defect — an authorisation decision expressed as a condition at each of ~30 call sites instead of as a gate each call site must pass. Patching the sites leaves the shape that produced them.
 
@@ -296,11 +296,11 @@ This is REQ-SEC-011 restated as a structural requirement rather than a behaviour
 
 ### REQ-SEC-017 — Secret material never returned by a read path
 
-**Must** · R1 · [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · **In Progress** · Issue: — · PR: —
 
 No API response, MCP tool result, export artefact or log line contains a password hash, a session or service-token hash, a reset-token hash, or an encrypted company secret — in any field, under any role, including the roles that administer the thing the secret belongs to.
 
-Found in R1: `GET /projects/:id/shared-passwords` returns the stored records whole, bcrypt hash included, to any caller holding `project.read`. An offline attack on a project's shared password needs only a Viewer grant. The neighbouring cases are already correct and show the intended shape — session tokens are stored hashed and the raw value is returned exactly once, at creation, and never read back.
+Found in R1: `GET /projects/:id/shared-passwords` returned the stored records whole, bcrypt hash included, to any caller holding `project.read`. An offline attack on a project's shared password needed only a Viewer grant. The shared-password read model now omits the hash; the remaining response-shape audit across the whole route table is still pending.
 
 **Acceptance**
 
@@ -311,7 +311,7 @@ Found in R1: `GET /projects/:id/shared-passwords` returns the stored records who
 
 ### REQ-SEC-018 — Parent scope verified on every scoped operation
 
-**Must** · R1 · [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · **In Progress** · Issue: — · PR: —
 
 When an operation is authorised against one identifier and acts on another, the second must be proven to belong to the first. A permission checked on a project does not authorise acting on a record that merely happens to be named in the same request.
 
@@ -320,6 +320,8 @@ Three instances in R1, all the same shape:
 - `deleteSharedPassword` checks `project.edit` on the `projectId` in the path and then deletes by the shared-password id alone — so an editor on any project can delete any other project's shared password.
 - `listAuditLogs` checks `company.read_audit_log` on the company id and then lists by project id without verifying the project belongs to that company.
 - `createModule` and its four siblings write `company_id` straight from the URL after authorising against a project, without verifying the project belongs to that company — attributing rows to a tenant the actor has no relationship with.
+
+> **Partially hardened on 2026-08-19.** Shared-password deletion, audit-log project reads and all five project-scoped catalogue writes now verify the parent relationship. The complete mismatched-pair matrix for every scoped operation remains part of M1.13.
 
 **Acceptance**
 

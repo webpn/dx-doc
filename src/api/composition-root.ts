@@ -290,6 +290,7 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
     cookieName: SESSION_COOKIE_NAME,
     sessionTtlMs,
     auditLogs,
+    appUrl: config.APP_URL,
   });
 
   // Error tracking (REQ-FDN-014): capture unhandled server errors at the

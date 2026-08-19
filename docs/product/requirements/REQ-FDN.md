@@ -62,7 +62,7 @@ One deployed instance hosts multiple Companies. A Company is the tenant boundary
 - No query path can return rows from a company other than the caller's; this is enforced in the persistence layer, not in individual services.
 - A test creates two companies with identically named projects and properties and demonstrates full isolation.
 
-> **Carried forward on 2026-08-18.** The schema carries the tenancy boundary correctly — every table reaches a `company_id` directly or through its project. The application does not enforce it on read: ten catalogue read paths take the company id from the request URL without checking the caller belongs to it, so cross-company reads succeed against a correctly modelled schema. Tenancy is a runtime property, not only a schema property; [REQ-SEC-016](REQ-SEC.md#req-sec-016--deny-by-default-authorisation-on-every-entry-point) at [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) restores it.
+> **Verified on 2026-08-19.** The schema carries the tenancy boundary correctly — every table reaches a `company_id` directly or through its project. Catalogue reads now pass through the shared deny-by-default authorisation gate, and the cross-tenant matrix proves that a user from one company cannot read another company's catalogue. Tenancy is enforced as both a schema and runtime property through [REQ-SEC-016](REQ-SEC.md#req-sec-016--deny-by-default-authorisation-on-every-entry-point).
 
 ### REQ-FDN-003 — Projects with flat grouping labels
 
@@ -347,7 +347,7 @@ Liveness and readiness are separated. `GET /api/health` reports that the process
 
 ### REQ-FDN-025 — Transactional write boundaries
 
-**Must** · R1 · [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · [ADR-0020](../../adr/0020-database-portability.md) · **Verified** · Issue: — · PR: —
+**Must** · R1 · [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · [ADR-0020](../../adr/0020-database-portability.md) · **In Progress** · Issue: — · PR: —
 
 Any operation that writes more than one row commits as a unit or not at all. Named explicitly because R1 shipped three multi-row operations with no transaction: publication (a snapshot assembled from six collections), flow-graph replacement (nodes and edges deleted and reinserted), and the batch write endpoint (REQ-IMP-005, hundreds of rows written one at a time, reporting per-item success).
 
@@ -360,7 +360,7 @@ The boundary is the application service, not the repository: a repository method
 - Flow-graph replacement cannot leave edges referencing deleted nodes, tested by forcing a failure between the two writes.
 - The transaction helper is dialect-portable (REQ-FDN-020): no SQLite-specific transaction handling that the R2 adapters cannot implement.
 
-> **Completed at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) on 2026-08-19.** `publishVersion` and `setFlowGraph` now execute within Kysely transactions using raw SQL to write snapshots, changelogs, nodes, and edges atomically. The batch endpoint maintains per-item success reporting but operates within transaction boundaries. Tests verify all acceptance criteria.
+> **Phase closed at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) on 2026-08-19.** Publication and flow-graph replacement are transactional. Batch writes still report per-item results and are not yet atomic; the requirement remains **In Progress** until a failing item rolls back the entire batch.
 
 ### REQ-FDN-026 — Web client shell built on the design system
 

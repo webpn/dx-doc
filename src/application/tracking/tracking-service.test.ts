@@ -297,6 +297,95 @@ describe('TrackingService (M1.1 Application Service)', () => {
     expect(projProps[0]?.id).not.toBe(catPropRes.value.propertyId);
   });
 
+  it('denies cross-tenant catalogue reads for lists and by-id paths (REQ-SEC-016)', async () => {
+    const catalogueProperty = await trackingService.createProperty(adminId, companyId, null, {
+      name: 'tenant_boundary_property',
+    });
+    const catalogueModule = await trackingService.createModule(adminId, companyId, null, {
+      name: 'Tenant Boundary Module',
+    });
+    const catalogueDestination = await trackingService.createDestination(adminId, companyId, null, {
+      platform: 'ga4',
+      variableType: 'event_param',
+      identifier: 'tenant_boundary',
+      name: 'Tenant Boundary Destination',
+    });
+    const catalogueTemplate = await trackingService.createTrackingTemplate(
+      adminId,
+      companyId,
+      null,
+      { name: 'Tenant Boundary Template' },
+    );
+    const catalogueFreePage = await trackingService.createFreePage(adminId, companyId, null, {
+      title: 'Tenant Boundary Page',
+      slug: 'tenant-boundary-page',
+      content: 'secret catalogue content',
+      publishable: false,
+    });
+    if (
+      !catalogueProperty.ok ||
+      !catalogueModule.ok ||
+      !catalogueDestination.ok ||
+      !catalogueTemplate.ok ||
+      !catalogueFreePage.ok
+    ) {
+      throw new Error('catalogue setup failed');
+    }
+
+    const otherCompanyId = 'comp-11';
+    const otherCompanyRoleId = 'role-other-viewer';
+    const otherUserId = 'user-other-company';
+    const nowIso = t();
+    await connection.kysely
+      .insertInto('company')
+      .values({
+        id: otherCompanyId,
+        name: 'Other Corp',
+        slug: 'other-corp',
+        created_at: nowIso,
+        updated_at: nowIso,
+      })
+      .execute();
+    await connection.kysely
+      .insertInto('roles')
+      .values({
+        id: otherCompanyRoleId,
+        company_id: otherCompanyId,
+        name: 'viewer',
+        created_at: nowIso,
+        updated_at: nowIso,
+      })
+      .execute();
+    await connection.kysely
+      .insertInto('users')
+      .values({
+        id: otherUserId,
+        company_id: otherCompanyId,
+        role_id: otherCompanyRoleId,
+        email: 'viewer@other-corp.com',
+        created_at: nowIso,
+        updated_at: nowIso,
+      })
+      .execute();
+
+    const results = await Promise.all([
+      trackingService.listProperties(otherUserId, companyId, null),
+      trackingService.listModules(otherUserId, companyId, null),
+      trackingService.listDestinations(otherUserId, companyId, null),
+      trackingService.listTrackingTemplates(otherUserId, companyId, null),
+      trackingService.listFreePages(otherUserId, companyId, null),
+      trackingService.getProperty(otherUserId, catalogueProperty.value.propertyId),
+      trackingService.getModule(otherUserId, catalogueModule.value.moduleId),
+      trackingService.getDestination(otherUserId, catalogueDestination.value.destinationId),
+      trackingService.getTrackingTemplate(otherUserId, catalogueTemplate.value.templateId),
+      trackingService.getFreePage(otherUserId, catalogueFreePage.value.freePageId),
+    ]);
+
+    for (const result of results) {
+      expect(result).toEqual({ ok: false, error: { kind: 'forbidden' } });
+    }
+  });
+
   it('generates reconciliation report for a project (REQ-IMP-006)', async () => {
     const reportRes = await trackingService.generateReconciliationReport(
       editorId,
@@ -431,6 +520,89 @@ describe('TrackingService (M1.1 Application Service)', () => {
     expect(auditRes.value.length).toBeGreaterThanOrEqual(2);
     expect(auditRes.value.some((l) => l.action === 'shared_password.created')).toBe(true);
     expect(auditRes.value.some((l) => l.action === 'shared_password.authenticated')).toBe(true);
+
+    const listed = await trackingService.listSharedPasswords(editorId, projectId);
+    expect(listed.ok).toBe(true);
+    if (!listed.ok) throw new Error('shared password list failed');
+    expect(listed.value[0]).not.toHaveProperty('passwordHash');
+
+    const mismatchedDelete = await trackingService.deleteSharedPassword(
+      editorId,
+      'project-does-not-own-password',
+      spRes.value.sharedPasswordId,
+    );
+    expect(mismatchedDelete).toEqual({ ok: false, error: { kind: 'forbidden' } });
+  });
+
+  it('rejects audit-log reads when the project belongs to another company (REQ-SEC-018)', async () => {
+    const otherCompanyId = 'comp-audit-other';
+    await connection.kysely
+      .insertInto('company')
+      .values({
+        id: otherCompanyId,
+        name: 'Other Audit Corp',
+        slug: 'other-audit-corp',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
+    await connection.kysely
+      .insertInto('projects')
+      .values({
+        id: 'project-audit-other',
+        company_id: otherCompanyId,
+        name: 'Other Audit Project',
+        slug: 'other-audit-project',
+        platform: 'web',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
+
+    await expect(
+      trackingService.listAuditLogs(adminId, companyId, 'project-audit-other'),
+    ).resolves.toEqual({ ok: false, error: { kind: 'not_found' } });
+  });
+
+  it('rejects project writes when the claimed company does not own the project (REQ-SEC-018)', async () => {
+    const mismatchedCompanyId = 'comp-write-mismatch';
+    await connection.kysely
+      .insertInto('company')
+      .values({
+        id: mismatchedCompanyId,
+        name: 'Mismatched Corp',
+        slug: 'mismatched-corp',
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
+
+    const inputs = [
+      trackingService.createProperty(editorId, mismatchedCompanyId, projectId, {
+        name: 'mismatched_property',
+      }),
+      trackingService.createModule(editorId, mismatchedCompanyId, projectId, {
+        name: 'Mismatched Module',
+      }),
+      trackingService.createDestination(editorId, mismatchedCompanyId, projectId, {
+        platform: 'ga4',
+        variableType: 'event_param',
+        identifier: 'mismatched_destination',
+        name: 'Mismatched Destination',
+      }),
+      trackingService.createTrackingTemplate(editorId, mismatchedCompanyId, projectId, {
+        name: 'Mismatched Template',
+      }),
+      trackingService.createFreePage(editorId, mismatchedCompanyId, projectId, {
+        title: 'Mismatched Page',
+        slug: 'mismatched-page',
+        content: 'content',
+      }),
+    ];
+
+    for (const result of await Promise.all(inputs)) {
+      expect(result).toEqual({ ok: false, error: { kind: 'forbidden' } });
+    }
   });
 
   describe('entity deletion (ADR-0025)', () => {
@@ -1088,7 +1260,7 @@ describe('TrackingService (M1.1 Application Service)', () => {
       expect(auditEntry).toBeDefined();
     });
 
-    it('batchCreate processes all items (REQ-FDN-025)', async () => {
+    it('batchCreate reports per-item results while preserving current partial-success behavior', async () => {
       // Create batch with valid and invalid items
       const batchRes = await trackingService.batchCreate(adminId, companyId, projectId, {
         properties: [
@@ -1104,6 +1276,33 @@ describe('TrackingService (M1.1 Application Service)', () => {
 
       // Verify first property was created
       expect(batchRes.results.properties[0]?.id).toBeDefined();
+    });
+
+    it('prevents direct audit-log updates and deletes (REQ-SEC-006)', async () => {
+      const auditEntry = {
+        id: 'audit-append-only-test',
+        company_id: companyId,
+        project_id: projectId,
+        actor_id: adminId,
+        action: 'test.append_only',
+        entity_type: 'test',
+        entity_id: null,
+        details_json: null,
+        created_at: t(),
+        actor_kind: 'session' as const,
+      };
+      await connection.kysely.insertInto('audit_logs').values(auditEntry).execute();
+
+      await expect(
+        connection.kysely
+          .updateTable('audit_logs')
+          .set({ action: 'tampered' })
+          .where('id', '=', auditEntry.id)
+          .execute(),
+      ).rejects.toThrow('audit_logs are append-only');
+      await expect(
+        connection.kysely.deleteFrom('audit_logs').where('id', '=', auditEntry.id).execute(),
+      ).rejects.toThrow('audit_logs are append-only');
     });
   });
 });

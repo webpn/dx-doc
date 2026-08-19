@@ -107,7 +107,7 @@ export class PermissionService {
   /** Deny-by-default authorisation helper (M1.13 hardening). */
   async canOnProjectOrCompany(
     userId: string,
-    action: ProjectAction,
+    action: ProjectAction | CompanyAction | InstanceAction,
     projectId?: string,
     companyId?: string,
   ): Promise<boolean> {
@@ -122,7 +122,7 @@ export class PermissionService {
     }
     // Project scope for project actions
     if (action.startsWith('project.') && projectId) {
-      return this.canOnProject(userId, projectId, action);
+      return this.canOnProject(userId, projectId, action as ProjectAction);
     }
     return false;
   }

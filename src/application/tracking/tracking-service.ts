@@ -105,10 +105,13 @@ export type TrackingServiceError =
   | { kind: 'forbidden' }
   | { kind: 'not_found' }
   | { kind: 'validation'; issues: ValidationIssue[] }
+  | { kind: 'publication_integrity'; reason: string }
   | { kind: 'hierarchy_cycle' }
   | { kind: 'cross_project_reference' }
   | { kind: 'stale_write'; currentUpdatedAt: string }
   | { kind: 'in_use'; reason: string };
+
+type SharedPasswordReadModel = Omit<ProjectSharedPassword, 'passwordHash'>;
 
 export class TrackingService {
   constructor(
@@ -151,6 +154,7 @@ export class TrackingService {
     if (projectId !== null) {
       const project = await this.projects.getProjectById(projectId);
       if (!project) return err({ kind: 'not_found' });
+      if (project.companyId !== companyId) return err({ kind: 'forbidden' });
       if (!(await this.permissions.canOnProject(actorId, projectId, 'project.edit'))) {
         return err({ kind: 'forbidden' });
       }
@@ -227,10 +231,15 @@ export class TrackingService {
   ): Promise<Result<DataLayerProperty, TrackingServiceError>> {
     const prop = await this.properties.getPropertyById(propertyId);
     if (!prop) return err({ kind: 'not_found' });
-    if (prop.projectId !== null) {
-      if (!(await this.permissions.canOnProject(actorId, prop.projectId, 'project.read'))) {
-        return err({ kind: 'forbidden' });
-      }
+    if (
+      !(await this.permissions.canOnProjectOrCompany(
+        actorId,
+        prop.projectId === null ? 'company.manage_catalogue' : 'project.read',
+        prop.projectId ?? undefined,
+        prop.companyId,
+      ))
+    ) {
+      return err({ kind: 'forbidden' });
     }
     return ok(prop);
   }
@@ -240,10 +249,15 @@ export class TrackingService {
     companyId: string,
     projectId: string | null,
   ): Promise<Result<DataLayerProperty[], TrackingServiceError>> {
-    if (projectId !== null) {
-      if (!(await this.permissions.canOnProject(actorId, projectId, 'project.read'))) {
-        return err({ kind: 'forbidden' });
-      }
+    if (
+      !(await this.permissions.canOnProjectOrCompany(
+        actorId,
+        projectId === null ? 'company.manage_catalogue' : 'project.read',
+        projectId ?? undefined,
+        companyId,
+      ))
+    ) {
+      return err({ kind: 'forbidden' });
     }
     const list = await this.properties.listProperties(companyId, projectId);
     return ok(list);
@@ -429,6 +443,9 @@ export class TrackingService {
     }
 
     if (projectId !== null) {
+      const project = await this.projects.getProjectById(projectId);
+      if (!project) return err({ kind: 'not_found' });
+      if (project.companyId !== companyId) return err({ kind: 'forbidden' });
       if (!(await this.permissions.canOnProject(actorId, projectId, 'project.edit'))) {
         return err({ kind: 'forbidden' });
       }
@@ -480,10 +497,15 @@ export class TrackingService {
   ): Promise<Result<{ module: Module; propertyIds: string[] }, TrackingServiceError>> {
     const mod = await this.modules.getModuleById(moduleId);
     if (!mod) return err({ kind: 'not_found' });
-    if (mod.projectId !== null) {
-      if (!(await this.permissions.canOnProject(actorId, mod.projectId, 'project.read'))) {
-        return err({ kind: 'forbidden' });
-      }
+    if (
+      !(await this.permissions.canOnProjectOrCompany(
+        actorId,
+        mod.projectId === null ? 'company.manage_catalogue' : 'project.read',
+        mod.projectId ?? undefined,
+        mod.companyId,
+      ))
+    ) {
+      return err({ kind: 'forbidden' });
     }
     const propertyIds = await this.modules.getModulePropertyIds(moduleId);
     return ok({ module: mod, propertyIds });
@@ -494,10 +516,15 @@ export class TrackingService {
     companyId: string,
     projectId: string | null,
   ): Promise<Result<Module[], TrackingServiceError>> {
-    if (projectId !== null) {
-      if (!(await this.permissions.canOnProject(actorId, projectId, 'project.read'))) {
-        return err({ kind: 'forbidden' });
-      }
+    if (
+      !(await this.permissions.canOnProjectOrCompany(
+        actorId,
+        projectId === null ? 'company.manage_catalogue' : 'project.read',
+        projectId ?? undefined,
+        companyId,
+      ))
+    ) {
+      return err({ kind: 'forbidden' });
     }
     const list = await this.modules.listModules(companyId, projectId);
     return ok(list);
@@ -637,6 +664,9 @@ export class TrackingService {
     }
 
     if (projectId !== null) {
+      const project = await this.projects.getProjectById(projectId);
+      if (!project) return err({ kind: 'not_found' });
+      if (project.companyId !== companyId) return err({ kind: 'forbidden' });
       if (!(await this.permissions.canOnProject(actorId, projectId, 'project.edit'))) {
         return err({ kind: 'forbidden' });
       }
@@ -693,10 +723,15 @@ export class TrackingService {
   ): Promise<Result<Destination, TrackingServiceError>> {
     const dest = await this.destinations.getDestinationById(destinationId);
     if (!dest) return err({ kind: 'not_found' });
-    if (dest.projectId !== null) {
-      if (!(await this.permissions.canOnProject(actorId, dest.projectId, 'project.read'))) {
-        return err({ kind: 'forbidden' });
-      }
+    if (
+      !(await this.permissions.canOnProjectOrCompany(
+        actorId,
+        dest.projectId === null ? 'company.manage_catalogue' : 'project.read',
+        dest.projectId ?? undefined,
+        dest.companyId,
+      ))
+    ) {
+      return err({ kind: 'forbidden' });
     }
     return ok(dest);
   }
@@ -706,10 +741,15 @@ export class TrackingService {
     companyId: string,
     projectId: string | null,
   ): Promise<Result<Destination[], TrackingServiceError>> {
-    if (projectId !== null) {
-      if (!(await this.permissions.canOnProject(actorId, projectId, 'project.read'))) {
-        return err({ kind: 'forbidden' });
-      }
+    if (
+      !(await this.permissions.canOnProjectOrCompany(
+        actorId,
+        projectId === null ? 'company.manage_catalogue' : 'project.read',
+        projectId ?? undefined,
+        companyId,
+      ))
+    ) {
+      return err({ kind: 'forbidden' });
     }
     const list = await this.destinations.listDestinations(companyId, projectId);
     return ok(list);
@@ -1061,6 +1101,9 @@ export class TrackingService {
     }
 
     if (projectId !== null) {
+      const project = await this.projects.getProjectById(projectId);
+      if (!project) return err({ kind: 'not_found' });
+      if (project.companyId !== companyId) return err({ kind: 'forbidden' });
       if (!(await this.permissions.canOnProject(actorId, projectId, 'project.edit'))) {
         return err({ kind: 'forbidden' });
       }
@@ -1110,10 +1153,15 @@ export class TrackingService {
   ): Promise<Result<TrackingTemplate, TrackingServiceError>> {
     const tpl = await this.templates.getTemplateById(templateId);
     if (!tpl) return err({ kind: 'not_found' });
-    if (tpl.projectId !== null) {
-      if (!(await this.permissions.canOnProject(actorId, tpl.projectId, 'project.read'))) {
-        return err({ kind: 'forbidden' });
-      }
+    if (
+      !(await this.permissions.canOnProjectOrCompany(
+        actorId,
+        tpl.projectId === null ? 'company.manage_catalogue' : 'project.read',
+        tpl.projectId ?? undefined,
+        tpl.companyId,
+      ))
+    ) {
+      return err({ kind: 'forbidden' });
     }
     return ok(tpl);
   }
@@ -1123,10 +1171,15 @@ export class TrackingService {
     companyId: string,
     projectId: string | null,
   ): Promise<Result<TrackingTemplate[], TrackingServiceError>> {
-    if (projectId !== null) {
-      if (!(await this.permissions.canOnProject(actorId, projectId, 'project.read'))) {
-        return err({ kind: 'forbidden' });
-      }
+    if (
+      !(await this.permissions.canOnProjectOrCompany(
+        actorId,
+        projectId === null ? 'company.manage_catalogue' : 'project.read',
+        projectId ?? undefined,
+        companyId,
+      ))
+    ) {
+      return err({ kind: 'forbidden' });
     }
     const list = await this.templates.listTemplates(companyId, projectId);
     return ok(list);
@@ -1257,6 +1310,9 @@ export class TrackingService {
     }
 
     if (projectId !== null) {
+      const project = await this.projects.getProjectById(projectId);
+      if (!project) return err({ kind: 'not_found' });
+      if (project.companyId !== companyId) return err({ kind: 'forbidden' });
       if (!(await this.permissions.canOnProject(actorId, projectId, 'project.edit'))) {
         return err({ kind: 'forbidden' });
       }
@@ -1306,10 +1362,15 @@ export class TrackingService {
   ): Promise<Result<FreePage, TrackingServiceError>> {
     const fp = await this.freePages.getFreePageById(freePageId);
     if (!fp) return err({ kind: 'not_found' });
-    if (fp.projectId !== null) {
-      if (!(await this.permissions.canOnProject(actorId, fp.projectId, 'project.read'))) {
-        return err({ kind: 'forbidden' });
-      }
+    if (
+      !(await this.permissions.canOnProjectOrCompany(
+        actorId,
+        fp.projectId === null ? 'company.manage_catalogue' : 'project.read',
+        fp.projectId ?? undefined,
+        fp.companyId,
+      ))
+    ) {
+      return err({ kind: 'forbidden' });
     }
     return ok(fp);
   }
@@ -1319,10 +1380,15 @@ export class TrackingService {
     companyId: string,
     projectId: string | null,
   ): Promise<Result<FreePage[], TrackingServiceError>> {
-    if (projectId !== null) {
-      if (!(await this.permissions.canOnProject(actorId, projectId, 'project.read'))) {
-        return err({ kind: 'forbidden' });
-      }
+    if (
+      !(await this.permissions.canOnProjectOrCompany(
+        actorId,
+        projectId === null ? 'company.manage_catalogue' : 'project.read',
+        projectId ?? undefined,
+        companyId,
+      ))
+    ) {
+      return err({ kind: 'forbidden' });
     }
     const list = await this.freePages.listFreePages(companyId, projectId);
     return ok(list);
@@ -2637,6 +2703,28 @@ export class TrackingService {
 
     // Referential integrity check (REQ-VER-003): cannot publish a flow referencing excluded pages/trackings
     // Properties and modules always publish.
+    const includedTrackingIds = new Set(includedTrks.map((tracking) => tracking.id));
+    const includedPageIds = new Set(includedFps.map((page) => page.id));
+    for (const flow of includedFlows) {
+      const nodes = await this.flows.getFlowNodes(flow.id);
+      for (const node of nodes) {
+        if (node.nodeType === 'page' && node.pageId !== null && !includedPageIds.has(node.pageId)) {
+          return err({
+            kind: 'publication_integrity',
+            reason: `Flow ${flow.id} references excluded page ${node.pageId}`,
+          });
+        }
+        if (node.nodeType === 'trigger' && node.triggerId !== null) {
+          const triggerTrackingIds = await this.triggers.getTriggerTrackingIds(node.triggerId);
+          if (triggerTrackingIds.some((trackingId) => !includedTrackingIds.has(trackingId))) {
+            return err({
+              kind: 'publication_integrity',
+              reason: `Flow ${flow.id} references a trigger with an excluded tracking`,
+            });
+          }
+        }
+      }
+    }
 
     const snapshot: ProjectVersionSnapshot = {
       versionNumber: nextNumber,
@@ -2995,12 +3083,12 @@ export class TrackingService {
   async listSharedPasswords(
     actorId: string,
     projectId: string,
-  ): Promise<Result<ProjectSharedPassword[], TrackingServiceError>> {
+  ): Promise<Result<SharedPasswordReadModel[], TrackingServiceError>> {
     if (!(await this.permissions.canOnProject(actorId, projectId, 'project.read'))) {
       return err({ kind: 'forbidden' });
     }
     const list = await this.sharedPasswords.listSharedPasswordsForProject(projectId);
-    return ok(list);
+    return ok(list.map(({ passwordHash: _passwordHash, ...readModel }) => readModel));
   }
 
   async deleteSharedPassword(
@@ -3010,6 +3098,10 @@ export class TrackingService {
   ): Promise<Result<{ ok: true }, TrackingServiceError>> {
     if (!(await this.permissions.canOnProject(actorId, projectId, 'project.edit'))) {
       return err({ kind: 'forbidden' });
+    }
+    const sharedPassword = await this.sharedPasswords.getSharedPasswordById(sharedPasswordId);
+    if (sharedPassword?.projectId !== projectId) {
+      return err({ kind: 'not_found' });
     }
     await this.sharedPasswords.deleteSharedPassword(sharedPasswordId);
     return ok({ ok: true });
@@ -3025,6 +3117,10 @@ export class TrackingService {
     }
 
     if (projectId) {
+      const project = await this.projects.getProjectById(projectId);
+      if (project?.companyId !== companyId) {
+        return err({ kind: 'not_found' });
+      }
       const logs = await this.auditLogs.listLogsForProject(projectId);
       return ok(logs);
     }

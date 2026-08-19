@@ -9,6 +9,7 @@ export interface AuthRoutesOptions {
   accounts: AccountRepository;
   cookieName: string;
   sessionTtlMs: number;
+  appUrl?: string;
 }
 
 interface LoginBody {
@@ -52,7 +53,7 @@ export function registerAuthRoutes(app: FastifyInstance, options: AuthRoutesOpti
       sameSite: 'lax',
       path: '/',
       maxAge: Math.floor(options.sessionTtlMs / 1000),
-      secure: false,
+      secure: options.appUrl !== undefined && new URL(options.appUrl).protocol === 'https:',
     });
     return { ok: true, user: result.user, passwordChangeRequired: result.passwordChangeRequired };
   });

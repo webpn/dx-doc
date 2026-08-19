@@ -24,6 +24,7 @@ const MIGRATION_NAMES = [
   '011_assets',
   '012_audit_company_nullable',
   '013_query_path_indexes',
+  '014_audit_logs_append_only',
 ];
 
 describe('migration introspection (REQ-FDN-024 readiness)', () => {

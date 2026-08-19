@@ -100,6 +100,14 @@ export function replyServiceError(reply: FastifyReply, error: ServiceErrorShape)
           currentUpdatedAt: (error as { currentUpdatedAt?: string }).currentUpdatedAt,
         },
       });
+    case 'publication_integrity':
+      return reply.code(409).send({
+        error: {
+          code: 'PUBLICATION_INTEGRITY',
+          message: 'Publication contains a reference to excluded content',
+          reason: error.reason,
+        },
+      });
     case 'cross_project_parent':
     case 'cross_project_reference':
       return reply.code(400).send({

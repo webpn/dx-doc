@@ -91,6 +91,7 @@ describe('auth routes (email + password)', () => {
       accounts,
       cookieName: 'dxdoc_session',
       sessionTtlMs: TTL_MS,
+      appUrl: 'https://dx.test',
     });
   });
 
@@ -98,6 +99,17 @@ describe('auth routes (email + password)', () => {
     await app.close();
     await closeSqliteConnection(connection);
     rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('sets the secure session cookie flag for HTTPS application URLs (REQ-SEC-019)', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email: 'u@acme.test', password: PASSWORD, companyId: 'c1' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(String(response.headers['set-cookie'])).toContain('Secure');
   });
 
   function loginPayload(overrides: Record<string, string> = {}): Record<string, string> {

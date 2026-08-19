@@ -16,7 +16,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-IMP-002 | API surface complete for every R1 entity       | Must   | R1   | M1.2 → M1.12  | In Progress |
 | REQ-IMP-003 | Idempotent upsert keyed on `custom_id`         | Must   | R1   | M1.2          | Implemented |
 | REQ-IMP-004 | Asset upload through the API                   | Must   | R1   | M1.2 → M1.12  | Not Started |
-| REQ-IMP-005 | Batch write endpoints                          | Should | R1   | M1.2 → M1.14  | Verified    |
+| REQ-IMP-005 | Batch write endpoints                          | Should | R1   | M1.2 → M1.14  | In Progress |
 | REQ-IMP-006 | Reconciliation report                          | Should | R1   | M1.2          | Implemented |
 | REQ-IMP-007 | Import scripts committed and re-runnable       | Must   | R1   | M1.4 → M1.18  | Not Started |
 | REQ-IMP-008 | Source system frozen, then read-only archive   | Must   | R1   | M1.10 → M1.18 | Not Started |
@@ -97,7 +97,7 @@ Endpoints accepting an array of entities in one call, so that thousands of track
 - Batches accept an explicit list of entities only — never a filter expression (REQ-API-008).
 - Batch writes produce proportionate audit entries, not one per item (REQ-SEC-006).
 
-> **Carried forward on 2026-08-18.** The endpoint exists and reports per-item results. It writes sequentially with no transaction, so a failure part-way leaves partial data behind and reports success for everything before it — the worst outcome for an import that is meant to be re-runnable. Made atomic by [REQ-FDN-025](REQ-FDN.md#req-fdn-025--transactional-write-boundaries) at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness).
+> **Phase closed at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) on 2026-08-19.** The endpoint exists and reports per-item results, but it remains sequential and non-transactional: a failure can leave earlier items persisted. Atomic rollback remains open with [REQ-FDN-025](REQ-FDN.md#req-fdn-025--transactional-write-boundaries).
 
 ### REQ-IMP-006 — Reconciliation report
 

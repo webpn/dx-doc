@@ -39,6 +39,7 @@ export interface ApiRoutesOptions {
   cookieName: string;
   sessionTtlMs: number;
   auditLogs: AuditLogRepository;
+  appUrl?: string;
 }
 
 /**
@@ -61,9 +62,17 @@ export function registerAllRoutes(app: FastifyInstance, options: ApiRoutesOption
     accounts,
     cookieName,
     sessionTtlMs,
+    appUrl,
   } = options;
 
-  registerAuthRoutes(app, { auth, sessions, accounts, cookieName, sessionTtlMs });
+  registerAuthRoutes(app, {
+    auth,
+    sessions,
+    accounts,
+    cookieName,
+    sessionTtlMs,
+    ...(appUrl === undefined ? {} : { appUrl }),
+  });
 
   registerProjectRoutes(app, {
     projects: projectService,
