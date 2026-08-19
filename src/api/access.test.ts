@@ -142,7 +142,7 @@ describe('Access administration and service tokens over HTTP (M1.12 first half)'
     );
     const projectRepo = new SqliteProjectRepository(connection.kysely);
     projects = new ProjectService(projectRepo, permissions, accounts);
-    const grants = new GrantService(accounts, projectRepo, permissions);
+    const grants = new GrantService(accounts, projectRepo, permissions, auditLogRepo);
     const pages = new PageService(
       new SqlitePageRepository(connection.kysely),
       projectRepo,

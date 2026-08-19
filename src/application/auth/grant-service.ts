@@ -4,6 +4,7 @@ import { err, ok, type Result } from '@project/shared';
 
 import type { ProjectGrant, AccountRepository } from '../ports/account-repository';
 import type { ProjectRepository } from '../ports/project-repository';
+import type { AuditLogRepository } from '../ports/tracking-repositories';
 
 import type { ProjectAction, PermissionService } from './permissions';
 import { isCompanyRoleName, type CompanyRoleName } from './roles';
@@ -29,6 +30,7 @@ export class GrantService {
     private readonly accounts: AccountRepository,
     private readonly projects: ProjectRepository,
     private readonly permissions: PermissionService,
+    private readonly auditLogs: AuditLogRepository,
     private readonly now: () => Date = () => new Date(),
     private readonly newId: () => string = () => randomUUID(),
   ) {}
@@ -85,6 +87,18 @@ export class GrantService {
       await this.accounts.updateGrantRole(existing.id, role.id, nowIso);
     }
 
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: project.companyId,
+      projectId,
+      actorId,
+      action: 'grant.changed',
+      entityType: 'grant',
+      entityId: userId,
+      details: { roleName, userId },
+      createdAt: nowIso,
+    });
+
     return ok({ roleName });
   }
 
@@ -102,6 +116,23 @@ export class GrantService {
     }
     // Revoking an absent grant is a deliberate no-op success: there is no
     // access left to remove.
+
+    const project = await this.projects.getProjectById(projectId);
+    if (project) {
+      const nowIso = this.now().toISOString();
+      await this.auditLogs.appendLog({
+        id: this.newId(),
+        companyId: project.companyId,
+        projectId,
+        actorId,
+        action: 'grant.revoked',
+        entityType: 'grant',
+        entityId: userId,
+        details: { userId },
+        createdAt: nowIso,
+      });
+    }
+
     return ok({ ok: true });
   }
 

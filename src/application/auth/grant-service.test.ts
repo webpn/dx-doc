@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { AuditLogEntry } from '../../domain/entities';
 import type {
   AccountRepository,
   CompanyRole,
@@ -10,6 +11,7 @@ import type {
   UserAccount,
 } from '../ports/account-repository';
 import type { ProjectRecord, ProjectRepository } from '../ports/project-repository';
+import type { AuditLogRepository } from '../ports/tracking-repositories';
 
 import { GrantService } from './grant-service';
 import { PermissionService } from './permissions';
@@ -188,6 +190,20 @@ function addUser(
   });
 }
 
+class FakeAuditLogRepository implements AuditLogRepository {
+  async appendLog(_entry: AuditLogEntry): Promise<void> {
+    // No-op for tests
+  }
+
+  listLogsForCompany(_companyId: string, _limit?: number): Promise<AuditLogEntry[]> {
+    return Promise.resolve([]);
+  }
+
+  listLogsForProject(_projectId: string, _limit?: number): Promise<AuditLogEntry[]> {
+    return Promise.resolve([]);
+  }
+}
+
 function build(): {
   accounts: FakeAccounts;
   projects: FakeProjects;
@@ -201,11 +217,13 @@ function build(): {
   addUser(accounts, 'admin', 'c1', 'admin');
   addUser(accounts, 'viewer', 'c1', 'viewer');
   const permissions = new PermissionService(accounts);
+  const auditLogs = new FakeAuditLogRepository();
   let counter = 0;
   const grants = new GrantService(
     accounts,
     projects,
     permissions,
+    auditLogs,
     () => FIXED_NOW,
     () => 'g-' + String(++counter),
   );

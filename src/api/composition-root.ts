@@ -211,7 +211,7 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
 
   const projectService = new ProjectService(projects, permissions, accounts);
   const pageService = new PageService(pages, projects, permissions);
-  const grantService = new GrantService(accounts, projects, permissions);
+  const grantService = new GrantService(accounts, projects, permissions, auditLogs);
   const trackingService = new TrackingService(
     properties,
     modules,
