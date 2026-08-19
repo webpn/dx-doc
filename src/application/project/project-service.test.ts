@@ -306,3 +306,36 @@ describe('ProjectService.update + get', () => {
     expect(grants[0]).toMatchObject({ projectId, userId: 'u1', roleName: 'admin' });
   });
 });
+
+describe('ProjectService.update — Optimistic concurrency (REQ-AUTH-005, ADR-0016)', () => {
+  it('accepts update with matching expectedUpdatedAt', async () => {
+    const { projects, service } = build();
+    const created = await service.create('u1', 'c1', { name: 'Web', slug: 'web', platform: 'web' });
+    const projectId = created.ok ? created.value.projectId : '';
+    const project = await projects.getProjectById(projectId);
+    if (!project) throw new Error('project not found');
+
+    // Update with correct expectedUpdatedAt succeeds
+    const edit = await service.update('u1', projectId, {
+      name: 'Updated',
+      expectedUpdatedAt: project.updatedAt,
+    });
+    expect(edit.ok).toBe(true);
+  });
+
+  it('rejects update with wrong expectedUpdatedAt', async () => {
+    const { service } = build();
+    const created = await service.create('u1', 'c1', { name: 'Web', slug: 'web', platform: 'web' });
+    const projectId = created.ok ? created.value.projectId : '';
+
+    // Update with obviously wrong expectedUpdatedAt fails
+    const staleEdit = await service.update('u1', projectId, {
+      name: 'Stale',
+      expectedUpdatedAt: '2000-01-01T00:00:00.000Z',
+    });
+    expect(staleEdit.ok).toBe(false);
+    if (!staleEdit.ok) {
+      expect(staleEdit.error.kind).toBe('stale_write');
+    }
+  });
+});

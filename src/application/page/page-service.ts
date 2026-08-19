@@ -16,7 +16,8 @@ export type PageServiceError =
   | { kind: 'validation'; issues: ValidationIssue[] }
   | { kind: 'duplicate_custom_id' }
   | { kind: 'cross_project_parent' }
-  | { kind: 'in_use'; reason: string };
+  | { kind: 'in_use'; reason: string }
+  | { kind: 'stale_write'; currentUpdatedAt: string };
 
 /**
  * Page/Screen CRUD within a project (REQ-DOM-001, REQ-API-001). Writes are
@@ -125,6 +126,17 @@ export class PageService {
     }
     if (!(await this.permissions.canOnProject(actorId, page.projectId, 'project.edit'))) {
       return err({ kind: 'forbidden' });
+    }
+
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
+    if (
+      parsed.value.expectedUpdatedAt !== undefined &&
+      parsed.value.expectedUpdatedAt !== page.updatedAt
+    ) {
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: page.updatedAt,
+      });
     }
 
     const data = parsed.value;

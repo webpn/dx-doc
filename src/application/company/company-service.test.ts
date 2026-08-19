@@ -403,3 +403,32 @@ describe('CompanyService.update (REQ-SEC-014)', () => {
     });
   });
 });
+
+describe('CompanyService.update — Optimistic concurrency (REQ-AUTH-005, ADR-0016)', () => {
+  it('accepts update with matching expectedUpdatedAt', async () => {
+    const { companyService, companyAId, sysadminId, companies } = buildHarness();
+    const company = await companies.getCompanyById(companyAId);
+    if (!company) throw new Error('company not found');
+
+    // Update with correct expectedUpdatedAt succeeds
+    const edit = await companyService.update(sysadminId, companyAId, {
+      name: 'Updated Acme',
+      expectedUpdatedAt: company.updatedAt,
+    });
+    expect(edit.ok).toBe(true);
+  });
+
+  it('rejects update with wrong expectedUpdatedAt', async () => {
+    const { companyService, companyAId, sysadminId } = buildHarness();
+
+    // Update with obviously wrong expectedUpdatedAt fails
+    const staleEdit = await companyService.update(sysadminId, companyAId, {
+      name: 'Stale',
+      expectedUpdatedAt: '2000-01-01T00:00:00.000Z',
+    });
+    expect(staleEdit.ok).toBe(false);
+    if (!staleEdit.ok) {
+      expect(staleEdit.error.kind).toBe('stale_write');
+    }
+  });
+});

@@ -269,6 +269,17 @@ export class TrackingService {
       return err({ kind: 'validation', issues: parsed.error });
     }
 
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
+    if (
+      parsed.value.expectedUpdatedAt !== undefined &&
+      parsed.value.expectedUpdatedAt !== prop.updatedAt
+    ) {
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: prop.updatedAt,
+      });
+    }
+
     const patchData = parsed.value;
 
     if (patchData.parentPropertyId !== undefined) {
@@ -512,6 +523,17 @@ export class TrackingService {
       return err({ kind: 'validation', issues: parsed.error });
     }
 
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
+    if (
+      parsed.value.expectedUpdatedAt !== undefined &&
+      parsed.value.expectedUpdatedAt !== mod.updatedAt
+    ) {
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: mod.updatedAt,
+      });
+    }
+
     const nowIso = this.now().toISOString();
     await this.modules.updateModule({
       ...mod,
@@ -711,6 +733,17 @@ export class TrackingService {
     const parsed = validate(destinationUpdateSchema, input);
     if (!parsed.ok) {
       return err({ kind: 'validation', issues: parsed.error });
+    }
+
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
+    if (
+      parsed.value.expectedUpdatedAt !== undefined &&
+      parsed.value.expectedUpdatedAt !== dest.updatedAt
+    ) {
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: dest.updatedAt,
+      });
     }
 
     const nowIso = this.now().toISOString();
@@ -928,6 +961,17 @@ export class TrackingService {
       return err({ kind: 'validation', issues: parsed.error });
     }
 
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
+    if (
+      parsed.value.expectedUpdatedAt !== undefined &&
+      parsed.value.expectedUpdatedAt !== event.updatedAt
+    ) {
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: event.updatedAt,
+      });
+    }
+
     const nowIso = this.now().toISOString();
     await this.navEvents.updateNavigationEvent({
       ...event,
@@ -1106,6 +1150,17 @@ export class TrackingService {
     const parsed = validate(trackingTemplateUpdateSchema, input);
     if (!parsed.ok) {
       return err({ kind: 'validation', issues: parsed.error });
+    }
+
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
+    if (
+      parsed.value.expectedUpdatedAt !== undefined &&
+      parsed.value.expectedUpdatedAt !== tpl.updatedAt
+    ) {
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: tpl.updatedAt,
+      });
     }
 
     const nowIso = this.now().toISOString();
@@ -1291,6 +1346,17 @@ export class TrackingService {
     const parsed = validate(freePageUpdateSchema, input);
     if (!parsed.ok) {
       return err({ kind: 'validation', issues: parsed.error });
+    }
+
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
+    if (
+      parsed.value.expectedUpdatedAt !== undefined &&
+      parsed.value.expectedUpdatedAt !== fp.updatedAt
+    ) {
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: fp.updatedAt,
+      });
     }
 
     const nowIso = this.now().toISOString();
@@ -1645,6 +1711,17 @@ export class TrackingService {
     const tps = await this.trackings.getTrackingProperties(trackingId);
     const target = tps.find((tp) => tp.propertyId === propertyId);
     if (!target) return err({ kind: 'not_found' });
+
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
+    if (
+      parsed.value.expectedUpdatedAt !== undefined &&
+      parsed.value.expectedUpdatedAt !== target.updatedAt
+    ) {
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: target.updatedAt,
+      });
+    }
 
     const nowIso = this.now().toISOString();
     await this.trackings.setTrackingProperties([
@@ -2121,6 +2198,17 @@ export class TrackingService {
     const parsed = validate(flowUpdateSchema, input);
     if (!parsed.ok) return err({ kind: 'validation', issues: parsed.error });
 
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
+    if (
+      parsed.value.expectedUpdatedAt !== undefined &&
+      parsed.value.expectedUpdatedAt !== flow.updatedAt
+    ) {
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: flow.updatedAt,
+      });
+    }
+
     const nowIso = this.now().toISOString();
     await this.flows.updateFlow({
       ...flow,
@@ -2313,6 +2401,17 @@ export class TrackingService {
 
     const parsed = validate(triggerUpdateSchema, input);
     if (!parsed.ok) return err({ kind: 'validation', issues: parsed.error });
+
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
+    if (
+      parsed.value.expectedUpdatedAt !== undefined &&
+      parsed.value.expectedUpdatedAt !== trg.updatedAt
+    ) {
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: trg.updatedAt,
+      });
+    }
 
     const nowIso = this.now().toISOString();
     await this.triggers.updateTrigger({

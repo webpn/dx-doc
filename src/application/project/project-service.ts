@@ -14,7 +14,8 @@ export type ProjectServiceError =
   | { kind: 'forbidden' }
   | { kind: 'not_found' }
   | { kind: 'validation'; issues: ValidationIssue[] }
-  | { kind: 'duplicate_custom_id' };
+  | { kind: 'duplicate_custom_id' }
+  | { kind: 'stale_write'; currentUpdatedAt: string };
 
 /**
  * Project CRUD (REQ-FDN-003, REQ-API-001). All writes go through the shared
@@ -149,6 +150,17 @@ export class ProjectService {
     }
     if (!(await this.permissions.canOnProject(actorId, projectId, 'project.manage'))) {
       return err({ kind: 'forbidden' });
+    }
+
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
+    if (
+      parsed.value.expectedUpdatedAt !== undefined &&
+      parsed.value.expectedUpdatedAt !== project.updatedAt
+    ) {
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: project.updatedAt,
+      });
     }
 
     const data = parsed.value;

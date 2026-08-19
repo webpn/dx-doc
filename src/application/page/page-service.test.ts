@@ -317,3 +317,36 @@ describe('PageService.delete (ADR-0025)', () => {
     });
   });
 });
+
+describe('PageService.update — Optimistic concurrency (REQ-AUTH-005, ADR-0016)', () => {
+  it('accepts update with matching expectedUpdatedAt', async () => {
+    const { pages, service } = build();
+    const created = await service.create('u1', 'proj-1', { name: 'Home', slug: 'home' });
+    const pageId = created.ok ? created.value.pageId : '';
+    const page = await pages.getPageById(pageId);
+    if (!page) throw new Error('page not found');
+
+    // Update with correct expectedUpdatedAt succeeds
+    const edit = await service.update('u1', pageId, {
+      name: 'Updated',
+      expectedUpdatedAt: page.updatedAt,
+    });
+    expect(edit.ok).toBe(true);
+  });
+
+  it('rejects update with wrong expectedUpdatedAt', async () => {
+    const { service } = build();
+    const created = await service.create('u1', 'proj-1', { name: 'Home', slug: 'home' });
+    const pageId = created.ok ? created.value.pageId : '';
+
+    // Update with obviously wrong expectedUpdatedAt fails
+    const staleEdit = await service.update('u1', pageId, {
+      name: 'Stale',
+      expectedUpdatedAt: '2000-01-01T00:00:00.000Z',
+    });
+    expect(staleEdit.ok).toBe(false);
+    if (!staleEdit.ok) {
+      expect(staleEdit.error.kind).toBe('stale_write');
+    }
+  });
+});

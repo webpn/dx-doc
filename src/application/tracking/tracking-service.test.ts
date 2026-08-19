@@ -861,4 +861,40 @@ describe('TrackingService (M1.1 Application Service)', () => {
       });
     });
   });
+
+  describe('Optimistic concurrency (REQ-AUTH-005, ADR-0016)', () => {
+    it('accepts update with correct expectedUpdatedAt', async () => {
+      const prop = await trackingService.createProperty(editorId, companyId, projectId, {
+        name: 'conc_prop',
+      });
+      if (!prop.ok) throw new Error('create failed');
+      const propRecord = await trackingService.getProperty(editorId, prop.value.propertyId);
+      if (!propRecord.ok) throw new Error('get failed');
+      const currentTime = propRecord.value.updatedAt;
+
+      // Edit with correct expectedUpdatedAt succeeds
+      const edit = await trackingService.updateProperty(editorId, prop.value.propertyId, {
+        name: 'updated',
+        expectedUpdatedAt: currentTime,
+      });
+      expect(edit.ok).toBe(true);
+    });
+
+    it('rejects update with incorrect expectedUpdatedAt', async () => {
+      const prop = await trackingService.createProperty(editorId, companyId, projectId, {
+        name: 'conc_prop2',
+      });
+      if (!prop.ok) throw new Error('create failed');
+
+      // Try with wrong expectedUpdatedAt
+      const staleEdit = await trackingService.updateProperty(editorId, prop.value.propertyId, {
+        name: 'stale',
+        expectedUpdatedAt: '2000-01-01T00:00:00.000Z', // very old time
+      });
+      expect(staleEdit.ok).toBe(false);
+      if (!staleEdit.ok) {
+        expect(staleEdit.error.kind).toBe('stale_write');
+      }
+    });
+  });
 });

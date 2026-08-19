@@ -14,7 +14,8 @@ export type CompanyError =
   | { kind: 'forbidden' }
   | { kind: 'invalid_input' }
   | { kind: 'not_found' }
-  | { kind: 'validation'; issues: ValidationIssue[] };
+  | { kind: 'validation'; issues: ValidationIssue[] }
+  | { kind: 'stale_write'; currentUpdatedAt: string };
 
 /**
  * Company lifecycle (REQ-FDN-002, REQ-SEC-014). Creating a company — including
@@ -107,6 +108,17 @@ export class CompanyService {
       (await this.permissions.canInCompany(actorId, companyId, 'company.manage'));
     if (!allowed) {
       return err({ kind: 'forbidden' });
+    }
+
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
+    if (
+      parsed.value.expectedUpdatedAt !== undefined &&
+      parsed.value.expectedUpdatedAt !== company.updatedAt
+    ) {
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: company.updatedAt,
+      });
     }
 
     const data = parsed.value;

@@ -38,7 +38,9 @@ export const companyCreateSchema = z.object({
 });
 export type CompanyCreateInput = z.infer<typeof companyCreateSchema>;
 
-export const companyUpdateSchema = companyCreateSchema.partial();
+export const companyUpdateSchema = companyCreateSchema.partial().extend({
+  expectedUpdatedAt: z.string().optional(),
+});
 export type CompanyUpdateInput = z.infer<typeof companyUpdateSchema>;
 
 export const projectCreateSchema = z.object({
@@ -58,7 +60,9 @@ export const projectCreateSchema = z.object({
 });
 export type ProjectCreateInput = z.infer<typeof projectCreateSchema>;
 
-export const projectUpdateSchema = projectCreateSchema.partial();
+export const projectUpdateSchema = projectCreateSchema.partial().extend({
+  expectedUpdatedAt: z.string().optional(),
+});
 export type ProjectUpdateInput = z.infer<typeof projectUpdateSchema>;
 
 export const pageCreateSchema = z.object({
@@ -73,7 +77,9 @@ export const pageCreateSchema = z.object({
 });
 export type PageCreateInput = z.infer<typeof pageCreateSchema>;
 
-export const pageUpdateSchema = pageCreateSchema.partial();
+export const pageUpdateSchema = pageCreateSchema.partial().extend({
+  expectedUpdatedAt: z.string().optional(),
+});
 export type PageUpdateInput = z.infer<typeof pageUpdateSchema>;
 
 export const PROPERTY_DATA_SOURCES = ['development', 'tag_manager', 'other'] as const;
@@ -106,7 +112,9 @@ export const propertyCreateSchema = z.object({
 export type PropertyCreateInput = z.input<typeof propertyCreateSchema>;
 export type PropertyCreateOutput = z.output<typeof propertyCreateSchema>;
 
-export const propertyUpdateSchema = propertyCreateSchema.partial();
+export const propertyUpdateSchema = propertyCreateSchema.partial().extend({
+  expectedUpdatedAt: z.string().optional(),
+});
 export type PropertyUpdateInput = z.infer<typeof propertyUpdateSchema>;
 
 export const moduleCreateSchema = z.object({
@@ -134,10 +142,14 @@ export const destinationCreateSchema = z.object({
 });
 export type DestinationCreateInput = z.infer<typeof destinationCreateSchema>;
 
-export const destinationUpdateSchema = destinationCreateSchema.partial();
+export const destinationUpdateSchema = destinationCreateSchema.partial().extend({
+  expectedUpdatedAt: z.string().optional(),
+});
 export type DestinationUpdateInput = z.infer<typeof destinationUpdateSchema>;
 
-export const moduleUpdateSchema = moduleCreateSchema.partial();
+export const moduleUpdateSchema = moduleCreateSchema.partial().extend({
+  expectedUpdatedAt: z.string().optional(),
+});
 export type ModuleUpdateInput = z.infer<typeof moduleUpdateSchema>;
 
 export const trackingTemplateCreateSchema = z.object({
@@ -154,7 +166,9 @@ export const trackingTemplateCreateSchema = z.object({
 export type TrackingTemplateCreateInput = z.input<typeof trackingTemplateCreateSchema>;
 export type TrackingTemplateCreateOutput = z.output<typeof trackingTemplateCreateSchema>;
 
-export const trackingTemplateUpdateSchema = trackingTemplateCreateSchema.partial();
+export const trackingTemplateUpdateSchema = trackingTemplateCreateSchema.partial().extend({
+  expectedUpdatedAt: z.string().optional(),
+});
 export type TrackingTemplateUpdateInput = z.infer<typeof trackingTemplateUpdateSchema>;
 
 export const freePageCreateSchema = z.object({
@@ -171,7 +185,9 @@ export const freePageCreateSchema = z.object({
 export type FreePageCreateInput = z.input<typeof freePageCreateSchema>;
 export type FreePageCreateOutput = z.output<typeof freePageCreateSchema>;
 
-export const freePageUpdateSchema = freePageCreateSchema.partial();
+export const freePageUpdateSchema = freePageCreateSchema.partial().extend({
+  expectedUpdatedAt: z.string().optional(),
+});
 export type FreePageUpdateInput = z.infer<typeof freePageUpdateSchema>;
 
 export const navigationEventCreateSchema = z.object({
@@ -186,7 +202,9 @@ export const navigationEventCreateSchema = z.object({
 export type NavigationEventCreateInput = z.input<typeof navigationEventCreateSchema>;
 export type NavigationEventCreateOutput = z.output<typeof navigationEventCreateSchema>;
 
-export const navigationEventUpdateSchema = navigationEventCreateSchema.partial();
+export const navigationEventUpdateSchema = navigationEventCreateSchema.partial().extend({
+  expectedUpdatedAt: z.string().optional(),
+});
 export type NavigationEventUpdateInput = z.infer<typeof navigationEventUpdateSchema>;
 
 export const trackingCreateSchema = z.object({
@@ -210,6 +228,7 @@ export type TrackingUpdateInput = z.infer<typeof trackingUpdateSchema>;
 
 export const trackingPropertyPresenceSchema = z.object({
   presence: z.enum(PRESENCE_VALUES),
+  expectedUpdatedAt: z.string().optional(),
 });
 export type TrackingPropertyPresenceInput = z.infer<typeof trackingPropertyPresenceSchema>;
 
@@ -232,7 +251,9 @@ export const flowCreateSchema = z.object({
 export type FlowCreateInput = z.input<typeof flowCreateSchema>;
 export type FlowCreateOutput = z.output<typeof flowCreateSchema>;
 
-export const flowUpdateSchema = flowCreateSchema.partial();
+export const flowUpdateSchema = flowCreateSchema.partial().extend({
+  expectedUpdatedAt: z.string().optional(),
+});
 export type FlowUpdateInput = z.infer<typeof flowUpdateSchema>;
 
 export const triggerCreateSchema = z.object({
@@ -248,7 +269,9 @@ export const triggerCreateSchema = z.object({
 export type TriggerCreateInput = z.input<typeof triggerCreateSchema>;
 export type TriggerCreateOutput = z.output<typeof triggerCreateSchema>;
 
-export const triggerUpdateSchema = triggerCreateSchema.partial();
+export const triggerUpdateSchema = triggerCreateSchema.partial().extend({
+  expectedUpdatedAt: z.string().optional(),
+});
 export type TriggerUpdateInput = z.infer<typeof triggerUpdateSchema>;
 
 export const flowNodeSchema = z.object({
