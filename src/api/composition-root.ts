@@ -259,7 +259,7 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
   });
 
   app.register(cookie);
-  app.register(multipart);
+  app.register(multipart, { limits: { fileSize: config.UPLOAD_MAX_BYTES } });
 
   // Liveness: the process is up (REQ-FDN-024).
   app.get('/api/health', () => ({ status: 'ok' }));
