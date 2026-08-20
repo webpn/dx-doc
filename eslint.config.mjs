@@ -129,7 +129,7 @@ export default tseslint.config(
     ignores: ['src/design-system/**'],
     rules: {
       'no-restricted-imports': [
-        'warn',
+        'error',
         {
           patterns: [
             {

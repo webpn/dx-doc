@@ -32,9 +32,11 @@
       "@project/shared": ["./src/shared/index.ts"],
       "@project/shared/*": ["./src/shared/*"],
       "@project/api": ["./src/api/index.ts"],
-      "@project/api/*": ["./src/api/*"]
+      "@project/api/*": ["./src/api/*"],
+      "@project/app": ["./src/app/index.ts"],
+      "@project/app/*": ["./src/app/*"]
     }
   },
-  "include": ["src", "tests", "e2e", "vite.config.ts", "scripts", "db"],
+  "include": ["src", "tests", "e2e", "vite.config.ts", "playwright.config.ts", "scripts", "db"],
   "exclude": ["node_modules", "dist", "build", "coverage"]
 }

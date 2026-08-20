@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
@@ -16,11 +17,33 @@ const projectAliases: Record<string, string> = {
 };
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
 
   test: {
     pool: 'forks',
     fileParallelism: false,
+    // Split by environment: domain/application/infrastructure/api tests run
+    // under Node (they touch the filesystem and real SQLite), while
+    // app/design-system component tests need a DOM (React Testing Library).
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'node',
+          environment: 'node',
+          exclude: ['**/node_modules/**', 'src/app/**', 'src/design-system/**', 'e2e/**'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'ui',
+          environment: 'jsdom',
+          include: ['src/app/**/*.test.{ts,tsx}', 'src/design-system/**/*.test.{ts,tsx}'],
+          setupFiles: ['./tests/support/setup-ui-tests.ts'],
+        },
+      },
+    ],
   },
 
   resolve: {
