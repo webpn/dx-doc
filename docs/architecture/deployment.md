@@ -82,19 +82,22 @@ Company-level configuration — branding, SMTP override, catalogue defaults, SSO
 
 ## Schema Migrations
 
-- **Format:** forward-only, versioned SQL files.
-- **Execution:** at application start-up, before the HTTP server starts accepting requests.
-- **Idempotency:** each migration is recorded in a `schema_migrations` table. Already-applied migrations are skipped.
+- **Format:** forward-only, versioned TypeScript modules (14 today, under `db/migrations/`), run through Kysely's `Migrator`.
+- **Execution:** an explicit `npm run db:migrate` step, run before starting the application — **not** at process boot.
+- **Idempotency:** each applied migration is recorded in Kysely's own `kysely_migration` table. Already-applied migrations are skipped.
 - **Safety:** a documented mandatory backup step before running migrations. No supported downgrade path (O7).
 
 ## Startup Sequence
 
+Startup **never runs migrations** — that is the explicit `npm run db:migrate` step above, run separately in CI/deploy.
+
 1. Load environment variables and validate required ones.
-2. Connect to database.
-3. Run pending schema migrations.
-4. Initialize search index (create if not exists, update schema if needed).
-5. Verify S3 connectivity.
-6. Start HTTP server (REST API + MCP server + static file serving).
+2. Connect to the database; fail fast if it is not reachable.
+3. Check the schema version; fail fast with an instruction to run `npm run db:migrate` if any migration is pending.
+4. Bootstrap the first administrator if the database is empty (REQ-SEC-013).
+5. Start the HTTP server (REST API + MCP server + static file serving).
+
+Search-index initialization and S3 connectivity are **not** part of the startup self-check; they are reported through `GET /api/ready` instead (see Monitoring below), and the process starts serving requests either way.
 
 ## Reference deployment stack (M0.6)
 

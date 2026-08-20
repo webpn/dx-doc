@@ -101,7 +101,7 @@ Describes the deployable containers/services that compose the dx-doc Platform.
 ### Audit Logging
 
 - Append-only audit entries for all write events (create, update, delete, publish, export, permission changes).
-- 24-month retention, configurable.
+- Retention period is configurable via `AUDIT_RETENTION_MONTHS` (default 24 months), but no pruning job reads it yet — nothing currently enforces retention.
 - Implemented as a cross-cutting concern — audit entries are recorded at the API layer, not scattered through domain logic.
 
 ### Error Tracking
