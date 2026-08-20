@@ -180,7 +180,6 @@ describe('TrackingService (M1.1 Application Service)', () => {
       hasher,
       projectRepo,
       permissions,
-      connection.kysely,
     );
   });
 

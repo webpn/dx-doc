@@ -1392,6 +1392,48 @@ export class SqliteFlowRepository implements FlowRepository {
     }));
   }
 
+  async replaceFlowGraph(flowId: string, nodes: FlowNode[], edges: FlowEdge[]): Promise<void> {
+    await this.db.transaction().execute(async (trx) => {
+      await trx.deleteFrom('flow_nodes').where('flow_id', '=', flowId).execute();
+      await trx.deleteFrom('flow_edges').where('flow_id', '=', flowId).execute();
+
+      if (nodes.length > 0) {
+        await trx
+          .insertInto('flow_nodes')
+          .values(
+            nodes.map((n) => ({
+              id: n.id,
+              flow_id: n.flowId,
+              node_type: n.nodeType,
+              page_id: n.pageId,
+              trigger_id: n.triggerId,
+              position_x: n.positionX,
+              position_y: n.positionY,
+              created_at: n.createdAt,
+            })),
+          )
+          .execute();
+      }
+
+      if (edges.length > 0) {
+        await trx
+          .insertInto('flow_edges')
+          .values(
+            edges.map((e) => ({
+              id: e.id,
+              flow_id: e.flowId,
+              from_node_id: e.fromNodeId,
+              to_node_id: e.toNodeId,
+              label: e.label,
+              condition_description: e.conditionDescription,
+              created_at: e.createdAt,
+            })),
+          )
+          .execute();
+      }
+    });
+  }
+
   private toEntity(row: {
     id: string;
     project_id: string;
@@ -1557,6 +1599,46 @@ export class SqliteVersionRepository implements VersionRepository {
         created_at: version.createdAt,
       })
       .execute();
+  }
+
+  async createVersionWithAuditLog(
+    version: ProjectVersion,
+    auditEntry: AuditLogEntry | null,
+  ): Promise<void> {
+    await this.db.transaction().execute(async (trx) => {
+      await trx
+        .insertInto('versions')
+        .values({
+          id: version.id,
+          project_id: version.projectId,
+          version_number: version.versionNumber,
+          title: version.title,
+          release_notes: version.releaseNotes,
+          changelog_json: JSON.stringify(version.changelog),
+          snapshot_json: JSON.stringify(version.snapshot),
+          created_by: version.createdBy,
+          created_at: version.createdAt,
+        })
+        .execute();
+
+      if (auditEntry) {
+        await trx
+          .insertInto('audit_logs')
+          .values({
+            id: auditEntry.id,
+            company_id: auditEntry.companyId,
+            project_id: auditEntry.projectId,
+            actor_id: auditEntry.actorId,
+            actor_kind: auditEntry.actorKind ?? 'session',
+            action: auditEntry.action,
+            entity_type: auditEntry.entityType,
+            entity_id: auditEntry.entityId,
+            details_json: auditEntry.details ? JSON.stringify(auditEntry.details) : null,
+            created_at: auditEntry.createdAt,
+          })
+          .execute();
+      }
+    });
   }
 
   async getVersionById(id: string): Promise<ProjectVersion | null> {

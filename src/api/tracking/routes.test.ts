@@ -175,7 +175,6 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
       hasher,
       projectRepo,
       permissions,
-      connection.kysely,
       searchIndex,
     );
 

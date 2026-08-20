@@ -179,6 +179,13 @@ export interface FlowRepository {
   getFlowNodes(flowId: string): Promise<FlowNode[]>;
   setFlowEdges(edges: FlowEdge[]): Promise<void>;
   getFlowEdges(flowId: string): Promise<FlowEdge[]>;
+  /**
+   * Atomically replaces every node and edge for `flowId` with `nodes` and
+   * `edges` in a single transaction (REQ-FDN-025). Unlike `setFlowNodes` /
+   * `setFlowEdges`, this always clears existing rows first, even when the
+   * replacement set is empty (an empty graph is a valid graph).
+   */
+  replaceFlowGraph(flowId: string, nodes: FlowNode[], edges: FlowEdge[]): Promise<void>;
 
   /**
    * ADR-0025: nothing references a flow itself. Deletes its own
@@ -202,6 +209,14 @@ export interface TriggerRepository {
 
 export interface VersionRepository {
   createVersion(version: ProjectVersion): Promise<void>;
+  /**
+   * Atomically inserts `version` and, when `auditEntry` is not null, an
+   * accompanying audit-log row, in a single transaction (REQ-FDN-025).
+   */
+  createVersionWithAuditLog(
+    version: ProjectVersion,
+    auditEntry: AuditLogEntry | null,
+  ): Promise<void>;
   getVersionById(id: string): Promise<ProjectVersion | null>;
   getVersionByProjectAndNumber(
     projectId: string,

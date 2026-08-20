@@ -96,7 +96,7 @@ export default tseslint.config(
               message: 'Domain and Application layers must not depend on React.',
             },
             {
-              group: ['@project/infrastructure', '@project/infrastructure/*'],
+              group: ['@project/infrastructure', '@project/infrastructure/*', '**/infrastructure/**'],
               message:
                 'Domain and Application layers must not import Infrastructure directly. Use port interfaces.',
             },

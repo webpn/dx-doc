@@ -43,7 +43,6 @@ import type {
 import { generateMermaidDiagram } from '@project/domain/mermaid';
 import { err, ok, type Result } from '@project/shared/result';
 
-import type { Db } from '../../infrastructure/persistence/sqlite-kysely';
 import type { PermissionService } from '../auth/permissions';
 import type { PasswordHasher } from '../ports/password-hasher';
 import type { ProjectRepository } from '../ports/project-repository';
@@ -158,14 +157,10 @@ export class TrackingService {
     private readonly passwordHasher: PasswordHasher,
     private readonly projects: ProjectRepository,
     private readonly permissions: PermissionService,
-    private readonly db: Db, // Used for transaction support (REQ-FDN-025)
     private readonly searchIndex?: SearchIndex,
     private readonly now: () => Date = () => new Date(),
     private readonly newId: () => string = () => randomUUID(),
-  ) {
-    // db is used for transaction support in publishVersion and setFlowGraph
-    void this.db;
-  }
+  ) {}
 
   // --- PROPERTIES ---
   async createProperty(
@@ -2421,45 +2416,7 @@ export class TrackingService {
       createdAt: nowIso,
     }));
 
-    await this.db.transaction().execute(async (trx) => {
-      await trx.deleteFrom('flow_nodes').where('flow_id', '=', flowId).execute();
-      await trx.deleteFrom('flow_edges').where('flow_id', '=', flowId).execute();
-
-      if (domainNodes.length > 0) {
-        await trx
-          .insertInto('flow_nodes')
-          .values(
-            domainNodes.map((n) => ({
-              id: n.id,
-              flow_id: n.flowId,
-              node_type: n.nodeType,
-              page_id: n.pageId,
-              trigger_id: n.triggerId,
-              position_x: n.positionX,
-              position_y: n.positionY,
-              created_at: n.createdAt,
-            })),
-          )
-          .execute();
-      }
-
-      if (domainEdges.length > 0) {
-        await trx
-          .insertInto('flow_edges')
-          .values(
-            domainEdges.map((e) => ({
-              id: e.id,
-              flow_id: e.flowId,
-              from_node_id: e.fromNodeId,
-              to_node_id: e.toNodeId,
-              label: e.label,
-              condition_description: e.conditionDescription,
-              created_at: e.createdAt,
-            })),
-          )
-          .execute();
-      }
-    });
+    await this.flows.replaceFlowGraph(flowId, domainNodes, domainEdges);
 
     return ok({ ok: true });
   }
@@ -2973,43 +2930,37 @@ export class TrackingService {
 
     const project = await this.projects.getProjectById(projectId);
 
-    await this.db.transaction().execute(async (trx) => {
-      await trx
-        .insertInto('versions')
-        .values({
-          id: versionId,
-          project_id: projectId,
-          version_number: nextNumber,
-          title: parsed.value.title ?? null,
-          release_notes: parsed.value.releaseNotes ?? null,
-          changelog_json: JSON.stringify(changelog),
-          snapshot_json: JSON.stringify(snapshot),
-          created_by: actorId,
-          created_at: nowIso,
-        })
-        .execute();
+    const version: ProjectVersion = {
+      id: versionId,
+      projectId,
+      versionNumber: nextNumber,
+      title: parsed.value.title ?? null,
+      releaseNotes: parsed.value.releaseNotes ?? null,
+      changelog,
+      snapshot,
+      createdBy: actorId,
+      createdAt: nowIso,
+    };
 
-      if (project) {
-        await trx
-          .insertInto('audit_logs')
-          .values({
-            id: this.newId(),
-            company_id: project.companyId,
-            project_id: projectId,
-            actor_id: actorId,
-            action: 'version.published',
-            entity_type: 'version',
-            entity_id: versionId,
-            details_json: JSON.stringify({
-              versionNumber: nextNumber,
-              title: parsed.value.title,
-              changelogEntryCount: changelog.length,
-            }),
-            created_at: nowIso,
-          })
-          .execute();
-      }
-    });
+    const auditEntry: AuditLogEntry | null = project
+      ? {
+          id: this.newId(),
+          companyId: project.companyId,
+          projectId,
+          actorId,
+          action: 'version.published',
+          entityType: 'version',
+          entityId: versionId,
+          details: {
+            versionNumber: nextNumber,
+            title: parsed.value.title,
+            changelogEntryCount: changelog.length,
+          },
+          createdAt: nowIso,
+        }
+      : null;
+
+    await this.versions.createVersionWithAuditLog(version, auditEntry);
 
     return ok({ versionId, versionNumber: nextNumber });
   }
