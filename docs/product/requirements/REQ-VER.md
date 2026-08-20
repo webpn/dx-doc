@@ -13,8 +13,8 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-VER-002 | Unpublished-changes indicator                      | Must   | R1   | M1.8 → M1.17 | Not Started |
 | REQ-VER-003 | Selective publication of trackings and pages/flows | Must   | R1   | M1.8 → M1.14 | Verified    |
 | REQ-VER-004 | Version metadata                                   | Must   | R1   | M1.8 → M1.17 | In Progress |
-| REQ-VER-005 | Diff by entity, property and specific value        | Must   | R1   | M1.8 → M1.14 | Verified    |
-| REQ-VER-006 | Automatically generated changelog                  | Must   | R1   | M1.8 → M1.14 | Verified    |
+| REQ-VER-005 | Diff by entity, property and specific value        | Must   | R1   | M1.8 → M1.14 | In Progress |
+| REQ-VER-006 | Automatically generated changelog                  | Must   | R1   | M1.8 → M1.14 | In Progress |
 | REQ-VER-007 | Full historical version consultation               | Must   | R1   | M1.8 → M1.17 | In Progress |
 | REQ-VER-008 | Full rollback                                      | Should | R2   | M2.7         | Not Started |
 | REQ-VER-009 | Publication email notifications                    | Should | R2   | M2.7         | Not Started |

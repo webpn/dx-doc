@@ -23,9 +23,9 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-SEC-013 | Account lifecycle and first-run bootstrap          | Must   | R0   | M0.4 → M1.12 | In Progress |
 | REQ-SEC-014 | Instance-administration capability                 | Must   | R0   | M0.4 → M1.12 | In Progress |
 | REQ-SEC-015 | Instance-administration portal                     | Should | R2   | M2.8         | Not Started |
-| REQ-SEC-016 | Deny-by-default authorisation on every entry point | Must   | R1   | M1.13        | Not Started |
-| REQ-SEC-017 | Secret material never returned by a read path      | Must   | R1   | M1.13        | Not Started |
-| REQ-SEC-018 | Parent scope verified on every scoped operation    | Must   | R1   | M1.13        | Not Started |
+| REQ-SEC-016 | Deny-by-default authorisation on every entry point | Must   | R1   | M1.13        | Verified    |
+| REQ-SEC-017 | Secret material never returned by a read path      | Must   | R1   | M1.13        | In Progress |
+| REQ-SEC-018 | Parent scope verified on every scoped operation    | Must   | R1   | M1.13        | In Progress |
 | REQ-SEC-019 | Transport security and authentication throttling   | Must   | R1   | M1.13        | Not Started |
 
 ---

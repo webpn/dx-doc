@@ -10,7 +10,7 @@ Entry format and status legend: [requirements index](README.md).
 | ID          | Requirement                                           | MoSCoW | Rel.    | Milestone    | Status      |
 | ----------- | ----------------------------------------------------- | ------ | ------- | ------------ | ----------- |
 | REQ-FDN-001 | Layered architecture with enforced boundaries         | Must   | R0      | M0.1         | Implemented |
-| REQ-FDN-002 | Multi-company tenancy on a single instance            | Must   | R0      | M0.2 → M1.13 | In Progress |
+| REQ-FDN-002 | Multi-company tenancy on a single instance            | Must   | R0      | M0.2 → M1.13 | Verified    |
 | REQ-FDN-003 | Projects with flat grouping labels                    | Must   | R0      | M0.2         | Implemented |
 | REQ-FDN-004 | Immutable internal identifiers                        | Must   | R0      | M0.2         | Implemented |
 | REQ-FDN-005 | Persistence behind repository ports; SQLite default   | Must   | R0      | M0.2         | Implemented |
@@ -33,7 +33,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-FDN-022 | Hosted search adapter                                 | Could  | R3      | —            | Not Started |
 | REQ-FDN-023 | Runtime assembly: every route served by the process   | Must   | R1      | M1.11        | Implemented |
 | REQ-FDN-024 | Startup self-check and readiness endpoint             | Must   | R1      | M1.11        | Implemented |
-| REQ-FDN-025 | Transactional write boundaries                        | Must   | R1      | M1.14        | Verified    |
+| REQ-FDN-025 | Transactional write boundaries                        | Must   | R1      | M1.14        | In Progress |
 | REQ-FDN-026 | Web client shell built on the design system           | Must   | R1      | M1.15        | Not Started |
 
 ---
@@ -52,7 +52,7 @@ The six layers described in [ARCHITECTURE.md](../../../ARCHITECTURE.md) — doma
 
 ### REQ-FDN-002 — Multi-company tenancy on a single instance
 
-**Must** · R0 · [M0.2](../milestones.md#m02--persistence-foundation) → [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · spec §6.2, §16.1 · [ADR-0002](../../adr/0002-multi-company-tenancy.md) · **In Progress** · Issue: — · PR: —
+**Must** · R0 · [M0.2](../milestones.md#m02--persistence-foundation) → [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) · spec §6.2, §16.1 · [ADR-0002](../../adr/0002-multi-company-tenancy.md) · **Verified** · Issue: — · PR: —
 
 One deployed instance hosts multiple Companies. A Company is the tenant boundary and owns its users, shared catalogue, branding and SMTP configuration.
 

@@ -17,7 +17,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-DOM-006 | Module entity, project-scoped, inheritable            | Must   | R1   | M1.1         | Implemented |
 | REQ-DOM-007 | Opt-in propagation of module changes                  | Must   | R1   | M1.1 → M1.16 | In Progress |
 | REQ-DOM-008 | Property removal with automatic module detachment     | Must   | R1   | M1.1         | Implemented |
-| REQ-DOM-009 | Tracking Template, editor-configurable                | Must   | R1   | M1.1 → M1.16 | Implemented |
+| REQ-DOM-009 | Tracking Template, editor-configurable                | Must   | R1   | M1.1 → M1.16 | In Progress |
 | REQ-DOM-010 | Specific Values with plain `[placeholder]` strings    | Must   | R1   | M1.1         | Implemented |
 | REQ-DOM-011 | Prose conditional valorisations                       | Won't  | —    | —            | Rejected    |
 | REQ-DOM-012 | Structured property conditions, four operators + note | Should | R2   | M2.1         | Not Started |
