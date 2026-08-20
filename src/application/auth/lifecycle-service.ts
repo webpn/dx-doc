@@ -157,11 +157,15 @@ export class LifecycleService {
 
   async requestPasswordReset(companyId: string | null, email: string): Promise<void> {
     const user = await this.accounts.getUserByEmail(companyId, email.trim().toLowerCase());
-    // Uniform no-op for unknown, password-less (SSO), or deactivated accounts.
+    // Uniform no-op for unknown or deactivated accounts. A null passwordHash
+    // means "no password set yet" — every invited user starts this way, so
+    // the reset link doubles as the first-password-set link; it is not
+    // itself a signal to withhold the link (no SSO/passwordless account type
+    // exists yet in this schema — see UserAccount).
     if (user === null) {
       return;
     }
-    if (user.passwordHash === null || !user.active) {
+    if (!user.active) {
       return;
     }
     const token = generateSessionToken();

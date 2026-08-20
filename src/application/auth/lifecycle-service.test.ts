@@ -375,7 +375,7 @@ describe('LifecycleService — password reset (REQ-SEC-013)', () => {
     await expect(lifecycle.requestPasswordReset('c1', 'almost@nope')).resolves.toBeUndefined();
   });
 
-  it('issues a token only for an active account with a local password', async () => {
+  it('issues a token for an active account with an existing local password', async () => {
     const { accounts, resetTokens, lifecycle } = buildHarness();
     setEditorWithPassword(accounts, 'hash:secret');
 
@@ -383,6 +383,30 @@ describe('LifecycleService — password reset (REQ-SEC-013)', () => {
 
     expect(resetTokens.tokens.size).toBe(1);
     expect([...resetTokens.tokens.values()][0]?.userId).toBe('editor');
+  });
+
+  it('issues a token for a newly invited account with no password yet', async () => {
+    // A freshly invited user is created with passwordHash: null (no SSO
+    // account type exists yet, REQ-SEC-004 is R2/Not Started) — the reset
+    // link is how they set their first local password.
+    const { resetTokens, lifecycle } = buildHarness();
+
+    await lifecycle.requestPasswordReset('c1', 'editor@acme.test');
+
+    expect(resetTokens.tokens.size).toBe(1);
+    expect([...resetTokens.tokens.values()][0]?.userId).toBe('editor');
+  });
+
+  it('issues no token for a deactivated account', async () => {
+    const { accounts, resetTokens, lifecycle } = buildHarness();
+    setEditorWithPassword(accounts, 'hash:secret');
+    const editor = accounts.users.get('editor');
+    if (editor === undefined) throw new Error('editor missing from harness');
+    accounts.users.set('editor', { ...editor, active: false });
+
+    await lifecycle.requestPasswordReset('c1', 'editor@acme.test');
+
+    expect(resetTokens.tokens.size).toBe(0);
   });
 
   it('emails a single-use reset link whose token matches the stored hash', async () => {
