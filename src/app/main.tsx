@@ -3,8 +3,9 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
+import '@project/design-system/theme.css';
+
 import { App } from './App';
-import '@project/design-system/tokens.css';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
