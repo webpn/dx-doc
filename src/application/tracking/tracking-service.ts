@@ -3239,9 +3239,14 @@ export class TrackingService {
       }
     }
 
-    if (input.trackings && projectId !== null) {
+    if (input.trackings) {
       let i = 0;
       for (const item of input.trackings) {
+        if (projectId === null) {
+          results.trackings.push({ index: i, success: false, error: { kind: 'not_found' } });
+          i++;
+          continue;
+        }
         const res = await this.createTracking(actorId, projectId, item);
         if (res.ok) {
           results.trackings.push({ index: i, success: true, id: res.value.trackingId });
