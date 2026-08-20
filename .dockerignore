@@ -9,3 +9,6 @@ docs
 *.db
 Dockerfile
 docker-compose.yml
+.env
+.env.*
+!.env.example

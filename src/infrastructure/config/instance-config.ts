@@ -195,7 +195,11 @@ const instanceEnvSchema = z.object({
   STORAGE_S3_ACCESS_KEY: z.string().trim().min(1),
   STORAGE_S3_SECRET_KEY: z.string().min(1),
   STORAGE_S3_FORCE_PATH_STYLE: z.preprocess(toBool, z.boolean()).default(true),
-  STORAGE_PUBLIC_BASE_URL: z.string().trim().optional(),
+  STORAGE_PUBLIC_BASE_URL: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => (value === '' ? undefined : value)),
   UPLOAD_MAX_BYTES: z.coerce.number().int().positive().default(10_485_760),
   IMAGE_MAX_DIMENSION: z.coerce.number().int().positive().default(2000),
 
