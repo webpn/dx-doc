@@ -8,6 +8,8 @@ Accepted
 
 2026-08-11
 
+> **Implementation status (2026-08-20):** Partially implemented. `expectedUpdatedAt` is **optional** in practice — when omitted, writes proceed with last-write-wins semantics. The check is read-compare-write rather than an atomic guarded `UPDATE ... WHERE updated_at = ?`, so it can still lose a concurrent write. Bulk writes are **not** transactional: `batchCreate` processes items independently and returns per-item results.
+
 ## Context
 
 Multiple editors may work on the same project simultaneously. The spec defines the concurrency behavior: "If a record the user is viewing is modified by someone else, a notice appears. A save is rejected if the record was modified after the moment the user opened it, with a clear conflict message."

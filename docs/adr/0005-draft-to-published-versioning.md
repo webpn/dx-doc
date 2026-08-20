@@ -45,7 +45,7 @@ Rejected: makes historical version consultation expensive (must replay all delta
 
 ## Consequences
 
-- The draft is the single mutable state. Concurrency conflicts are handled by optimistic locking (ADR-0018).
+- The draft is the single mutable state. Concurrency conflicts are handled by optimistic locking (ADR-0016).
 - Version snapshots duplicate data. This is accepted; the alternative (computing historical states from deltas) is more complex and error-prone.
 - Selective exclusion means a published version may not contain every entity in the draft. Properties and Modules cannot be selectively excluded — this simplifies dependency resolution (a published tracking never references an unpublished property).
 - No merge conflicts. No conflict resolution UI. Simpler mental model.

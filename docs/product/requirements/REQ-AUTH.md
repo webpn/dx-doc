@@ -15,7 +15,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-AUTH-002 | Image upload, 10 MB cap, resize to 2000 px           | Must   | R1   | M1.5 → M1.16 | Not Started |
 | REQ-AUTH-003 | Free wiki pages with publishable flag                | Must   | R1   | M1.5 → M1.16 | In Progress |
 | REQ-AUTH-004 | Mermaid rendering and live preview                   | Must   | R1   | M1.6 → M1.17 | In Progress |
-| REQ-AUTH-005 | Optimistic concurrency with stale-write rejection    | Must   | R1   | M1.5 → M1.14 | Verified    |
+| REQ-AUTH-005 | Optimistic concurrency with stale-write rejection    | Must   | R1   | M1.5 → M1.14 | In Progress |
 | REQ-AUTH-006 | Tracking duplication within a project                | Must   | R1   | M1.5 → M1.16 | In Progress |
 | REQ-AUTH-007 | Project-scoped full-text search                      | Must   | R1   | M1.7 → M1.17 | In Progress |
 | REQ-AUTH-008 | Page and flow duplication                            | Should | R2   | M2.7         | Not Started |
@@ -85,9 +85,11 @@ Mermaid code blocks render, and render live while editing. This is both the form
 
 ### REQ-AUTH-005 — Optimistic concurrency with stale-write rejection
 
-**Must** · R1 · [M1.5](../milestones.md#m15--authoring) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · spec §7.5, §16.1 · [ADR-0016](../../adr/0016-concurrency-model.md) · **Verified** · Issue: — · PR: —
+**Must** · R1 · [M1.5](../milestones.md#m15--authoring) → [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) · spec §7.5, §16.1 · [ADR-0016](../../adr/0016-concurrency-model.md) · **In Progress** · Issue: — · PR: —
 
 No pessimistic locking. A notice appears when a record being viewed is modified by someone else. A save is rejected if the record changed after the user opened it.
+
+> **Downgraded from Verified on 2026-08-20.** The version token (`expectedUpdatedAt`) is optional in every check — omitting it silently falls back to last-write-wins, the alternative the design explicitly rejects. The check itself is read-compare-write, not an atomic guarded `UPDATE ... WHERE updated_at = ?`, so it can still lose a concurrent write under real contention. See [ADR-0016](../../adr/0016-concurrency-model.md)'s implementation-status note.
 
 **Acceptance**
 

@@ -8,6 +8,8 @@ Accepted — **amended twice on 2026-08-12**: (1) the default adapter is Pagefin
 
 2026-08-11 (amended 2026-08-12)
 
+> **Implementation status (2026-08-20):** Partially implemented. There is one index directory per project, not two. Indexing runs only when `POST /api/projects/:projectId/search/sync` is called explicitly; publication does not trigger a rebuild, and there is no draft-freshness window or retry tracking.
+
 ## Context
 
 The Platform requires full-text search within a project, sitting behind an interface so the implementation can be changed without touching application code.

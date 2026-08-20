@@ -8,6 +8,8 @@ Accepted
 
 2026-08-11 (accepted 2026-08-12)
 
+> **Implementation status (2026-08-20):** Not implemented. The `company` table holds only `id`, `name`, `slug` and timestamps; there is no company-settings table and no secret-encryption code. All configuration is instance-level via environment variables. This decision describes the target design, not current behaviour.
+
 ## Context
 
 The Platform has two categories of configuration:

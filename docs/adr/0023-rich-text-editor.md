@@ -10,7 +10,7 @@ Accepted (2026-08-12) — **amended 2026-08-17**: the engine is **MDXEditor**, r
 
 ## Context
 
-[ADR-0011](0011-ui-library-selection.md) selected shadcn/ui and recorded that it covers neither the Markdown editor nor Mermaid. Both are Must requirements delivered by [M1.5](../product/milestones.md#m15--authoring):
+[ADR-0011](0011-ui-library-selection.md) selected shadcn/ui and recorded that it covers neither the Markdown editor nor Mermaid. Both are Must requirements delivered by [M1.16](../product/milestones.md#m116--authoring-ui):
 
 - **[REQ-AUTH-001](../product/requirements/REQ-AUTH.md#req-auth-001--markdown-editor-with-the-full-block-set)** — content is **stored as Markdown**, with the full block set, and _"every block round-trips through save and reload without lossy re-serialisation"_. Markdown-as-storage is not a preference: the git export ([ADR-0018](0018-git-export-model.md)) and the textual diff on descriptions ([REQ-VER-004](../product/requirements/REQ-VER.md#req-ver-004--version-metadata)) both rest on it.
 - **[REQ-AUTH-004](../product/requirements/REQ-AUTH.md#req-auth-004--mermaid-rendering-and-live-preview)** — Mermaid rendering with live preview. **Demoted to R2 on 2026-08-12, then returned to R1 / M1.6 on 2026-08-17** when flows (REQ-NAV-003…007) moved into R1. Either way it does not bear on the editor choice for R1 storage: a ` ```mermaid ` block is a fenced code block, and an editor that handles code blocks handles it (renderer delivery is a separate concern, REQ-AUTH-004).
@@ -28,7 +28,7 @@ Consequence to record: MDXEditor is distributed as an **npm package**, not as a 
 
 ### The acceptance condition still applies (unchanged)
 
-[REQ-AUTH-001](../product/requirements/REQ-AUTH.md#req-auth-001--markdown-editor-with-the-full-block-set) requires **Markdown as the stored form**, with the full block set. A time-boxed spike must still verify a **lossless Markdown → document → Markdown round-trip over the full required block set** — headings, ordered/unordered lists, bold and italic, links, tables, code blocks (including ` ```mermaid ` fenced blocks with language tags), images, quotes and callouts. That spike lands **before M1.5 begins**, not inside it.
+[REQ-AUTH-001](../product/requirements/REQ-AUTH.md#req-auth-001--markdown-editor-with-the-full-block-set) requires **Markdown as the stored form**, with the full block set. A time-boxed spike must still verify a **lossless Markdown → document → Markdown round-trip over the full required block set** — headings, ordered/unordered lists, bold and italic, links, tables, code blocks (including ` ```mermaid ` fenced blocks with language tags), images, quotes and callouts. That spike lands **before M1.16 begins**, not inside it.
 
 > The original fallback (TipTap/ProseMirror or Lexical) is retained. MDXEditor itself is built on ProseMirror, so if its own round-trip is lossy, TipTap as the fallback is a comparatively short step; both are named so the spike is a decision point rather than a sunk cost.
 
@@ -38,7 +38,7 @@ The project advertises two capabilities this product does not want, and neither 
 
 **AI assistance / MDX execution.** The Platform's stock configuration must contact no external service beyond what [REQ-FDN-021](../product/requirements/REQ-FDN.md#req-fdn-021--third-party-data-flow-statement)'s data-flow statement lists, and the whole argument for the Pagefind default ([ADR-0009](0009-search-abstraction.md)) is that documentation content does not leave the instance. Any AI-assist plugin and any live JSX/MDX execution must be removed or hard-disabled, and the M0.6 data-flow test should cover the editor the way it covers search.
 
-**CRDT-based multi-user editing.** [ADR-0016](0016-concurrency-model.md) chose optimistic concurrency with stale-write rejection, and [M1.5](../product/milestones.md#m15--authoring)'s exit criterion is a _rejected_ save with a visible conflict. A live collaborative layer would silently merge exactly the situation the product has decided to surface. It is unused surface area at best and a contradiction of an accepted decision at worst — leave it off.
+**CRDT-based multi-user editing.** [ADR-0016](0016-concurrency-model.md) chose optimistic concurrency with stale-write rejection, and [M1.16](../product/milestones.md#m116--authoring-ui)'s exit criterion is a _rejected_ save with a visible conflict. A live collaborative layer would silently merge exactly the situation the product has decided to surface. It is unused surface area at best and a contradiction of an accepted decision at worst — leave it off.
 
 ## Risks accepted
 
@@ -58,4 +58,4 @@ The project advertises two capabilities this product does not want, and neither 
 
 ## Last Responsible Moment
 
-Before [M1.5](../product/milestones.md#m15--authoring) begins — and the spike must land before it, not inside it.
+Before [M1.16](../product/milestones.md#m116--authoring-ui) begins — and the spike must land before it, not inside it.

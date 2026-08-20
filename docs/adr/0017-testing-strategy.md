@@ -8,6 +8,8 @@ Accepted (2026-08-12)
 
 2026-08-11 (decided 2026-08-12)
 
+> **Implementation status (2026-08-20):** Partially implemented. Integration tests use Fastify's `app.inject` rather than `supertest` (not a dependency). The `tests/integration/`, `tests/support/builders/` and `seed/demo/` directories described below do not exist; tests live alongside the code they cover. Coverage measurement is not configured (`npm run test:coverage` is a placeholder).
+
 ## Context
 
 The Platform needs a testing strategy that covers domain logic, application use cases, infrastructure adapters, API endpoints, and UI components. Tests must be reliable, fast enough to run in CI on every PR, and provide meaningful coverage of behavior — not implementation details.

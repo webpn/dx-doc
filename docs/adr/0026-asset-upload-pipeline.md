@@ -8,6 +8,8 @@ Accepted
 
 2026-08-18
 
+> **Implementation status (2026-08-20):** The streaming size limit described below is not wired up. `@fastify/multipart` is registered without `limits`, and the upload route buffers the file via `toBuffer()` before checking its size, so an oversized upload is fully read into memory before rejection.
+
 ## Context
 
 [REQ-IMP-004](../product/requirements/REQ-IMP.md#req-imp-004--asset-upload-through-the-api)

@@ -43,7 +43,7 @@ Two parts, and the second matters as much as the first:
 - **Tailwind CSS becomes a dependency**, and the design tokens required by [ADR-0008](0008-design-system-boundary.md) (colours, typography, spacing, radii, shadows, breakpoints, z-index, motion) are defined in the Tailwind theme. Application code still consumes them through the design system, not by reaching for arbitrary Tailwind classes.
 - **The design-system boundary changes character but not purpose.** With MUI, `src/design-system/` would wrap an external dependency. With shadcn/ui the copied components _are_ the design system's internals. Application code still imports from `@project/design-system` and never from a component path directly; the wrapping policy in [ADR-0008](0008-design-system-boundary.md) now means "the copied component plus whatever project-level API it needs", and for many components that addition is nothing.
 - **Upstream fixes are a manual pull, not an `npm update`.** This is the price of code ownership. Staying close to upstream is what keeps that pull cheap; every divergence makes it more expensive, which is the practical reason for the "close to upstream" rule, independent of the AI argument.
-- **Complex tables are a separate concern.** shadcn/ui's table is presentational; sorting, filtering and virtualisation for tracking and property lists come from TanStack Table, which pairs with the [ADR-0012](0012-data-fetching-strategy.md) choice.
+- **Complex tables are a separate concern.** shadcn/ui's table is presentational; sorting, filtering and virtualisation for tracking and property lists are deferred to whatever table engine M1.16/M1.17 selects — not a dependency today.
 - **Open gap: the Markdown editor and Mermaid are not covered by this decision.** [REQ-AUTH-001](../product/requirements/REQ-AUTH.md#req-auth-001--markdown-editor-with-the-full-block-set) (full block set) and [REQ-AUTH-004](../product/requirements/REQ-AUTH.md#req-auth-004--mermaid-rendering-and-live-preview) (Mermaid live preview) are Must requirements delivered by [M1.5](../product/milestones.md#m15--authoring), and no shadcn/ui component addresses them. The editor engine is a distinct choice, still to be made before M1.5. It was folded into D1's criteria and should not have been — a component library and an editor engine are different decisions.
 
 ## Alternatives Considered
@@ -60,7 +60,7 @@ Two parts, and the second matters as much as the first:
 
 - [ADR-0008](0008-design-system-boundary.md): Design System Boundary — the wrapper that insulated the application from this choice, and whose character this decision changes.
 - [ADR-0019](0019-ai-coding-agent-model.md): AI Coding Agent Model — why criterion 1 outweighs the rest.
-- [ADR-0012](0012-data-fetching-strategy.md): TanStack Query for server state; TanStack Table is its companion for the table work.
+- [ADR-0012](0012-data-fetching-strategy.md): TanStack Query for server state; a table engine for the complex list views is a separate, not-yet-made choice (see the correction on the "Complex tables" consequence above).
 - [REQ-NFR-013](../product/requirements/REQ-NFR.md#req-nfr-013--wcag-aa-as-a-design-principle-not-a-gate): accessibility as a design principle, not a conformance gate.
 - D1 in [decisions](../decisions/README.md).
 

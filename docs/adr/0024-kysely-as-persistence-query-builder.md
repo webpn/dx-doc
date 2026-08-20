@@ -40,9 +40,9 @@ and tracks applied migrations in its own table.
 
 Two facts make this decision reversible in a way the equivalent decision would
 not be in a year: **the application has never been started in production**
-(`var/db/` is empty, no SQLite file exists, no `schema_migrations` rows have
+(`var/db/` is empty, no SQLite file exists, no `kysely_migration` rows have
 ever been written) and **the current schema is small and self-contained**
-(five migrations, seven tables, all created in the current pre-R1 effort).
+(all created in the current pre-R1 effort).
 There is no data to migrate and no operator with an existing `kysely_migration`
 table to reconcile.
 

@@ -5,9 +5,10 @@ import { z } from 'zod';
  *
  * Only operator/instance settings live here, read from the environment.
  * Company-level configuration (SSO connections, supported login methods,
- * locales, branding, catalogue defaults, SMTP override) lives in the database
- * and is edited by each company's Admin — it is never read from the
- * environment at request time.
+ * locales, branding, catalogue defaults, SMTP override) is the target design
+ * of ADR-0014 — it does not exist yet. There is no company-settings table
+ * and no secret-encryption code; all configuration today is instance-level,
+ * read from the environment.
  *
  * The environment-variable matrix (README and .env.example) is reproduced from
  * this module; a test fails when they diverge (REQ-FDN-013 acceptance).

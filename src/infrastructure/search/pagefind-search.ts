@@ -10,12 +10,14 @@ import { close, createIndex } from 'pagefind';
  * configured `SEARCH_INDEX_PATH`.
  *
  * Known limitation, recorded here deliberately: Pagefind has no server-side
- * query API. Search executes in the browser against the served index
- * (`pagefind.js` + WASM). The port's `query` method therefore throws
- * `PagefindQueryUnsupportedError` for this adapter; the web client (M1.7)
- * searches client-side against an index artefact served through an authorised,
- * grant-checked route (REQ-FDN-008). Adapters that support server-side query
- * (REQ-FDN-022) implement `query` for real.
+ * query API in the browser-served form ADR-0009 describes. This adapter
+ * works around that by keeping an in-process `Map` of indexed documents and
+ * matching `query` against it with substring search — so `query` does
+ * **not** throw `PagefindQueryUnsupportedError` in practice; it silently
+ * returns `[]` for any project that has not been synced (via
+ * `POST /api/projects/:projectId/search/sync`) since the current process
+ * started. Adapters that support real server-side query (REQ-FDN-022)
+ * implement `query` properly.
  */
 export class PagefindSearchIndex implements SearchIndex {
   private readonly documents = new Map<string, IndexableDocument[]>();

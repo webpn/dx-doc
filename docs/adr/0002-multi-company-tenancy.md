@@ -18,8 +18,8 @@ Multi-tenancy is implemented at the **database level** using a `company_id` fore
 
 **Schema pattern:**
 
-- Every tenant entity table includes a `company_id` column referencing the `companies` table.
-- Every query includes `WHERE company_id = ?` scoped to the current user's company.
+- Every tenant entity table reaches a `company_id` — most carry it directly, some only through an unambiguous parent chain to a Project (see the implementation-status note this correction accompanies: `company_id` is not on every table, but every tenant table resolves to one).
+- Every query includes `WHERE company_id = ?` scoped to the current user's company, either directly or through the project it belongs to.
 - Company-level configuration (branding, SMTP, catalogue defaults) is stored in the `companies` table and related tables.
 
 **Middleware enforcement:**

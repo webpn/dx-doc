@@ -126,7 +126,7 @@ All tests run on every PR and push to `main`. See `.github/workflows/ci.yml`.
 
 ## Coverage
 
-Coverage is measured but no arbitrary threshold is enforced. Focus coverage on:
+Coverage measurement is not yet configured (`npm run test:coverage` is a placeholder). Once wired up, no arbitrary threshold should be enforced. Focus coverage on:
 
 - Domain logic (high value, easy to test)
 - Application use cases (orchestration and policies)
