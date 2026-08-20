@@ -1,0 +1,14 @@
+# Normalise all text files to LF in the working tree.
+# The doc tooling (scripts/docs-*.mjs) and prettier (endOfLine: 'lf') both
+# assume LF; a CRLF working tree silently breaks heading detection.
+* text=auto eol=lf
+
+# Binary files must never be normalised.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.sqlite binary

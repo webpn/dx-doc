@@ -68,7 +68,12 @@ export function deriveFileId(docsRoot, absFile) {
 export function stripCodeFences(lines) {
   const kept = [];
   let inFence = false;
-  for (const line of lines) {
+  for (const rawLine of lines) {
+    // Strip a trailing CR so a CRLF checkout behaves like an LF one. Without
+    // this, `/^(#{1,6})\s+(.*)$/` never matches (`.` excludes \r, and `$` is
+    // not multiline), so no heading is ever detected and every ID-based link
+    // reports as unresolvable.
+    const line = rawLine.endsWith('\r') ? rawLine.slice(0, -1) : rawLine;
     if (/^\s*(```|~~~)/.test(line)) {
       inFence = !inFence;
       kept.push('');
@@ -77,6 +82,14 @@ export function stripCodeFences(lines) {
     kept.push(inFence ? '' : line);
   }
   return kept;
+}
+
+// Blank out inline code spans (`...`) so example link syntax inside them is
+// never parsed as a real link. Applied after fenced blocks are stripped.
+// Replaces span contents with spaces to preserve column offsets, which
+// docs-links.mjs relies on to map a match back to the raw line.
+export function stripInlineCode(line) {
+  return line.replace(/`[^`]*`/g, (m) => ' '.repeat(m.length));
 }
 
 // A heading can cover a contiguous range, e.g. "REQ-NFR-001 … REQ-NFR-004 —

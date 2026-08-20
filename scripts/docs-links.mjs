@@ -19,7 +19,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { buildHref, buildRegistry, looksLikeId, stripCodeFences } from './docs-registry.mjs';
+import {
+  buildHref,
+  buildRegistry,
+  looksLikeId,
+  stripCodeFences,
+  stripInlineCode,
+} from './docs-registry.mjs';
 
 const MODE = process.argv[2];
 if (MODE !== 'check' && MODE !== 'sync') {
@@ -50,7 +56,7 @@ let fixedFiles = 0;
 for (const file of files) {
   const raw = fs.readFileSync(file, 'utf8');
   const lines = raw.split('\n');
-  const strippedForScan = stripCodeFences(lines);
+  const strippedForScan = stripCodeFences(lines).map(stripInlineCode);
   let changed = false;
   const relFile = path.relative(repoRoot, file);
 

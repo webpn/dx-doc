@@ -80,7 +80,13 @@ if (MODE === 'generate') {
   console.log(`docs-index generate: wrote ${path.relative(repoRoot, indexFile)}.`);
 } else {
   const current = fs.existsSync(indexFile) ? fs.readFileSync(indexFile, 'utf8') : null;
-  if (current !== content) {
+  // Compare after normalising CRLF -> LF on both sides. `content` is always
+  // LF-only (built with `lines.join('\n')`); on a CRLF working tree (Windows,
+  // core.autocrlf=true) `current` is CRLF, which would otherwise never equal
+  // `content` even when every line is identical. This mirrors the CRLF
+  // tolerance already applied to heading/link scanning in docs-registry.mjs.
+  const normalize = (text) => text.replace(/\r\n/g, '\n');
+  if (current === null || normalize(current) !== normalize(content)) {
     console.error('docs-index check: docs/INDEX.md is stale. Run "npm run docs:generate-index".');
     process.exit(1);
   }
