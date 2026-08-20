@@ -4,7 +4,7 @@
 
 # dx-doc — Tracking Documentation Platform
 
-**Status:** R1 (MVP) in its completion phase — backend complete, web client in progress
+**Status:** R1 (MVP) in its completion phase — backend and client foundation complete, authoring and consultation UI in progress
 
 ## What we are building
 
@@ -58,26 +58,27 @@ The detailed, enumerated definition of R1 scope lives in the [R1 minimum require
 
 ## Current Status
 
-**R0 is complete. R1 is in its completion phase** ([M1.11–M1.18](docs/product/milestones.md#r1-completion--assembly-hardening-and-the-client)).
+**R0 is complete. R1 is in its completion phase** ([M1.11–M1.18](docs/product/milestones.md)).
 
 What exists:
 
 - The full R1 data model — pages, trackings, properties, modules, destinations, specific values, templates, free pages, flows and triggers — persisted through repository ports over SQLite, with the composition rules enforced in a dependency-free domain layer.
-- Application services carrying validation and permissions, ~60 REST route handlers, an MCP JSON-RPC surface, the publication and changelog pipeline, project-scoped search indexing, shared-password access and the audit-log store. Typecheck, lint, format and 148 tests are green.
+- Application services carrying validation and permissions, and an **assembled server**: ~93 REST route handlers plus `GET /api/health` and `GET /api/ready`, an MCP JSON-RPC surface with 40 tools, the publication and changelog pipeline, project-scoped search indexing, shared-password access and the audit-log store.
+- Access administration — project grants have permission-gated, audited write paths — and company-scoped catalogue reads.
+- The client foundation: a design system built on shadcn/ui, the authentication flow, and the authenticated application shell.
 
-What does not yet exist, and is what M1.11–M1.18 build:
+What does not yet exist:
 
-- **The assembled application.** The server currently registers only `GET /api/health` and the static handler; the routes above are not yet wired into it ([M1.11](docs/product/milestones.md#m111--runtime-assembly-and-first-run)).
-- **The web client.** The React app is still scaffolding — no design system, no editor, no navigation ([M1.15](docs/product/milestones.md#m115--client-foundation)–[M1.17](docs/product/milestones.md#m117--consultation-search-and-publication-ui)).
-- **Access administration and tenancy hardening.** Project grants have no write path, and several read paths are not company-scoped ([M1.12](docs/product/milestones.md#m112--access-administration-and-api-surface-completion), [M1.13](docs/product/milestones.md#m113--tenancy-and-authorisation-hardening)).
+- **The authoring editor** — Markdown authoring with image upload (M1.16).
+- **The consultation, search and publication UI** (M1.17).
 
-> **Not yet deployable.** Do not run this on an instance holding real documentation until [M1.13](docs/product/milestones.md#m113--tenancy-and-authorisation-hardening) closes: catalogue read paths are not tenant-scoped, and shared-password hashes are returned by a read endpoint. Both are recorded as [REQ-SEC-016](docs/product/requirements/REQ-SEC.md) … [REQ-SEC-019](docs/product/requirements/REQ-SEC.md).
+> **Not production-hardened.** The application assembles and runs, but do not expose an instance holding real documentation to an untrusted network yet. There is no request rate limiting, no CSRF protection and no security response headers; batch writes are not transactional; and the optimistic-concurrency check is read-compare-write rather than an atomic guarded update. See [SECURITY.md](SECURITY.md) for the full implemented-versus-planned split.
 
 The source of truth for what is scheduled is [docs/product/milestones.md](docs/product/milestones.md).
 
 ## Prerequisites
 
-- Node.js 20 LTS or later
+- Node.js 22 LTS or later
 - npm 10 or later
 - S3-compatible object storage (e.g., MinIO for local development); Docker for the reference stack
 
@@ -145,7 +146,7 @@ and read back from it; nothing else is contacted.
 | Integration                                    | When it is contacted                | What is sent                                                | Default                           |
 | ---------------------------------------------- | ----------------------------------- | ----------------------------------------------------------- | --------------------------------- |
 | Object storage (S3-compatible, `STORAGE_S3_*`) | asset upload/read                   | documentation assets the operator configured to store there | Required                          |
-| SMTP (`SMTP_*`)                                | password reset / publication emails | the recipient address and the email body                    | Off — no email is sent without it |
+| SMTP (`SMTP_*`)                                | password reset                      | the recipient address and the email body                    | Off — no email is sent without it |
 | Error tracking (Sentry, `SENTRY_DSN`)          | unhandled errors                    | error context (no documentation content, no personal data)  | Off                               |
 | Identity providers (OIDC/SAML, R2+)            | SSO login                           | an authorization code / assertion                           | Off                               |
 | Search (hosted adapter, R3+)                   | search                              | query terms and indexed content                             | Off — Pagefind is local           |
@@ -162,13 +163,15 @@ Instance-level configuration only — infrastructure and operator secrets. Per-c
 | Variable                                                                                                          | Required                               | Default                 | Purpose                                                                                         |
 | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------- |
 | `APP_URL`                                                                                                         | Yes                                    | —                       | Public base URL; also derives the OIDC redirect URI                                             |
-| `APP_SECRET`                                                                                                      | Yes                                    | —                       | Signing key for sessions and encrypted company-level secrets                                    |
+| `APP_SECRET`                                                                                                      | Yes                                    | —                       | Reserved for session signing and company-secret encryption; required at boot but not yet consumed |
 | `APP_ENV`                                                                                                         | No                                     | `development`           | Runtime environment                                                                             |
 | `APP_DEFAULT_LOCALE`                                                                                              | No                                     | `en`                    | Interface language fallback before any company context exists                                   |
 | `DB_DRIVER`                                                                                                       | No                                     | `sqlite`                | Persistence adapter: `sqlite` (default), `mariadb` or `postgres` (R2)                           |
 | `DB_FILE`                                                                                                         | If `DB_DRIVER=sqlite`                  | `./var/db/dxdoc.sqlite` | SQLite database file path                                                                       |
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`                                                         | If `DB_DRIVER` is `mariadb`/`postgres` | —                       | Server database connection (R2)                                                                 |
 | `DB_POOL_SIZE`, `DB_SSL_MODE`                                                                                     | No                                     | `10`, `preferred`       | Server database tuning (R2)                                                                     |
+| `PORT`                                                                                                            | No                                     | `3001`                  | Port the API server listens on                                                                  |
+| `HOST`                                                                                                            | No                                     | `127.0.0.1`             | Interface the API server binds to; set to `0.0.0.0` in containers                                |
 | `STORAGE_S3_ENDPOINT`, `STORAGE_S3_REGION`, `STORAGE_S3_BUCKET`, `STORAGE_S3_ACCESS_KEY`, `STORAGE_S3_SECRET_KEY` | Yes                                    | —                       | S3-compatible object storage (AWS S3, MinIO, Backblaze B2; not Cloudinary — see `.env.example`) |
 | `STORAGE_S3_FORCE_PATH_STYLE`                                                                                     | No                                     | `true`                  | Required by providers using path-style addressing (MinIO, B2)                                   |
 | `STORAGE_PUBLIC_BASE_URL`                                                                                         | No                                     | —                       | Public URL prefix for stored assets, if different from the endpoint                             |
@@ -177,7 +180,9 @@ Instance-level configuration only — infrastructure and operator secrets. Per-c
 | `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD`                                                               | Yes (first run)                        | —                       | Read once, against an empty database, to create the first `instance_admin`                      |
 | `SEARCH_DRIVER`                                                                                                   | No                                     | `pagefind`              | Search adapter; a hosted adapter (e.g. Algolia) arrives R3                                      |
 | `SEARCH_INDEX_PATH`                                                                                               | No                                     | `./var/search`          | Pagefind index location on local disk                                                           |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`                                               | No                                     | —                       | Instance-wide email fallback; a company may override in the database                            |
+| `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`                                                                         | No                                     | —                       | Instance-wide email fallback; a company may override in the database                            |
+| `SMTP_PORT`                                                                                                       | No                                     | `587`                   | SMTP transport port                                                                              |
+| `SMTP_FROM`                                                                                                       | No                                     | `noreply@localhost`     | SMTP "from" address                                                                              |
 | `SMTP_TLS`                                                                                                        | No                                     | `true`                  | SMTP transport security                                                                         |
 | `SENTRY_DSN`                                                                                                      | No                                     | —                       | Error tracking (R1); the application runs normally with none configured                         |
 | `AUDIT_RETENTION_MONTHS`                                                                                          | No                                     | `24`                    | Audit log retention                                                                             |
@@ -196,8 +201,14 @@ Instance-level configuration only — infrastructure and operator secrets. Per-c
 | `npm run format`       | Prettier formatting                                                 |
 | `npm run format:check` | Check formatting without writing                                    |
 | `npm test`             | Unit and component tests                                            |
+| `npm run test:coverage` | **Not yet configured** — placeholder                               |
 | `npm run test:e2e`     | End-to-end tests                                                    |
 | `npm run db:migrate`   | Apply pending schema migrations (Kysely Migrator; run before `dev`) |
+| `npm run db:seed:demo` | **Not yet configured** — placeholder                                |
+| `npm run docs:check-links`    | Verify documentation cross-references (CI gate)               |
+| `npm run docs:sync-links`     | Rewrite ID-based documentation links to current paths          |
+| `npm run docs:check-index`    | Verify `docs/INDEX.md` is current (CI gate)                    |
+| `npm run docs:generate-index` | Regenerate `docs/INDEX.md`                                      |
 
 ## Architecture Overview
 

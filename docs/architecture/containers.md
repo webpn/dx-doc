@@ -55,7 +55,7 @@ Describes the deployable containers/services that compose the dx-doc Platform.
 
 ### Application Server (Node.js)
 
-- **Runtime:** Node.js 20 LTS
+- **Runtime:** Node.js 22 LTS
 - **Responsibilities:**
   - REST API: validation, authentication, authorization, request routing
   - MCP Server: Model Context Protocol over HTTP/SSE, a layer above the REST API
