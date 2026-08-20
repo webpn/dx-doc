@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-The project is in pre-release (R0). No versions are supported for production use yet.
+The project is in pre-release (R1). No versions are supported for production use yet.
 
 Once R1 is released, security patches will be provided for the latest stable release and the immediately preceding release.
 
@@ -22,11 +22,15 @@ You will receive a response within 5 business days. The vulnerability will be ad
 
 ## Security Principles
 
-The Platform applies these principles from day one:
+The Platform's security posture is split below into controls that are **implemented today** and
+controls that are **planned but not yet present**. Read the second table before exposing an
+instance to an untrusted network.
+
+### Implemented today
 
 ### Secrets Management
 
-- No secrets are committed to the repository. All secrets are injected through environment variables (instance-level) or stored in the database (company-level).
+- No secrets are committed to the repository. All operator secrets are supplied as instance-level environment variables. Per-company configuration stored in the database is planned but not yet implemented — see ADR-0014.
 - The `.env.example` file contains only placeholder values and documentation.
 - `.env` is in `.gitignore`.
 
@@ -35,7 +39,7 @@ The Platform applies these principles from day one:
 - All API endpoints except health checks and shared-password project views require authentication.
 - Authorization (project-scoped access grants) is enforced at the API middleware layer — never in the UI alone.
 - Shared passwords for project access are hashed before storage.
-- Session tokens are signed and have a configurable TTL.
+- Session tokens are opaque random values, stored only as SHA-256 hashes; the raw token is never persisted.
 
 ### Input Validation
 
@@ -45,14 +49,13 @@ The Platform applies these principles from day one:
 
 ### Output Security
 
-- User-generated Markdown content is sanitized before rendering (XSS prevention).
 - Image uploads are validated for type (not extension) and size.
 - Error responses never expose stack traces, SQL, or internal paths.
 - Non-publishable free pages (containing test credentials and internal references) are excluded from all published artefacts and external search indexes.
 
 ### Data Protection
 
-- The Platform stores no personal data. Test credentials are the most sensitive data.
+- The Platform stores the minimum personal data required to operate accounts: a user's email address and a bcrypt hash of their password. Audit-log entries reference user IDs. No documentation content is treated as personal data.
 - Non-publishable free pages are flagged and excluded from external exposure.
 - Audit logs record write events only — not read events.
 - Project deletion is an archive operation, not a hard delete.
@@ -66,15 +69,25 @@ The Platform applies these principles from day one:
 ### HTTP Security
 
 - HTTPS required in production.
-- Security headers configured (Content-Security-Policy, X-Content-Type-Options, X-Frame-Options, Strict-Transport-Security).
-- CSRF protection for cookie-based authentication.
 
 ### Least Privilege
 
 - Database connections use the minimum required privileges.
 - Search API keys are server-side scoped to the user's project grants.
-- Object storage access is through signed URLs or a configured IAM role with minimum permissions.
 - Analytics platform integrations (R4) use service accounts with read-only access.
+
+### Planned — not yet implemented
+
+> Do not rely on any control in this list. Each names the milestone that delivers it.
+
+| Control | Status | Target |
+| --- | --- | --- |
+| Security response headers (CSP, X-Content-Type-Options, X-Frame-Options, HSTS) | Not implemented | R1 hardening |
+| CSRF protection for cookie-based authentication | Not implemented | R1 hardening |
+| Request rate limiting / throttling | Not implemented | R1 hardening |
+| Markdown sanitization before rendering | Not implemented — no renderer exists yet | M1.16 (authoring editor) |
+| Signed (time-limited) object-storage URLs | Not implemented — assets are served from a public base URL by design in R1, see ADR-0026 | R2 |
+| Audit-log retention enforcement | Not implemented — `AUDIT_RETENTION_MONTHS` is read but no pruning job exists | R2 |
 
 ## References
 
