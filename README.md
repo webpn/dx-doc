@@ -129,7 +129,7 @@ For host-side local development only (SMTP catcher + object storage, run the
 app yourself with `npm run dev`):
 
 ```bash
-docker compose up -d mailpit minio
+docker compose up -d mailpit minio minio-init
 ```
 
 ## Data flow (third-party data-flow statement)
