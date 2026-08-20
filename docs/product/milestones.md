@@ -412,6 +412,8 @@ The M1.15 review artifact is the combination of the design-review route, compone
 
 > **This is the first milestone whose exit criterion a non-developer can check**, and that is deliberate. Everything before it is verifiable only by test; from here the demonstration is somebody using the product.
 
+> **Blocked at "creates a project" — decision needed (2026-08-20).** The client foundation itself (design system, API client, query/state layers, auth flow, shell, project list, design-review route, component tests) is built and passing. The exit-criterion walkthrough deadlocks one step earlier than the client can fix: a freshly created company has no path to its first Admin, so the bootstrap administrator cannot create a project in a company they just created, and the invite path is blocked the same way. Full analysis and candidate resolutions are recorded at [REQ-SEC-014](requirements/REQ-SEC.md#req-sec-014--instance-administration-capability). The Playwright acceptance test stops at company creation with this finding rather than seeding a database row to route around it — once a resolution lands, the remaining steps (project, invite, grant, editor login) are already written and ready to run.
+
 ### M1.16 — Authoring UI
 
 **Goal:** an editor can build the whole tracking documentation without leaving the browser.

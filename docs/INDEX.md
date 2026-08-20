@@ -52,6 +52,10 @@ One entry per file. Use this to find _what exists and where_ before opening full
 
 ## [ADR-0024](adr/0024-kysely-as-persistence-query-builder.md) — Kysely for Persistence Queries and Migrations
 
+## [ADR-0025](adr/0025-r1-entity-deletion-semantics.md) — R1 Entity Deletion Semantics
+
+## [ADR-0026](adr/0026-asset-upload-pipeline.md) — Asset Upload Pipeline
+
 ## [architecture-containers](architecture/containers.md) — Container Architecture
 
 ## [architecture-deployment](architecture/deployment.md) — Deployment
@@ -421,3 +425,5 @@ One entry per file. Use this to find _what exists and where_ before opening full
 ## [docs](README.md) — Documentation
 
 ## [testing-strategy](testing/strategy.md) — Testing Strategy
+
+## [ui](ui/README.md) — UI design review
