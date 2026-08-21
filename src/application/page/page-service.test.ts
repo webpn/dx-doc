@@ -66,12 +66,16 @@ class FakePages implements PageRepository {
     return Promise.resolve(result);
   }
 
-  updatePage(page: PageRecord): Promise<void> {
+  updatePage(page: PageRecord, expectedUpdatedAt?: string): Promise<boolean> {
+    const existing = this.pages.get(page.id);
+    if (expectedUpdatedAt !== undefined && existing?.updatedAt !== expectedUpdatedAt) {
+      return Promise.resolve(false);
+    }
     this.pages.set(page.id, page);
     if (page.customId) {
       this.customToId.set(page.customId, page.id);
     }
-    return Promise.resolve();
+    return Promise.resolve(true);
   }
 
   getPageDeletionBlockers(): Promise<PageDeletionBlockers> {
@@ -104,9 +108,13 @@ class FakeProjects implements ProjectRepository {
   listProjectsForCompany(_c: string): Promise<ProjectRecord[]> {
     return Promise.resolve(Array.from(this.projects.values()));
   }
-  updateProject(p: ProjectRecord): Promise<void> {
+  updateProject(p: ProjectRecord, expectedUpdatedAt?: string): Promise<boolean> {
+    const existing = this.projects.get(p.id);
+    if (expectedUpdatedAt !== undefined && existing?.updatedAt !== expectedUpdatedAt) {
+      return Promise.resolve(false);
+    }
     this.projects.set(p.id, p);
-    return Promise.resolve();
+    return Promise.resolve(true);
   }
 }
 

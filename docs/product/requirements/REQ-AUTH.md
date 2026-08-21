@@ -89,17 +89,13 @@ Mermaid code blocks render, and render live while editing. This is both the form
 
 No pessimistic locking. A notice appears when a record being viewed is modified by someone else. A save is rejected if the record changed after the user opened it.
 
-> **Downgraded from Verified on 2026-08-20.** The version token (`expectedUpdatedAt`) is optional in every check — omitting it silently falls back to last-write-wins, the alternative the design explicitly rejects. The check itself is read-compare-write, not an atomic guarded `UPDATE ... WHERE updated_at = ?`, so it can still lose a concurrent write under real contention. See [ADR-0016](../../adr/0016-concurrency-model.md)'s implementation-status note.
+> **Status on 2026-08-20.** Every mutable entity's update path (properties, modules, destinations, navigation events, trackings, tracking-property presence, tracking templates, free pages, flows, triggers, pages, projects) takes `expectedUpdatedAt` and enforces it as an atomically guarded `UPDATE ... WHERE id = ? AND updated_at = ?`, returning `stale_write` when the row changed since the caller's read — closing the earlier read-compare-write race. `expectedUpdatedAt` is still optional per call; omitting it writes unconditionally (last-write-wins), which is the client's choice to make, not the server's. What remains for this requirement: the conflict is not yet surfaced comprehensibly in the UI (still [M1.16](../milestones.md#m116--authoring-ui)).
 
 **Acceptance**
 
 - A rejected save states what happened and does not discard the user's input.
 - The check is server-side and applies to API and MCP writes identically, not only to the UI.
 - No lock can be left held by a departed session, because no lock exists.
-
-> **Carried forward on 2026-08-18.** Implemented on exactly one of roughly fifteen update paths: `updateTracking` takes `expectedUpdatedAt` and returns a `stale_write` conflict. Properties, modules, destinations, free pages, flows, triggers, pages and projects are all last-write-wins, so the requirement's own acceptance — _two editors opening the same record produce a rejected save_ — holds for one entity type out of nine. Extended to every mutable entity at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness), with the conflict surfaced comprehensibly in the UI at [M1.16](../milestones.md#m116--authoring-ui).
-
-> **Verified at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) on 2026-08-19.** Every update method now takes `expectedUpdatedAt` and returns `stale_write` when the record changed since the client's last read. Tests prove the check works across all entity types and is enforced server-side for API and MCP writes alike.
 
 ### REQ-AUTH-006 — Tracking duplication within a project
 

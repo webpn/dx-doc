@@ -129,6 +129,97 @@ describe('SQLite Tracking Repositories (M1.1 Persistence)', () => {
     expect(updated?.status).toBe('deprecated');
   });
 
+  describe('Guarded update (REQ-AUTH-005, ADR-0016)', () => {
+    it('updateProperty applies the write and returns true when expectedUpdatedAt matches', async () => {
+      const propId = 'prop-guard-1';
+      const createdAt = t();
+      await propRepo.createProperty({
+        id: propId,
+        companyId,
+        projectId,
+        name: 'guarded_prop',
+        businessLabel: null,
+        description: null,
+        dataSource: 'development',
+        type: 'string',
+        formatPattern: null,
+        allowedValues: null,
+        exampleValues: null,
+        piiFlag: false,
+        hashingPolicy: null,
+        status: 'active',
+        introducedInVersion: null,
+        analysisNotes: null,
+        aepFieldGroup: null,
+        parentPropertyId: null,
+        derivedFrom: null,
+        customId: null,
+        createdAt,
+        updatedAt: createdAt,
+      });
+      const original = await propRepo.getPropertyById(propId);
+      if (!original) throw new Error('expected property to exist');
+
+      const applied = await propRepo.updateProperty(
+        { ...original, businessLabel: 'Guarded Update' },
+        original.updatedAt,
+      );
+
+      expect(applied).toBe(true);
+      const after = await propRepo.getPropertyById(propId);
+      expect(after?.businessLabel).toBe('Guarded Update');
+    });
+
+    it('updateProperty rejects the write and returns false when expectedUpdatedAt is stale, without applying it', async () => {
+      const propId = 'prop-guard-2';
+      const createdAt = t();
+      await propRepo.createProperty({
+        id: propId,
+        companyId,
+        projectId,
+        name: 'guarded_prop_2',
+        businessLabel: 'Original Label',
+        description: null,
+        dataSource: 'development',
+        type: 'string',
+        formatPattern: null,
+        allowedValues: null,
+        exampleValues: null,
+        piiFlag: false,
+        hashingPolicy: null,
+        status: 'active',
+        introducedInVersion: null,
+        analysisNotes: null,
+        aepFieldGroup: null,
+        parentPropertyId: null,
+        derivedFrom: null,
+        customId: null,
+        createdAt,
+        updatedAt: createdAt,
+      });
+      const original = await propRepo.getPropertyById(propId);
+      if (!original) throw new Error('expected property to exist');
+
+      // A concurrent writer already changed the row after `original` was read.
+      const concurrentUpdatedAt = '2030-01-01T00:00:00.000Z';
+      const concurrentlyChanged = await propRepo.updateProperty(
+        { ...original, businessLabel: 'Changed By Someone Else', updatedAt: concurrentUpdatedAt },
+        original.updatedAt,
+      );
+      expect(concurrentlyChanged).toBe(true);
+
+      // This caller still holds the now-stale `original.updatedAt` and tries to write.
+      const staleWrite = await propRepo.updateProperty(
+        { ...original, businessLabel: 'My Stale Overwrite', updatedAt: '2030-06-01T00:00:00.000Z' },
+        original.updatedAt,
+      );
+
+      expect(staleWrite).toBe(false);
+      const after = await propRepo.getPropertyById(propId);
+      expect(after?.businessLabel).toBe('Changed By Someone Else');
+    });
+  });
+
   it('manages Modules and module properties (REQ-DOM-006)', async () => {
     const modId = 'mod-1';
     await modRepo.createModule({

@@ -104,8 +104,8 @@ export class SqliteProjectRepository implements ProjectRepository {
     return rows.map((r) => toProject(r));
   }
 
-  async updateProject(project: ProjectRecord): Promise<void> {
-    await this.db
+  async updateProject(project: ProjectRecord, expectedUpdatedAt?: string): Promise<boolean> {
+    let query = this.db
       .updateTable('projects')
       .set({
         name: project.name,
@@ -119,7 +119,11 @@ export class SqliteProjectRepository implements ProjectRepository {
         custom_id: project.customId,
         updated_at: project.updatedAt,
       })
-      .where('id', '=', project.id)
-      .execute();
+      .where('id', '=', project.id);
+    if (expectedUpdatedAt !== undefined) {
+      query = query.where('updated_at', '=', expectedUpdatedAt);
+    }
+    const result = await query.executeTakeFirst();
+    return result.numUpdatedRows > 0n;
   }
 }

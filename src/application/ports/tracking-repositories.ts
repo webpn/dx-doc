@@ -39,7 +39,14 @@ export interface PropertyRepository {
     customId: string,
   ): Promise<DataLayerProperty | null>;
   listProperties(companyId: string, projectId: string | null): Promise<DataLayerProperty[]>;
-  updateProperty(property: DataLayerProperty): Promise<void>;
+  /**
+   * Applies `property`'s fields. When `expectedUpdatedAt` is provided, the
+   * write is atomically guarded by `WHERE updated_at = expectedUpdatedAt`
+   * (REQ-AUTH-005, ADR-0016): returns `false` and applies nothing if the row
+   * has since changed. When omitted, writes unconditionally and returns
+   * `true`.
+   */
+  updateProperty(property: DataLayerProperty, expectedUpdatedAt?: string): Promise<boolean>;
   getPropertyDeletionBlockers(id: string): Promise<PropertyDeletionBlockers>;
   /** Deletes the property's own `property_destinations` rows, then the property. */
   deleteProperty(id: string): Promise<void>;
@@ -54,7 +61,7 @@ export interface ModuleRepository {
     customId: string,
   ): Promise<Module | null>;
   listModules(companyId: string, projectId: string | null): Promise<Module[]>;
-  updateModule(module: Module): Promise<void>;
+  updateModule(module: Module, expectedUpdatedAt?: string): Promise<boolean>;
   setModuleProperties(moduleId: string, propertyIds: string[], nowIso: string): Promise<void>;
   getModulePropertyIds(moduleId: string): Promise<string[]>;
   /** ADR-0025: number of trackings this module is attached to. */
@@ -72,7 +79,7 @@ export interface DestinationRepository {
     customId: string,
   ): Promise<Destination | null>;
   listDestinations(companyId: string, projectId: string | null): Promise<Destination[]>;
-  updateDestination(destination: Destination): Promise<void>;
+  updateDestination(destination: Destination, expectedUpdatedAt?: string): Promise<boolean>;
   setPropertyDestinations(
     propertyId: string,
     mappings: {
@@ -96,7 +103,7 @@ export interface TrackingTemplateRepository {
     customId: string,
   ): Promise<TrackingTemplate | null>;
   listTemplates(companyId: string, projectId: string | null): Promise<TrackingTemplate[]>;
-  updateTemplate(template: TrackingTemplate): Promise<void>;
+  updateTemplate(template: TrackingTemplate, expectedUpdatedAt?: string): Promise<boolean>;
   /** Nothing references a template (ADR-0025); deletion is unconditional. */
   deleteTemplate(id: string): Promise<void>;
 }
@@ -115,7 +122,7 @@ export interface FreePageRepository {
     customId: string,
   ): Promise<FreePage | null>;
   listFreePages(companyId: string, projectId: string | null): Promise<FreePage[]>;
-  updateFreePage(page: FreePage): Promise<void>;
+  updateFreePage(page: FreePage, expectedUpdatedAt?: string): Promise<boolean>;
   /** Nothing references a free page (ADR-0025); deletion is unconditional. */
   deleteFreePage(id: string): Promise<void>;
 }
@@ -124,7 +131,7 @@ export interface NavigationEventRepository {
   createNavigationEvent(event: NavigationEvent): Promise<void>;
   getNavigationEventById(id: string): Promise<NavigationEvent | null>;
   listNavigationEvents(projectId: string): Promise<NavigationEvent[]>;
-  updateNavigationEvent(event: NavigationEvent): Promise<void>;
+  updateNavigationEvent(event: NavigationEvent, expectedUpdatedAt?: string): Promise<boolean>;
   /** ADR-0025: trackings and templates that reference this navigation event. */
   countUsageOfNavigationEvent(id: string): Promise<{ trackings: number; templates: number }>;
   deleteNavigationEvent(id: string): Promise<void>;
@@ -137,7 +144,7 @@ export interface TrackingRepository {
   getTrackingByCustomId(projectId: string, customId: string): Promise<Tracking | null>;
   listTrackingsForProject(projectId: string): Promise<Tracking[]>;
   listTrackingsForPage(pageId: string): Promise<Tracking[]>;
-  updateTracking(tracking: Tracking): Promise<void>;
+  updateTracking(tracking: Tracking, expectedUpdatedAt?: string): Promise<boolean>;
 
   // Tracking modules join
   setTrackingModules(trackingId: string, moduleIds: string[], nowIso: string): Promise<void>;
@@ -145,6 +152,19 @@ export interface TrackingRepository {
 
   // Tracking properties (first class records)
   setTrackingProperties(trackingProperties: TrackingProperty[]): Promise<void>;
+  /**
+   * Atomically guarded single-row presence update (REQ-AUTH-005, ADR-0016).
+   * Unlike `setTrackingProperties`'s bulk upsert, this targets exactly one
+   * existing `tracking_properties` row by id and never inserts: returns
+   * `false` and applies nothing if `expectedUpdatedAt` is provided and no
+   * longer matches.
+   */
+  updateTrackingPropertyPresence(
+    trackingPropertyId: string,
+    presence: TrackingProperty['presence'],
+    updatedAt: string,
+    expectedUpdatedAt?: string,
+  ): Promise<boolean>;
   getTrackingProperties(trackingId: string): Promise<TrackingProperty[]>;
   removeTrackingProperty(trackingPropertyId: string): Promise<void>;
   getProjectIdForTrackingProperty(trackingPropertyId: string): Promise<string | null>;
@@ -172,7 +192,7 @@ export interface FlowRepository {
   getFlowById(id: string): Promise<Flow | null>;
   getFlowByProjectAndSlug(projectId: string, slug: string): Promise<Flow | null>;
   listFlowsForProject(projectId: string): Promise<Flow[]>;
-  updateFlow(flow: Flow): Promise<void>;
+  updateFlow(flow: Flow, expectedUpdatedAt?: string): Promise<boolean>;
 
   // Nodes and edges
   setFlowNodes(nodes: FlowNode[]): Promise<void>;
@@ -198,7 +218,7 @@ export interface TriggerRepository {
   createTrigger(trigger: Trigger): Promise<void>;
   getTriggerById(id: string): Promise<Trigger | null>;
   listTriggersForProject(projectId: string): Promise<Trigger[]>;
-  updateTrigger(trigger: Trigger): Promise<void>;
+  updateTrigger(trigger: Trigger, expectedUpdatedAt?: string): Promise<boolean>;
   setTriggerTrackings(triggerId: string, trackingIds: string[], nowIso: string): Promise<void>;
   getTriggerTrackingIds(triggerId: string): Promise<string[]>;
   /** ADR-0025: number of flow diagrams this trigger is placed on. */

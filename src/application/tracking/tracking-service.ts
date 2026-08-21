@@ -311,17 +311,6 @@ export class TrackingService {
       return err({ kind: 'validation', issues: parsed.error });
     }
 
-    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
-    if (
-      parsed.value.expectedUpdatedAt !== undefined &&
-      parsed.value.expectedUpdatedAt !== prop.updatedAt
-    ) {
-      return err({
-        kind: 'stale_write',
-        currentUpdatedAt: prop.updatedAt,
-      });
-    }
-
     const patchData = parsed.value;
 
     if (patchData.parentPropertyId !== undefined) {
@@ -381,7 +370,17 @@ export class TrackingService {
       updatedAt: nowIso,
     };
 
-    await this.properties.updateProperty(updated);
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
+    // enforced atomically by the repository's `WHERE updated_at = ?`, so
+    // there is no read-compare-write race between the check and the write.
+    const applied = await this.properties.updateProperty(updated, patchData.expectedUpdatedAt);
+    if (!applied) {
+      const current = await this.properties.getPropertyById(propertyId);
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: current?.updatedAt ?? prop.updatedAt,
+      });
+    }
 
     const project = await this.projects.getProjectById(prop.companyId);
     if (project) {
@@ -578,19 +577,11 @@ export class TrackingService {
       return err({ kind: 'validation', issues: parsed.error });
     }
 
-    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
-    if (
-      parsed.value.expectedUpdatedAt !== undefined &&
-      parsed.value.expectedUpdatedAt !== mod.updatedAt
-    ) {
-      return err({
-        kind: 'stale_write',
-        currentUpdatedAt: mod.updatedAt,
-      });
-    }
-
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
+    // enforced atomically by the repository's `WHERE updated_at = ?`, so
+    // there is no read-compare-write race between the check and the write.
     const nowIso = this.now().toISOString();
-    await this.modules.updateModule({
+    const updatedModule: Module = {
       ...mod,
       name: parsed.value.name ?? mod.name,
       description:
@@ -598,7 +589,15 @@ export class TrackingService {
           ? (parsed.value.description ?? null)
           : mod.description,
       updatedAt: nowIso,
-    });
+    };
+    const applied = await this.modules.updateModule(updatedModule, parsed.value.expectedUpdatedAt);
+    if (!applied) {
+      const current = await this.modules.getModuleById(moduleId);
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: current?.updatedAt ?? mod.updatedAt,
+      });
+    }
 
     if (parsed.value.propertyIds !== undefined) {
       await this.modules.setModuleProperties(moduleId, parsed.value.propertyIds, nowIso);
@@ -803,19 +802,11 @@ export class TrackingService {
       return err({ kind: 'validation', issues: parsed.error });
     }
 
-    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
-    if (
-      parsed.value.expectedUpdatedAt !== undefined &&
-      parsed.value.expectedUpdatedAt !== dest.updatedAt
-    ) {
-      return err({
-        kind: 'stale_write',
-        currentUpdatedAt: dest.updatedAt,
-      });
-    }
-
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
+    // enforced atomically by the repository's `WHERE updated_at = ?`, so
+    // there is no read-compare-write race between the check and the write.
     const nowIso = this.now().toISOString();
-    await this.destinations.updateDestination({
+    const updatedDestination: Destination = {
       ...dest,
       platform: parsed.value.platform ?? dest.platform,
       variableType: parsed.value.variableType ?? dest.variableType,
@@ -831,7 +822,18 @@ export class TrackingService {
           ? (parsed.value.platformAttributes ?? null)
           : dest.platformAttributes,
       updatedAt: nowIso,
-    });
+    };
+    const applied = await this.destinations.updateDestination(
+      updatedDestination,
+      parsed.value.expectedUpdatedAt,
+    );
+    if (!applied) {
+      const current = await this.destinations.getDestinationById(destinationId);
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: current?.updatedAt ?? dest.updatedAt,
+      });
+    }
 
     const project = await this.projects.getProjectById(dest.companyId);
     if (project) {
@@ -1029,19 +1031,11 @@ export class TrackingService {
       return err({ kind: 'validation', issues: parsed.error });
     }
 
-    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
-    if (
-      parsed.value.expectedUpdatedAt !== undefined &&
-      parsed.value.expectedUpdatedAt !== event.updatedAt
-    ) {
-      return err({
-        kind: 'stale_write',
-        currentUpdatedAt: event.updatedAt,
-      });
-    }
-
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
+    // enforced atomically by the repository's `WHERE updated_at = ?`, so
+    // there is no read-compare-write race between the check and the write.
     const nowIso = this.now().toISOString();
-    await this.navEvents.updateNavigationEvent({
+    const updatedEvent: NavigationEvent = {
       ...event,
       name: parsed.value.name ?? event.name,
       description:
@@ -1050,7 +1044,18 @@ export class TrackingService {
           : event.description,
       active: parsed.value.active ?? event.active,
       updatedAt: nowIso,
-    });
+    };
+    const applied = await this.navEvents.updateNavigationEvent(
+      updatedEvent,
+      parsed.value.expectedUpdatedAt,
+    );
+    if (!applied) {
+      const current = await this.navEvents.getNavigationEventById(eventId);
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: current?.updatedAt ?? event.updatedAt,
+      });
+    }
 
     const project = await this.projects.getProjectById(event.projectId);
     if (project) {
@@ -1233,19 +1238,11 @@ export class TrackingService {
       return err({ kind: 'validation', issues: parsed.error });
     }
 
-    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
-    if (
-      parsed.value.expectedUpdatedAt !== undefined &&
-      parsed.value.expectedUpdatedAt !== tpl.updatedAt
-    ) {
-      return err({
-        kind: 'stale_write',
-        currentUpdatedAt: tpl.updatedAt,
-      });
-    }
-
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
+    // enforced atomically by the repository's `WHERE updated_at = ?`, so
+    // there is no read-compare-write race between the check and the write.
     const nowIso = this.now().toISOString();
-    await this.templates.updateTemplate({
+    const updatedTemplate: TrackingTemplate = {
       ...tpl,
       name: parsed.value.name ?? tpl.name,
       description:
@@ -1259,7 +1256,18 @@ export class TrackingService {
       configJson:
         parsed.value.configJson !== undefined ? (parsed.value.configJson ?? null) : tpl.configJson,
       updatedAt: nowIso,
-    });
+    };
+    const applied = await this.templates.updateTemplate(
+      updatedTemplate,
+      parsed.value.expectedUpdatedAt,
+    );
+    if (!applied) {
+      const current = await this.templates.getTemplateById(templateId);
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: current?.updatedAt ?? tpl.updatedAt,
+      });
+    }
 
     const project = await this.projects.getProjectById(tpl.companyId);
     if (project) {
@@ -1442,26 +1450,29 @@ export class TrackingService {
       return err({ kind: 'validation', issues: parsed.error });
     }
 
-    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
-    if (
-      parsed.value.expectedUpdatedAt !== undefined &&
-      parsed.value.expectedUpdatedAt !== fp.updatedAt
-    ) {
-      return err({
-        kind: 'stale_write',
-        currentUpdatedAt: fp.updatedAt,
-      });
-    }
-
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
+    // enforced atomically by the repository's `WHERE updated_at = ?`, so
+    // there is no read-compare-write race between the check and the write.
     const nowIso = this.now().toISOString();
-    await this.freePages.updateFreePage({
+    const updatedFreePage: FreePage = {
       ...fp,
       title: parsed.value.title ?? fp.title,
       slug: parsed.value.slug ?? fp.slug,
       content: parsed.value.content ?? fp.content,
       publishable: parsed.value.publishable ?? fp.publishable,
       updatedAt: nowIso,
-    });
+    };
+    const applied = await this.freePages.updateFreePage(
+      updatedFreePage,
+      parsed.value.expectedUpdatedAt,
+    );
+    if (!applied) {
+      const current = await this.freePages.getFreePageById(freePageId);
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: current?.updatedAt ?? fp.updatedAt,
+      });
+    }
 
     const project = await this.projects.getProjectById(fp.companyId);
     if (project) {
@@ -1645,19 +1656,11 @@ export class TrackingService {
       return err({ kind: 'validation', issues: parsed.error });
     }
 
-    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
-    if (
-      parsed.value.expectedUpdatedAt !== undefined &&
-      parsed.value.expectedUpdatedAt !== tracking.updatedAt
-    ) {
-      return err({
-        kind: 'stale_write',
-        currentUpdatedAt: tracking.updatedAt,
-      });
-    }
-
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
+    // enforced atomically by the repository's `WHERE updated_at = ?`, so
+    // there is no read-compare-write race between the check and the write.
     const nowIso = this.now().toISOString();
-    await this.trackings.updateTracking({
+    const updatedTracking: Tracking = {
       ...tracking,
       pageId: parsed.value.pageId !== undefined ? (parsed.value.pageId ?? null) : tracking.pageId,
       navigationEventId: parsed.value.navigationEventId ?? tracking.navigationEventId,
@@ -1668,7 +1671,18 @@ export class TrackingService {
           ? (parsed.value.description ?? null)
           : tracking.description,
       updatedAt: nowIso,
-    });
+    };
+    const applied = await this.trackings.updateTracking(
+      updatedTracking,
+      parsed.value.expectedUpdatedAt,
+    );
+    if (!applied) {
+      const current = await this.trackings.getTrackingById(trackingId);
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: current?.updatedAt ?? tracking.updatedAt,
+      });
+    }
 
     const project = await this.projects.getProjectById(tracking.projectId);
     if (project) {
@@ -1820,25 +1834,24 @@ export class TrackingService {
     const target = tps.find((tp) => tp.propertyId === propertyId);
     if (!target) return err({ kind: 'not_found' });
 
-    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
-    if (
-      parsed.value.expectedUpdatedAt !== undefined &&
-      parsed.value.expectedUpdatedAt !== target.updatedAt
-    ) {
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
+    // enforced atomically by the repository's `WHERE updated_at = ?`, so
+    // there is no read-compare-write race between the check and the write.
+    const nowIso = this.now().toISOString();
+    const applied = await this.trackings.updateTrackingPropertyPresence(
+      target.id,
+      parsed.value.presence,
+      nowIso,
+      parsed.value.expectedUpdatedAt,
+    );
+    if (!applied) {
+      const currentTps = await this.trackings.getTrackingProperties(trackingId);
+      const current = currentTps.find((tp) => tp.propertyId === propertyId);
       return err({
         kind: 'stale_write',
-        currentUpdatedAt: target.updatedAt,
+        currentUpdatedAt: current?.updatedAt ?? target.updatedAt,
       });
     }
-
-    const nowIso = this.now().toISOString();
-    await this.trackings.setTrackingProperties([
-      {
-        ...target,
-        presence: parsed.value.presence,
-        updatedAt: nowIso,
-      },
-    ]);
 
     const project = await this.projects.getProjectById(tracking.projectId);
     if (project) {
@@ -2306,19 +2319,11 @@ export class TrackingService {
     const parsed = validate(flowUpdateSchema, input);
     if (!parsed.ok) return err({ kind: 'validation', issues: parsed.error });
 
-    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
-    if (
-      parsed.value.expectedUpdatedAt !== undefined &&
-      parsed.value.expectedUpdatedAt !== flow.updatedAt
-    ) {
-      return err({
-        kind: 'stale_write',
-        currentUpdatedAt: flow.updatedAt,
-      });
-    }
-
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
+    // enforced atomically by the repository's `WHERE updated_at = ?`, so
+    // there is no read-compare-write race between the check and the write.
     const nowIso = this.now().toISOString();
-    await this.flows.updateFlow({
+    const updatedFlow: Flow = {
       ...flow,
       name: parsed.value.name ?? flow.name,
       slug: parsed.value.slug ?? flow.slug,
@@ -2327,7 +2332,15 @@ export class TrackingService {
           ? (parsed.value.description ?? null)
           : flow.description,
       updatedAt: nowIso,
-    });
+    };
+    const applied = await this.flows.updateFlow(updatedFlow, parsed.value.expectedUpdatedAt);
+    if (!applied) {
+      const current = await this.flows.getFlowById(flowId);
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: current?.updatedAt ?? flow.updatedAt,
+      });
+    }
 
     const project = await this.projects.getProjectById(flow.projectId);
     if (project) {
@@ -2509,19 +2522,11 @@ export class TrackingService {
     const parsed = validate(triggerUpdateSchema, input);
     if (!parsed.ok) return err({ kind: 'validation', issues: parsed.error });
 
-    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
-    if (
-      parsed.value.expectedUpdatedAt !== undefined &&
-      parsed.value.expectedUpdatedAt !== trg.updatedAt
-    ) {
-      return err({
-        kind: 'stale_write',
-        currentUpdatedAt: trg.updatedAt,
-      });
-    }
-
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
+    // enforced atomically by the repository's `WHERE updated_at = ?`, so
+    // there is no read-compare-write race between the check and the write.
     const nowIso = this.now().toISOString();
-    await this.triggers.updateTrigger({
+    const updatedTrigger: Trigger = {
       ...trg,
       name: parsed.value.name ?? trg.name,
       description:
@@ -2529,7 +2534,18 @@ export class TrackingService {
           ? (parsed.value.description ?? null)
           : trg.description,
       updatedAt: nowIso,
-    });
+    };
+    const applied = await this.triggers.updateTrigger(
+      updatedTrigger,
+      parsed.value.expectedUpdatedAt,
+    );
+    if (!applied) {
+      const current = await this.triggers.getTriggerById(triggerId);
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: current?.updatedAt ?? trg.updatedAt,
+      });
+    }
 
     if (parsed.value.trackingIds !== undefined) {
       await this.triggers.setTriggerTrackings(triggerId, parsed.value.trackingIds, nowIso);

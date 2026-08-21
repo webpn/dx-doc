@@ -152,16 +152,10 @@ export class ProjectService {
       return err({ kind: 'forbidden' });
     }
 
-    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
-    if (
-      parsed.value.expectedUpdatedAt !== undefined &&
-      parsed.value.expectedUpdatedAt !== project.updatedAt
-    ) {
-      return err({
-        kind: 'stale_write',
-        currentUpdatedAt: project.updatedAt,
-      });
-    }
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
+    // enforced atomically by the repository's `WHERE updated_at = ?`, so
+    // there is no read-compare-write race between the check and the write.
+    const expectedUpdatedAt = parsed.value.expectedUpdatedAt;
 
     const data = parsed.value;
     // If the input provides a custom_id that is already used by another
@@ -180,7 +174,14 @@ export class ProjectService {
     if (data.platform !== undefined) project.platform = data.platform;
     if (data.tagManager !== undefined) project.tagManager = data.tagManager ?? null;
     project.updatedAt = this.now().toISOString();
-    await this.projects.updateProject(project);
+    const applied = await this.projects.updateProject(project, expectedUpdatedAt);
+    if (!applied) {
+      const current = await this.projects.getProjectById(projectId);
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: current?.updatedAt ?? project.updatedAt,
+      });
+    }
     return ok({ ok: true });
   }
 }

@@ -103,8 +103,8 @@ export class SqlitePageRepository implements PageRepository {
     return rows.map(toPage);
   }
 
-  async updatePage(page: PageRecord): Promise<void> {
-    await this.db
+  async updatePage(page: PageRecord, expectedUpdatedAt?: string): Promise<boolean> {
+    let query = this.db
       .updateTable('pages')
       .set({
         name: page.name,
@@ -113,8 +113,12 @@ export class SqlitePageRepository implements PageRepository {
         custom_id: page.customId,
         updated_at: page.updatedAt,
       })
-      .where('id', '=', page.id)
-      .execute();
+      .where('id', '=', page.id);
+    if (expectedUpdatedAt !== undefined) {
+      query = query.where('updated_at', '=', expectedUpdatedAt);
+    }
+    const result = await query.executeTakeFirst();
+    return result.numUpdatedRows > 0n;
   }
 
   /** ADR-0025: a page blocks deletion if anything still depends on it. */

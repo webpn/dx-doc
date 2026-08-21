@@ -155,12 +155,16 @@ class FakeProjects implements ProjectRepository {
     );
   }
 
-  updateProject(project: ProjectRecord): Promise<void> {
+  updateProject(project: ProjectRecord, expectedUpdatedAt?: string): Promise<boolean> {
+    const existing = this.projects.get(project.id);
+    if (expectedUpdatedAt !== undefined && existing?.updatedAt !== expectedUpdatedAt) {
+      return Promise.resolve(false);
+    }
     this.projects.set(project.id, project);
     if (project.customId) {
       this.customToId.set(project.customId, project.id);
     }
-    return Promise.resolve();
+    return Promise.resolve(true);
   }
 }
 

@@ -24,5 +24,12 @@ export interface ProjectRepository {
   /** Idempotency lookup keyed on the orthogonal `custom_id` (REQ-IMP-003). */
   getProjectByCustomId(companyId: string, customId: string): Promise<ProjectRecord | null>;
   listProjectsForCompany(companyId: string): Promise<ProjectRecord[]>;
-  updateProject(project: ProjectRecord): Promise<void>;
+  /**
+   * Applies `project`'s fields. When `expectedUpdatedAt` is provided, the
+   * write is atomically guarded by `WHERE updated_at = expectedUpdatedAt`
+   * (REQ-AUTH-005, ADR-0016): returns `false` and applies nothing if the row
+   * has since changed. When omitted, writes unconditionally and returns
+   * `true`.
+   */
+  updateProject(project: ProjectRecord, expectedUpdatedAt?: string): Promise<boolean>;
 }

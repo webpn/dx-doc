@@ -140,8 +140,8 @@ export class SqlitePropertyRepository implements PropertyRepository {
     return rows.map((r) => this.toEntity(r));
   }
 
-  async updateProperty(property: DataLayerProperty): Promise<void> {
-    await this.db
+  async updateProperty(property: DataLayerProperty, expectedUpdatedAt?: string): Promise<boolean> {
+    let query = this.db
       .updateTable('properties')
       .set({
         name: property.name,
@@ -162,8 +162,12 @@ export class SqlitePropertyRepository implements PropertyRepository {
         derived_from: property.derivedFrom ? JSON.stringify(property.derivedFrom) : null,
         updated_at: property.updatedAt,
       })
-      .where('id', '=', property.id)
-      .execute();
+      .where('id', '=', property.id);
+    if (expectedUpdatedAt !== undefined) {
+      query = query.where('updated_at', '=', expectedUpdatedAt);
+    }
+    const result = await query.executeTakeFirst();
+    return result.numUpdatedRows > 0n;
   }
 
   /** ADR-0025: what blocks this property's deletion. */
@@ -342,16 +346,20 @@ export class SqliteModuleRepository implements ModuleRepository {
     }));
   }
 
-  async updateModule(mod: Module): Promise<void> {
-    await this.db
+  async updateModule(mod: Module, expectedUpdatedAt?: string): Promise<boolean> {
+    let query = this.db
       .updateTable('modules')
       .set({
         name: mod.name,
         description: mod.description,
         updated_at: mod.updatedAt,
       })
-      .where('id', '=', mod.id)
-      .execute();
+      .where('id', '=', mod.id);
+    if (expectedUpdatedAt !== undefined) {
+      query = query.where('updated_at', '=', expectedUpdatedAt);
+    }
+    const result = await query.executeTakeFirst();
+    return result.numUpdatedRows > 0n;
   }
 
   async setModuleProperties(
@@ -470,8 +478,11 @@ export class SqliteDestinationRepository implements DestinationRepository {
     return rows.map((r) => this.toEntity(r));
   }
 
-  async updateDestination(destination: Destination): Promise<void> {
-    await this.db
+  async updateDestination(
+    destination: Destination,
+    expectedUpdatedAt?: string,
+  ): Promise<boolean> {
+    let query = this.db
       .updateTable('destinations')
       .set({
         platform: destination.platform,
@@ -485,8 +496,12 @@ export class SqliteDestinationRepository implements DestinationRepository {
           : null,
         updated_at: destination.updatedAt,
       })
-      .where('id', '=', destination.id)
-      .execute();
+      .where('id', '=', destination.id);
+    if (expectedUpdatedAt !== undefined) {
+      query = query.where('updated_at', '=', expectedUpdatedAt);
+    }
+    const result = await query.executeTakeFirst();
+    return result.numUpdatedRows > 0n;
   }
 
   async setPropertyDestinations(
@@ -635,8 +650,11 @@ export class SqliteNavigationEventRepository implements NavigationEventRepositor
     }));
   }
 
-  async updateNavigationEvent(event: NavigationEvent): Promise<void> {
-    await this.db
+  async updateNavigationEvent(
+    event: NavigationEvent,
+    expectedUpdatedAt?: string,
+  ): Promise<boolean> {
+    let query = this.db
       .updateTable('navigation_events')
       .set({
         name: event.name,
@@ -644,8 +662,12 @@ export class SqliteNavigationEventRepository implements NavigationEventRepositor
         active: event.active ? 1 : 0,
         updated_at: event.updatedAt,
       })
-      .where('id', '=', event.id)
-      .execute();
+      .where('id', '=', event.id);
+    if (expectedUpdatedAt !== undefined) {
+      query = query.where('updated_at', '=', expectedUpdatedAt);
+    }
+    const result = await query.executeTakeFirst();
+    return result.numUpdatedRows > 0n;
   }
 
   /** ADR-0025: trackings and templates that reference this navigation event. */
@@ -743,8 +765,8 @@ export class SqliteTrackingRepository implements TrackingRepository {
     return rows.map((r) => this.toTrackingEntity(r));
   }
 
-  async updateTracking(tracking: Tracking): Promise<void> {
-    await this.db
+  async updateTracking(tracking: Tracking, expectedUpdatedAt?: string): Promise<boolean> {
+    let query = this.db
       .updateTable('trackings')
       .set({
         page_id: tracking.pageId,
@@ -754,8 +776,12 @@ export class SqliteTrackingRepository implements TrackingRepository {
         description: tracking.description,
         updated_at: tracking.updatedAt,
       })
-      .where('id', '=', tracking.id)
-      .execute();
+      .where('id', '=', tracking.id);
+    if (expectedUpdatedAt !== undefined) {
+      query = query.where('updated_at', '=', expectedUpdatedAt);
+    }
+    const result = await query.executeTakeFirst();
+    return result.numUpdatedRows > 0n;
   }
 
   async setTrackingModules(trackingId: string, moduleIds: string[], nowIso: string): Promise<void> {
@@ -808,6 +834,23 @@ export class SqliteTrackingRepository implements TrackingRepository {
         )
         .execute();
     }
+  }
+
+  async updateTrackingPropertyPresence(
+    trackingPropertyId: string,
+    presence: TrackingProperty['presence'],
+    updatedAt: string,
+    expectedUpdatedAt?: string,
+  ): Promise<boolean> {
+    let query = this.db
+      .updateTable('tracking_properties')
+      .set({ presence, updated_at: updatedAt })
+      .where('id', '=', trackingPropertyId);
+    if (expectedUpdatedAt !== undefined) {
+      query = query.where('updated_at', '=', expectedUpdatedAt);
+    }
+    const result = await query.executeTakeFirst();
+    return result.numUpdatedRows > 0n;
   }
 
   async getTrackingProperties(trackingId: string): Promise<TrackingProperty[]> {
@@ -1098,8 +1141,11 @@ export class SqliteTrackingTemplateRepository implements TrackingTemplateReposit
     }));
   }
 
-  async updateTemplate(template: TrackingTemplate): Promise<void> {
-    await this.db
+  async updateTemplate(
+    template: TrackingTemplate,
+    expectedUpdatedAt?: string,
+  ): Promise<boolean> {
+    let query = this.db
       .updateTable('tracking_templates')
       .set({
         name: template.name,
@@ -1108,8 +1154,12 @@ export class SqliteTrackingTemplateRepository implements TrackingTemplateReposit
         config_json: template.configJson,
         updated_at: template.updatedAt,
       })
-      .where('id', '=', template.id)
-      .execute();
+      .where('id', '=', template.id);
+    if (expectedUpdatedAt !== undefined) {
+      query = query.where('updated_at', '=', expectedUpdatedAt);
+    }
+    const result = await query.executeTakeFirst();
+    return result.numUpdatedRows > 0n;
   }
 
   /** Nothing references a template (ADR-0025); deletion is unconditional. */
@@ -1203,8 +1253,8 @@ export class SqliteFreePageRepository implements FreePageRepository {
     return rows.map((r) => this.toEntity(r));
   }
 
-  async updateFreePage(page: FreePage): Promise<void> {
-    await this.db
+  async updateFreePage(page: FreePage, expectedUpdatedAt?: string): Promise<boolean> {
+    let query = this.db
       .updateTable('free_pages')
       .set({
         title: page.title,
@@ -1213,8 +1263,12 @@ export class SqliteFreePageRepository implements FreePageRepository {
         publishable: page.publishable ? 1 : 0,
         updated_at: page.updatedAt,
       })
-      .where('id', '=', page.id)
-      .execute();
+      .where('id', '=', page.id);
+    if (expectedUpdatedAt !== undefined) {
+      query = query.where('updated_at', '=', expectedUpdatedAt);
+    }
+    const result = await query.executeTakeFirst();
+    return result.numUpdatedRows > 0n;
   }
 
   private toEntity(row: {
@@ -1297,8 +1351,8 @@ export class SqliteFlowRepository implements FlowRepository {
     return rows.map((r) => this.toEntity(r));
   }
 
-  async updateFlow(flow: Flow): Promise<void> {
-    await this.db
+  async updateFlow(flow: Flow, expectedUpdatedAt?: string): Promise<boolean> {
+    let query = this.db
       .updateTable('flows')
       .set({
         name: flow.name,
@@ -1306,8 +1360,12 @@ export class SqliteFlowRepository implements FlowRepository {
         description: flow.description,
         updated_at: flow.updatedAt,
       })
-      .where('id', '=', flow.id)
-      .execute();
+      .where('id', '=', flow.id);
+    if (expectedUpdatedAt !== undefined) {
+      query = query.where('updated_at', '=', expectedUpdatedAt);
+    }
+    const result = await query.executeTakeFirst();
+    return result.numUpdatedRows > 0n;
   }
 
   async setFlowNodes(nodes: FlowNode[]): Promise<void> {
@@ -1522,16 +1580,20 @@ export class SqliteTriggerRepository implements TriggerRepository {
     }));
   }
 
-  async updateTrigger(trigger: Trigger): Promise<void> {
-    await this.db
+  async updateTrigger(trigger: Trigger, expectedUpdatedAt?: string): Promise<boolean> {
+    let query = this.db
       .updateTable('triggers')
       .set({
         name: trigger.name,
         description: trigger.description,
         updated_at: trigger.updatedAt,
       })
-      .where('id', '=', trigger.id)
-      .execute();
+      .where('id', '=', trigger.id);
+    if (expectedUpdatedAt !== undefined) {
+      query = query.where('updated_at', '=', expectedUpdatedAt);
+    }
+    const result = await query.executeTakeFirst();
+    return result.numUpdatedRows > 0n;
   }
 
   async setTriggerTrackings(

@@ -128,16 +128,10 @@ export class PageService {
       return err({ kind: 'forbidden' });
     }
 
-    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
-    if (
-      parsed.value.expectedUpdatedAt !== undefined &&
-      parsed.value.expectedUpdatedAt !== page.updatedAt
-    ) {
-      return err({
-        kind: 'stale_write',
-        currentUpdatedAt: page.updatedAt,
-      });
-    }
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
+    // enforced atomically by the repository's `WHERE updated_at = ?`, so
+    // there is no read-compare-write race between the check and the write.
+    const expectedUpdatedAt = parsed.value.expectedUpdatedAt;
 
     const data = parsed.value;
     if (data.customId !== undefined) {
@@ -151,7 +145,14 @@ export class PageService {
     if (data.slug !== undefined) page.slug = data.slug;
     if (data.parentId !== undefined) page.parentId = data.parentId ?? null;
     page.updatedAt = this.now().toISOString();
-    await this.pages.updatePage(page);
+    const applied = await this.pages.updatePage(page, expectedUpdatedAt);
+    if (!applied) {
+      const current = await this.pages.getPageById(pageId);
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: current?.updatedAt ?? page.updatedAt,
+      });
+    }
     return ok({ ok: true });
   }
 
