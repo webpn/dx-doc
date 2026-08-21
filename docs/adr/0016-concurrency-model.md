@@ -8,7 +8,7 @@ Accepted
 
 2026-08-11
 
-> **Implementation status (2026-08-20):** Every mutable entity's update path (`Property`, `Module`, `Destination`, `NavigationEvent`, `Tracking`, `TrackingProperty` presence, `TrackingTemplate`, `FreePage`, `Flow`, `Trigger`, `Page`, `Project`) enforces the concurrency check as an atomically guarded `UPDATE ... WHERE id = ? AND updated_at = ?`: the repository applies the write and reports whether a row matched in one statement, closing the read-compare-write race the previous note flagged. `expectedUpdatedAt` remains optional per call — omitting it still writes unconditionally (last-write-wins) — but every caller that passes it gets an atomic guarantee. Bulk writes are still **not** transactional: `batchCreate` processes items independently and returns per-item results.
+> **Implementation status (2026-08-21):** `Property`, `Module`, `Destination`, `NavigationEvent`, `Tracking`, `TrackingProperty` presence, `TrackingTemplate`, `FreePage`, `Flow`, `Trigger`, `Page` and `Project` enforce the concurrency check as an atomically guarded `UPDATE ... WHERE id = ? AND updated_at = ?`: the repository applies the write and reports whether a row matched in one statement. **`CompanyService.update` is not yet covered** — it still does a read-compare-write check with the same race the others used to have; tracked as backlog. `expectedUpdatedAt` remains optional per call — omitting it still writes unconditionally (last-write-wins) — but every entity that has the guard gets an atomic guarantee when the caller supplies the token. Bulk writes are still **not** transactional: `batchCreate` processes items independently and returns per-item results.
 
 ## Context
 
