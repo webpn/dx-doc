@@ -198,7 +198,14 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
     passwordResetTtlMs,
     auditLogs,
   );
-  const companyService = new CompanyService(accounts, companies, permissions);
+  const companyService = new CompanyService(
+    accounts,
+    companies,
+    permissions,
+    undefined,
+    undefined,
+    hasher,
+  );
 
   const search =
     options.searchIndex ?? new PagefindSearchIndex(path.resolve(config.SEARCH_INDEX_PATH));

@@ -35,6 +35,19 @@ export const companyCreateSchema = z.object({
     .min(1, 'name is required')
     .max(120, 'name must be 120 characters or fewer'),
   slug,
+  /**
+   * Optional first-Admin provisioning (REQ-SEC-014): a freshly created
+   * company otherwise has no member who could pass `canInCompany`, so
+   * nothing in the API could create its first Admin. Supplying this at
+   * creation seeds one Admin user in the same operation, mirroring how
+   * `BootstrapService` seeds the instance administrator.
+   */
+  firstAdmin: z
+    .object({
+      email: z.string().trim().pipe(z.email('email must be a valid email address')),
+      password: z.string().min(8, 'password must be at least 8 characters').optional(),
+    })
+    .optional(),
 });
 export type CompanyCreateInput = z.infer<typeof companyCreateSchema>;
 

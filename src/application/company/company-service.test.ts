@@ -12,10 +12,20 @@ import type {
   UserAccount,
 } from '../ports/account-repository';
 import type { CompanyRecord, CompanyRepository } from '../ports/company-repository';
+import type { PasswordHasher } from '../ports/password-hasher';
 
 import { CompanyService } from './company-service';
 
 const FIXED_NOW = new Date('2026-06-01T00:00:00.000Z');
+
+class FakeHasher implements PasswordHasher {
+  hash(plaintext: string): Promise<string> {
+    return Promise.resolve(`hashed:${plaintext}`);
+  }
+  verify(_plaintext: string, _hash: string): Promise<boolean> {
+    return Promise.resolve(true);
+  }
+}
 
 class FakeAccounts implements AccountRepository {
   users = new Map<string, UserAccount>();
@@ -129,6 +139,7 @@ function buildHarness(): {
     permissions,
     () => FIXED_NOW,
     () => 'id-' + String(++counter),
+    new FakeHasher(),
   );
 
   // The instance administrator: company-less, holds the capability.
@@ -273,6 +284,78 @@ describe('CompanyService.createCompany (REQ-FDN-002, REQ-SEC-015)', () => {
     expect(roles.map((r) => r.name).sort()).toEqual([...COMPANY_ROLE_NAMES].sort());
   });
 
+  it('optionally provisions the first Admin in the same call (REQ-SEC-014)', async () => {
+    const { accounts, companyService, sysadminId } = buildHarness();
+
+    const result = await companyService.createCompany(sysadminId, {
+      name: 'Acme',
+      slug: 'acme',
+      firstAdmin: { email: 'FIRST@ACME.TEST', password: 'correct-horse-battery' },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      throw new Error('expected create to succeed');
+    }
+    const companyId = result.value.companyId;
+    const userId = result.value.firstAdminUserId;
+    expect(userId).toBeDefined();
+    if (userId === undefined) {
+      throw new Error('expected firstAdminUserId to be set');
+    }
+    const admin = await accounts.getUserById(userId);
+    expect(admin?.companyId).toBe(companyId);
+    expect(admin?.email).toBe('first@acme.test');
+    expect(admin?.passwordHash).toBe('hashed:correct-horse-battery');
+    expect(admin?.passwordMustChange).toBe(false);
+    const roles = await accounts.listRolesForCompany(companyId);
+    const adminRole = roles.find((r) => r.name === 'admin');
+    expect(admin?.roleId).toBe(adminRole?.id);
+
+    // The new Admin can now pass canInCompany — the wall this closes.
+    const permissions = new PermissionService(accounts);
+    expect(await permissions.canInCompany(userId, companyId, 'company.manage_projects')).toBe(
+      true,
+    );
+  });
+
+  it('provisions a password-less first Admin who must set one at first login', async () => {
+    const { accounts, companyService, sysadminId } = buildHarness();
+
+    const result = await companyService.createCompany(sysadminId, {
+      name: 'Acme',
+      slug: 'acme',
+      firstAdmin: { email: 'invited@acme.test' },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      throw new Error('expected create to succeed');
+    }
+    const userId = result.value.firstAdminUserId;
+    if (userId === undefined) {
+      throw new Error('expected firstAdminUserId to be set');
+    }
+    const admin = await accounts.getUserById(userId);
+    expect(admin?.passwordHash).toBeNull();
+    expect(admin?.passwordMustChange).toBe(true);
+  });
+
+  it('rejects an invalid first-Admin email', async () => {
+    const { companyService, sysadminId } = buildHarness();
+
+    const result = await companyService.createCompany(sysadminId, {
+      name: 'Acme',
+      slug: 'acme',
+      firstAdmin: { email: 'not-an-email' },
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.kind).toBe('validation');
+    }
+  });
+
   it('a non-instance-admin cannot create a company', async () => {
     const { companyService, plainUserId } = buildHarness();
 
@@ -285,10 +368,12 @@ describe('CompanyService.createCompany (REQ-FDN-002, REQ-SEC-015)', () => {
   it('rejects a company with no identity (not even a stub)', async () => {
     const { companyService, sysadminId } = buildHarness();
 
-    expect(await companyService.createCompany(sysadminId, { name: '  ', slug: '' })).toEqual({
-      ok: false,
-      error: { kind: 'invalid_input' },
-    });
+    const result = await companyService.createCompany(sysadminId, { name: '  ', slug: '' });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.kind).toBe('validation');
+    }
   });
 });
 

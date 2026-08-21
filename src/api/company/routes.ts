@@ -38,7 +38,7 @@ export function registerCompanyRoutes(app: FastifyInstance, options: CompanyRout
     if (!result.ok) {
       return replyServiceError(reply, result.error);
     }
-    return reply.code(201).send({ companyId: result.value.companyId });
+    return reply.code(201).send(result.value);
   });
 
   app.get('/api/companies/:id', async (request, reply) => {

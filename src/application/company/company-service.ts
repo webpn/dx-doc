@@ -6,8 +6,14 @@ import type { PermissionService } from '../auth/permissions';
 import { COMPANY_ROLE_NAMES } from '../auth/roles';
 import type { AccountRepository } from '../ports/account-repository';
 import type { CompanyRecord, CompanyRepository } from '../ports/company-repository';
+import type { PasswordHasher } from '../ports/password-hasher';
 import type { ValidationIssue } from '../validation/issues';
-import { companyUpdateSchema, type CompanyUpdateInput } from '../validation/schemas';
+import {
+  companyCreateSchema,
+  companyUpdateSchema,
+  type CompanyCreateInput,
+  type CompanyUpdateInput,
+} from '../validation/schemas';
 import { validate } from '../validation/validate';
 
 export type CompanyError =
@@ -31,21 +37,27 @@ export class CompanyService {
     private readonly permissions: PermissionService,
     private readonly now: () => Date = () => new Date(),
     private readonly newId: () => string = () => randomUUID(),
+    private readonly hasher?: PasswordHasher,
   ) {}
 
   async createCompany(
     actorId: string,
-    input: { name: string; slug: string },
-  ): Promise<Result<{ companyId: string }, CompanyError>> {
+    input: CompanyCreateInput,
+  ): Promise<Result<{ companyId: string; firstAdminUserId?: string }, CompanyError>> {
     if (!(await this.permissions.canAdministerInstance(actorId))) {
       return err({ kind: 'forbidden' });
     }
-    const name = input.name.trim();
-    const slug = input.slug.trim();
-    if (name === '' || slug === '') {
+    const parsed = validate(companyCreateSchema, input);
+    if (!parsed.ok) {
+      return err({ kind: 'validation', issues: parsed.error });
+    }
+    if (parsed.value.firstAdmin?.password !== undefined && this.hasher === undefined) {
+      // A password was supplied but this instance has no hasher wired in —
+      // fail closed rather than store an unhashed credential.
       return err({ kind: 'invalid_input' });
     }
 
+    const { name, slug, firstAdmin } = parsed.value;
     const companyId = this.newId();
     const nowIso = this.now().toISOString();
     await this.companies.createCompany({
@@ -57,11 +69,43 @@ export class CompanyService {
     });
 
     // A tenant is unusable without its four company roles (REQ-SEC-002).
+    const roleIds = new Map<string, string>();
     for (const roleName of COMPANY_ROLE_NAMES) {
-      await this.accounts.createRole({ id: this.newId(), companyId, name: roleName });
+      const roleId = this.newId();
+      roleIds.set(roleName, roleId);
+      await this.accounts.createRole({ id: roleId, companyId, name: roleName });
     }
 
-    return ok({ companyId });
+    let firstAdminUserId: string | undefined;
+    if (firstAdmin !== undefined) {
+      // REQ-SEC-014: a freshly created company has no member who can pass
+      // `canInCompany`, so nothing in the API could otherwise create its
+      // first Admin. Seed one here, in the same operation, mirroring how
+      // `BootstrapService` seeds the instance administrator.
+      firstAdminUserId = this.newId();
+      const passwordHash =
+        firstAdmin.password !== undefined && this.hasher !== undefined
+          ? await this.hasher.hash(firstAdmin.password)
+          : null;
+      await this.accounts.createUser({
+        id: firstAdminUserId,
+        companyId,
+        email: firstAdmin.email.trim().toLowerCase(),
+        passwordHash,
+        createdAt: nowIso,
+      });
+      const admin = await this.accounts.getUserById(firstAdminUserId);
+      if (admin !== null) {
+        admin.roleId = roleIds.get('admin') ?? null;
+        // A password-less first Admin (invite-style) must set one at first
+        // login, same as the bootstrap administrator (REQ-SEC-013).
+        admin.passwordMustChange = firstAdmin.password === undefined;
+        admin.updatedAt = nowIso;
+        await this.accounts.updateUser(admin);
+      }
+    }
+
+    return ok(firstAdminUserId === undefined ? { companyId } : { companyId, firstAdminUserId });
   }
 
   /**
