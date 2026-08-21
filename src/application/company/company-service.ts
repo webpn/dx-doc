@@ -154,22 +154,22 @@ export class CompanyService {
       return err({ kind: 'forbidden' });
     }
 
-    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016)
-    if (
-      parsed.value.expectedUpdatedAt !== undefined &&
-      parsed.value.expectedUpdatedAt !== company.updatedAt
-    ) {
-      return err({
-        kind: 'stale_write',
-        currentUpdatedAt: company.updatedAt,
-      });
-    }
-
+    // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
+    // enforced atomically by the repository's `WHERE updated_at = ?`, so
+    // there is no read-compare-write race between the check and the write.
     const data = parsed.value;
     if (data.name !== undefined) company.name = data.name;
     if (data.slug !== undefined) company.slug = data.slug;
+    const previousUpdatedAt = company.updatedAt;
     company.updatedAt = this.now().toISOString();
-    await this.companies.updateCompany(company);
+    const applied = await this.companies.updateCompany(company, data.expectedUpdatedAt);
+    if (!applied) {
+      const current = await this.companies.getCompanyById(companyId);
+      return err({
+        kind: 'stale_write',
+        currentUpdatedAt: current?.updatedAt ?? previousUpdatedAt,
+      });
+    }
     return ok({ ok: true });
   }
 }

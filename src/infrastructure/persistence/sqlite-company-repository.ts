@@ -40,15 +40,19 @@ export class SqliteCompanyRepository implements CompanyRepository {
     };
   }
 
-  async updateCompany(company: CompanyRecord): Promise<void> {
-    await this.db
+  async updateCompany(company: CompanyRecord, expectedUpdatedAt?: string): Promise<boolean> {
+    let query = this.db
       .updateTable('company')
       .set({
         name: company.name,
         slug: company.slug,
         updated_at: company.updatedAt,
       })
-      .where('id', '=', company.id)
-      .execute();
+      .where('id', '=', company.id);
+    if (expectedUpdatedAt !== undefined) {
+      query = query.where('updated_at', '=', expectedUpdatedAt);
+    }
+    const result = await query.executeTakeFirst();
+    return result.numUpdatedRows > 0n;
   }
 }

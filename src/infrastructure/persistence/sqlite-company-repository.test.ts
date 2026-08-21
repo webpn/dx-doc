@@ -72,4 +72,55 @@ describe('SqliteCompanyRepository', () => {
       updatedAt: '2026-01-02T00:00:00.000Z',
     });
   });
+
+  it('applies the write and reports true when expectedUpdatedAt matches', async () => {
+    const company = {
+      id: 'c-3',
+      name: 'Acme Corp',
+      slug: 'acme-corp',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
+    await repo.createCompany(company);
+
+    const applied = await repo.updateCompany(
+      { ...company, name: 'Acme Corporation', updatedAt: '2026-01-02T00:00:00.000Z' },
+      '2026-01-01T00:00:00.000Z',
+    );
+
+    expect(applied).toBe(true);
+    const found = await repo.getCompanyById('c-3');
+    expect(found?.name).toBe('Acme Corporation');
+    expect(found?.updatedAt).toBe('2026-01-02T00:00:00.000Z');
+  });
+
+  it('atomically rejects a stale write and leaves the row untouched', async () => {
+    const company = {
+      id: 'c-4',
+      name: 'Acme Corp',
+      slug: 'acme-corp',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
+    await repo.createCompany(company);
+
+    // A concurrent writer already updated the row.
+    await repo.updateCompany({
+      ...company,
+      name: 'Concurrent Edit',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+    });
+
+    // The stale caller's write, guarded by the updatedAt it originally read,
+    // must be rejected atomically rather than clobbering the concurrent edit.
+    const applied = await repo.updateCompany(
+      { ...company, name: 'Stale Edit', updatedAt: '2026-01-03T00:00:00.000Z' },
+      '2026-01-01T00:00:00.000Z',
+    );
+
+    expect(applied).toBe(false);
+    const found = await repo.getCompanyById('c-4');
+    expect(found?.name).toBe('Concurrent Edit');
+    expect(found?.updatedAt).toBe('2026-01-02T00:00:00.000Z');
+  });
 });

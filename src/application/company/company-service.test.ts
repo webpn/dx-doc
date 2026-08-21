@@ -111,9 +111,13 @@ class FakeCompanies implements CompanyRepository {
     return Promise.resolve(this.companies.get(id) ?? null);
   }
 
-  updateCompany(company: CompanyRecord): Promise<void> {
+  updateCompany(company: CompanyRecord, expectedUpdatedAt?: string): Promise<boolean> {
+    const existing = this.companies.get(company.id);
+    if (expectedUpdatedAt !== undefined && existing?.updatedAt !== expectedUpdatedAt) {
+      return Promise.resolve(false);
+    }
     this.companies.set(company.id, company);
-    return Promise.resolve();
+    return Promise.resolve(true);
   }
 }
 
