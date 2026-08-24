@@ -10,6 +10,11 @@ export interface ApiErrorBody {
   issues?: ValidationIssue[];
   currentUpdatedAt?: string;
   reason?: string;
+  /**
+   * Companies an email resolves to, sent with `COMPANY_SELECTION_REQUIRED` so
+   * the login screen can offer the choice instead of asking for a typed id.
+   */
+  companyIds?: string[];
 }
 
 /**
@@ -22,6 +27,8 @@ export class ApiClientError extends Error {
   readonly code: string;
   readonly issues?: ValidationIssue[];
   readonly currentUpdatedAt?: string;
+  /** Set only for `COMPANY_SELECTION_REQUIRED` (409). */
+  readonly companyIds?: string[];
 
   constructor(status: number, body: ApiErrorBody) {
     super(body.message);
@@ -30,6 +37,7 @@ export class ApiClientError extends Error {
     this.code = body.code;
     if (body.issues !== undefined) this.issues = body.issues;
     if (body.currentUpdatedAt !== undefined) this.currentUpdatedAt = body.currentUpdatedAt;
+    if (body.companyIds !== undefined) this.companyIds = body.companyIds;
   }
 }
 
@@ -55,7 +63,12 @@ function isApiErrorBody(value: unknown): value is { error: ApiErrorBody } {
 
 export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
-  if (init.body !== undefined) headers.set('content-type', 'application/json');
+  // A FormData body must NOT carry an explicit content-type: the browser
+  // generates `multipart/form-data` with a boundary parameter, and overriding
+  // it leaves the server unable to parse the parts (REQ-AUTH-002 uploads).
+  if (init.body !== undefined && !(init.body instanceof FormData)) {
+    headers.set('content-type', 'application/json');
+  }
 
   let response: Response;
   try {
