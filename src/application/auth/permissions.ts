@@ -1,4 +1,5 @@
-import type { AccountRepository } from '../ports/account-repository';
+import type { AccountRepository, UserAccount } from '../ports/account-repository';
+import type { InstanceAdminStepUpRepository } from '../ports/instance-admin-stepup-repository';
 
 import type { CompanyRoleName } from './roles';
 
@@ -69,7 +70,17 @@ export const COMPANY_ACTION_ROLES: Readonly<Record<CompanyAction, readonly Compa
 };
 
 export class PermissionService {
-  constructor(private readonly accounts: AccountRepository) {}
+  /**
+   * `stepUps` is optional so every existing construction site keeps working
+   * and, more importantly, so the default is the *safe* one: with no step-up
+   * store there is no step-up path, and an instance administrator is denied
+   * every company action exactly as before (ADR-0027).
+   */
+  constructor(
+    private readonly accounts: AccountRepository,
+    private readonly stepUps?: InstanceAdminStepUpRepository,
+    private readonly now: () => Date = () => new Date(),
+  ) {}
 
   /** May the user perform `action` on `projectId`? Requires a matching grant. */
   async canOnProject(userId: string, projectId: string, action: ProjectAction): Promise<boolean> {
@@ -81,21 +92,43 @@ export class PermissionService {
     return PROJECT_ACTION_ROLES[action].includes(grant.roleName);
   }
 
-  /** May the user perform `action` within `companyId`? Uses the company role. */
+  /**
+   * May the user perform `action` within `companyId`? Company membership is
+   * the ordinary path; an instance administrator's audited, expiring step-up
+   * window is the second (ADR-0027). Nothing else admits.
+   */
   async canInCompany(userId: string, companyId: string, action: CompanyAction): Promise<boolean> {
     const user = await this.accounts.getUserById(userId);
-    if (user === null) {
+    if (user === null || !user.active) {
       return false;
     }
-    if (user.companyId !== companyId || user.roleId === null || !user.active) {
+    if (user.companyId === companyId && user.roleId !== null) {
+      const roles = await this.accounts.listRolesForCompany(companyId);
+      const role = roles.find((candidate) => candidate.id === user.roleId);
+      if (role !== undefined && COMPANY_ACTION_ROLES[action].includes(role.name)) {
+        return true;
+      }
+    }
+    return this.hasCompanyStepUp(user, companyId);
+  }
+
+  /**
+   * ADR-0027: an open, unexpired step-up window admits a holder of the
+   * `instance_admin` capability to COMPANY actions in that one company. The
+   * flag is still required — a step-up row on a non-holder grants nothing —
+   * and this is deliberately never consulted by `canOnProject`, which is what
+   * keeps REQ-SEC-014's no-implied-content-access rule true.
+   */
+  private async hasCompanyStepUp(user: UserAccount, companyId: string): Promise<boolean> {
+    if (this.stepUps === undefined || !user.instanceAdmin) {
       return false;
     }
-    const roles = await this.accounts.listRolesForCompany(companyId);
-    const role = roles.find((candidate) => candidate.id === user.roleId);
-    if (role === undefined) {
-      return false;
-    }
-    return COMPANY_ACTION_ROLES[action].includes(role.name);
+    const stepUp = await this.stepUps.getActiveStepUp(
+      user.id,
+      companyId,
+      this.now().toISOString(),
+    );
+    return stepUp !== null;
   }
 
   /** Instance administration capability (REQ-SEC-014). */

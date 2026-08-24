@@ -246,11 +246,16 @@ A discrete `instance_admin` flag on a user, independent of the four company-scop
 
 **It carries exactly two powers the Admin role does not have:** creating companies, and granting or revoking the `instance_admin` flag itself. Everything else an Admin does — projects, integrations, catalogue, branding, audit log — stays with the Admin role, inside one company.
 
-Three rules make it safe:
+Because the flag holder is permanently company-less, they cannot pass `canInCompany` for any company — including one they just created. Two mechanisms close that gap without weakening the isolation:
 
-- **Step-up re-authentication.** Entering the instance-administration surface requires re-authenticating, so an ordinary session that is hijacked or left open does not reach it.
+- **A company may be created with its first Admin in the same call.** `CompanyService.createCompany` accepts an optional first-Admin payload (email, and either a password or a password-less account that must set one at first login). The new user is created with `companyId` set to the just-created company and the Admin role, in the same operation that creates the company's four roles — mirroring how `BootstrapService` seeds the instance administrator. This is the normal provisioning path.
+- **Step-up to company administration.** A flag holder may open an explicit, expiring, audited window to administer one named company, described in [ADR-0027](../../adr/0027-instance-admin-stepup.md). It admits company-scoped administration only, never project content, and never mutates the holder's `companyId`. This is the recovery path for a company whose first Admin was mis-addressed or has left.
+
+Three rules make the capability safe:
+
+- **Step-up re-authentication.** Entering the instance-administration surface, and opening a step-up window for a company, both require re-authenticating with the holder's password — so an ordinary session that is hijacked or left open does not reach either.
 - **A guaranteed local-password path.** A user holding this flag always retains a working email + password login, even where their own company's supported-login-methods setting has local password disabled for everyone else ([ADR-0014](../../adr/0014-configuration-split.md)). The instance must stay recoverable when an identity provider is down, misconfigured, or has just been pointed at the wrong tenant.
-- **No implied content access.** The flag confers no read or write access to any project's documentation. Reaching content still requires a role and a grant (REQ-SEC-002, REQ-SEC-003), and that grant is auditable like anyone else's.
+- **No implied content access.** The flag confers no read or write access to any project's documentation, and neither does a step-up window. Reaching content still requires a role and a grant (REQ-SEC-002, REQ-SEC-003), and that grant is auditable like anyone else's.
 
 **Acceptance**
 
@@ -259,16 +264,9 @@ Three rules make it safe:
 - Disabling local password in a company's supported-login-methods setting does not lock out its `instance_admin` flag holders; a test asserts this, since it is the recovery path.
 - Granting or revoking the flag is itself audited, and cannot be performed by an agent through MCP (REQ-API-004).
 - Entering the administration surface without a recent re-authentication is refused, including through the API.
+- A step-up window is scoped to one company, expires on its own, requires the password to open, is audited when opened, and grants no project action — each asserted by test (ADR-0027).
 
 > This is the distinction the system-administrator persona draws, made enforceable: **operating the deployment and administering a tenant are different jobs.** Before this, Admin was both — it created companies and also had the run of their content. Splitting them costs one boolean and makes "who can see our documentation?" answerable without qualification.
-
-> **Carried forward on 2026-08-18.** The flag, its semantics and its storage are implemented. What does not exist: the step-up re-authentication rule, the guaranteed local-password path, and — most simply — any way for its holder to log in, since the login route requires a company id and this user has none (REQ-SEC-013). Completed at [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion).
-
-> **Found: a freshly created company has no path to its first Admin — resolved 2026-08-21 (found 2026-08-20).** Walking the exact exit criterion in [M1.15](../milestones.md#m115--client-foundation) — bootstrap administrator logs in, creates a company, creates a project, grants an editor — deadlocks at "creates a project." `ProjectService.create` requires `company.manage_projects`, gated by `canInCompany`, which requires `user.companyId === companyId`; the instance administrator's `companyId` is permanently `null` by this requirement's own "no implied content access" rule, so they can never pass it for any company, including one they just created. The obvious next step, inviting the first company user, is blocked the same way: `company.invite_user` also requires `canInCompany`, and a brand-new company has no member yet who could hold it. `GrantService.setRole`'s own comment states the same wall from the other side: "an instance admin outside any tenant can never be granted (no company)." This is not a missing route — it is a missing capability: **nothing in the exposed API can create a company's first Admin.**
->
-> **Decision: company creation optionally provisions its first Admin in the same call.** `CompanyService.createCompany` accepts an optional first-Admin payload (email + password, or an invite-style passwordless account) alongside the company's name and slug; when supplied, the new user is created with `companyId` set to the just-created company and the Admin role, in the same operation that creates the company's four roles. This mirrors how `BootstrapService` already seeds the instance administrator, keeps the instance admin permanently company-less (the invariant this requirement exists to protect), and needs no relaxation of `canInCompany`/`setRole`. The other two candidates considered — a one-time "assign instance admin as this company's Admin" action, and relaxing `canInCompany` for companies with zero members — are not used: both would have added a second capability class or weakened the isolation check this requirement's acceptance criteria test directly.
->
-> Implemented at 2026-08-21: `CompanyService.createCompany` accepts an optional `firstAdmin` payload and seeds the Admin user (with or without a password — a password-less first Admin must set one at first login, same as the bootstrap administrator) in the same call. The remaining gap is the Playwright acceptance test (`e2e/m1-15-acceptance.spec.ts`) exercising this path end-to-end, tracked at [M1.15](../milestones.md#m115--client-foundation).
 
 ### REQ-SEC-015 — Instance-administration portal
 

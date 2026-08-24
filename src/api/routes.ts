@@ -1,6 +1,7 @@
 import type { AssetService } from '@project/application/asset/asset-service';
 import type { AuthService } from '@project/application/auth/auth-service';
 import type { GrantService } from '@project/application/auth/grant-service';
+import type { InstanceAdminStepUpService } from '@project/application/auth/instance-admin-stepup-service';
 import type { LifecycleService } from '@project/application/auth/lifecycle-service';
 import type { ServiceTokenService } from '@project/application/auth/service-token-service';
 import type { SessionService } from '@project/application/auth/session-service';
@@ -16,6 +17,7 @@ import { registerAccessRoutes } from './access/routes';
 import { registerAssetRoutes } from './assets/routes';
 import { registerAuthRoutes } from './auth/routes';
 import { registerCompanyRoutes } from './company/routes';
+import { registerInstanceAdminStepUpRoutes } from './instance-admin/routes';
 import { registerLifecycleRoutes } from './lifecycle/routes';
 import { registerMcpRoutes } from './mcp/routes';
 import { McpServerHandler } from './mcp/server';
@@ -35,6 +37,8 @@ export interface ApiRoutesOptions {
   lifecycle: LifecycleService;
   companyService: CompanyService;
   grantService: GrantService;
+  /** ADR-0027 — opens/closes instance-admin step-up windows. */
+  instanceAdminStepUpService: InstanceAdminStepUpService;
   accounts: AccountRepository;
   cookieName: string;
   sessionTtlMs: number;
@@ -59,6 +63,7 @@ export function registerAllRoutes(app: FastifyInstance, options: ApiRoutesOption
     lifecycle,
     companyService,
     grantService,
+    instanceAdminStepUpService,
     accounts,
     cookieName,
     sessionTtlMs,
@@ -99,6 +104,13 @@ export function registerAllRoutes(app: FastifyInstance, options: ApiRoutesOption
   registerAccessRoutes(app, { grants: grantService, sessions, serviceTokens, cookieName });
   registerLifecycleRoutes(app, { lifecycle, sessions, serviceTokens, cookieName });
   registerCompanyRoutes(app, { companies: companyService, sessions, serviceTokens, cookieName });
+  // ADR-0027 — instance-admin step-up windows.
+  registerInstanceAdminStepUpRoutes(app, {
+    stepUps: instanceAdminStepUpService,
+    sessions,
+    serviceTokens,
+    cookieName,
+  });
   registerTokenRoutes(app, { tokens: serviceTokens, sessions, serviceTokens, cookieName });
 
   const mcpHandler = new McpServerHandler(
