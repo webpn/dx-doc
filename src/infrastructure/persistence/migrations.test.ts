@@ -28,6 +28,7 @@ const MIGRATION_NAMES = [
   '015_instance_admin_stepups',
   '016_page_description',
   '017_free_page_hierarchy',
+  '018_company_deletion_audit_exception',
 ];
 
 describe('migration introspection (REQ-FDN-024 readiness)', () => {

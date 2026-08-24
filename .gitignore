@@ -47,3 +47,6 @@ db/schema.sql
 # Temp
 tmp/
 temp/
+
+.claude\skills\dx-doc-dev\SKILL.md
+.claude/skills/dx-doc-dev/SKILL.md

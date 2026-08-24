@@ -65,6 +65,7 @@ export interface Database {
   audit_logs: AuditLogsTable;
   api_service_tokens: ApiServiceTokensTable;
   assets: AssetsTable;
+  company_deletion_markers: CompanyDeletionMarkersTable;
 }
 
 /**
@@ -329,6 +330,7 @@ export const SCHEMA_DEFINITIONS: DatabaseSchemaDefinition = {
     'created_at',
     'updated_at',
   ],
+  company_deletion_markers: ['company_id', 'created_at'],
 };
 
 export interface CompanyTable {
@@ -728,6 +730,17 @@ export interface AssetsTable {
   original_filename: string;
   created_at: ColumnType<string, string | undefined, string | undefined>;
   updated_at: ColumnType<string, string | undefined, string | undefined>;
+}
+
+/**
+ * Marks a company as having a `deleteCompanyCascade` in flight (migration
+ * 018). Its sole purpose is to key the narrow exception the audit-logs
+ * append-only trigger grants to that one cascade — see the migration's own
+ * comment for why the exception exists and how it stays narrow.
+ */
+export interface CompanyDeletionMarkersTable {
+  company_id: string;
+  created_at: ColumnType<string, string | undefined, string | undefined>;
 }
 
 export type { Generated };

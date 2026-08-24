@@ -22,6 +22,7 @@ import * as m014 from '../../db/migrations/014_audit_logs_append_only';
 import * as m015 from '../../db/migrations/015_instance_admin_stepups';
 import * as m016 from '../../db/migrations/016_page_description';
 import * as m017 from '../../db/migrations/017_free_page_hierarchy';
+import * as m018 from '../../db/migrations/018_company_deletion_audit_exception';
 import type { Connection } from '../../src/infrastructure/persistence/sqlite-kysely';
 
 const staticMigrations: Record<string, Migration> = {
@@ -42,6 +43,7 @@ const staticMigrations: Record<string, Migration> = {
   '015_instance_admin_stepups': m015,
   '016_page_description': m016,
   '017_free_page_hierarchy': m017,
+  '018_company_deletion_audit_exception': m018,
 };
 
 class StaticMigrationProvider implements MigrationProvider {
