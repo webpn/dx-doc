@@ -428,7 +428,7 @@ describe('LifecycleService — password reset (REQ-SEC-013)', () => {
     }
     // The emailed token is the raw value; the store holds only its hash.
     expect(resetTokens.tokens.has(hashSessionToken(rawToken))).toBe(true);
-    expect(email.sent[0]?.text).toContain('https://dx.test/reset-password?token=');
+    expect(email.sent[0]?.text).toContain('https://dx.test/password-reset/confirm?token=');
   });
 
   it('sends no email for an unknown address (no disclosure)', async () => {

@@ -177,7 +177,7 @@ export class LifecycleService {
       usedAt: null,
       createdAt: this.now().toISOString(),
     });
-    const resetLink = `${this.appUrl.replace(/\/+$/, '')}/reset-password?token=${token}`;
+    const resetLink = `${this.appUrl.replace(/\/+$/, '')}/password-reset/confirm?token=${token}`;
     await this.email.send({
       to: user.email,
       subject: 'dx-doc password reset',
