@@ -1,6 +1,8 @@
 import type { ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
+import { useTranslate } from './i18n';
+import { useRestoreSession } from './queries/auth';
 import { LoginPage } from './routes/auth/login-page';
 import { PasswordChangePage } from './routes/auth/password-change-page';
 import { PasswordResetConfirmPage } from './routes/auth/password-reset-confirm-page';
@@ -21,8 +23,27 @@ import { TemplateEditorPage } from './shell/template-editor-page';
 import { TrackingEditorPage } from './shell/tracking-editor-page';
 import { useSessionStore } from './stores/session-store';
 
+/**
+ * Placeholder shown only while `GET /api/auth/me` is in flight on boot. Carries
+ * `role="status"` so assistive technology announces the wait rather than
+ * reporting an empty page.
+ */
+function SessionLoading(): ReactElement {
+  const t = useTranslate();
+  return <div role="status">{t('auth.session.loading')}</div>;
+}
+
 export function App(): ReactElement {
   const session = useSessionStore((state) => state.session);
+  // The session cookie survives a full page load but this store does not, so on
+  // boot the server is asked who the actor is before anything is rendered.
+  const { resolved } = useRestoreSession();
+
+  // "Not known yet" is not "signed out": rendering the login page here would
+  // flash it over a perfectly good session on every refresh and deep link.
+  if (!resolved) {
+    return <SessionLoading />;
+  }
 
   if (session === null) {
     return (

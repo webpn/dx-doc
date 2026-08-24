@@ -26,6 +26,7 @@ export const en = {
   'auth.login.emailLabel': 'Email address',
   'auth.login.companyIdLabel': 'Company ID',
   'auth.login.companyIdHint': 'Leave blank for an instance administrator.',
+  'auth.session.loading': 'Signing you in…',
   'auth.login.companyChoiceLabel': 'Company',
   'auth.login.companyChoiceHint': 'This email is registered with more than one company.',
   'auth.login.passwordLabel': 'Password',

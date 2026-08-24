@@ -16,12 +16,28 @@ export interface LoginResponse {
   passwordChangeRequired: boolean;
 }
 
+/** The current session as rebuilt from the cookie by `GET /api/auth/me`. */
+export interface SessionResponse {
+  userId: string;
+  companyId: string | null;
+  instanceAdmin: boolean;
+  passwordChangeRequired: boolean;
+}
+
 export const authApi = {
   login(email: string, password: string, companyId?: string): Promise<LoginResponse> {
     return apiRequest<LoginResponse>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password, ...(companyId ? { companyId } : {}) }),
     });
+  },
+  /**
+   * The actor behind the current cookie, or a 401 (surfaced as an
+   * ApiClientError) when there is no live session. Used to rehydrate the
+   * in-memory session store on a full page load.
+   */
+  me(): Promise<SessionResponse> {
+    return apiRequest<SessionResponse>('/api/auth/me', { method: 'GET' });
   },
   logout(): Promise<{ ok: true }> {
     return apiRequest<{ ok: true }>('/api/auth/logout', { method: 'POST' });

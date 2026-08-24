@@ -164,6 +164,42 @@ describe('auth routes (email + password)', () => {
     expect(body.error.code).toBe('INVALID_CREDENTIALS');
   });
 
+  it('returns the current session for a valid cookie so a reloaded client can rehydrate', async () => {
+    // The session lives in an httpOnly cookie, which survives a full page load
+    // while the client's in-memory store does not. Without this endpoint a
+    // refresh or a pasted URL looks unauthenticated. GET /api/auth/me lets the
+    // client rebuild its session from the cookie the server already trusts.
+    const login = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: loginPayload(),
+    });
+    const setCookie = String(login.headers['set-cookie'] ?? '');
+    const token = setCookie.split(';')[0]?.split('=')[1] ?? '';
+
+    const me = await app.inject({
+      method: 'GET',
+      url: '/api/auth/me',
+      headers: { cookie: `dxdoc_session=${token}` },
+    });
+
+    expect(me.statusCode).toBe(200);
+    const body = me.json<{
+      userId: string;
+      companyId: string | null;
+      instanceAdmin: boolean;
+      passwordChangeRequired: boolean;
+    }>();
+    expect(body.userId).toBe('u1');
+    expect(body.companyId).toBe('c1');
+  });
+
+  it('answers /api/auth/me with 401 when there is no session cookie', async () => {
+    const me = await app.inject({ method: 'GET', url: '/api/auth/me' });
+    expect(me.statusCode).toBe(401);
+    expect(me.json<{ error: { code: string } }>().error.code).toBe('UNAUTHENTICATED');
+  });
+
   it('logs out by destroying the session and clearing the cookie', async () => {
     const login = await app.inject({
       method: 'POST',

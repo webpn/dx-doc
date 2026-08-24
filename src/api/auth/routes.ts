@@ -72,6 +72,44 @@ export function registerAuthRoutes(app: FastifyInstance, options: AuthRoutesOpti
     return { ok: true, user: result.user, passwordChangeRequired: result.passwordChangeRequired };
   });
 
+  /**
+   * The current session, rebuilt from the cookie. The session itself is an
+   * httpOnly cookie, which survives a full page load while the client's
+   * in-memory store does not — so after a refresh or a pasted URL the client
+   * needs somewhere to ask "who am I?" instead of assuming it is signed out.
+   *
+   * Read-only and derived entirely from server state: the cookie is resolved to
+   * a session, then to the live user row, so a deactivated or deleted account
+   * stops rehydrating immediately rather than living on in a stale client.
+   */
+  app.get('/api/auth/me', async (request, reply) => {
+    const cookies = request.cookies as Record<string, string | undefined>;
+    const token = cookies[options.cookieName];
+    if (token === undefined) {
+      return reply
+        .code(401)
+        .send({ error: { code: 'UNAUTHENTICATED', message: 'Not authenticated' } });
+    }
+    const userId = await options.sessions.resolve(token);
+    if (userId === null) {
+      return reply
+        .code(401)
+        .send({ error: { code: 'UNAUTHENTICATED', message: 'Session expired' } });
+    }
+    const user = await options.accounts.getUserById(userId);
+    if (!user?.active) {
+      return reply
+        .code(401)
+        .send({ error: { code: 'UNAUTHENTICATED', message: 'Not authenticated' } });
+    }
+    return {
+      userId: user.id,
+      companyId: user.companyId,
+      instanceAdmin: user.instanceAdmin,
+      passwordChangeRequired: user.passwordMustChange,
+    };
+  });
+
   app.post('/api/auth/logout', async (request, reply) => {
     const cookies = request.cookies as Record<string, string | undefined>;
     const token = cookies[options.cookieName];
