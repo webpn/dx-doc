@@ -10,7 +10,7 @@
  */
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { sql } from 'kysely';
 import { FileMigrationProvider } from 'kysely/migration';
@@ -25,12 +25,20 @@ const MIGRATIONS_DIR = path.resolve(
 /**
  * The default migration provider: Kysely's file provider over `db/migrations`,
  * exactly what `scripts/migrate.ts` (`npm run db:migrate`) uses.
+ *
+ * The `import` hook is required, not cosmetic: Kysely's own default joins
+ * `migrationFolder` with the filename and passes the result straight to
+ * `import()`. On Windows that yields a bare `C:\...` path, and Node's ESM
+ * loader rejects it with ERR_UNSUPPORTED_ESM_URL_SCHEME ("absolute paths must
+ * be valid file:// URLs"). Converting with `pathToFileURL` makes migration
+ * loading work identically on Windows and POSIX.
  */
 export function getMigrationProvider(): FileMigrationProvider {
   return new FileMigrationProvider({
     fs,
     path,
     migrationFolder: MIGRATIONS_DIR,
+    import: (filePath: string) => import(pathToFileURL(filePath).href),
   });
 }
 

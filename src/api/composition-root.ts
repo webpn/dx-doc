@@ -26,6 +26,7 @@ import { AssetService } from '@project/application/asset/asset-service';
 import { AuthService } from '@project/application/auth/auth-service';
 import { BootstrapService } from '@project/application/auth/bootstrap-service';
 import { GrantService } from '@project/application/auth/grant-service';
+import { InstanceAdminStepUpService } from '@project/application/auth/instance-admin-stepup-service';
 import { LifecycleService } from '@project/application/auth/lifecycle-service';
 import { PermissionService } from '@project/application/auth/permissions';
 import { ServiceTokenService } from '@project/application/auth/service-token-service';
@@ -52,6 +53,7 @@ import { pendingMigrations } from '@project/infrastructure/persistence/migration
 import { SqliteAccountRepository } from '@project/infrastructure/persistence/sqlite-account-repository';
 import { SqliteAssetRepository } from '@project/infrastructure/persistence/sqlite-asset-repository';
 import { SqliteCompanyRepository } from '@project/infrastructure/persistence/sqlite-company-repository';
+import { SqliteInstanceAdminStepUpRepository } from '@project/infrastructure/persistence/sqlite-instance-admin-stepup-repository';
 import {
   closeSqliteConnection,
   openSqliteConnection,
@@ -172,12 +174,26 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
   const sharedPasswords = new SqliteSharedPasswordRepository(connection.kysely);
   const auditLogs = new SqliteAuditLogRepository(connection.kysely);
   const assetRepository = new SqliteAssetRepository(connection.kysely);
+  const instanceAdminStepUps = new SqliteInstanceAdminStepUpRepository(connection.kysely);
 
   const hasher = new BcryptPasswordHasher();
   const sessionTtlMs = parseDurationToMs(config.AUTH_SESSION_TTL);
   const sessionService = new SessionService(sessions, sessionTtlMs, auditLogs);
   const serviceTokenService = new ServiceTokenService(serviceTokens, accounts);
-  const permissions = new PermissionService(accounts);
+  // ADR-0027: an instance administrator is company-less, so `canInCompany`
+  // consults their open step-up windows as a second admission path. Passing
+  // the store here is what activates it; without it the behaviour is the
+  // pre-ADR-0027 deny.
+  const permissions = new PermissionService(accounts, instanceAdminStepUps);
+  const instanceAdminStepUpService = new InstanceAdminStepUpService(
+    accounts,
+    hasher,
+    companies,
+    instanceAdminStepUps,
+    permissions,
+    auditLogs,
+    config.INSTANCE_ADMIN_STEPUP_TTL_MINUTES,
+  );
   const auth = new AuthService(accounts, hasher, sessionService, auditLogs);
   const bootstrap = new BootstrapService(accounts, hasher);
   // Email delivery is fire-and-forget; an instance without SMTP configured
@@ -292,6 +308,7 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
     lifecycle,
     companyService,
     grantService,
+    instanceAdminStepUpService,
     accounts,
     cookieName: SESSION_COOKIE_NAME,
     sessionTtlMs,

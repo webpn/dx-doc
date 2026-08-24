@@ -54,6 +54,12 @@ export type Db = Kysely<Database>;
 export interface Connection {
   readonly kysely: Db;
   readonly exec: (sqlText: string) => void;
+  /**
+   * Close the underlying `better-sqlite3` handle directly. Prefer
+   * `closeSqliteConnection`, which also destroys the Kysely wrapper; this is
+   * the low-level half it calls. Idempotent.
+   */
+  readonly close: () => void;
 }
 
 /**
@@ -79,6 +85,11 @@ export function openSqliteConnection(filePath: string): Connection {
     exec: (sqlText: string): void => {
       inner.exec(sqlText);
     },
+    close: (): void => {
+      if (inner.open) {
+        inner.close();
+      }
+    },
   };
 }
 
@@ -87,7 +98,18 @@ export function openSqliteConnection(filePath: string): Connection {
  * lifetime in production; this is for the test setup path which
  * opens and closes per-test connections in `beforeEach` /
  * `afterEach`.
+ *
+ * Both halves must be closed. `Kysely#destroy()` alone is not enough: the
+ * SqliteDialect creates its `better-sqlite3` handle lazily on first query, so
+ * a connection used only through the `exec()` escape hatch has an open handle
+ * that Kysely's driver never learned about and therefore never closes. On
+ * Windows the leaked handle makes the database file undeletable (EBUSY), which
+ * surfaced as unrelated-looking test-teardown failures.
+ *
+ * `close()` is synchronous because `better-sqlite3`'s is; awaiting this
+ * function guarantees the file is released before a caller deletes it.
  */
 export async function closeSqliteConnection(connection: Connection): Promise<void> {
   await connection.kysely.destroy();
+  connection.close();
 }

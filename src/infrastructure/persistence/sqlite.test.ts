@@ -42,7 +42,7 @@ describe('SQLite adapter', () => {
     expect(bt.rows[0]?.timeout).toBe(5000);
   });
 
-  it('actually enforces foreign keys, not merely reports the pragma', () => {
+  it('actually enforces foreign keys, not merely reports the pragma', async () => {
     const conn = openTempConnection();
 
     conn.exec(`
@@ -54,5 +54,10 @@ describe('SQLite adapter', () => {
     expect(() => {
       conn.exec("INSERT INTO child (parent_id) VALUES ('missing')");
     }).toThrow(/FOREIGN KEY constraint failed/);
+
+    // Close inside the test rather than relying on teardown alone: this test
+    // touches the database only through `exec()`, the path whose handle Kysely
+    // never owns, so it is the exact case that used to leak.
+    await closeSqliteConnection(conn);
   });
 });

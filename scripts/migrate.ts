@@ -6,12 +6,13 @@
  *   npm run db:migrate
  *   tsx scripts/migrate.ts [up]
  */
-import { mkdirSync, promises as fs } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { FileMigrationProvider, Migrator } from 'kysely/migration';
+import { Migrator } from 'kysely/migration';
 
+import { getMigrationProvider } from '../src/infrastructure/persistence/migrations';
 import {
   closeSqliteConnection,
   openSqliteConnection,
@@ -44,11 +45,10 @@ async function migrate(): Promise<void> {
 
   const migrator = new Migrator({
     db: connection.kysely,
-    provider: new FileMigrationProvider({
-      fs,
-      path,
-      migrationFolder: path.resolve(root, 'db/migrations'),
-    }),
+    // Shared with the startup self-check so there is one definition of where
+    // migrations live and how they are loaded (the `import` hook it carries is
+    // required on Windows).
+    provider: getMigrationProvider(),
   });
 
   const { error, results } = await migrator.migrateToLatest();

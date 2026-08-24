@@ -5,6 +5,7 @@ import path from 'node:path';
 import type { AssetService } from '@project/application/asset/asset-service';
 import type { AuthService } from '@project/application/auth/auth-service';
 import type { GrantService } from '@project/application/auth/grant-service';
+import type { InstanceAdminStepUpService } from '@project/application/auth/instance-admin-stepup-service';
 import type { LifecycleService } from '@project/application/auth/lifecycle-service';
 import type { ServiceTokenService } from '@project/application/auth/service-token-service';
 import type { SessionService } from '@project/application/auth/session-service';
@@ -71,20 +72,26 @@ function testEnv(
 function testComposition(overrides: Record<string, string> = {}): Composition {
   const dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-comp-'));
   const dbFile = path.join(dir, 'test.sqlite');
-  return assembleComposition({
+  const composition = assembleComposition({
     env: testEnv(overrides),
     dbFile,
     storage: new InMemoryObjectStorage(),
     searchIndex: new InMemorySearchIndex(),
   });
+  // Register the directory we actually created. `config.DB_FILE` is the raw env
+  // value, NOT the `dbFile` override passed above, so deriving the path to
+  // remove from the config deleted the wrong directory and leaked one temp dir
+  // per test.
+  open.push({ composition, dir });
+  return composition;
 }
 
-const open: Composition[] = [];
+const open: { composition: Composition; dir: string }[] = [];
 afterEach(async () => {
-  for (const composition of open.splice(0)) {
+  for (const { composition, dir } of open.splice(0)) {
     await composition.app.close().catch(() => undefined);
     await composition.close().catch(() => undefined);
-    rmSync(path.dirname(composition.config.DB_FILE), { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true });
   }
 });
 
@@ -100,6 +107,7 @@ const stubServiceTokens = {} as ServiceTokenService;
 const stubLifecycle = {} as LifecycleService;
 const stubCompany = {} as CompanyService;
 const stubGrants = {} as GrantService;
+const stubInstanceAdminStepUps = {} as InstanceAdminStepUpService;
 const stubAuditLogs = {} as AuditLogRepository;
 const stubAccounts = {} as AccountRepository;
 
@@ -142,6 +150,7 @@ const ALL_ROUTES = captureRoutes((app) => {
     lifecycle: stubLifecycle,
     companyService: stubCompany,
     grantService: stubGrants,
+    instanceAdminStepUpService: stubInstanceAdminStepUps,
     accounts: stubAccounts,
     cookieName: SESSION_COOKIE_NAME,
     sessionTtlMs: 1000,
@@ -237,7 +246,6 @@ const INDIVIDUAL_ROUTES = [
 describe('composition root — route table (REQ-FDN-023)', () => {
   it('serves exactly the routes the API layer defines, plus liveness/readiness', () => {
     const composition = testComposition();
-    open.push(composition);
 
     // Fastify registers HEAD beside every GET (including the two lifecycle
     // routes), so the expected surface includes both.
@@ -254,7 +262,6 @@ describe('composition root — route table (REQ-FDN-023)', () => {
 
   it('serves every route each individual register function defines (nothing unwired)', () => {
     const composition = testComposition();
-    open.push(composition);
 
     const served = sortRoutes(composition.servedRoutes);
     for (const route of sortRoutes(INDIVIDUAL_ROUTES)) {
@@ -264,7 +271,6 @@ describe('composition root — route table (REQ-FDN-023)', () => {
 
   it('exposes the milestone-critical surface an accidentally dropped route would fail', () => {
     const composition = testComposition();
-    open.push(composition);
 
     const served = new Set(composition.servedRoutes.map((r) => `${r.method} ${r.url}`));
     const critical = [
@@ -290,7 +296,6 @@ describe('composition root — route table (REQ-FDN-023)', () => {
 describe('composition root — first-run and readiness (M1.11)', () => {
   it('bootstrap admin authenticates end-to-end on the real server and is forced to change the password', async () => {
     const composition = testComposition();
-    open.push(composition);
     await applyMigrations(composition.connection);
     await checkStartup(composition);
 
@@ -338,7 +343,6 @@ describe('composition root — first-run and readiness (M1.11)', () => {
 
   it('fails loudly against an unmigrated database, naming the remedy', async () => {
     const composition = testComposition();
-    open.push(composition); // empty database: migrated nowhere
 
     await expect(checkStartup(composition)).rejects.toThrow(/npm run db:migrate/);
     await expect(checkStartup(composition)).rejects.toBeInstanceOf(StartupError);
@@ -384,7 +388,6 @@ describe('composition root — first-run and readiness (M1.11)', () => {
 
   it('/api/ready is healthy when migrated and flips unhealthy when the database is gone, without a restart', async () => {
     const composition = testComposition();
-    open.push(composition);
     await applyMigrations(composition.connection);
 
     expect(await composition.checkReady()).toEqual({ ok: true });
@@ -406,7 +409,6 @@ describe('composition root — first-run and readiness (M1.11)', () => {
 
   it('readiness discloses no version, path, driver or config value', async () => {
     const composition = testComposition();
-    open.push(composition);
     await applyMigrations(composition.connection);
 
     const healthy = await composition.app.inject({ method: 'GET', url: '/api/ready' });
