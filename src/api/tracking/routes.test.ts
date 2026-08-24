@@ -283,7 +283,7 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
       payload: { title: 'Integration', slug: 'integration', content: '# Integration' },
     });
     expect(rootRes.statusCode).toBe(201);
-    const rootId = (rootRes.json() as { id: string }).id;
+    const rootId = rootRes.json<{ id: string }>().id;
 
     const childRes = await app.inject({
       method: 'POST',
