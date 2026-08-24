@@ -32,20 +32,13 @@ vi.mock('../queries', async (importOriginal) => {
     useProject: () => ({ data: { companyId: 'cmp_1' } }) as unknown,
     useUpdateTracking: () => ({ mutateAsync: update, isPending: false }) as unknown,
     useApplyModule: () => ({ mutateAsync: applyModule, isPending: false }) as unknown,
-    useRemoveTrackingProperty: () =>
-      ({ mutateAsync: removeProperty, isPending: false }) as unknown,
+    useRemoveTrackingProperty: () => ({ mutateAsync: removeProperty, isPending: false }) as unknown,
     useSetPresence: () => ({ mutateAsync: setPresence, isPending: false }) as unknown,
   };
 });
 
 vi.mock('../editor', () => ({
-  MarkdownEditor: ({
-    value,
-    onChange,
-  }: {
-    value: string;
-    onChange: (next: string) => void;
-  }) => (
+  MarkdownEditor: ({ value, onChange }: { value: string; onChange: (next: string) => void }) => (
     <textarea
       aria-label="Description"
       onChange={(event) => {

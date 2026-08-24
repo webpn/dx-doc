@@ -13,8 +13,7 @@ export const queryKeys = {
   page: (pageId: string) => ['pages', pageId] as const,
   trackings: (projectId: string) => ['projects', projectId, 'trackings'] as const,
   tracking: (trackingId: string) => ['trackings', trackingId] as const,
-  navigationEvents: (projectId: string) =>
-    ['projects', projectId, 'navigation-events'] as const,
+  navigationEvents: (projectId: string) => ['projects', projectId, 'navigation-events'] as const,
   modules: (companyId: string, projectId?: string) =>
     ['companies', companyId, 'modules', projectId ?? null] as const,
   properties: (companyId: string, projectId?: string) =>

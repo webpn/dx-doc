@@ -80,14 +80,14 @@ instance to an untrusted network.
 
 > Do not rely on any control in this list. Each names the milestone that delivers it.
 
-| Control | Status | Target |
-| --- | --- | --- |
-| Security response headers (CSP, X-Content-Type-Options, X-Frame-Options, HSTS) | Not implemented | R1 hardening |
-| CSRF protection for cookie-based authentication | Not implemented | R1 hardening |
-| Request rate limiting / throttling | Not implemented | R1 hardening |
-| Markdown sanitization before rendering | Not implemented — no renderer exists yet | M1.16 (authoring editor) |
-| Signed (time-limited) object-storage URLs | Not implemented — assets are served from a public base URL by design in R1, see ADR-0026 | R2 |
-| Audit-log retention enforcement | Not implemented — `AUDIT_RETENTION_MONTHS` is read but no pruning job exists | R2 |
+| Control                                                                        | Status                                                                                   | Target                   |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- | ------------------------ |
+| Security response headers (CSP, X-Content-Type-Options, X-Frame-Options, HSTS) | Not implemented                                                                          | R1 hardening             |
+| CSRF protection for cookie-based authentication                                | Not implemented                                                                          | R1 hardening             |
+| Request rate limiting / throttling                                             | Not implemented                                                                          | R1 hardening             |
+| Markdown sanitization before rendering                                         | Not implemented — no renderer exists yet                                                 | M1.16 (authoring editor) |
+| Signed (time-limited) object-storage URLs                                      | Not implemented — assets are served from a public base URL by design in R1, see ADR-0026 | R2                       |
+| Audit-log retention enforcement                                                | Not implemented — `AUDIT_RETENTION_MONTHS` is read but no pruning job exists             | R2                       |
 
 ## References
 

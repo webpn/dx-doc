@@ -478,10 +478,7 @@ export class SqliteDestinationRepository implements DestinationRepository {
     return rows.map((r) => this.toEntity(r));
   }
 
-  async updateDestination(
-    destination: Destination,
-    expectedUpdatedAt?: string,
-  ): Promise<boolean> {
+  async updateDestination(destination: Destination, expectedUpdatedAt?: string): Promise<boolean> {
     let query = this.db
       .updateTable('destinations')
       .set({
@@ -1141,10 +1138,7 @@ export class SqliteTrackingTemplateRepository implements TrackingTemplateReposit
     }));
   }
 
-  async updateTemplate(
-    template: TrackingTemplate,
-    expectedUpdatedAt?: string,
-  ): Promise<boolean> {
+  async updateTemplate(template: TrackingTemplate, expectedUpdatedAt?: string): Promise<boolean> {
     let query = this.db
       .updateTable('tracking_templates')
       .set({

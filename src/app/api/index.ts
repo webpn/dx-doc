@@ -15,11 +15,7 @@ export {
   PLATFORMS,
 } from './projects';
 export { grantsApi, type ProjectGrant, type RoleName, ROLE_NAMES } from './grants';
-export {
-  instanceAdminApi,
-  type InstanceAdminStepUp,
-  type StepUpOpenInput,
-} from './instance-admin';
+export { instanceAdminApi, type InstanceAdminStepUp, type StepUpOpenInput } from './instance-admin';
 export { usersApi } from './users';
 export { assetsApi, type AssetRecord, type AssetUploadResult } from './assets';
 export { pagesApi, type Page, type PageCreateInput, type PageUpdateInput } from './pages';

@@ -82,7 +82,10 @@ export function resolveLocale(tag: string | undefined): Locale {
   return match ?? 'en';
 }
 
-function interpolate(template: string, params: Record<string, string | number> | undefined): string {
+function interpolate(
+  template: string,
+  params: Record<string, string | number> | undefined,
+): string {
   if (params === undefined) return template;
   // An unmatched placeholder is left verbatim rather than replaced with
   // 'undefined': the placeholder name is self-describing in a screenshot or a

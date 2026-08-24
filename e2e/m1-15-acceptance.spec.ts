@@ -121,9 +121,7 @@ test('bootstrap admin onboards a project and an editor sees only that project', 
   // Invite the editor into the company, then grant them a role on this project.
   // Two deliberate steps: the invite alone gives no project access at all.
   await page.goto(`/companies/${String(companyId)}/projects/${String(projectId)}/access`);
-  await expect(
-    page.getByText('Nobody has been granted access to this project yet.'),
-  ).toBeVisible();
+  await expect(page.getByText('Nobody has been granted access to this project yet.')).toBeVisible();
 
   await page.getByLabel('Invite by email').fill(editorEmail);
   await page.getByRole('button', { name: 'Send invite' }).click();

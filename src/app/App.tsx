@@ -69,10 +69,7 @@ export function App(): ReactElement {
           path="/projects/:projectId/properties/:propertyId"
         />
         <Route element={<TemplateEditorPage />} path="/projects/:projectId/templates/:templateId" />
-        <Route
-          element={<TrackingEditorPage />}
-          path="/projects/:projectId/trackings/:trackingId"
-        />
+        <Route element={<TrackingEditorPage />} path="/projects/:projectId/trackings/:trackingId" />
         <Route element={<Navigate replace to="/" />} path="*" />
       </Route>
     </Routes>

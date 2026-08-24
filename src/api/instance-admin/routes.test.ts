@@ -5,7 +5,6 @@ import type { SessionService } from '@project/application/auth/session-service';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
 
-
 import { registerInstanceAdminStepUpRoutes } from './routes';
 
 /**

@@ -125,20 +125,19 @@ export const trackingsApi = {
     }),
 
   removeProperty: (trackingId: string, propertyId: string): Promise<RemovePropertyResult> =>
-    apiRequest<RemovePropertyResult>(
-      `/api/trackings/${trackingId}/properties/${propertyId}`,
-      { method: 'DELETE' },
-    ),
+    apiRequest<RemovePropertyResult>(`/api/trackings/${trackingId}/properties/${propertyId}`, {
+      method: 'DELETE',
+    }),
 
   setPresence: (
     trackingId: string,
     propertyId: string,
     presence: Presence,
   ): Promise<{ ok: true }> =>
-    apiRequest<{ ok: true }>(
-      `/api/trackings/${trackingId}/properties/${propertyId}/presence`,
-      { method: 'PATCH', body: JSON.stringify({ presence }) },
-    ),
+    apiRequest<{ ok: true }>(`/api/trackings/${trackingId}/properties/${propertyId}/presence`, {
+      method: 'PATCH',
+      body: JSON.stringify({ presence }),
+    }),
 
   addSpecificValue: (
     trackingPropertyId: string,

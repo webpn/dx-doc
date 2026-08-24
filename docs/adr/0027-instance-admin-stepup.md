@@ -24,7 +24,7 @@ if (user.companyId !== companyId || user.roleId === null || !user.active) {
 
 So the instance administrator fails `company.manage_projects` for **every** company, including one they created a second earlier. `ProjectService.create` is gated on exactly that action. The obvious workaround — invite the company's first user and let them do it — is blocked identically: `company.invite_user` is also a `canInCompany` action, and a brand-new company has no member yet who could hold it. `GrantService.setRole` states the same wall from the other side: _"an instance admin outside any tenant can never be granted (no company)."_
 
-An earlier fix (2026-08-21) took the narrowest possible step: `CompanyService.createCompany` gained an optional `firstAdmin` payload, seeding a company's first Admin in the same call that creates the company. That closed the deadlock — a company can now reach a usable state — but it does **not** satisfy the milestone's criterion, because the actor who creates the project is then a *different person* than the one the criterion follows. Read literally, the criterion requires the instance administrator themselves to create the project.
+An earlier fix (2026-08-21) took the narrowest possible step: `CompanyService.createCompany` gained an optional `firstAdmin` payload, seeding a company's first Admin in the same call that creates the company. That closed the deadlock — a company can now reach a usable state — but it does **not** satisfy the milestone's criterion, because the actor who creates the project is then a _different person_ than the one the criterion follows. Read literally, the criterion requires the instance administrator themselves to create the project.
 
 Two readings of the criterion were available, and this is the decision point:
 
@@ -41,7 +41,7 @@ Four properties make this bounded rather than a blanket widening:
 
 1. **Step-up is explicit and per-company.** The capability is not ambient. The administrator opens a step-up for one named company by **re-authenticating with their password** — the re-authentication rule REQ-SEC-014 already requires for the administration surface, now with a concrete trigger. A step-up for company A grants nothing in company B.
 2. **It is time-boxed and short.** A window expires on its own (default 15 minutes, `INSTANCE_ADMIN_STEPUP_TTL_MINUTES`). It is not a mode the administrator can forget they are in, and a stolen session is only useful inside a window that is already open.
-3. **It grants administration, not content.** The window admits exactly the `CompanyAction` set an Admin holds — creating and configuring projects, inviting users, managing the catalogue and settings. It confers **no** `ProjectAction`: reading or editing a project's documentation still requires a grant, exactly as REQ-SEC-014's "no implied content access" rule demands. Project *reads* are unaffected by a step-up, which is what keeps "who can see our documentation?" answerable without qualification.
+3. **It grants administration, not content.** The window admits exactly the `CompanyAction` set an Admin holds — creating and configuring projects, inviting users, managing the catalogue and settings. It confers **no** `ProjectAction`: reading or editing a project's documentation still requires a grant, exactly as REQ-SEC-014's "no implied content access" rule demands. Project _reads_ are unaffected by a step-up, which is what keeps "who can see our documentation?" answerable without qualification.
 4. **Opening it is audited, and so is everything done inside it.** Opening a window appends `instance_admin.stepup_opened` naming the company; actions performed under it are attributable to the administrator, in that company, during that window.
 
 The `companyId` on the user record is **never** mutated. The instance administrator remains company-less; the step-up is a separate, expiring authorisation fact, checked alongside company membership rather than by faking it.
@@ -65,7 +65,7 @@ Rejected as the primary answer, though it remains a defensible reading. The crit
 
 ### `firstAdmin` at company creation, and nothing further
 
-This is implemented and is **kept** — it is the right default path, and it means the common case needs no step-up at all. Rejected as *sufficient*: it does not satisfy the criterion as written, and it is a one-shot at creation time with no recovery afterwards.
+This is implemented and is **kept** — it is the right default path, and it means the common case needs no step-up at all. Rejected as _sufficient_: it does not satisfy the criterion as written, and it is a one-shot at creation time with no recovery afterwards.
 
 ### Relax `canInCompany` for companies with zero members
 

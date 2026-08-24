@@ -87,11 +87,7 @@ export class SqliteAccountRepository implements AccountRepository {
   }
 
   async listUsersByEmail(email: string): Promise<UserAccount[]> {
-    const rows = await this.db
-      .selectFrom('users')
-      .selectAll()
-      .where('email', '=', email)
-      .execute();
+    const rows = await this.db.selectFrom('users').selectAll().where('email', '=', email).execute();
     return rows.map(toUser);
   }
 

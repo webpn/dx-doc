@@ -80,13 +80,7 @@ describe('MarkdownEditor', () => {
 
     const ref = createRef<MarkdownEditorHandle>();
     renderWithProviders(
-      <MarkdownEditor
-        value=""
-        onChange={vi.fn()}
-        companyId="cmp_1"
-        projectId="prj_1"
-        ref={ref}
-      />,
+      <MarkdownEditor value="" onChange={vi.fn()} companyId="cmp_1" projectId="prj_1" ref={ref} />,
     );
 
     // The editor exposes the same path the paste/drop handler uses, so the
@@ -109,13 +103,7 @@ describe('MarkdownEditor', () => {
 
     const ref = createRef<MarkdownEditorHandle>();
     renderWithProviders(
-      <MarkdownEditor
-        value=""
-        onChange={vi.fn()}
-        companyId="cmp_1"
-        projectId="prj_1"
-        ref={ref}
-      />,
+      <MarkdownEditor value="" onChange={vi.fn()} companyId="cmp_1" projectId="prj_1" ref={ref} />,
     );
 
     await expect(ref.current?.uploadImage(pngFile())).rejects.toThrow(

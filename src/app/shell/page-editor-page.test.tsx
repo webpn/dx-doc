@@ -27,13 +27,7 @@ vi.mock('../queries', async (importOriginal) => {
 // as a plain textarea so this suite tests the screen's own behaviour (loading,
 // parent choices, save payload) rather than re-testing MDXEditor.
 vi.mock('../editor', () => ({
-  MarkdownEditor: ({
-    value,
-    onChange,
-  }: {
-    value: string;
-    onChange: (next: string) => void;
-  }) => (
+  MarkdownEditor: ({ value, onChange }: { value: string; onChange: (next: string) => void }) => (
     <textarea
       aria-label="Description"
       onChange={(event) => {
@@ -76,9 +70,7 @@ describe('PageEditorPage (REQ-DOM-001, REQ-AUTH-001)', () => {
 
     expect(await screen.findByDisplayValue('Home')).toBeInTheDocument();
     expect(screen.getByDisplayValue('home')).toBeInTheDocument();
-    expect(screen.getByLabelText('Description')).toHaveValue(
-      '## Behaviour\n\nShown after login.',
-    );
+    expect(screen.getByLabelText('Description')).toHaveValue('## Behaviour\n\nShown after login.');
   });
 
   it('saves an edited description with the loaded updatedAt as the concurrency guard', async () => {
@@ -116,9 +108,7 @@ describe('PageEditorPage (REQ-DOM-001, REQ-AUTH-001)', () => {
   });
 
   it('reports a stale write instead of silently discarding the edit', async () => {
-    update.mockRejectedValue(
-      Object.assign(new Error('stale'), { code: 'stale_write' }),
-    );
+    update.mockRejectedValue(Object.assign(new Error('stale'), { code: 'stale_write' }));
     const user = userEvent.setup();
     renderEditor();
 

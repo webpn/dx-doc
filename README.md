@@ -143,13 +143,13 @@ For a **stock instance** (SQLite, Pagefind, no SMTP/Sentry/SSO configured),
 the operator configured (`STORAGE_S3_*`). Assets are uploaded to that storage
 and read back from it; nothing else is contacted.
 
-| Integration                                    | When it is contacted                | What is sent                                                | Default                           |
-| ---------------------------------------------- | ----------------------------------- | ----------------------------------------------------------- | --------------------------------- |
-| Object storage (S3-compatible, `STORAGE_S3_*`) | asset upload/read                   | documentation assets the operator configured to store there | Required                          |
-| SMTP (`SMTP_*`)                                | password reset                      | the recipient address and the email body                    | Off — no email is sent without it |
-| Error tracking (Sentry, `SENTRY_DSN`)          | unhandled errors                    | error context (no documentation content, no personal data)  | Off                               |
-| Identity providers (OIDC/SAML, R2+)            | SSO login                           | an authorization code / assertion                           | Off                               |
-| Search (hosted adapter, R3+)                   | search                              | query terms and indexed content                             | Off — Pagefind is local           |
+| Integration                                    | When it is contacted | What is sent                                                | Default                           |
+| ---------------------------------------------- | -------------------- | ----------------------------------------------------------- | --------------------------------- |
+| Object storage (S3-compatible, `STORAGE_S3_*`) | asset upload/read    | documentation assets the operator configured to store there | Required                          |
+| SMTP (`SMTP_*`)                                | password reset       | the recipient address and the email body                    | Off — no email is sent without it |
+| Error tracking (Sentry, `SENTRY_DSN`)          | unhandled errors     | error context (no documentation content, no personal data)  | Off                               |
+| Identity providers (OIDC/SAML, R2+)            | SSO login            | an authorization code / assertion                           | Off                               |
+| Search (hosted adapter, R3+)                   | search               | query terms and indexed content                             | Off — Pagefind is local           |
 
 Documentation content is **never** sent to: search (default is local), email
 (the content itself is not emailed), or any analytics/telemetry service. Test
@@ -160,56 +160,56 @@ any configuration (REQ-SEC-012).
 
 Instance-level configuration only — infrastructure and operator secrets. Per-company configuration (SSO connection details, supported login methods, supported locales, branding, catalogue defaults, SMTP override) is set by each company's Admin through the web UI and stored in the database, not here — see [ADR-0014](docs/adr/0014-configuration-split.md). The full set, with defaults, lives in [`.env.example`](.env.example); this table is kept in sync with it (REQ-FDN-013).
 
-| Variable                                                                                                          | Required                               | Default                 | Purpose                                                                                         |
-| ----------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------- |
-| `APP_URL`                                                                                                         | Yes                                    | —                       | Public base URL; also derives the OIDC redirect URI                                             |
+| Variable                                                                                                          | Required                               | Default                 | Purpose                                                                                           |
+| ----------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------- |
+| `APP_URL`                                                                                                         | Yes                                    | —                       | Public base URL; also derives the OIDC redirect URI                                               |
 | `APP_SECRET`                                                                                                      | Yes                                    | —                       | Reserved for session signing and company-secret encryption; required at boot but not yet consumed |
-| `APP_ENV`                                                                                                         | No                                     | `development`           | Runtime environment                                                                             |
-| `APP_DEFAULT_LOCALE`                                                                                              | No                                     | `en`                    | Interface language fallback before any company context exists                                   |
-| `DB_DRIVER`                                                                                                       | No                                     | `sqlite`                | Persistence adapter: `sqlite` (default), `mariadb` or `postgres` (R2)                           |
-| `DB_FILE`                                                                                                         | If `DB_DRIVER=sqlite`                  | `./var/db/dxdoc.sqlite` | SQLite database file path                                                                       |
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`                                                         | If `DB_DRIVER` is `mariadb`/`postgres` | —                       | Server database connection (R2)                                                                 |
-| `DB_POOL_SIZE`, `DB_SSL_MODE`                                                                                     | No                                     | `10`, `preferred`       | Server database tuning (R2)                                                                     |
-| `PORT`                                                                                                            | No                                     | `3001`                  | Port the API server listens on                                                                  |
-| `HOST`                                                                                                            | No                                     | `127.0.0.1`             | Interface the API server binds to; set to `0.0.0.0` in containers                                |
-| `STORAGE_S3_ENDPOINT`, `STORAGE_S3_REGION`, `STORAGE_S3_BUCKET`, `STORAGE_S3_ACCESS_KEY`, `STORAGE_S3_SECRET_KEY` | Yes                                    | —                       | S3-compatible object storage (AWS S3, MinIO, Backblaze B2; not Cloudinary — see `.env.example`) |
-| `STORAGE_S3_FORCE_PATH_STYLE`                                                                                     | No                                     | `true`                  | Required by providers using path-style addressing (MinIO, B2)                                   |
-| `STORAGE_PUBLIC_BASE_URL`                                                                                         | No                                     | —                       | Public URL prefix for stored assets, if different from the endpoint                             |
-| `UPLOAD_MAX_BYTES`                                                                                                | No                                     | `10485760`              | Maximum asset upload size                                                                       |
-| `IMAGE_MAX_DIMENSION`                                                                                             | No                                     | `2000`                  | Automatic image resize threshold, px per side                                                   |
-| `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD`                                                               | Yes (first run)                        | —                       | Read once, against an empty database, to create the first `instance_admin`                      |
-| `SEARCH_DRIVER`                                                                                                   | No                                     | `pagefind`              | Search adapter; a hosted adapter (e.g. Algolia) arrives R3                                      |
-| `SEARCH_INDEX_PATH`                                                                                               | No                                     | `./var/search`          | Pagefind index location on local disk                                                           |
-| `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`                                                                         | No                                     | —                       | Instance-wide email fallback; a company may override in the database                            |
-| `SMTP_PORT`                                                                                                       | No                                     | `587`                   | SMTP transport port                                                                              |
-| `SMTP_FROM`                                                                                                       | No                                     | `noreply@localhost`     | SMTP "from" address                                                                              |
-| `SMTP_TLS`                                                                                                        | No                                     | `true`                  | SMTP transport security                                                                         |
-| `SENTRY_DSN`                                                                                                      | No                                     | —                       | Error tracking (R1); the application runs normally with none configured                         |
-| `AUDIT_RETENTION_MONTHS`                                                                                          | No                                     | `24`                    | Audit log retention                                                                             |
-| `AUTH_SESSION_TTL`                                                                                                | No                                     | `8h`                    | Session expiry                                                                                  |
-| `INSTANCE_ADMIN_STEPUP_TTL_MINUTES`                                                                               | No                                     | `15`                    | Lifetime of an instance-admin step-up window (ADR-0027)                                         |
-| `LOG_LEVEL`                                                                                                       | No                                     | `info`                  | Structured log verbosity                                                                        |
+| `APP_ENV`                                                                                                         | No                                     | `development`           | Runtime environment                                                                               |
+| `APP_DEFAULT_LOCALE`                                                                                              | No                                     | `en`                    | Interface language fallback before any company context exists                                     |
+| `DB_DRIVER`                                                                                                       | No                                     | `sqlite`                | Persistence adapter: `sqlite` (default), `mariadb` or `postgres` (R2)                             |
+| `DB_FILE`                                                                                                         | If `DB_DRIVER=sqlite`                  | `./var/db/dxdoc.sqlite` | SQLite database file path                                                                         |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`                                                         | If `DB_DRIVER` is `mariadb`/`postgres` | —                       | Server database connection (R2)                                                                   |
+| `DB_POOL_SIZE`, `DB_SSL_MODE`                                                                                     | No                                     | `10`, `preferred`       | Server database tuning (R2)                                                                       |
+| `PORT`                                                                                                            | No                                     | `3001`                  | Port the API server listens on                                                                    |
+| `HOST`                                                                                                            | No                                     | `127.0.0.1`             | Interface the API server binds to; set to `0.0.0.0` in containers                                 |
+| `STORAGE_S3_ENDPOINT`, `STORAGE_S3_REGION`, `STORAGE_S3_BUCKET`, `STORAGE_S3_ACCESS_KEY`, `STORAGE_S3_SECRET_KEY` | Yes                                    | —                       | S3-compatible object storage (AWS S3, MinIO, Backblaze B2; not Cloudinary — see `.env.example`)   |
+| `STORAGE_S3_FORCE_PATH_STYLE`                                                                                     | No                                     | `true`                  | Required by providers using path-style addressing (MinIO, B2)                                     |
+| `STORAGE_PUBLIC_BASE_URL`                                                                                         | No                                     | —                       | Public URL prefix for stored assets, if different from the endpoint                               |
+| `UPLOAD_MAX_BYTES`                                                                                                | No                                     | `10485760`              | Maximum asset upload size                                                                         |
+| `IMAGE_MAX_DIMENSION`                                                                                             | No                                     | `2000`                  | Automatic image resize threshold, px per side                                                     |
+| `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD`                                                               | Yes (first run)                        | —                       | Read once, against an empty database, to create the first `instance_admin`                        |
+| `SEARCH_DRIVER`                                                                                                   | No                                     | `pagefind`              | Search adapter; a hosted adapter (e.g. Algolia) arrives R3                                        |
+| `SEARCH_INDEX_PATH`                                                                                               | No                                     | `./var/search`          | Pagefind index location on local disk                                                             |
+| `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`                                                                         | No                                     | —                       | Instance-wide email fallback; a company may override in the database                              |
+| `SMTP_PORT`                                                                                                       | No                                     | `587`                   | SMTP transport port                                                                               |
+| `SMTP_FROM`                                                                                                       | No                                     | `noreply@localhost`     | SMTP "from" address                                                                               |
+| `SMTP_TLS`                                                                                                        | No                                     | `true`                  | SMTP transport security                                                                           |
+| `SENTRY_DSN`                                                                                                      | No                                     | —                       | Error tracking (R1); the application runs normally with none configured                           |
+| `AUDIT_RETENTION_MONTHS`                                                                                          | No                                     | `24`                    | Audit log retention                                                                               |
+| `AUTH_SESSION_TTL`                                                                                                | No                                     | `8h`                    | Session expiry                                                                                    |
+| `INSTANCE_ADMIN_STEPUP_TTL_MINUTES`                                                                               | No                                     | `15`                    | Lifetime of an instance-admin step-up window (ADR-0027)                                           |
+| `LOG_LEVEL`                                                                                                       | No                                     | `info`                  | Structured log verbosity                                                                          |
 
 ## Development Commands
 
-| Command                | Purpose                                                             |
-| ---------------------- | ------------------------------------------------------------------- |
-| `npm run dev`          | Start development server (Vite + API)                               |
-| `npm run start`        | Start the API/production server (Fastify, serves the built client)  |
-| `npm run build`        | Production build (typecheck + Vite)                                 |
-| `npm run typecheck`    | TypeScript type checking                                            |
-| `npm run lint`         | ESLint static analysis                                              |
-| `npm run format`       | Prettier formatting                                                 |
-| `npm run format:check` | Check formatting without writing                                    |
-| `npm test`             | Unit and component tests                                            |
-| `npm run test:coverage` | **Not yet configured** — placeholder                               |
-| `npm run test:e2e`     | End-to-end tests                                                    |
-| `npm run db:migrate`   | Apply pending schema migrations (Kysely Migrator; run before `dev`) |
-| `npm run db:seed:demo` | **Not yet configured** — placeholder                                |
-| `npm run docs:check-links`    | Verify documentation cross-references (CI gate)               |
-| `npm run docs:sync-links`     | Rewrite ID-based documentation links to current paths          |
-| `npm run docs:check-index`    | Verify `docs/INDEX.md` is current (CI gate)                    |
-| `npm run docs:generate-index` | Regenerate `docs/INDEX.md`                                      |
+| Command                       | Purpose                                                             |
+| ----------------------------- | ------------------------------------------------------------------- |
+| `npm run dev`                 | Start development server (Vite + API)                               |
+| `npm run start`               | Start the API/production server (Fastify, serves the built client)  |
+| `npm run build`               | Production build (typecheck + Vite)                                 |
+| `npm run typecheck`           | TypeScript type checking                                            |
+| `npm run lint`                | ESLint static analysis                                              |
+| `npm run format`              | Prettier formatting                                                 |
+| `npm run format:check`        | Check formatting without writing                                    |
+| `npm test`                    | Unit and component tests                                            |
+| `npm run test:coverage`       | **Not yet configured** — placeholder                                |
+| `npm run test:e2e`            | End-to-end tests                                                    |
+| `npm run db:migrate`          | Apply pending schema migrations (Kysely Migrator; run before `dev`) |
+| `npm run db:seed:demo`        | **Not yet configured** — placeholder                                |
+| `npm run docs:check-links`    | Verify documentation cross-references (CI gate)                     |
+| `npm run docs:sync-links`     | Rewrite ID-based documentation links to current paths               |
+| `npm run docs:check-index`    | Verify `docs/INDEX.md` is current (CI gate)                         |
+| `npm run docs:generate-index` | Regenerate `docs/INDEX.md`                                          |
 
 ## Architecture Overview
 

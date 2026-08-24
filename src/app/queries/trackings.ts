@@ -121,11 +121,7 @@ export function useSetPresence(trackingId: string) {
 export function useAddSpecificValue(trackingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: {
-      trackingPropertyId: string;
-      value: string;
-      description?: string;
-    }) =>
+    mutationFn: (input: { trackingPropertyId: string; value: string; description?: string }) =>
       trackingsApi.addSpecificValue(input.trackingPropertyId, {
         value: input.value,
         ...(input.description === undefined ? {} : { description: input.description }),
@@ -257,8 +253,7 @@ export function useDestination(destinationId: string | undefined) {
 export function useUpdateDestination(destinationId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: DestinationUpdateInput) =>
-      destinationsApi.update(destinationId, input),
+    mutationFn: (input: DestinationUpdateInput) => destinationsApi.update(destinationId, input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.destination(destinationId) });
       void queryClient.invalidateQueries({ queryKey: ['companies'] });

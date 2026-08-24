@@ -123,11 +123,7 @@ export class PermissionService {
     if (this.stepUps === undefined || !user.instanceAdmin) {
       return false;
     }
-    const stepUp = await this.stepUps.getActiveStepUp(
-      user.id,
-      companyId,
-      this.now().toISOString(),
-    );
+    const stepUp = await this.stepUps.getActiveStepUp(user.id, companyId, this.now().toISOString());
     return stepUp !== null;
   }
 

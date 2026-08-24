@@ -53,15 +53,15 @@ A few values can be overridden from the host environment before running
 `npm run test:e2e`, useful for pointing the suite at CI service containers
 instead of local Docker Compose:
 
-| Variable            | Default             | Purpose                              |
-| -------------------- | -------------------- | ------------------------------------- |
-| `S3_TEST_ENDPOINT`   | `http://127.0.0.1:9000` | S3-compatible endpoint               |
-| `S3_TEST_REGION`     | `us-east-1`          | S3 region                             |
-| `S3_TEST_BUCKET`     | `dxdoc-test-bucket`  | Bucket used by the suite              |
-| `S3_TEST_ACCESS_KEY` | `minioadmin`         | S3 access key                         |
-| `S3_TEST_SECRET_KEY` | `minioadmin`         | S3 secret key                         |
-| `SMTP_TEST_HOST`     | `127.0.0.1`          | SMTP catcher host                     |
-| `SMTP_TEST_PORT`     | `1025`               | SMTP catcher port                     |
+| Variable             | Default                 | Purpose                  |
+| -------------------- | ----------------------- | ------------------------ |
+| `S3_TEST_ENDPOINT`   | `http://127.0.0.1:9000` | S3-compatible endpoint   |
+| `S3_TEST_REGION`     | `us-east-1`             | S3 region                |
+| `S3_TEST_BUCKET`     | `dxdoc-test-bucket`     | Bucket used by the suite |
+| `S3_TEST_ACCESS_KEY` | `minioadmin`            | S3 access key            |
+| `S3_TEST_SECRET_KEY` | `minioadmin`            | S3 secret key            |
+| `SMTP_TEST_HOST`     | `127.0.0.1`             | SMTP catcher host        |
+| `SMTP_TEST_PORT`     | `1025`                  | SMTP catcher port        |
 
 Everything else (app secret, bootstrap admin credentials, database file,
 port) is fixed by `playwright.config.ts` and is not meant to be overridden.

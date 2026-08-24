@@ -142,9 +142,7 @@ describe('API error to message key (REQ-NFR-010)', () => {
   });
 
   it('maps a 409 conflict to the concurrent-edit message', () => {
-    const key = apiErrorMessageKey(
-      new ApiClientError(409, { code: 'CONFLICT', message: 'stale' }),
-    );
+    const key = apiErrorMessageKey(new ApiClientError(409, { code: 'CONFLICT', message: 'stale' }));
 
     expect(key).toBe('error.conflict');
   });

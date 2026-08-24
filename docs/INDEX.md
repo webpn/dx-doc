@@ -56,6 +56,10 @@ One entry per file. Use this to find _what exists and where_ before opening full
 
 ## [ADR-0026](adr/0026-asset-upload-pipeline.md) — Asset Upload Pipeline
 
+## [ADR-0027](adr/0027-instance-admin-stepup.md) — Instance-Admin Step-Up to Company Administration
+
+## [adr-spikes-adr-0023-mdxeditor-round-trip](adr/spikes/adr-0023-mdxeditor-round-trip.md) — ADR-0023 acceptance spike — MDXEditor 4.2.1 Markdown round-trip
+
 ## [architecture-containers](architecture/containers.md) — Container Architecture
 
 ## [architecture-deployment](architecture/deployment.md) — Deployment
