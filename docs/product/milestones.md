@@ -422,17 +422,19 @@ The M1.15 review artifact is the combination of the design-review route, compone
 
 The screens behind the M1.5 requirements, plus the two model capabilities whose service layer stops short of the requirement:
 
-- **Markdown editor** with the full block set (REQ-AUTH-001), engine per [ADR-0023](../adr/0023-rich-text-editor.md), storing ` ```mermaid ` blocks verbatim; **image upload** by drag-and-drop and paste against the M1.12 asset endpoint, 10 MB cap, resize to 2000 px (REQ-AUTH-002); **free pages** with the publishable flag visible and consequential in the UI (REQ-AUTH-003).
-- **Page editor**: hierarchy, description, screenshots, parent selection.
+- **Markdown editor** with the full block set (REQ-AUTH-001), engine per [ADR-0023](../adr/0023-rich-text-editor.md), storing ` ```mermaid ` blocks verbatim — built, with the round-trip proven by spike; **image upload** by drag-and-drop and paste against the M1.12 asset endpoint (REQ-AUTH-002) — built, cap and resize enforced server-side in `AssetService`. **Free pages** with the publishable flag (REQ-AUTH-003) are **not built**: the requirement calls for a hierarchy independent of the Page/Screen tree, and `free_pages` has no `parent_id`, so this needs a migration and a decision before the editor exists.
+- **Page editor**: hierarchy, description, parent selection — built. Screenshots are Markdown image references inside the description, per REQ-AUTH-002, not a separate field.
 - **Tracking editor**: navigation event, page attachment created inline, module attachment and detachment with the REQ-DOM-008 warning surfaced, per-property `presence`, specific values with placeholders preserved verbatim, destination mapping with per-mapping name override.
-- **Property, module and destination editors**, project-scoped and catalogue-scoped, with the **catalogue copy** flow (REQ-DOM-019) — implemented as a service method with no route and no screen.
-- **Tracking templates** (REQ-DOM-009): the entity stores a `config_json` that nothing reads. The requirement is an editor-configurable template that pre-seeds a new tracking, including its default specific values, with no software release. That mechanism is built here.
-- **Opt-in module propagation** (REQ-DOM-007): the default — a module edit does not reach existing trackings — holds today because no propagation path exists at all. The opt-in half is built here, with the preview of what it will touch.
+- **Property, module and destination editors**, project-scoped and catalogue-scoped, with the **catalogue copy** flow (REQ-DOM-019) — a standalone screen at `/projects/:projectId/catalogue`. Open: whether the selection belongs inside project creation instead, which the requirement's title implies.
+- **Tracking templates** (REQ-DOM-009): the pre-seeding mechanism reads `config_json` for description, page, navigation event and modules, materialising a seeded module's properties into the new tracking. The editor screen edits name, description, navigation event and the raw `config_json`. Open: **default specific values**, which need a config shape addressing a property within the seeded set.
+- **Opt-in module propagation** (REQ-DOM-007): built — `previewModulePropagation` reports what would change without writing, `propagateModuleToTrackings` applies it on request and records a single audit entry. Surfaced in the module editor behind an explicit "check what would change" step.
 - **Tracking duplication** (REQ-AUTH-006) and **conflict handling** (REQ-AUTH-005): the stale-write rejection from M1.14 surfaced as a comprehensible conflict message, not a toast saying 409.
 
 **Depends on:** M1.14, M1.15
 
 **Exit:** an editor builds one complete page of the first imported product's documentation — page, screenshot, two trackings, their modules, properties, presence, specific values and destination mappings — using the browser only, and the result is indistinguishable in content from the source documentation; two editors on the same tracking produce a conflict message naming what changed; opening a tracking page meets REQ-NFR-001's 2-second target at the first imported product's volume.
+
+> **Exit criteria not yet met as of 2026-08-24.** The screens exist and are unit-tested (64 files, 450 tests), and the Playwright suite now runs locally against a real browser: MinIO is reachable, `/api/ready` returns 200, and the bootstrap-and-onboard spec passes. Two things still block the exit. The second acceptance spec fails on a client-side redirect to `/login` when opening `/companies/:companyId/projects/new`, even though every API call in the flow succeeds (login 200, company 201, projects 200) — a client auth-state defect, not a server one. REQ-NFR-001's 2-second target has not been measured at all. Free pages (REQ-AUTH-003) now have a hierarchy and an API, but no editor screen yet.
 
 ### M1.17 — Consultation, search and publication UI
 
