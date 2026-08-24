@@ -99,7 +99,7 @@ export class PermissionService {
    */
   async canInCompany(userId: string, companyId: string, action: CompanyAction): Promise<boolean> {
     const user = await this.accounts.getUserById(userId);
-    if (user === null || !user.active) {
+    if (!user?.active) {
       return false;
     }
     if (user.companyId === companyId && user.roleId !== null) {

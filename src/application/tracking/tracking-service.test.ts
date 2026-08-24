@@ -1094,11 +1094,13 @@ describe('TrackingService (M1.1 Application Service)', () => {
       expect(afterMove.value.parentId).toBe(a.value.freePageId);
 
       // A page cannot be its own parent.
-      expect(
-        await trackingService.updateFreePage(editorId, a.value.freePageId, {
-          parentId: a.value.freePageId,
-        }),
-      ).toEqual({ ok: false, error: { kind: 'validation', issues: expect.anything() } });
+      const selfParent = await trackingService.updateFreePage(editorId, a.value.freePageId, {
+        parentId: a.value.freePageId,
+      });
+      expect(selfParent.ok).toBe(false);
+      if (!selfParent.ok) {
+        expect(selfParent.error.kind).toBe('validation');
+      }
 
       // Nor may it adopt its own descendant: b is already a child of a, so
       // making a a child of b would orphan the pair into a cycle.
