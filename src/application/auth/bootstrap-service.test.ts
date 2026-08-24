@@ -27,6 +27,10 @@ class FakeHasher implements PasswordHasher {
 
 class FakeAccounts implements AccountRepository {
   users = new Map<string, UserAccount>();
+
+  listUsersByEmail(email: string): Promise<UserAccount[]> {
+    return Promise.resolve([...this.users.values()].filter((u) => u.email === email));
+  }
   nextId = 0;
 
   createUser(input: CreateUserInput): Promise<void> {

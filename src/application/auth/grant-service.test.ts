@@ -21,6 +21,10 @@ const FIXED_NOW = new Date('2026-06-01T00:00:00.000Z');
 
 class FakeAccounts implements AccountRepository {
   users = new Map<string, UserAccount>();
+
+  listUsersByEmail(email: string): Promise<UserAccount[]> {
+    return Promise.resolve([...this.users.values()].filter((u) => u.email === email));
+  }
   roles = new Map<string, CompanyRole>();
   grants: ProjectGrant[] = [];
 

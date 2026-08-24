@@ -65,6 +65,13 @@ export interface AccountRepository {
   createUser(input: CreateUserInput): Promise<void>;
   getUserById(id: string): Promise<UserAccount | null>;
   getUserByEmail(companyId: string | null, email: string): Promise<UserAccount | null>;
+  /**
+   * Every account sharing an email address, across all companies. Email is
+   * unique per company (`users_company_email_unique`), never globally, so a
+   * login with no company must first discover how many accounts the address
+   * resolves to.
+   */
+  listUsersByEmail(email: string): Promise<UserAccount[]>;
   updateUser(user: UserAccount): Promise<void>;
   /** Number of users in the whole instance, used by the first-run bootstrap. */
   countUsers(): Promise<number>;

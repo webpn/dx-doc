@@ -41,7 +41,21 @@ export function registerAuthRoutes(app: FastifyInstance, options: AuthRoutesOpti
 
     const result = await options.auth.login(companyId, email, password);
     if (!result.ok) {
-      // One message for every failure mode — no disclosure of whether the
+      // The address holds accounts in several companies and the password was
+      // correct, so the client must pick one. Returned as 409 rather than 401:
+      // the credentials were accepted, only the target is ambiguous. Reached
+      // only after a successful password check, so it discloses nothing about
+      // addresses that do not exist (REQ-SEC-001).
+      if (result.reason === 'company_selection_required') {
+        return reply.code(409).send({
+          error: {
+            code: 'COMPANY_SELECTION_REQUIRED',
+            message: 'This email is registered with more than one company. Choose one to continue.',
+            companyIds: result.companyIds,
+          },
+        });
+      }
+      // One message for every other failure mode — no disclosure of whether the
       // address exists (REQ-SEC-001).
       return reply
         .code(401)

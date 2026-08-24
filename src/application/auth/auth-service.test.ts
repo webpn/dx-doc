@@ -65,8 +65,17 @@ class FakeAccounts implements AccountRepository {
     return Promise.resolve(this.users.get(id) ?? null);
   }
 
-  getUserByEmail(_companyId: string | null, _email: string): Promise<UserAccount | null> {
+  getUserByEmail(companyId: string | null, email: string): Promise<UserAccount | null> {
+    for (const user of this.users.values()) {
+      if (user.companyId === companyId && user.email === email) {
+        return Promise.resolve(user);
+      }
+    }
     return Promise.resolve(null);
+  }
+
+  listUsersByEmail(email: string): Promise<UserAccount[]> {
+    return Promise.resolve([...this.users.values()].filter((u) => u.email === email));
   }
 
   updateUser(user: UserAccount): Promise<void> {
@@ -126,6 +135,119 @@ class FakeSessions implements SessionRepository {
     return Promise.resolve();
   }
 }
+
+describe('AuthService.login — resolving an email shared across companies', () => {
+  // Email is unique per company (`users_company_email_unique`), never globally.
+  // A login that supplies no company must therefore work out which account is
+  // meant: an instance admin goes to the master control panel, a single company
+  // membership is entered directly, and several memberships require a choice.
+  function build(): { accounts: FakeAccounts; auth: AuthService } {
+    const accounts = new FakeAccounts();
+    const auth = new AuthService(
+      accounts,
+      new FakeHasher(),
+      new SessionService(new FakeSessions(), 1000, new FakeAuditLogs()),
+      new FakeAuditLogs(),
+      () => FIXED_NOW,
+    );
+    return { accounts, auth };
+  }
+
+  function seedUser(
+    accounts: FakeAccounts,
+    id: string,
+    companyId: string | null,
+    opts: { instanceAdmin?: boolean } = {},
+  ): void {
+    accounts.users.set(id, {
+      id,
+      companyId,
+      email: 'shared@acme.test',
+      passwordHash: 'hash:secret123',
+      roleId: null,
+      name: null,
+      instanceAdmin: opts.instanceAdmin ?? false,
+      active: true,
+      passwordMustChange: false,
+      createdAt: FIXED_NOW.toISOString(),
+      updatedAt: FIXED_NOW.toISOString(),
+    });
+  }
+
+  it('signs an instance admin into the master control panel when the email is also a company account', async () => {
+    const { accounts, auth } = build();
+    seedUser(accounts, 'admin', null, { instanceAdmin: true });
+    seedUser(accounts, 'member', 'c1');
+
+    const result = await auth.login(null, 'shared@acme.test', 'secret123');
+    if (!result.ok) throw new Error(`expected success, got ${result.reason}`);
+    // The instance admin wins: same address, but the company-less account is
+    // the master control panel and must not be shadowed by a tenant account.
+    expect(result.user.id).toBe('admin');
+    expect(result.user.instanceAdmin).toBe(true);
+    expect(result.user.companyId).toBeNull();
+  });
+
+  it('signs a single-company account in without asking for a company id', async () => {
+    const { accounts, auth } = build();
+    seedUser(accounts, 'member', 'c1');
+
+    const result = await auth.login(null, 'shared@acme.test', 'secret123');
+    if (!result.ok) throw new Error(`expected success, got ${result.reason}`);
+    expect(result.user.id).toBe('member');
+    expect(result.user.companyId).toBe('c1');
+  });
+
+  it('asks which company when the email is tied to several, listing only the ones it matches', async () => {
+    const { accounts, auth } = build();
+    seedUser(accounts, 'member-a', 'c1');
+    seedUser(accounts, 'member-b', 'c2');
+
+    const result = await auth.login(null, 'shared@acme.test', 'secret123');
+    expect(result).toEqual({
+      ok: false,
+      reason: 'company_selection_required',
+      companyIds: ['c1', 'c2'],
+    });
+  });
+
+  it('does not ask for a choice when the password is wrong, and never reveals the companies', async () => {
+    const { accounts, auth } = build();
+    seedUser(accounts, 'member-a', 'c1');
+    seedUser(accounts, 'member-b', 'c2');
+
+    // Enumeration guard: a bad password must look exactly like a bad address,
+    // so the ambiguity must be resolved only for credentials that actually work.
+    expect(await auth.login(null, 'shared@acme.test', 'wrong-password')).toEqual({
+      ok: false,
+      reason: 'invalid_credentials',
+    });
+  });
+
+  it('still honours an explicit company id, ignoring the other accounts', async () => {
+    const { accounts, auth } = build();
+    seedUser(accounts, 'member-a', 'c1');
+    seedUser(accounts, 'member-b', 'c2');
+
+    const result = await auth.login('c2', 'shared@acme.test', 'secret123');
+    if (!result.ok) throw new Error(`expected success, got ${result.reason}`);
+    expect(result.user.id).toBe('member-b');
+  });
+
+  it('skips a deactivated account when resolving, rather than counting it', async () => {
+    const { accounts, auth } = build();
+    seedUser(accounts, 'member-a', 'c1');
+    seedUser(accounts, 'member-b', 'c2');
+    const disabled = accounts.users.get('member-b');
+    if (!disabled) throw new Error('seed failed');
+    accounts.users.set('member-b', { ...disabled, active: false });
+
+    // Only one usable account remains, so this must sign in, not ask.
+    const result = await auth.login(null, 'shared@acme.test', 'secret123');
+    if (!result.ok) throw new Error(`expected success, got ${result.reason}`);
+    expect(result.user.id).toBe('member-a');
+  });
+});
 
 describe('AuthService.changePassword (REQ-SEC-013)', () => {
   function build(): { accounts: FakeAccounts; auth: AuthService } {
@@ -200,5 +322,71 @@ describe('AuthService.changePassword (REQ-SEC-013)', () => {
       ok: false,
       error: { kind: 'not_found' },
     });
+  });
+});
+
+/**
+ * The client shell has to know whether the authenticated actor holds the
+ * instance-administration capability, because that decides which surface it
+ * renders (REQ-SEC-014/015, ADR-0027 — only a holder can create a company or
+ * open a step-up). Login is the only round trip that establishes identity, so
+ * it has to say. The flag is a capability marker, not a secret: it says what
+ * this user may reach, and the server re-checks every call regardless.
+ */
+describe('AuthService.login exposes the instance-administration capability', () => {
+  function build(): { accounts: FakeAccounts; auth: AuthService } {
+    const accounts = new FakeAccounts();
+    const auth = new AuthService(
+      accounts,
+      new FakeHasher(),
+      new SessionService(new FakeSessions(), 1000, new FakeAuditLogs()),
+      new FakeAuditLogs(),
+      () => FIXED_NOW,
+    );
+    return { accounts, auth };
+  }
+
+  function seedUser(
+    accounts: FakeAccounts,
+    overrides: { id: string; companyId: string | null; instanceAdmin: boolean },
+  ): void {
+    accounts.users.set(overrides.id, {
+      id: overrides.id,
+      companyId: overrides.companyId,
+      email: `${overrides.id}@acme.test`,
+      // FakeHasher's convention: the hash is `hash:<password>`.
+      passwordHash: 'hash:correct-horse',
+      roleId: null,
+      name: null,
+      instanceAdmin: overrides.instanceAdmin,
+      active: true,
+      passwordMustChange: false,
+      createdAt: FIXED_NOW.toISOString(),
+      updatedAt: FIXED_NOW.toISOString(),
+    });
+  }
+
+  it('reports instanceAdmin: true for the company-less instance administrator', async () => {
+    const { accounts, auth } = build();
+    seedUser(accounts, { id: 'ia1', companyId: null, instanceAdmin: true });
+
+    const result = await auth.login(null, 'ia1@acme.test', 'correct-horse');
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.user).toEqual({ id: 'ia1', companyId: null, instanceAdmin: true });
+    }
+  });
+
+  it('reports instanceAdmin: false for an ordinary company user', async () => {
+    const { accounts, auth } = build();
+    seedUser(accounts, { id: 'u1', companyId: 'c1', instanceAdmin: false });
+
+    const result = await auth.login('c1', 'u1@acme.test', 'correct-horse');
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.user).toEqual({ id: 'u1', companyId: 'c1', instanceAdmin: false });
+    }
   });
 });

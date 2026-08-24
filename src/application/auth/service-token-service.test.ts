@@ -49,6 +49,10 @@ class FakeTokens implements ServiceTokenRepository {
 class FakeAccounts implements AccountRepository {
   users = new Map<string, UserAccount>();
 
+  listUsersByEmail(email: string): Promise<UserAccount[]> {
+    return Promise.resolve([...this.users.values()].filter((u) => u.email === email));
+  }
+
   createUser(input: CreateUserInput): Promise<void> {
     this.users.set(input.id, {
       id: input.id,

@@ -29,6 +29,10 @@ class FakeHasher implements PasswordHasher {
 
 class FakeAccounts implements AccountRepository {
   users = new Map<string, UserAccount>();
+
+  listUsersByEmail(email: string): Promise<UserAccount[]> {
+    return Promise.resolve([...this.users.values()].filter((u) => u.email === email));
+  }
   roles = new Map<string, CompanyRole>();
 
   createUser(input: CreateUserInput): Promise<void> {
@@ -318,9 +322,7 @@ describe('CompanyService.createCompany (REQ-FDN-002, REQ-SEC-015)', () => {
 
     // The new Admin can now pass canInCompany — the wall this closes.
     const permissions = new PermissionService(accounts);
-    expect(await permissions.canInCompany(userId, companyId, 'company.manage_projects')).toBe(
-      true,
-    );
+    expect(await permissions.canInCompany(userId, companyId, 'company.manage_projects')).toBe(true);
   });
 
   it('provisions a password-less first Admin who must set one at first login', async () => {

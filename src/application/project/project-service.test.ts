@@ -48,6 +48,10 @@ class FakeAccounts implements AccountRepository {
     return Promise.resolve(null);
   }
 
+  listUsersByEmail(_email: string): Promise<UserAccount[]> {
+    return Promise.resolve([]);
+  }
+
   updateUser(_user: UserAccount): Promise<void> {
     return Promise.resolve();
   }

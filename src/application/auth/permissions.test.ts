@@ -9,6 +9,11 @@ import type {
   ProjectGrant,
   UserAccount,
 } from '../ports/account-repository';
+import type {
+  InstanceAdminStepUp,
+  InstanceAdminStepUpRepository,
+  NewInstanceAdminStepUp,
+} from '../ports/instance-admin-stepup-repository';
 
 import {
   COMPANY_ACTION_ROLES,
@@ -21,6 +26,10 @@ import { COMPANY_ROLE_NAMES, type CompanyRoleName } from './roles';
 
 class FakeAccounts implements AccountRepository {
   users = new Map<string, UserAccount>();
+
+  listUsersByEmail(email: string): Promise<UserAccount[]> {
+    return Promise.resolve([...this.users.values()].filter((u) => u.email === email));
+  }
   roles = new Map<string, CompanyRole>();
   grants: ProjectGrant[] = [];
 
@@ -110,6 +119,51 @@ class FakeAccounts implements AccountRepository {
 
   createRole(role: NewCompanyRole): Promise<void> {
     this.roles.set(role.id, { id: role.id, companyId: role.companyId, name: role.name });
+    return Promise.resolve();
+  }
+}
+
+/**
+ * In-memory step-up store (ADR-0027). Mirrors the contract the real
+ * repository must honour — notably that `getActiveStepUp` enforces expiry on
+ * read, so an expired row is indistinguishable from an absent one.
+ */
+class FakeStepUps implements InstanceAdminStepUpRepository {
+  windows: InstanceAdminStepUp[] = [];
+
+  openStepUp(stepUp: NewInstanceAdminStepUp): Promise<void> {
+    this.windows = this.windows.filter(
+      (candidate) =>
+        !(candidate.userId === stepUp.userId && candidate.companyId === stepUp.companyId),
+    );
+    this.windows.push({ ...stepUp });
+    return Promise.resolve();
+  }
+
+  getActiveStepUp(
+    userId: string,
+    companyId: string,
+    now: string,
+  ): Promise<InstanceAdminStepUp | null> {
+    const found = this.windows.find(
+      (candidate) =>
+        candidate.userId === userId &&
+        candidate.companyId === companyId &&
+        candidate.expiresAt > now,
+    );
+    return Promise.resolve(found ?? null);
+  }
+
+  listActiveStepUpsForUser(userId: string, now: string): Promise<InstanceAdminStepUp[]> {
+    return Promise.resolve(
+      this.windows.filter((candidate) => candidate.userId === userId && candidate.expiresAt > now),
+    );
+  }
+
+  closeStepUp(userId: string, companyId: string): Promise<void> {
+    this.windows = this.windows.filter(
+      (candidate) => !(candidate.userId === userId && candidate.companyId === companyId),
+    );
     return Promise.resolve();
   }
 }
@@ -226,5 +280,130 @@ describe('PermissionService instance administration (REQ-SEC-013/014)', () => {
 
     admin.active = false;
     await expect(permissions.canAdministerInstance(admin.id)).resolves.toBe(false);
+  });
+});
+
+/**
+ * ADR-0027: an instance administrator is permanently company-less, so
+ * `canInCompany`'s membership rule can never admit them. An explicit,
+ * expiring step-up window admits them for COMPANY actions in one named
+ * company — and for nothing else. These tests pin all four bounds: scope
+ * (that company only), expiry, capability (the flag is still required), and
+ * the hard line that a step-up confers no project access whatsoever.
+ */
+describe('PermissionService instance-admin step-up (ADR-0027)', () => {
+  const NOW = new Date('2026-08-21T12:00:00.000Z');
+
+  function build(): {
+    accounts: FakeAccounts;
+    stepUps: FakeStepUps;
+    permissions: PermissionService;
+    admin: UserAccount;
+  } {
+    const accounts = new FakeAccounts();
+    const stepUps = new FakeStepUps();
+    const permissions = new PermissionService(accounts, stepUps, () => NOW);
+    const admin = setupUser(accounts, {
+      id: 'ia1',
+      companyId: null,
+      instanceAdmin: true,
+      roleId: null,
+    });
+    return { accounts, stepUps, permissions, admin };
+  }
+
+  /** Opens a window expiring `minutes` from NOW (negative = already expired). */
+  function openWindow(stepUps: FakeStepUps, userId: string, companyId: string, minutes: number) {
+    return stepUps.openStepUp({
+      id: `s-${companyId}`,
+      userId,
+      companyId,
+      createdAt: NOW.toISOString(),
+      expiresAt: new Date(NOW.getTime() + minutes * 60_000).toISOString(),
+    });
+  }
+
+  it('denies every company action to an instance admin with no step-up open', async () => {
+    const { permissions, admin } = build();
+
+    for (const action of Object.keys(COMPANY_ACTION_ROLES) as CompanyAction[]) {
+      await expect(permissions.canInCompany(admin.id, 'c1', action)).resolves.toBe(false);
+    }
+  });
+
+  it('admits every company action inside an open step-up for that company', async () => {
+    const { permissions, stepUps, admin } = build();
+    await openWindow(stepUps, admin.id, 'c1', 15);
+
+    for (const action of Object.keys(COMPANY_ACTION_ROLES) as CompanyAction[]) {
+      await expect(permissions.canInCompany(admin.id, 'c1', action)).resolves.toBe(true);
+    }
+  });
+
+  it('does not leak across companies — a step-up for c1 grants nothing in c2', async () => {
+    const { permissions, stepUps, admin } = build();
+    await openWindow(stepUps, admin.id, 'c1', 15);
+
+    await expect(permissions.canInCompany(admin.id, 'c2', 'company.manage_projects')).resolves.toBe(
+      false,
+    );
+  });
+
+  it('denies once the window has expired', async () => {
+    const { permissions, stepUps, admin } = build();
+    await openWindow(stepUps, admin.id, 'c1', -1);
+
+    await expect(permissions.canInCompany(admin.id, 'c1', 'company.manage_projects')).resolves.toBe(
+      false,
+    );
+  });
+
+  it('requires the instance_admin capability — a step-up row alone is not enough', async () => {
+    const { accounts, permissions, stepUps } = build();
+    const impostor = setupUser(accounts, {
+      id: 'u9',
+      companyId: null,
+      instanceAdmin: false,
+      roleId: null,
+    });
+    await openWindow(stepUps, impostor.id, 'c1', 15);
+
+    await expect(
+      permissions.canInCompany(impostor.id, 'c1', 'company.manage_projects'),
+    ).resolves.toBe(false);
+  });
+
+  it('denies a deactivated instance admin even inside an open window', async () => {
+    const { permissions, stepUps, admin } = build();
+    await openWindow(stepUps, admin.id, 'c1', 15);
+    admin.active = false;
+
+    await expect(permissions.canInCompany(admin.id, 'c1', 'company.manage_projects')).resolves.toBe(
+      false,
+    );
+  });
+
+  it('confers NO project access — the no-implied-content-access rule survives', async () => {
+    const { permissions, stepUps, admin } = build();
+    await openWindow(stepUps, admin.id, 'c1', 15);
+
+    // Every project action stays denied: reaching content still needs a grant.
+    for (const action of Object.keys(PROJECT_ACTION_ROLES) as ProjectAction[]) {
+      await expect(permissions.canOnProject(admin.id, 'p1', action)).resolves.toBe(false);
+    }
+    // ...including through the deny-by-default combined helper.
+    await expect(
+      permissions.canOnProjectOrCompany(admin.id, 'project.read', 'p1', 'c1'),
+    ).resolves.toBe(false);
+  });
+
+  it('still admits an ordinary company member without any step-up', async () => {
+    const { accounts, permissions } = build();
+    accounts.roles.set('r-admin', buildRole('r-admin', 'c1', 'admin'));
+    const member = setupUser(accounts, { id: 'u3', companyId: 'c1', roleId: 'r-admin' });
+
+    await expect(
+      permissions.canInCompany(member.id, 'c1', 'company.manage_projects'),
+    ).resolves.toBe(true);
   });
 });
