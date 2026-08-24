@@ -26,6 +26,7 @@ interface PageRow {
   parent_id: string | null;
   name: string;
   slug: string;
+  description: string | null;
   custom_id: string | null;
   created_at: string;
   updated_at: string;
@@ -38,6 +39,7 @@ function toPage(row: PageRow): PageRecord {
     parentId: row.parent_id,
     name: row.name,
     slug: row.slug,
+    description: row.description,
     customId: row.custom_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -57,6 +59,7 @@ export class SqlitePageRepository implements PageRepository {
         parent_id: page.parentId,
         name: page.name,
         slug: page.slug,
+        description: page.description,
         custom_id: page.customId,
         created_at: page.createdAt,
         updated_at: page.updatedAt,
@@ -110,6 +113,7 @@ export class SqlitePageRepository implements PageRepository {
         name: page.name,
         slug: page.slug,
         parent_id: page.parentId,
+        description: page.description,
         custom_id: page.customId,
         updated_at: page.updatedAt,
       })

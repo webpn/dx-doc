@@ -37,6 +37,24 @@ export function registerPageRoutes(app: FastifyInstance, options: PageRoutesOpti
     return reply.code(201).send({ id: result.value.pageId, created: result.value.created });
   });
 
+  app.get('/api/projects/:projectId/pages', async (request, reply) => {
+    const actor = await authenticateRequest(
+      request,
+      options.sessions,
+      options.serviceTokens,
+      options.cookieName,
+    );
+    if (actor === null) {
+      return unauthenticated(reply);
+    }
+    const { projectId } = request.params as { projectId: string };
+    const result = await options.pages.listForProject(actor.userId, projectId);
+    if (!result.ok) {
+      return replyServiceError(reply, result.error);
+    }
+    return result.value;
+  });
+
   app.get('/api/pages/:id', async (request, reply) => {
     const actor = await authenticateRequest(
       request,

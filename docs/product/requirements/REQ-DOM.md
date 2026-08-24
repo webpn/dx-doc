@@ -9,7 +9,7 @@ Entry format and status legend: [requirements index](README.md).
 
 | ID          | Requirement                                           | MoSCoW | Rel. | Milestone    | Status      |
 | ----------- | ----------------------------------------------------- | ------ | ---- | ------------ | ----------- |
-| REQ-DOM-001 | Page/Screen entity                                    | Must   | R1   | M1.1         | Implemented |
+| REQ-DOM-001 | Page/Screen entity                                    | Must   | R1   | M1.1 → M1.16 | In Progress |
 | REQ-DOM-002 | Tracking entity with navigation event and attachment  | Must   | R1   | M1.1         | Implemented |
 | REQ-DOM-003 | Data Layer Property, full attribute set               | Must   | R1   | M1.1         | Implemented |
 | REQ-DOM-004 | `object` property type with parent-child hierarchy    | Must   | R1   | M1.1         | Implemented |
@@ -42,9 +42,11 @@ Entry format and status legend: [requirements index](README.md).
 
 ### REQ-DOM-001 — Page/Screen entity
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.1, §8.1 · **Implemented** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) → [M1.16](../milestones.md#m116--authoring-ui) · spec §6.1, §8.1 · **In Progress** · Issue: — · PR: —
 
 A page, screen, modal, popup, or page template of the product, organised in a hierarchy. Carries a short behavioural description, optional screenshots, and Figma coordinates (REQ-DEV-001). Where content is CMS-driven, only generic templates are catalogued.
+
+The description is Markdown, like every other rich-text field (REQ-AUTH-001), and screenshots are image references to uploaded assets inside it (REQ-AUTH-002) — there is no separate page-to-asset relation. Figma coordinates are R2, with REQ-DEV-001.
 
 **Acceptance**
 
@@ -52,6 +54,7 @@ A page, screen, modal, popup, or page template of the product, organised in a hi
 - Pages are **created, edited, deleted and reordered by editors** through the UI and the API alike; the page set of a project is not fixed or seeded — it is the project's own catalogue of screens. (Editing was implicit in M0.5 CRUD and REQ-NAV-001; this states it as the page requirement itself.)
 - The hierarchy is arbitrarily deep and reorderable without changing any identifier (REQ-FDN-004).
 - A page carries its position in the hierarchy explicitly, so sibling order survives export and re-import.
+- A description survives a save-and-reload round trip verbatim, including fenced code blocks and image references.
 
 ### REQ-DOM-002 — Tracking entity with navigation event and attachment
 
@@ -132,7 +135,7 @@ When a module's property set changes, the editor is asked — at save time or la
 
 > Named as a demotion candidate if R1 overruns — see [milestones](../milestones.md#risk-mitigations-owned-by-milestones).
 
-> **Carried forward on 2026-08-18.** The default holds — a module edit does not reach existing trackings — but only because no propagation path exists at all: `updateModule` rewrites the module's property set and never touches a tracking. "Opt-in propagation" needs the opt-in half, and the preview of what it will affect, both of which are built at [M1.16](../milestones.md#m116--authoring-ui). Until then the correct reading of this requirement's status is _the safe default is implemented, the feature is not_.
+> **Carried forward on 2026-08-21.** `previewModulePropagation` reports which trackings a module's current property set would change and which properties each would gain, writing nothing; `propagateModuleToTrackings` applies it on explicit request and records a single `module_propagated` audit entry for the whole operation. `updateModule` still never propagates, so the default remains no propagation. Both reuse the `applyModuleToTracking` domain rule, so a propagated property is indistinguishable from one added by attaching the module by hand. What remains: the opt-in prompt and preview surface in the authoring UI at [M1.16](../milestones.md#m116--authoring-ui), and the REST route exposing both calls.
 
 ### REQ-DOM-008 — Property removal with automatic module detachment
 
@@ -159,7 +162,7 @@ A blueprint for new trackings: preselected modules, preconfigured custom propert
 - Templates exist only for Trackings; no template mechanism exists for pages or flows.
 - The current _Page View_ and _Action_ templates are expressible as instances of this mechanism, with no hard-coded behaviour remaining.
 
-> **Application behavior implemented on 2026-08-19.** `createTracking` accepts an optional `templateId`, validates the template scope, and applies JSON defaults for description, page, navigation event and modules. Existing trackings are not changed when a template is modified. Template editing UI remains deferred to [M1.16](../milestones.md#m116--authoring-ui).
+> **Carried forward on 2026-08-21.** `createTracking` accepts an optional `templateId`, validates the template scope, and applies JSON defaults for description, page, navigation event and modules. A seeded module's properties are materialised into the new tracking through the same `applyModuleToTracking` domain rule used when attaching a module by hand, so the tracking does not arrive with modules attached but no properties. Existing trackings are not changed when a template is modified. The template editor UI landed at [M1.16](../milestones.md#m116--authoring-ui) (name, description, navigation event, `config_json`). Still open: **default specific values** in the template config — a `SpecificValue` hangs off a `trackingPropertyId`, so seeding them needs a config shape that addresses a property within the seeded set, which is not yet designed.
 
 ### REQ-DOM-010 — Specific Values with plain `[placeholder]` strings
 
@@ -273,6 +276,7 @@ The company catalogue holds standard properties, modules, templates and free-pag
 - Subsequent catalogue changes do not propagate to existing projects.
 - A property created inside a project cannot be promoted into the catalogue — the operation does not exist.
 - A copied item has its own identifier, independent of its catalogue source. **No provenance column is stored**: the copy retains no reference of any kind to the catalogue item it came from.
+- The copy is **self-contained**: a copied module references the copied properties, never the catalogue's property rows. A copied module carries its properties even when only the module was selected — selecting a module implies copying what it is made of.
 - Where a later feature needs to relate a project item back to a catalogue item (REQ-DOM-024), it does so by **matching on name**, computed at the moment it is needed.
 
 > Accepted consequence: the catalogue drifts from project reality over time. Conscious trade-off for project autonomy. The mitigation (REQ-DOM-026) is optional and deferred.

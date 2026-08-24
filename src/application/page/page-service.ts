@@ -57,6 +57,9 @@ export class PageService {
         existing.name = data.name;
         existing.slug = data.slug;
         existing.parentId = data.parentId ?? existing.parentId;
+        // Matches the other fields' re-import semantics: an omitted
+        // description leaves the stored one alone rather than erasing it.
+        existing.description = data.description ?? existing.description;
         existing.updatedAt = this.now().toISOString();
         await this.pages.updatePage(existing);
         return ok({ pageId: existing.id, created: false });
@@ -82,6 +85,7 @@ export class PageService {
       parentId,
       name: data.name,
       slug: data.slug,
+      description: data.description ?? null,
       customId: data.customId ?? null,
       createdAt: nowIso,
       updatedAt: nowIso,
@@ -144,6 +148,7 @@ export class PageService {
     if (data.name !== undefined) page.name = data.name;
     if (data.slug !== undefined) page.slug = data.slug;
     if (data.parentId !== undefined) page.parentId = data.parentId ?? null;
+    if (data.description !== undefined) page.description = data.description;
     page.updatedAt = this.now().toISOString();
     const applied = await this.pages.updatePage(page, expectedUpdatedAt);
     if (!applied) {

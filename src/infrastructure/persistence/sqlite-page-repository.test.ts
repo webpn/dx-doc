@@ -21,6 +21,7 @@ function page(overrides: Partial<PageRecord>): PageRecord {
     parentId: null,
     name: 'Home',
     slug: 'home',
+    description: null,
     customId: null,
     createdAt: t(),
     updatedAt: t(),
@@ -81,6 +82,47 @@ describe('SqlitePageRepository (against the real schema)', () => {
 
     expect((await repo.getPageByProjectAndSlug('proj-1', 'home'))?.id).toBe('pg1');
     expect(await repo.getPageByProjectAndSlug('proj-1', 'nope')).toBeNull();
+  });
+
+  it('round-trips a markdown description, screenshots included', async () => {
+    // REQ-DOM-001's behavioural description, stored as markdown (REQ-AUTH-001)
+    // with screenshots as image references (REQ-AUTH-002) rather than a
+    // separate page-to-asset relation. Fenced blocks and pipes are the
+    // characters most likely to be mangled by a naive column, so they are
+    // exactly what this asserts survives.
+    const description = [
+      '## Behaviour',
+      '',
+      'Shown after login. ![Home screen](/assets/a1.png)',
+      '',
+      '```mermaid',
+      'graph TD;',
+      '  A-->B;',
+      '```',
+    ].join('\n');
+
+    await repo.createPage(page({ description }));
+
+    expect((await repo.getPageById('pg1'))?.description).toBe(description);
+  });
+
+  it('treats an undescribed page as null, not empty string', async () => {
+    await repo.createPage(page({}));
+
+    expect((await repo.getPageById('pg1'))?.description).toBeNull();
+  });
+
+  it('updates a description without touching the rest of the page', async () => {
+    await repo.createPage(page({ description: 'first' }));
+    const stored = await repo.getPageById('pg1');
+    if (stored === null) throw new Error('page was not stored');
+
+    await repo.updatePage({ ...stored, description: 'second', updatedAt: t() });
+
+    const updated = await repo.getPageById('pg1');
+    expect(updated?.description).toBe('second');
+    expect(updated?.name).toBe('Home');
+    expect(updated?.slug).toBe('home');
   });
 
   it('finds by custom_id scoped to the project', async () => {

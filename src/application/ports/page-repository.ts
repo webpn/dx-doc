@@ -5,6 +5,13 @@ export interface PageRecord {
   parentId: string | null;
   name: string;
   slug: string;
+  /**
+   * Short behavioural description (REQ-DOM-001), stored as Markdown like every
+   * other rich-text field (REQ-AUTH-001). Screenshots are markdown image
+   * references to uploaded assets inside this text (REQ-AUTH-002), which is why
+   * there is no separate page-to-asset relation. `null` means never described.
+   */
+  description: string | null;
   customId: string | null;
   createdAt: string;
   updatedAt: string;
