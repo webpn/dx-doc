@@ -1356,6 +1356,17 @@ export class TrackingService {
     const freePageId = this.newId();
     const nowIso = this.now().toISOString();
 
+    // REQ-AUTH-003 hierarchy: a parent must exist and belong to the same scope.
+    // Enforced here, not in the route, so the MCP server gets the same rule
+    // (REQ-FDN-010, ADR-0007). The FK alone would allow a parent from another
+    // project, which AGENTS.md forbids ("no cross-project references").
+    if (parsed.value.parentId !== undefined && parsed.value.parentId !== null) {
+      const parent = await this.freePages.getFreePageById(parsed.value.parentId);
+      if (parent?.companyId !== companyId || parent.projectId !== projectId) {
+        return err({ kind: 'not_found' });
+      }
+    }
+
     await this.freePages.createFreePage({
       id: freePageId,
       companyId,
@@ -1365,6 +1376,7 @@ export class TrackingService {
       content: parsed.value.content,
       publishable: parsed.value.publishable,
       customId: parsed.value.customId ?? null,
+      parentId: parsed.value.parentId ?? null,
       createdAt: nowIso,
       updatedAt: nowIso,
     });
@@ -1450,6 +1462,48 @@ export class TrackingService {
       return err({ kind: 'validation', issues: parsed.error });
     }
 
+    // REQ-AUTH-003 reparenting. `parentId` is tri-state here: absent leaves the
+    // parent alone, explicit null detaches to a root, an id moves the page. The
+    // FK guarantees the target exists but nothing more, so scope, self-parenting
+    // and cycles are checked here — in the service, so the MCP server and every
+    // other entry point inherit the rule (REQ-FDN-010, ADR-0007).
+    let nextParentId = fp.parentId;
+    if (parsed.value.parentId !== undefined) {
+      if (parsed.value.parentId === null) {
+        nextParentId = null;
+      } else {
+        const target = parsed.value.parentId;
+        if (target === freePageId) {
+          return err({
+            kind: 'validation',
+            issues: [
+              {
+                field: 'parentId',
+                code: 'self_parent',
+                message: 'a free page cannot be its own parent',
+              },
+            ],
+          });
+        }
+        const parent = await this.freePages.getFreePageById(target);
+        if (parent?.companyId !== fp.companyId || parent.projectId !== fp.projectId) {
+          return err({ kind: 'not_found' });
+        }
+        // Walk up from the proposed parent: meeting this page means the move
+        // would close a cycle and detach the whole branch from every root.
+        let cursor: string | null = parent.parentId;
+        while (cursor !== null) {
+          if (cursor === freePageId) {
+            // A dedicated error kind already exists for exactly this shape.
+            return err({ kind: 'hierarchy_cycle' });
+          }
+          const ancestor: FreePage | null = await this.freePages.getFreePageById(cursor);
+          cursor = ancestor?.parentId ?? null;
+        }
+        nextParentId = target;
+      }
+    }
+
     // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
     // enforced atomically by the repository's `WHERE updated_at = ?`, so
     // there is no read-compare-write race between the check and the write.
@@ -1460,6 +1514,7 @@ export class TrackingService {
       slug: parsed.value.slug ?? fp.slug,
       content: parsed.value.content ?? fp.content,
       publishable: parsed.value.publishable ?? fp.publishable,
+      parentId: nextParentId,
       updatedAt: nowIso,
     };
     const applied = await this.freePages.updateFreePage(
@@ -1580,6 +1635,25 @@ export class TrackingService {
 
     if (templateConfig.moduleIds !== undefined && templateConfig.moduleIds.length > 0) {
       await this.trackings.setTrackingModules(trackingId, templateConfig.moduleIds, nowIso);
+
+      // Attaching a module is not the same as carrying its properties:
+      // `setTrackingModules` only writes the join rows. REQ-DOM-009 promises a
+      // blueprint with "preselected modules, preconfigured custom properties",
+      // so materialise them through the same domain rule `applyModuleToTracking`
+      // uses — otherwise the seeded tracking arrives inert, and default specific
+      // values would be impossible (they hang off a trackingPropertyId).
+      let state = {
+        trackingId,
+        appliedModuleIds: templateConfig.moduleIds,
+        trackingProperties: [] as TrackingProperty[],
+      };
+      for (const moduleId of templateConfig.moduleIds) {
+        const modPropIds = await this.modules.getModulePropertyIds(moduleId);
+        state = applyModuleToTracking(state, moduleId, modPropIds, this.newId, nowIso);
+      }
+      if (state.trackingProperties.length > 0) {
+        await this.trackings.setTrackingProperties(state.trackingProperties);
+      }
     }
 
     const project = await this.projects.getProjectById(projectId);
@@ -2014,6 +2088,145 @@ export class TrackingService {
     return ok({ trackingId });
   }
 
+  /**
+   * Which trackings a module's current property set would change, and how
+   * (REQ-DOM-007). Read-only: propagation must show what it will change before
+   * it changes it, so this shares its diff logic with
+   * `propagateModuleToTrackings` and writes nothing.
+   *
+   * A module lives in one project (or the company catalogue), and trackings
+   * materialise a module's properties when it is applied. So "affected" means:
+   * trackings that already have this module attached and are missing at least
+   * one property the module now carries.
+   */
+  private async computeModulePropagation(moduleId: string): Promise<
+    | { ok: false; error: TrackingServiceError }
+    | {
+        ok: true;
+        projectIds: string[];
+        affected: { trackingId: string; addedPropertyIds: string[] }[];
+      }
+  > {
+    const mod = await this.modules.getModuleById(moduleId);
+    if (!mod) return { ok: false, error: { kind: 'not_found' } };
+
+    const modPropIds = await this.modules.getModulePropertyIds(moduleId);
+
+    // A catalogue module (projectId null) is not attached to any tracking:
+    // trackings only ever reference project modules, because copying to a
+    // project is what makes a catalogue module usable (REQ-DOM-019).
+    if (mod.projectId === null) {
+      return { ok: true, projectIds: [], affected: [] };
+    }
+
+    const trackings = await this.trackings.listTrackingsForProject(mod.projectId);
+    const affected: { trackingId: string; addedPropertyIds: string[] }[] = [];
+
+    for (const tracking of trackings) {
+      const attachedModuleIds = await this.trackings.getTrackingModuleIds(tracking.id);
+      if (!attachedModuleIds.includes(moduleId)) continue;
+
+      const existing = await this.trackings.getTrackingProperties(tracking.id);
+      const existingIds = new Set(existing.map((tp) => tp.propertyId));
+      const addedPropertyIds = modPropIds.filter((id) => !existingIds.has(id));
+
+      // A tracking that already carries every property is not "affected":
+      // listing it would overstate what propagation does.
+      if (addedPropertyIds.length > 0) {
+        affected.push({ trackingId: tracking.id, addedPropertyIds });
+      }
+    }
+
+    return { ok: true, projectIds: [mod.projectId], affected };
+  }
+
+  /** Preview propagation without applying it (REQ-DOM-007). */
+  async previewModulePropagation(
+    actorId: string,
+    moduleId: string,
+  ): Promise<
+    Result<{ affected: { trackingId: string; addedPropertyIds: string[] }[] }, TrackingServiceError>
+  > {
+    const computed = await this.computeModulePropagation(moduleId);
+    if (!computed.ok) return err(computed.error);
+
+    for (const projectId of computed.projectIds) {
+      if (!(await this.permissions.canOnProject(actorId, projectId, 'project.read'))) {
+        return err({ kind: 'forbidden' });
+      }
+    }
+
+    return ok({ affected: computed.affected });
+  }
+
+  /**
+   * Apply a module's current property set to the trackings already using it
+   * (REQ-DOM-007). Never called implicitly by `updateModule`: the default is no
+   * propagation, and this is the explicit opt-in.
+   *
+   * Produces a single audit entry for the whole operation, not one per tracking.
+   */
+  async propagateModuleToTrackings(
+    actorId: string,
+    moduleId: string,
+  ): Promise<Result<{ updatedTrackingCount: number }, TrackingServiceError>> {
+    const computed = await this.computeModulePropagation(moduleId);
+    if (!computed.ok) return err(computed.error);
+
+    for (const projectId of computed.projectIds) {
+      if (!(await this.permissions.canOnProject(actorId, projectId, 'project.edit'))) {
+        return err({ kind: 'forbidden' });
+      }
+    }
+
+    const nowIso = this.now().toISOString();
+    const modPropIds = await this.modules.getModulePropertyIds(moduleId);
+
+    for (const entry of computed.affected) {
+      const existingTps = await this.trackings.getTrackingProperties(entry.trackingId);
+      const existingModIds = await this.trackings.getTrackingModuleIds(entry.trackingId);
+
+      // Reuse the domain composition rule so a propagated property is
+      // indistinguishable from one added by attaching the module by hand.
+      const nextState = applyModuleToTracking(
+        {
+          trackingId: entry.trackingId,
+          appliedModuleIds: existingModIds,
+          trackingProperties: existingTps,
+        },
+        moduleId,
+        modPropIds,
+        this.newId,
+        nowIso,
+      );
+
+      await this.trackings.setTrackingProperties(nextState.trackingProperties);
+    }
+
+    const projectId = computed.projectIds[0];
+    if (projectId !== undefined && computed.affected.length > 0) {
+      const project = await this.projects.getProjectById(projectId);
+      if (project) {
+        await this.auditLogs.appendLog({
+          id: this.newId(),
+          companyId: project.companyId,
+          projectId,
+          actorId,
+          action: 'module_propagated',
+          entityType: 'module',
+          entityId: moduleId,
+          details: {
+            updatedTrackingCount: computed.affected.length,
+            trackingIds: computed.affected.map((a) => a.trackingId),
+          },
+          createdAt: nowIso,
+        });
+      }
+    }
+
+    return ok({ updatedTrackingCount: computed.affected.length });
+  }
+
   async removePropertyFromTracking(
     actorId: string,
     trackingId: string,
@@ -2092,44 +2305,65 @@ export class TrackingService {
     let copiedModules = 0;
     const nowIso = this.now().toISOString();
 
-    if ((selection.propertyIds?.length ?? 0) > 0) {
-      for (const pId of selection.propertyIds ?? []) {
-        const catProp = await this.properties.getPropertyById(pId);
-        if (catProp?.companyId === companyId) {
-          // Fresh independent copy with no provenance column (REQ-DOM-019)
-          await this.properties.createProperty({
-            ...catProp,
-            id: this.newId(),
-            projectId,
-            customId: null,
-            createdAt: nowIso,
-            updatedAt: nowIso,
-          });
-          copiedProperties++;
-        }
-      }
+    // Catalogue property id -> the id of its copy in this project. A copied
+    // module must reference the copies, not the catalogue originals: keeping the
+    // catalogue's ids would be a live link to the catalogue by another name,
+    // which REQ-DOM-019 forbids.
+    const copiedPropertyIds = new Map<string, string>();
+
+    const copyProperty = async (cataloguePropertyId: string): Promise<string | null> => {
+      const existing = copiedPropertyIds.get(cataloguePropertyId);
+      if (existing !== undefined) return existing;
+
+      const catProp = await this.properties.getPropertyById(cataloguePropertyId);
+      if (catProp?.companyId !== companyId) return null;
+
+      // Fresh independent copy with no provenance column (REQ-DOM-019)
+      const newPropertyId = this.newId();
+      await this.properties.createProperty({
+        ...catProp,
+        id: newPropertyId,
+        projectId,
+        customId: null,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      });
+      copiedPropertyIds.set(cataloguePropertyId, newPropertyId);
+      copiedProperties++;
+      return newPropertyId;
+    };
+
+    for (const pId of selection.propertyIds ?? []) {
+      await copyProperty(pId);
     }
 
-    if ((selection.moduleIds?.length ?? 0) > 0) {
-      for (const mId of selection.moduleIds ?? []) {
-        const catMod = await this.modules.getModuleById(mId);
-        if (catMod?.companyId === companyId) {
-          const newModId = this.newId();
-          await this.modules.createModule({
-            ...catMod,
-            id: newModId,
-            projectId,
-            customId: null,
-            createdAt: nowIso,
-            updatedAt: nowIso,
-          });
-          const propIds = await this.modules.getModulePropertyIds(mId);
-          if (propIds.length > 0) {
-            await this.modules.setModuleProperties(newModId, propIds, nowIso);
-          }
-          copiedModules++;
-        }
+    for (const mId of selection.moduleIds ?? []) {
+      const catMod = await this.modules.getModuleById(mId);
+      if (catMod?.companyId !== companyId) continue;
+
+      const newModId = this.newId();
+      await this.modules.createModule({
+        ...catMod,
+        id: newModId,
+        projectId,
+        customId: null,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      });
+
+      // A module is only meaningful with its properties, so copy any the caller
+      // did not select separately rather than leaving the module pointing at
+      // nothing this project owns.
+      const cataloguePropIds = await this.modules.getModulePropertyIds(mId);
+      const projectPropIds: string[] = [];
+      for (const cataloguePropId of cataloguePropIds) {
+        const copiedId = await copyProperty(cataloguePropId);
+        if (copiedId !== null) projectPropIds.push(copiedId);
       }
+      if (projectPropIds.length > 0) {
+        await this.modules.setModuleProperties(newModId, projectPropIds, nowIso);
+      }
+      copiedModules++;
     }
 
     return ok({ copiedProperties, copiedModules });

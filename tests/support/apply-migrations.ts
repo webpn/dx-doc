@@ -19,6 +19,9 @@ import * as m011 from '../../db/migrations/011_assets';
 import * as m012 from '../../db/migrations/012_audit_company_nullable';
 import * as m013 from '../../db/migrations/013_query_path_indexes';
 import * as m014 from '../../db/migrations/014_audit_logs_append_only';
+import * as m015 from '../../db/migrations/015_instance_admin_stepups';
+import * as m016 from '../../db/migrations/016_page_description';
+import * as m017 from '../../db/migrations/017_free_page_hierarchy';
 import type { Connection } from '../../src/infrastructure/persistence/sqlite-kysely';
 
 const staticMigrations: Record<string, Migration> = {
@@ -36,6 +39,9 @@ const staticMigrations: Record<string, Migration> = {
   '012_audit_company_nullable': m012,
   '013_query_path_indexes': m013,
   '014_audit_logs_append_only': m014,
+  '015_instance_admin_stepups': m015,
+  '016_page_description': m016,
+  '017_free_page_hierarchy': m017,
 };
 
 class StaticMigrationProvider implements MigrationProvider {

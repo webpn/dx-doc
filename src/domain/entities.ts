@@ -100,6 +100,8 @@ export interface FreePage {
   content: string;
   publishable: boolean;
   customId: string | null;
+  /** Own hierarchy, independent of the Page/Screen tree (REQ-AUTH-003). */
+  parentId: string | null;
   createdAt: string;
   updatedAt: string;
 }

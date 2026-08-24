@@ -345,6 +345,42 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     return reply.code(201).send({ id: result.value.templateId });
   });
 
+  app.get('/api/modules/:id/propagation-preview', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+
+    const { id } = request.params as { id: string };
+    const result = await trackingService.previewModulePropagation(actor.userId, id);
+    if (!result.ok) return replyServiceError(reply, result.error);
+
+    return reply.code(200).send(result.value);
+  });
+
+  app.post('/api/modules/:id/propagate', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+
+    const { id } = request.params as { id: string };
+    const result = await trackingService.propagateModuleToTrackings(actor.userId, id);
+    if (!result.ok) return replyServiceError(reply, result.error);
+
+    return reply.code(200).send(result.value);
+  });
+
+  app.get('/api/companies/:companyId/tracking-templates', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
+
+    const { companyId } = request.params as { companyId: string };
+    const query = request.query as { projectId?: string };
+    const projectId = query.projectId ?? null;
+
+    const result = await trackingService.listTrackingTemplates(userId, companyId, projectId);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return result.value;
+  });
+
   app.get('/api/tracking-templates/:id', async (request, reply) => {
     const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
     if (!actor) return unauthenticated(reply);
@@ -398,6 +434,20 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     );
     if (!result.ok) return replyServiceError(reply, result.error);
     return reply.code(201).send({ id: result.value.freePageId });
+  });
+
+  app.get('/api/companies/:companyId/free-pages', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
+
+    const { companyId } = request.params as { companyId: string };
+    const query = request.query as { projectId?: string };
+    const projectId = query.projectId ?? null;
+
+    const result = await trackingService.listFreePages(userId, companyId, projectId);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return reply.send(result.value);
   });
 
   app.get('/api/free-pages/:id', async (request, reply) => {

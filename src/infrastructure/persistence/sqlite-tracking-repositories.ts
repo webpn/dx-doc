@@ -1183,6 +1183,7 @@ export class SqliteFreePageRepository implements FreePageRepository {
         content: page.content,
         publishable: page.publishable ? 1 : 0,
         custom_id: page.customId,
+        parent_id: page.parentId,
         created_at: page.createdAt,
         updated_at: page.updatedAt,
       })
@@ -1261,6 +1262,7 @@ export class SqliteFreePageRepository implements FreePageRepository {
         slug: page.slug,
         content: page.content,
         publishable: page.publishable ? 1 : 0,
+        parent_id: page.parentId,
         updated_at: page.updatedAt,
       })
       .where('id', '=', page.id);
@@ -1280,6 +1282,7 @@ export class SqliteFreePageRepository implements FreePageRepository {
     content: string;
     publishable: number | boolean;
     custom_id: string | null;
+    parent_id: string | null;
     created_at: string;
     updated_at: string;
   }): FreePage {
@@ -1292,6 +1295,7 @@ export class SqliteFreePageRepository implements FreePageRepository {
       content: row.content,
       publishable: Boolean(row.publishable),
       customId: row.custom_id,
+      parentId: row.parent_id,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };

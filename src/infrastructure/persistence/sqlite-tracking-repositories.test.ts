@@ -436,6 +436,7 @@ describe('SQLite Tracking Repositories (M1.1 Persistence)', () => {
       content: '# Architecture',
       publishable: true,
       customId: null,
+      parentId: null,
       createdAt: t(),
       updatedAt: t(),
     });

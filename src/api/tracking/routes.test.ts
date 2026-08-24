@@ -225,6 +225,95 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     expect(res.json()).toEqual([]);
   });
 
+  it('lists tracking templates for a project (REQ-DOM-009)', async () => {
+    // The list route is what a template picker needs; the service had it long
+    // before it was reachable over HTTP.
+    const emptyRes = await app.inject({
+      method: 'GET',
+      url: `/api/companies/${companyId}/tracking-templates?projectId=${projectId}`,
+      headers: { cookie: editorCookie },
+    });
+    expect(emptyRes.statusCode).toBe(200);
+    expect(emptyRes.json()).toEqual([]);
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/tracking-templates?projectId=${projectId}`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'Page View', description: 'Standard page view blueprint.' },
+    });
+    expect(createRes.statusCode).toBe(201);
+
+    const listRes = await app.inject({
+      method: 'GET',
+      url: `/api/companies/${companyId}/tracking-templates?projectId=${projectId}`,
+      headers: { cookie: editorCookie },
+    });
+    expect(listRes.statusCode).toBe(200);
+    const templates: { name: string; projectId: string | null }[] = listRes.json();
+    expect(templates).toHaveLength(1);
+    expect(templates[0]?.name).toBe('Page View');
+
+    // Catalogue templates are a separate scope needing company.manage_catalogue,
+    // which this project-only editor lacks — so the catalogue list is forbidden,
+    // not merely empty. That the two scopes diverge is the point.
+    const catalogueRes = await app.inject({
+      method: 'GET',
+      url: `/api/companies/${companyId}/tracking-templates`,
+      headers: { cookie: editorCookie },
+    });
+    expect(catalogueRes.statusCode).toBe(403);
+  });
+
+  it('rejects an unauthenticated template list', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/companies/${companyId}/tracking-templates?projectId=${projectId}`,
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('lists free pages and round-trips their hierarchy (REQ-AUTH-003)', async () => {
+    // listFreePages existed with permission checks but had no HTTP route, so no
+    // client could reach it — the same gap found for pages and templates.
+    const rootRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/free-pages?projectId=${projectId}`,
+      headers: { cookie: editorCookie },
+      payload: { title: 'Integration', slug: 'integration', content: '# Integration' },
+    });
+    expect(rootRes.statusCode).toBe(201);
+    const rootId = (rootRes.json() as { id: string }).id;
+
+    const childRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/free-pages?projectId=${projectId}`,
+      headers: { cookie: editorCookie },
+      payload: { title: 'SDK', slug: 'sdk', content: '# SDK', parentId: rootId },
+    });
+    expect(childRes.statusCode).toBe(201);
+
+    const fpListRes = await app.inject({
+      method: 'GET',
+      url: `/api/companies/${companyId}/free-pages?projectId=${projectId}`,
+      headers: { cookie: editorCookie },
+    });
+    expect(fpListRes.statusCode).toBe(200);
+    const pages: { slug: string; parentId: string | null }[] = fpListRes.json();
+    expect(pages).toHaveLength(2);
+    // The hierarchy must survive the transport, not just the database.
+    expect(pages.find((p) => p.slug === 'sdk')?.parentId).toBe(rootId);
+    expect(pages.find((p) => p.slug === 'integration')?.parentId).toBeNull();
+
+    // The company catalogue is a separate scope needing company.manage_catalogue.
+    const fpCatalogueRes = await app.inject({
+      method: 'GET',
+      url: `/api/companies/${companyId}/free-pages`,
+      headers: { cookie: editorCookie },
+    });
+    expect(fpCatalogueRes.statusCode).toBe(403);
+  });
+
   it('creates, reads, and updates full tracking graph via REST API (REQ-IMP-002)', async () => {
     // 1. Create property
     const propRes = await app.inject({

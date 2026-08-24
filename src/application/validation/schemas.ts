@@ -86,6 +86,10 @@ export const pageCreateSchema = z.object({
     .max(120, 'name must be 120 characters or fewer'),
   slug,
   parentId: z.string().min(1, 'parent_id must not be empty').optional(),
+  // Markdown (REQ-AUTH-001); screenshots are image references inside it
+  // (REQ-AUTH-002). Same budget as a tracking description, the closest
+  // analogue.
+  description: z.string().max(5000).optional(),
   customId: optionalCustomId.optional(),
 });
 export type PageCreateInput = z.infer<typeof pageCreateSchema>;
@@ -194,6 +198,11 @@ export const freePageCreateSchema = z.object({
   content: z.string().default(''),
   publishable: z.boolean().optional().default(true),
   customId: optionalCustomId.optional(),
+  // REQ-AUTH-003: free pages have their own hierarchy. Nullable/absent means a
+  // root page. Cross-hierarchy parents are impossible by construction — the FK
+  // targets free_pages.id — and cross-project parents are rejected in the
+  // service, where the project scope is known (no cross-project references).
+  parentId: z.string().nullish(),
 });
 export type FreePageCreateInput = z.input<typeof freePageCreateSchema>;
 export type FreePageCreateOutput = z.output<typeof freePageCreateSchema>;

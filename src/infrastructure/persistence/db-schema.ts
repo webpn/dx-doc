@@ -41,6 +41,7 @@ export interface Database {
   project_grants: ProjectGrantsTable;
   pages: PagesTable;
   sessions: SessionsTable;
+  instance_admin_stepups: InstanceAdminStepupsTable;
   password_reset_tokens: PasswordResetTokensTable;
   navigation_events: NavigationEventsTable;
   properties: PropertiesTable;
@@ -108,8 +109,19 @@ export const SCHEMA_DEFINITIONS: DatabaseSchemaDefinition = {
   ],
   project_grouping_labels: ['project_id', 'label'],
   project_grants: ['id', 'project_id', 'user_id', 'role_id', 'created_at', 'updated_at'],
-  pages: ['id', 'project_id', 'parent_id', 'name', 'slug', 'custom_id', 'created_at', 'updated_at'],
+  pages: [
+    'id',
+    'project_id',
+    'parent_id',
+    'name',
+    'slug',
+    'description',
+    'custom_id',
+    'created_at',
+    'updated_at',
+  ],
   sessions: ['id', 'user_id', 'token_hash', 'expires_at', 'created_at'],
+  instance_admin_stepups: ['id', 'user_id', 'company_id', 'created_at', 'expires_at'],
   password_reset_tokens: ['id', 'user_id', 'token_hash', 'expires_at', 'used_at', 'created_at'],
   navigation_events: [
     'id',
@@ -197,6 +209,7 @@ export const SCHEMA_DEFINITIONS: DatabaseSchemaDefinition = {
     'content',
     'publishable',
     'custom_id',
+    'parent_id',
     'created_at',
     'updated_at',
   ],
@@ -400,6 +413,7 @@ export interface PagesTable {
   parent_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   name: string;
   slug: string;
+  description: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   custom_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   created_at: ColumnType<string, string | undefined, string | undefined>;
   updated_at: ColumnType<string, string | undefined, string | undefined>;
@@ -411,6 +425,15 @@ export interface SessionsTable {
   token_hash: string;
   expires_at: string;
   created_at: string;
+}
+
+/** Instance-admin step-up windows (ADR-0027). See migration 015 and REQ-SEC-014. */
+export interface InstanceAdminStepupsTable {
+  id: string;
+  user_id: string;
+  company_id: string;
+  created_at: string;
+  expires_at: string;
 }
 
 export interface PasswordResetTokensTable {
@@ -551,6 +574,8 @@ export interface FreePagesTable {
     number | boolean | undefined
   >;
   custom_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
+  // REQ-AUTH-003: free pages carry their own hierarchy, independent of `pages`.
+  parent_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   created_at: ColumnType<string, string | undefined, string | undefined>;
   updated_at: ColumnType<string, string | undefined, string | undefined>;
 }

@@ -67,6 +67,32 @@ Hierarchically organised unstructured pages covering what the previous documenta
 - The flag's enforcement is REQ-SEC-012 — index exclusion and artefact omission, tested per path.
 - Free pages have their own hierarchy, independent of the Page/Screen hierarchy.
 
+> **Hierarchy implemented on 2026-08-24 (migration 017).** `free_pages` had no
+> parent link at all, so this acceptance criterion was unimplementable: a free
+> page could only ever be flat. `017_free_page_hierarchy` adds a nullable
+> self-referencing `parent_id` (`char(36)`) plus `idx_free_pages_parent_id`,
+> modelled on `pages.parent_id` so no new traversal pattern enters the codebase.
+> Independence from the Page/Screen tree is structural — the FK targets
+> `free_pages.id` and can never point at `pages`.
+>
+> `parentId` is carried through the entity, the Kysely table type, the SQLite
+> adapter (insert, update and row mapping) and `freePageCreateSchema`. On create
+> and on update the service — not the route, so the MCP server inherits it
+> (REQ-FDN-010, ADR-0007) — rejects a parent in a different company/project
+> scope (`not_found`), a page as its own parent (`validation`/`self_parent`) and
+> a move under the page's own descendant (`hierarchy_cycle`, HTTP 400). On
+> update `parentId` is tri-state: absent leaves the parent alone, explicit
+> `null` detaches to a root, an id moves the page.
+>
+> `GET /api/companies/:companyId/free-pages` now exists; `listFreePages` had
+> permission checks but no route, so no client could reach it. As with the other
+> company-scoped lists, omitting `?projectId=` means the company catalogue and
+> requires `company.manage_catalogue` — a project-scoped editor gets 403, not an
+> empty list.
+>
+> Still open: no free-page editor screen, so the hierarchy has no UI. The
+> publishable-flag enforcement above is REQ-SEC-012 and unchanged by this work.
+
 ### REQ-AUTH-004 — Mermaid rendering and live preview
 
 **Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §7.1, §8.4 · **In Progress** · Issue: — · PR: —

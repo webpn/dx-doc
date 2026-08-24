@@ -43,6 +43,7 @@ describe('TrackingService (M1.1 Application Service)', () => {
   let modRepo: SqliteModuleRepository;
   let navRepo: SqliteNavigationEventRepository;
   let trkRepo: SqliteTrackingRepository;
+  let auditRepo: SqliteAuditLogRepository;
 
   const companyId = 'comp-10';
   const projectId = 'proj-10';
@@ -162,6 +163,7 @@ describe('TrackingService (M1.1 Application Service)', () => {
     const versionRepo = new SqliteVersionRepository(connection.kysely);
     const sharedPasswordRepo = new SqliteSharedPasswordRepository(connection.kysely);
     const auditLogRepo = new SqliteAuditLogRepository(connection.kysely);
+    auditRepo = auditLogRepo;
     const hasher = new BcryptPasswordHasher();
 
     trackingService = new TrackingService(
@@ -294,6 +296,252 @@ describe('TrackingService (M1.1 Application Service)', () => {
     expect(projProps[0]?.name).toBe('global_user_id');
     expect(projProps[0]?.projectId).toBe(projectId);
     expect(projProps[0]?.id).not.toBe(catPropRes.value.propertyId);
+  });
+
+  it('points a copied module at the copied properties, not the catalogue originals (REQ-DOM-019)', async () => {
+    const catPropRes = await trackingService.createProperty(adminId, companyId, null, {
+      name: 'shared_user_id',
+      businessLabel: 'Shared User ID',
+    });
+    if (!catPropRes.ok) throw new Error('catProp fail');
+
+    const catModRes = await trackingService.createModule(adminId, companyId, null, {
+      name: 'Shared Identity',
+      propertyIds: [catPropRes.value.propertyId],
+    });
+    if (!catModRes.ok) throw new Error('catMod fail');
+
+    const copyRes = await trackingService.copyCatalogueToProject(editorId, companyId, projectId, {
+      propertyIds: [catPropRes.value.propertyId],
+      moduleIds: [catModRes.value.moduleId],
+    });
+    if (!copyRes.ok) throw new Error('copy fail');
+
+    const projProps = await propRepo.listProperties(companyId, projectId);
+    const projMods = await modRepo.listModules(companyId, projectId);
+    expect(projProps).toHaveLength(1);
+    expect(projMods).toHaveLength(1);
+
+    const copiedPropertyId = projProps[0]?.id;
+    const copiedModuleId = projMods[0]?.id;
+    if (copiedPropertyId === undefined || copiedModuleId === undefined) {
+      throw new Error('copy produced no project items');
+    }
+
+    // The copy must be self-contained: a project module that still references
+    // the catalogue's property ids is a live link to the catalogue by another
+    // name, which is exactly what REQ-DOM-019 forbids.
+    const copiedModuleProps = await modRepo.getModulePropertyIds(copiedModuleId);
+    expect(copiedModuleProps).toEqual([copiedPropertyId]);
+    expect(copiedModuleProps).not.toContain(catPropRes.value.propertyId);
+  });
+
+  describe('opt-in propagation of module changes (REQ-DOM-007)', () => {
+    /** A module with one property, attached to one tracking. */
+    async function seedModuleOnTracking(): Promise<{
+      moduleId: string;
+      trackingId: string;
+      firstPropertyId: string;
+    }> {
+      const p1 = await trackingService.createProperty(editorId, companyId, projectId, {
+        name: 'page_name',
+        businessLabel: 'Page Name',
+      });
+      if (!p1.ok) throw new Error('p1 fail');
+
+      const mod = await trackingService.createModule(editorId, companyId, projectId, {
+        name: 'Page Context',
+        propertyIds: [p1.value.propertyId],
+      });
+      if (!mod.ok) throw new Error('mod fail');
+
+      const nav = await trackingService.createNavigationEvent(editorId, projectId, {
+        name: 'page_view',
+      });
+      if (!nav.ok) throw new Error('nav fail');
+
+      const trk = await trackingService.createTracking(editorId, projectId, {
+        name: 'Home page view',
+        slug: 'home-page-view',
+        navigationEventId: nav.value.eventId,
+      });
+      if (!trk.ok) throw new Error('trk fail');
+
+      const applied = await trackingService.applyModuleToTracking(
+        editorId,
+        trk.value.trackingId,
+        mod.value.moduleId,
+      );
+      if (!applied.ok) throw new Error('apply fail');
+
+      return {
+        moduleId: mod.value.moduleId,
+        trackingId: trk.value.trackingId,
+        firstPropertyId: p1.value.propertyId,
+      };
+    }
+
+    /** Add a second property to an existing module. */
+    async function addPropertyToModule(moduleId: string, firstPropertyId: string): Promise<string> {
+      const p2 = await trackingService.createProperty(editorId, companyId, projectId, {
+        name: 'page_type',
+        businessLabel: 'Page Type',
+      });
+      if (!p2.ok) throw new Error('p2 fail');
+
+      const upd = await trackingService.updateModule(editorId, moduleId, {
+        propertyIds: [firstPropertyId, p2.value.propertyId],
+      });
+      if (!upd.ok) throw new Error('module update fail');
+
+      return p2.value.propertyId;
+    }
+
+    it('does not reach existing trackings without an explicit propagation action', async () => {
+      const { moduleId, trackingId, firstPropertyId } = await seedModuleOnTracking();
+      const newPropertyId = await addPropertyToModule(moduleId, firstPropertyId);
+
+      // The safe default: the module gained a property, the tracking did not.
+      const tps = await trkRepo.getTrackingProperties(trackingId);
+      expect(tps.map((tp) => tp.propertyId)).toEqual([firstPropertyId]);
+      expect(tps.map((tp) => tp.propertyId)).not.toContain(newPropertyId);
+    });
+
+    it('previews what propagation would change without changing anything', async () => {
+      const { moduleId, trackingId, firstPropertyId } = await seedModuleOnTracking();
+      const newPropertyId = await addPropertyToModule(moduleId, firstPropertyId);
+
+      const preview = await trackingService.previewModulePropagation(editorId, moduleId);
+      if (!preview.ok) throw new Error('preview fail');
+
+      expect(preview.value.affected).toHaveLength(1);
+      expect(preview.value.affected[0]?.trackingId).toBe(trackingId);
+      expect(preview.value.affected[0]?.addedPropertyIds).toEqual([newPropertyId]);
+
+      // A preview that mutates is not a preview.
+      const tps = await trkRepo.getTrackingProperties(trackingId);
+      expect(tps.map((tp) => tp.propertyId)).toEqual([firstPropertyId]);
+    });
+
+    it('propagates on demand and writes exactly one audit entry, not one per tracking', async () => {
+      const { moduleId, trackingId, firstPropertyId } = await seedModuleOnTracking();
+
+      // The second tracking must attach the module BEFORE the module changes.
+      // Attaching afterwards would hand it the new property immediately, so
+      // there would be nothing left to propagate and the count would be 1.
+      const nav2 = await trackingService.createNavigationEvent(editorId, projectId, {
+        name: 'screen_view',
+      });
+      if (!nav2.ok) throw new Error('nav2 fail');
+      const trk2 = await trackingService.createTracking(editorId, projectId, {
+        name: 'Search page view',
+        slug: 'search-page-view',
+        navigationEventId: nav2.value.eventId,
+      });
+      if (!trk2.ok) throw new Error('trk2 fail');
+      const applied2 = await trackingService.applyModuleToTracking(
+        editorId,
+        trk2.value.trackingId,
+        moduleId,
+      );
+      if (!applied2.ok) throw new Error('apply2 fail');
+
+      const newPropertyId = await addPropertyToModule(moduleId, firstPropertyId);
+
+      const before = await auditRepo.listLogsForProject(projectId, 500);
+      const beforeCount = before.filter((e) => e.action === 'module_propagated').length;
+
+      const result = await trackingService.propagateModuleToTrackings(editorId, moduleId);
+      if (!result.ok) throw new Error('propagate fail');
+
+      expect(result.value.updatedTrackingCount).toBe(2);
+
+      for (const id of [trackingId, trk2.value.trackingId]) {
+        const tps = await trkRepo.getTrackingProperties(id);
+        expect(tps.map((tp) => tp.propertyId)).toContain(newPropertyId);
+      }
+
+      const after = await auditRepo.listLogsForProject(projectId, 500);
+      const propagationEntries = after.filter((e) => e.action === 'module_propagated');
+      expect(propagationEntries.length - beforeCount).toBe(1);
+    });
+  });
+
+  it('materialises a template’s module properties into the new tracking (REQ-DOM-009)', async () => {
+    // REQ-DOM-009 promises "preselected modules, preconfigured custom
+    // properties, default specific values". A tracking created from a template
+    // that attaches a module must therefore carry that module's properties —
+    // and default specific values are impossible without them, because a
+    // SpecificValue hangs off a trackingPropertyId, not off the tracking.
+    const prop = await trackingService.createProperty(editorId, companyId, projectId, {
+      name: 'checkout_step',
+      businessLabel: 'Checkout Step',
+    });
+    if (!prop.ok) throw new Error('prop fail');
+
+    const mod = await trackingService.createModule(editorId, companyId, projectId, {
+      name: 'Checkout',
+      propertyIds: [prop.value.propertyId],
+    });
+    if (!mod.ok) throw new Error('mod fail');
+
+    const nav = await trackingService.createNavigationEvent(editorId, projectId, {
+      name: 'checkout_view',
+    });
+    if (!nav.ok) throw new Error('nav fail');
+
+    const tpl = await trackingService.createTrackingTemplate(editorId, companyId, projectId, {
+      name: 'Checkout blueprint',
+      configJson: JSON.stringify({
+        navigationEventId: nav.value.eventId,
+        moduleIds: [mod.value.moduleId],
+      }),
+    });
+    if (!tpl.ok) throw new Error('tpl fail');
+
+    const trk = await trackingService.createTracking(editorId, projectId, {
+      name: 'Checkout step view',
+      slug: 'checkout-step-view',
+      navigationEventId: nav.value.eventId,
+      templateId: tpl.value.templateId,
+    });
+    if (!trk.ok) throw new Error('trk fail');
+
+    const moduleIds = await trkRepo.getTrackingModuleIds(trk.value.trackingId);
+    expect(moduleIds).toEqual([mod.value.moduleId]);
+
+    // The module is attached; its properties must be present too.
+    const tps = await trkRepo.getTrackingProperties(trk.value.trackingId);
+    expect(tps.map((tp) => tp.propertyId)).toEqual([prop.value.propertyId]);
+  });
+
+  it('copies a module’s properties even when only the module was selected (REQ-DOM-019)', async () => {
+    const catPropRes = await trackingService.createProperty(adminId, companyId, null, {
+      name: 'module_only_property',
+    });
+    if (!catPropRes.ok) throw new Error('catProp fail');
+
+    const catModRes = await trackingService.createModule(adminId, companyId, null, {
+      name: 'Module Only',
+      propertyIds: [catPropRes.value.propertyId],
+    });
+    if (!catModRes.ok) throw new Error('catMod fail');
+
+    // Only the module is selected: its properties must still arrive, otherwise
+    // the project gets a module that references nothing it owns.
+    const copyRes = await trackingService.copyCatalogueToProject(editorId, companyId, projectId, {
+      moduleIds: [catModRes.value.moduleId],
+    });
+    if (!copyRes.ok) throw new Error('copy fail');
+    expect(copyRes.value.copiedProperties).toBe(1);
+
+    const projProps = await propRepo.listProperties(companyId, projectId);
+    const projMods = await modRepo.listModules(companyId, projectId);
+    const copiedModuleId2 = projMods[0]?.id;
+    if (copiedModuleId2 === undefined) throw new Error('no copied module');
+
+    expect(projProps).toHaveLength(1);
+    expect(await modRepo.getModulePropertyIds(copiedModuleId2)).toEqual([projProps[0]?.id]);
   });
 
   it('denies cross-tenant catalogue reads for lists and by-id paths (REQ-SEC-016)', async () => {
@@ -774,6 +1022,100 @@ describe('TrackingService (M1.1 Application Service)', () => {
         ok: true,
         value: { ok: true },
       });
+    });
+
+    it('nests a free page under another and rejects a parent outside its scope (REQ-AUTH-003)', async () => {
+      // REQ-AUTH-003: "Free pages have their own hierarchy, independent of the
+      // Page/Screen hierarchy." Independence is structural — parent_id references
+      // free_pages.id — so what needs proving here is that the parent round-trips
+      // and that scope is enforced above the FK.
+      const root = await trackingService.createFreePage(editorId, companyId, projectId, {
+        title: 'Integration Guide',
+        slug: 'integration-guide',
+        content: 'root',
+      });
+      if (!root.ok) throw new Error('root create failed');
+
+      const child = await trackingService.createFreePage(editorId, companyId, projectId, {
+        title: 'SDK Setup',
+        slug: 'sdk-setup',
+        content: 'child',
+        parentId: root.value.freePageId,
+      });
+      if (!child.ok) throw new Error('child create failed');
+
+      const loaded = await trackingService.getFreePage(editorId, child.value.freePageId);
+      if (!loaded.ok) throw new Error('read failed');
+      expect(loaded.value.parentId).toBe(root.value.freePageId);
+
+      // A root page keeps a null parent — absent must not become a dangling id.
+      const loadedRoot = await trackingService.getFreePage(editorId, root.value.freePageId);
+      if (!loadedRoot.ok) throw new Error('root read failed');
+      expect(loadedRoot.value.parentId).toBeNull();
+
+      // The company catalogue is a different scope from this project: the FK would
+      // happily accept it, the service must not (no cross-project references).
+      const cataloguePage = await trackingService.createFreePage(adminId, companyId, null, {
+        title: 'Catalogue Note',
+        slug: 'catalogue-note',
+        content: 'catalogue',
+      });
+      if (!cataloguePage.ok) throw new Error('catalogue create failed');
+
+      const crossScope = await trackingService.createFreePage(editorId, companyId, projectId, {
+        title: 'Bad Child',
+        slug: 'bad-child',
+        content: 'x',
+        parentId: cataloguePage.value.freePageId,
+      });
+      expect(crossScope).toEqual({ ok: false, error: { kind: 'not_found' } });
+    });
+
+    it('reparents a free page, rejecting a self-parent, a cycle and a cross-scope parent (REQ-AUTH-003)', async () => {
+      const a = await trackingService.createFreePage(editorId, companyId, projectId, {
+        title: 'Guide A',
+        slug: 'guide-a',
+        content: 'a',
+      });
+      const b = await trackingService.createFreePage(editorId, companyId, projectId, {
+        title: 'Guide B',
+        slug: 'guide-b',
+        content: 'b',
+      });
+      if (!a.ok || !b.ok) throw new Error('create failed');
+
+      // Reparenting must actually persist.
+      const moved = await trackingService.updateFreePage(editorId, b.value.freePageId, {
+        parentId: a.value.freePageId,
+      });
+      expect(moved.ok).toBe(true);
+      const afterMove = await trackingService.getFreePage(editorId, b.value.freePageId);
+      if (!afterMove.ok) throw new Error('read failed');
+      expect(afterMove.value.parentId).toBe(a.value.freePageId);
+
+      // A page cannot be its own parent.
+      expect(
+        await trackingService.updateFreePage(editorId, a.value.freePageId, {
+          parentId: a.value.freePageId,
+        }),
+      ).toEqual({ ok: false, error: { kind: 'validation', issues: expect.anything() } });
+
+      // Nor may it adopt its own descendant: b is already a child of a, so
+      // making a a child of b would orphan the pair into a cycle.
+      expect(
+        await trackingService.updateFreePage(editorId, a.value.freePageId, {
+          parentId: b.value.freePageId,
+        }),
+      ).toEqual({ ok: false, error: { kind: 'hierarchy_cycle' } });
+
+      // Explicit null detaches back to a root page.
+      const detached = await trackingService.updateFreePage(editorId, b.value.freePageId, {
+        parentId: null,
+      });
+      expect(detached.ok).toBe(true);
+      const afterDetach = await trackingService.getFreePage(editorId, b.value.freePageId);
+      if (!afterDetach.ok) throw new Error('read failed');
+      expect(afterDetach.value.parentId).toBeNull();
     });
 
     it('deletes a free page unconditionally', async () => {
