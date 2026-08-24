@@ -152,6 +152,21 @@ export const INSTANCE_VARIABLES: readonly InstanceVariableDef[] = [
   },
   { key: 'AUDIT_RETENTION_MONTHS', required: false, default: '24', purpose: 'Audit log retention' },
   { key: 'AUTH_SESSION_TTL', required: false, default: '8h', purpose: 'Session expiry' },
+  // Read directly by src/api/server.ts rather than through this config object,
+  // but they are still instance configuration and belong in the documented set.
+  { key: 'PORT', required: false, default: '3001', purpose: 'Port the API server listens on' },
+  {
+    key: 'HOST',
+    required: false,
+    default: '127.0.0.1',
+    purpose: 'Interface the API server binds to; set to 0.0.0.0 in containers',
+  },
+  {
+    key: 'INSTANCE_ADMIN_STEPUP_TTL_MINUTES',
+    required: false,
+    default: '15',
+    purpose: 'Instance-admin step-up window lifetime (ADR-0027)',
+  },
   { key: 'LOG_LEVEL', required: false, default: 'info', purpose: 'Structured log verbosity' },
 ];
 
@@ -225,6 +240,12 @@ const instanceEnvSchema = z.object({
     .trim()
     .regex(/^\d+[smhd]$/, 'AUTH_SESSION_TTL must look like 8h, 30m, 60s, 1d')
     .default('8h'),
+  /**
+   * How long an instance-admin step-up window stays open (ADR-0027). Short by
+   * design: it is an audited window for administering one company, not a mode
+   * the administrator can forget they are in.
+   */
+  INSTANCE_ADMIN_STEPUP_TTL_MINUTES: z.coerce.number().int().positive().default(15),
 
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 });

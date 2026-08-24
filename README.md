@@ -187,6 +187,7 @@ Instance-level configuration only — infrastructure and operator secrets. Per-c
 | `SENTRY_DSN`                                                                                                      | No                                     | —                       | Error tracking (R1); the application runs normally with none configured                         |
 | `AUDIT_RETENTION_MONTHS`                                                                                          | No                                     | `24`                    | Audit log retention                                                                             |
 | `AUTH_SESSION_TTL`                                                                                                | No                                     | `8h`                    | Session expiry                                                                                  |
+| `INSTANCE_ADMIN_STEPUP_TTL_MINUTES`                                                                               | No                                     | `15`                    | Lifetime of an instance-admin step-up window (ADR-0027)                                         |
 | `LOG_LEVEL`                                                                                                       | No                                     | `info`                  | Structured log verbosity                                                                        |
 
 ## Development Commands

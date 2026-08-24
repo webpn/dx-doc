@@ -23,14 +23,25 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      // `channel` uses a browser already installed on the machine instead of
+      // Playwright's own download. Set PLAYWRIGHT_CHANNEL=chrome (or msedge) on
+      // networks where cdn.playwright.dev is unreachable; CI leaves it unset and
+      // uses the pinned bundled build.
+      use: {
+        ...devices['Desktop Chrome'],
+        ...(process.env.PLAYWRIGHT_CHANNEL === undefined
+          ? {}
+          : { channel: process.env.PLAYWRIGHT_CHANNEL }),
+      },
     },
   ],
   webServer: {
     command: 'npm run test:e2e:server',
     url: BASE_URL,
     reuseExistingServer: false,
-    timeout: 60_000,
+    // Generous: this boots tsx + migrations + the real server, and on a
+    // OneDrive-backed working copy module resolution alone can take a minute.
+    timeout: 180_000,
     env: {
       APP_URL: BASE_URL,
       APP_SECRET: 'e2e-test-secret-do-not-use-in-production',
