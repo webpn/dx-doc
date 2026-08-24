@@ -2,6 +2,7 @@ import { Alert, Card, Skeleton } from '@project/design-system';
 import { useEffect, type ReactElement } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { useTranslate } from '../i18n';
 import { useProject } from '../queries';
 import { useProjectStore } from '../stores/project-store';
 
@@ -11,6 +12,7 @@ import { useProjectStore } from '../stores/project-store';
  * route, param sync and loading/error handling stay.
  */
 export function ProjectPage(): ReactElement {
+  const t = useTranslate();
   const { projectId } = useParams<{ projectId: string }>();
   const setCurrentProjectId = useProjectStore((state) => state.setCurrentProjectId);
   const project = useProject(projectId);
@@ -27,7 +29,7 @@ export function ProjectPage(): ReactElement {
   }
 
   if (project.isError) {
-    return <Alert variant="error">Unable to load this project.</Alert>;
+    return <Alert variant="error">{t('project.detail.loadError')}</Alert>;
   }
 
   if (project.data === undefined) {

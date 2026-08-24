@@ -11,23 +11,27 @@ import {
 import { useState, type SyntheticEvent, type ReactElement } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { ApiClientError, ApiNetworkError } from '../../api';
+import { ApiClientError } from '../../api';
+import { apiErrorMessageKey, useTranslate } from '../../i18n';
 import { useConfirmPasswordReset } from '../../queries';
 
 const MIN_PASSWORD_LENGTH = 8;
 
 export function PasswordResetConfirmPage(): ReactElement {
+  const t = useTranslate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') ?? '';
   const [newPassword, setNewPassword] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const confirmReset = useConfirmPasswordReset();
 
+  const minLengthHint = t('auth.passwordChange.minLengthHint', { min: MIN_PASSWORD_LENGTH });
+
   function submit(event: SyntheticEvent<HTMLFormElement>): void {
     event.preventDefault();
     confirmReset.reset();
     if (newPassword.length < MIN_PASSWORD_LENGTH) {
-      setValidationError(`Use at least ${String(MIN_PASSWORD_LENGTH)} characters.`);
+      setValidationError(minLengthHint);
       return;
     }
     setValidationError(null);
@@ -36,27 +40,29 @@ export function PasswordResetConfirmPage(): ReactElement {
 
   const error = confirmReset.error;
   const errorMessage =
-    error instanceof ApiClientError
-      ? error.code === 'INVALID_OR_EXPIRED_TOKEN'
-        ? 'This reset link is invalid or has expired. Request a new one.'
-        : error.message
-      : error instanceof ApiNetworkError
-        ? 'Unable to reach the server. Check your connection and try again.'
-        : null;
+    error === null
+      ? null
+      : error instanceof ApiClientError
+        ? error.code === 'INVALID_OR_EXPIRED_TOKEN'
+          ? t('auth.passwordReset.invalidToken')
+          : error.status >= 500 || error.status === 401
+            ? t(apiErrorMessageKey(error))
+            : error.message
+        : t(apiErrorMessageKey(error));
 
   if (token === '') {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[var(--color-surface-muted)] p-8">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Reset link missing</CardTitle>
-            <CardDescription>This page needs a reset token in the URL.</CardDescription>
+            <CardTitle>{t('auth.passwordReset.missingTokenTitle')}</CardTitle>
+            <CardDescription>{t('auth.passwordReset.missingTokenDescription')}</CardDescription>
           </CardHeader>
           <Link
             className="text-sm text-[var(--color-primary)] hover:underline"
             to="/password-reset"
           >
-            Request a new reset link
+            {t('auth.passwordReset.requestNewLink')}
           </Link>
         </Card>
       </main>
@@ -67,25 +73,25 @@ export function PasswordResetConfirmPage(): ReactElement {
     <main className="flex min-h-screen items-center justify-center bg-[var(--color-surface-muted)] p-8">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Choose a new password</CardTitle>
-          <CardDescription>Set a new password for your account.</CardDescription>
+          <CardTitle>{t('auth.passwordReset.confirmTitle')}</CardTitle>
+          <CardDescription>{t('auth.passwordReset.confirmDescription')}</CardDescription>
         </CardHeader>
         {validationError !== null || errorMessage !== null ? (
           <Alert variant="error">{validationError ?? errorMessage}</Alert>
         ) : null}
         {confirmReset.isSuccess ? (
           <>
-            <Alert variant="success">Your password has been reset.</Alert>
+            <Alert variant="success">{t('auth.passwordReset.confirmDone')}</Alert>
             <Link className="text-sm text-[var(--color-primary)] hover:underline" to="/login">
-              Continue to sign in
+              {t('auth.passwordReset.continueToSignIn')}
             </Link>
           </>
         ) : (
           <form className="mt-6 grid gap-5" onSubmit={submit}>
             <Field
-              hint={`Use at least ${String(MIN_PASSWORD_LENGTH)} characters.`}
+              hint={minLengthHint}
               htmlFor="newPassword"
-              label="New password"
+              label={t('auth.passwordChange.newLabel')}
             >
               <Input
                 autoComplete="new-password"
@@ -101,7 +107,9 @@ export function PasswordResetConfirmPage(): ReactElement {
             </Field>
             <div className="flex justify-end">
               <Button disabled={confirmReset.isPending} type="submit">
-                {confirmReset.isPending ? 'Saving…' : 'Save password'}
+                {confirmReset.isPending
+                  ? t('auth.passwordReset.confirmSubmitting')
+                  : t('auth.passwordReset.confirmSubmit')}
               </Button>
             </div>
           </form>

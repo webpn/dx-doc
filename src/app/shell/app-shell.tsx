@@ -13,10 +13,12 @@ import { ChevronDown, LogOut } from 'lucide-react';
 import type { ReactElement, ReactNode } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 
+import { useTranslate } from '../i18n';
 import { useLogout } from '../queries';
 import { useSessionStore } from '../stores/session-store';
 
 function UserMenu(): ReactElement {
+  const t = useTranslate();
   const session = useSessionStore((state) => state.session);
   const logout = useLogout();
   const navigate = useNavigate();
@@ -44,7 +46,7 @@ function UserMenu(): ReactElement {
           }}
         >
           <LogOut className="size-4" />
-          Sign out
+          {t('app.signOut')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -52,11 +54,12 @@ function UserMenu(): ReactElement {
 }
 
 export function AppShell(props: { children?: ReactNode }): ReactElement {
+  const t = useTranslate();
   return (
     <AppShellLayout>
       <AppHeader>
         <span className="text-lg font-extrabold tracking-tight text-[var(--color-ink)]">
-          dx-doc
+          {t('app.name')}
         </span>
         <UserMenu />
       </AppHeader>

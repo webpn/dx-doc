@@ -10,6 +10,13 @@ export interface SessionState {
   userId: string;
   companyId: string | null;
   passwordChangeRequired: boolean;
+  /**
+   * Holds the instance-administration capability (REQ-SEC-014). The shell uses
+   * it to decide which surface to render — company creation and step-up
+   * (ADR-0027) belong to this actor only. Never treated as authorisation: the
+   * server re-checks every request.
+   */
+  instanceAdmin: boolean;
 }
 
 interface SessionStore {

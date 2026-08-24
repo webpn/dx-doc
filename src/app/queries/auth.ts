@@ -13,6 +13,7 @@ export function useLogin() {
         userId: result.user.id,
         companyId: result.user.companyId,
         passwordChangeRequired: result.passwordChangeRequired,
+        instanceAdmin: result.user.instanceAdmin,
       });
     },
   });

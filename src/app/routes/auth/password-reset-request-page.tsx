@@ -12,9 +12,11 @@ import { useState, type SyntheticEvent, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 
 import { ApiNetworkError } from '../../api';
+import { useTranslate } from '../../i18n';
 import { useRequestPasswordReset } from '../../queries';
 
 export function PasswordResetRequestPage(): ReactElement {
+  const t = useTranslate();
   const [email, setEmail] = useState('');
   const [companyId, setCompanyId] = useState('');
   const requestReset = useRequestPasswordReset();
@@ -30,22 +32,15 @@ export function PasswordResetRequestPage(): ReactElement {
     <main className="flex min-h-screen items-center justify-center bg-[var(--color-surface-muted)] p-8">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Reset your password</CardTitle>
-          <CardDescription>
-            We&apos;ll send a reset link to your email if an account matches — the response is the
-            same either way.
-          </CardDescription>
+          <CardTitle>{t('auth.passwordReset.requestTitle')}</CardTitle>
+          <CardDescription>{t('auth.passwordReset.requestDescription')}</CardDescription>
         </CardHeader>
-        {networkError ? (
-          <Alert variant="error">
-            Unable to reach the server. Check your connection and try again.
-          </Alert>
-        ) : null}
+        {networkError ? <Alert variant="error">{t('error.unreachable')}</Alert> : null}
         {requestReset.isSuccess ? (
-          <Alert variant="success">If that account exists, a reset link is on its way.</Alert>
+          <Alert variant="success">{t('auth.passwordReset.requestSent')}</Alert>
         ) : (
           <form className="mt-6 grid gap-5" onSubmit={submit}>
-            <Field htmlFor="email" label="Email address">
+            <Field htmlFor="email" label={t('auth.login.emailLabel')}>
               <Input
                 autoComplete="username"
                 id="email"
@@ -59,8 +54,8 @@ export function PasswordResetRequestPage(): ReactElement {
             </Field>
             <Field
               htmlFor="companyId"
-              hint="Leave blank for an instance administrator."
-              label="Company ID"
+              hint={t('auth.login.companyIdHint')}
+              label={t('auth.login.companyIdLabel')}
             >
               <Input
                 autoComplete="off"
@@ -73,10 +68,12 @@ export function PasswordResetRequestPage(): ReactElement {
             </Field>
             <div className="flex items-center justify-between">
               <Link className="text-sm text-[var(--color-primary)] hover:underline" to="/login">
-                Back to sign in
+                {t('auth.passwordReset.backToSignIn')}
               </Link>
               <Button disabled={requestReset.isPending} type="submit">
-                {requestReset.isPending ? 'Sending…' : 'Send reset link'}
+                {requestReset.isPending
+                  ? t('auth.passwordReset.requestSubmitting')
+                  : t('auth.passwordReset.requestSubmit')}
               </Button>
             </div>
           </form>

@@ -3,6 +3,11 @@ import { apiRequest } from './client';
 export interface AuthenticatedUser {
   id: string;
   companyId: string | null;
+  /**
+   * Holds the instance-administration capability (REQ-SEC-014). Decides which
+   * surface the shell renders; the server re-checks every request regardless.
+   */
+  instanceAdmin: boolean;
 }
 
 export interface LoginResponse {

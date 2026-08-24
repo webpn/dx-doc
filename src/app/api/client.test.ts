@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { authApi } from './auth';
-import { ApiClientError, ApiNetworkError } from './client';
+import { ApiClientError, ApiNetworkError, apiRequest } from './client';
 import { companiesApi } from './companies';
 
 function jsonResponse(status: number, body: unknown): Response {
@@ -84,5 +84,30 @@ describe('api client', () => {
 
     const error = await authApi.logout().catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(ApiNetworkError);
+  });
+
+  it('does not force a JSON content-type on a FormData body', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(201, { id: 'a1', url: '/x.png', created: true }));
+
+    const form = new FormData();
+    form.append('file', new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' }), 'x.png');
+
+    await apiRequest('/api/projects/p1/assets?companyId=c1', { method: 'POST', body: form });
+
+    // The browser must set `multipart/form-data; boundary=…` itself. Forcing
+    // application/json here makes the server unable to find the boundary, so
+    // every upload fails with a parse error.
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const headers = new Headers(init.headers);
+    expect(headers.get('content-type')).toBeNull();
+  });
+
+  it('still sets a JSON content-type on a string body', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { ok: true }));
+
+    await apiRequest('/api/anything', { method: 'POST', body: JSON.stringify({ a: 1 }) });
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(new Headers(init.headers).get('content-type')).toBe('application/json');
   });
 });

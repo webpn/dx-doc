@@ -22,6 +22,20 @@ export default defineConfig({
   test: {
     pool: 'forks',
     fileParallelism: false,
+    // Generous per-test budgets: this repository is typically checked out inside
+    // a OneDrive-synced folder, where cold module resolution and SQLite file I/O
+    // are far slower than on local disk.
+    //
+    // NOTE: these do NOT cover worker STARTUP. Vitest hard-codes that budget
+    // (START_TIMEOUT 60s / WORKER_START_TIMEOUT 90s in vitest/dist) with no
+    // config surface. When a fork exceeds it the run aborts that file with
+    // "[vitest-pool-runner]: Timeout waiting for worker to respond" and reports
+    // the remaining files as a pass — a green summary that silently omits a
+    // suite. If a run's file count is lower than expected, re-run the missing
+    // file on its own rather than trusting the total.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
+    teardownTimeout: 30_000,
     // Split by environment: domain/application/infrastructure/api tests run
     // under Node (they touch the filesystem and real SQLite), while
     // app/design-system component tests need a DOM (React Testing Library).
@@ -31,7 +45,13 @@ export default defineConfig({
         test: {
           name: 'node',
           environment: 'node',
-          exclude: ['**/node_modules/**', 'src/app/**', 'src/design-system/**', 'e2e/**'],
+          exclude: [
+            '**/node_modules/**',
+            'src/app/**',
+            'src/design-system/**',
+            'e2e/**',
+            'spikes/**',
+          ],
         },
       },
       {
@@ -39,7 +59,14 @@ export default defineConfig({
         test: {
           name: 'ui',
           environment: 'jsdom',
-          include: ['src/app/**/*.test.{ts,tsx}', 'src/design-system/**/*.test.{ts,tsx}'],
+          include: [
+            'src/app/**/*.test.{ts,tsx}',
+            'src/design-system/**/*.test.{ts,tsx}',
+            // ADR-0023 acceptance spike: not application code, but needs the
+            // same jsdom + React Testing Library environment as the ui
+            // project to drive the real MDXEditor component.
+            'spikes/**/*.test.{ts,tsx}',
+          ],
           setupFiles: ['./tests/support/setup-ui-tests.ts'],
         },
       },

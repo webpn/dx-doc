@@ -11,6 +11,13 @@ export interface CompanyRecord {
 export interface CompanyCreateInput {
   name: string;
   slug: string;
+  /**
+   * Optional first-Admin provisioning (REQ-SEC-014). A new company otherwise
+   * has no member who could pass `canInCompany`, so supplying this seeds its
+   * first Admin in the same operation. Omit `password` for a password-less
+   * account that must set one at first login.
+   */
+  firstAdmin?: { email: string; password?: string };
 }
 
 export interface CompanyUpdateInput extends Partial<CompanyCreateInput> {
