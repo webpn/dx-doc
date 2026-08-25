@@ -11,7 +11,11 @@ import { DesignReviewPage } from './routes/design-review-page';
 import { AppShell } from './shell/app-shell';
 import { CatalogueCopyPage } from './shell/catalogue-copy-page';
 import { CompanyCreatePage } from './shell/company-create-page';
+import { CompanyListPage } from './shell/company-list-page';
 import { DestinationEditorPage } from './shell/destination-editor-page';
+import { FreePageCreatePage } from './shell/free-page-create-page';
+import { FreePageEditorPage } from './shell/free-page-editor-page';
+import { FreePageListPage } from './shell/free-page-list-page';
 import { ModuleEditorPage } from './shell/module-editor-page';
 import { PageEditorPage } from './shell/page-editor-page';
 import { ProjectAccessPage } from './shell/project-access-page';
@@ -70,6 +74,7 @@ export function App(): ReactElement {
         <Route element={<ProjectListPage />} path="/" />
         {/* An instance administrator has no company of their own (REQ-SEC-014),
             so the selected company travels in the URL rather than the session. */}
+        <Route element={<CompanyListPage />} path="/companies" />
         <Route element={<CompanyCreatePage />} path="/companies/new" />
         <Route element={<ProjectListPage />} path="/companies/:companyId/projects" />
         <Route element={<ProjectCreatePage />} path="/companies/:companyId/projects/new" />
@@ -84,6 +89,12 @@ export function App(): ReactElement {
           path="/projects/:projectId/destinations/:destinationId"
         />
         <Route element={<ModuleEditorPage />} path="/projects/:projectId/modules/:moduleId" />
+        <Route element={<FreePageListPage />} path="/projects/:projectId/free-pages" />
+        <Route element={<FreePageCreatePage />} path="/projects/:projectId/free-pages/new" />
+        <Route
+          element={<FreePageEditorPage />}
+          path="/projects/:projectId/free-pages/:freePageId"
+        />
         <Route element={<PageEditorPage />} path="/projects/:projectId/pages/:pageId" />
         <Route
           element={<PropertyEditorPage />}

@@ -5,12 +5,16 @@
  * Do not build ad hoc keys inline; add a helper here instead.
  */
 export const queryKeys = {
+  companies: () => ['companies'] as const,
   company: (companyId: string) => ['companies', companyId] as const,
   projects: (companyId: string) => ['companies', companyId, 'projects'] as const,
   project: (projectId: string) => ['projects', projectId] as const,
   grants: (projectId: string) => ['projects', projectId, 'grants'] as const,
   pages: (projectId: string) => ['projects', projectId, 'pages'] as const,
   page: (pageId: string) => ['pages', pageId] as const,
+  freePages: (companyId: string, projectId: string | null) =>
+    ['companies', companyId, 'free-pages', projectId] as const,
+  freePage: (freePageId: string) => ['free-pages', freePageId] as const,
   trackings: (projectId: string) => ['projects', projectId, 'trackings'] as const,
   tracking: (trackingId: string) => ['trackings', trackingId] as const,
   navigationEvents: (projectId: string) => ['projects', projectId, 'navigation-events'] as const,

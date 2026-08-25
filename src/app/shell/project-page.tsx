@@ -1,6 +1,6 @@
 import { Alert, Card, Skeleton } from '@project/design-system';
 import { useEffect, type ReactElement } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import { useTranslate } from '../i18n';
 import { useProject } from '../queries';
@@ -42,6 +42,12 @@ export function ProjectPage(): ReactElement {
       <p className="mt-2 text-[var(--color-muted)]">
         {project.data.platform} · {project.data.slug}
       </p>
+      <Link
+        className="mt-4 inline-flex h-10 w-fit items-center rounded-md border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-ink)]"
+        to={`/projects/${project.data.id}/free-pages`}
+      >
+        {t('freePage.list.title')}
+      </Link>
     </Card>
   );
 }

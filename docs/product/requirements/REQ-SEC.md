@@ -270,13 +270,17 @@ Three rules make the capability safe:
 
 ### REQ-SEC-015 — Instance-administration portal
 
-**Should** · R2 · [M2.8](../milestones.md#m28--platform-hardening) · **Not Started** · Issue: — · PR: —
+**Should** · R2 · [M2.8](../milestones.md#m28--platform-hardening) · **In progress** · Issue: — · PR: —
 
 An instance-wide console, reachable only by holders of the REQ-SEC-014 capability: list companies, create and configure them, appoint each company's first Admin, grant and revoke the instance-administration capability, and see instance-level health and configuration.
 
 Deliberately **not** a way into documentation content: the portal shows companies, their configuration and their administrators, never their trackings, properties or pages. A holder who wants to read a project asks for a grant in that company like anyone else, and it is audited like anyone else's.
 
-**R0 provides the capability and its authentication rules; this is the surface built on top.** Until it exists, company creation happens through the API (REQ-API-001) authenticated as an `instance_admin` — sufficient for one deployment with a handful of companies, and why the portal is a `Should` in R2 rather than a `Must` in R0.
+The company list is built: `GET /api/companies` (`CompanyService.list`) returns every company with its project count, gated by the same instance-administration check as company creation, and the client renders it at `/companies` with a "Companies" link in the shell header for instance administrators. `DELETE /api/companies/:id` (`CompanyService.deleteCompany` → `CompanyRepository.deleteCompanyCascade`) performs the hard delete this list's Delete action needs, removing every row scoped to the company — projects and their tracking/flow composition, the company-scoped catalogue, accounts, and audit history (via the migration-018 marker) — before the company row itself.
+
+Still missing: appointing/changing a company's Admin from the portal (today only at creation, via `CompanyCreatePage`), granting or revoking the REQ-SEC-014 flag from the UI (API-only today), and instance-level health/configuration display.
+
+**R0 provides the capability and its authentication rules; this is the surface built on top.** Company creation and deletion already work through the API (REQ-API-001) authenticated as an `instance_admin` for anything the portal does not yet cover.
 
 > The portal is what makes the instance administrator a real user of the Platform rather than only a person with shell access. It is also the natural place for anything else that is genuinely instance-wide and content-free — which, deliberately, is a very short list.
 

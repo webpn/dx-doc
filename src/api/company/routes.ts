@@ -41,6 +41,23 @@ export function registerCompanyRoutes(app: FastifyInstance, options: CompanyRout
     return reply.code(201).send(result.value);
   });
 
+  app.get('/api/companies', async (request, reply) => {
+    const actor = await authenticateRequest(
+      request,
+      options.sessions,
+      options.serviceTokens,
+      options.cookieName,
+    );
+    if (actor === null) {
+      return unauthenticated(reply);
+    }
+    const result = await options.companies.list(actor.userId);
+    if (!result.ok) {
+      return replyServiceError(reply, result.error);
+    }
+    return result.value;
+  });
+
   app.get('/api/companies/:id', async (request, reply) => {
     const actor = await authenticateRequest(
       request,
@@ -79,5 +96,23 @@ export function registerCompanyRoutes(app: FastifyInstance, options: CompanyRout
       return replyServiceError(reply, result.error);
     }
     return { ok: true };
+  });
+
+  app.delete('/api/companies/:id', async (request, reply) => {
+    const actor = await authenticateRequest(
+      request,
+      options.sessions,
+      options.serviceTokens,
+      options.cookieName,
+    );
+    if (actor === null) {
+      return unauthenticated(reply);
+    }
+    const { id } = request.params as { id: string };
+    const result = await options.companies.deleteCompany(actor.userId, id);
+    if (!result.ok) {
+      return replyServiceError(reply, result.error);
+    }
+    return reply.code(204).send();
   });
 }

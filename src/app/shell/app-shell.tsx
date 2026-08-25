@@ -11,7 +11,7 @@ import {
 } from '@project/design-system';
 import { ChevronDown, LogOut } from 'lucide-react';
 import type { ReactElement, ReactNode } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 
 import { useTranslate } from '../i18n';
 import { useLogout } from '../queries';
@@ -55,12 +55,21 @@ function UserMenu(): ReactElement {
 
 export function AppShell(props: { children?: ReactNode }): ReactElement {
   const t = useTranslate();
+  const session = useSessionStore((state) => state.session);
   return (
     <AppShellLayout>
       <AppHeader>
         <span className="text-lg font-extrabold tracking-tight text-[var(--color-ink)]">
           {t('app.name')}
         </span>
+        {session?.instanceAdmin === true ? (
+          <Link
+            className="text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+            to="/companies"
+          >
+            {t('company.list.title')}
+          </Link>
+        ) : null}
         <UserMenu />
       </AppHeader>
       <AppMain>{props.children ?? <Outlet />}</AppMain>

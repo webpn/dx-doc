@@ -3,6 +3,7 @@ export { authApi, type AuthenticatedUser, type LoginResponse } from './auth';
 export {
   companiesApi,
   type CompanyRecord,
+  type CompanySummary,
   type CompanyCreateInput,
   type CompanyUpdateInput,
 } from './companies';
@@ -19,6 +20,12 @@ export { instanceAdminApi, type InstanceAdminStepUp, type StepUpOpenInput } from
 export { usersApi } from './users';
 export { assetsApi, type AssetRecord, type AssetUploadResult } from './assets';
 export { pagesApi, type Page, type PageCreateInput, type PageUpdateInput } from './pages';
+export {
+  freePagesApi,
+  type FreePage,
+  type FreePageCreateInput,
+  type FreePageUpdateInput,
+} from './free-pages';
 export {
   trackingsApi,
   navigationEventsApi,

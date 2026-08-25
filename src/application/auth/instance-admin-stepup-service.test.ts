@@ -124,6 +124,12 @@ class FakeCompanies implements CompanyRepository {
     return Promise.resolve(this.companies.get(id) ?? null);
   }
 
+  listCompanies(): Promise<CompanyRecord[]> {
+    return Promise.resolve(
+      [...this.companies.values()].sort((a, b) => a.name.localeCompare(b.name)),
+    );
+  }
+
   updateCompany(company: CompanyRecord, expectedUpdatedAt?: string): Promise<boolean> {
     const existing = this.companies.get(company.id);
     if (expectedUpdatedAt !== undefined && existing?.updatedAt !== expectedUpdatedAt) {
@@ -131,6 +137,15 @@ class FakeCompanies implements CompanyRepository {
     }
     this.companies.set(company.id, company);
     return Promise.resolve(true);
+  }
+
+  deleteCompanyCascade(companyId: string): Promise<void> {
+    this.companies.delete(companyId);
+    return Promise.resolve();
+  }
+
+  countProjectsForCompany(_companyId: string): Promise<number> {
+    return Promise.resolve(0);
   }
 }
 

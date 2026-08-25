@@ -6,11 +6,18 @@ export {
   useRequestPasswordReset,
   useConfirmPasswordReset,
 } from './auth';
-export { useCompany, useCreateCompany } from './companies';
+export { useCompanies, useCompany, useCreateCompany, useDeleteCompany } from './companies';
 export { useProjects, useProject, useCreateProject, useUpdateProject } from './projects';
 export { useGrants, useSetGrant, useRemoveGrant } from './grants';
 export { useInviteUser } from './users';
 export { usePages, usePage, useCreatePage, useUpdatePage, useDeletePage } from './pages';
+export {
+  useFreePages,
+  useFreePage,
+  useCreateFreePage,
+  useUpdateFreePage,
+  useDeleteFreePage,
+} from './free-pages';
 export {
   useTrackings,
   useTracking,

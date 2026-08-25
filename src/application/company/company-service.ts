@@ -21,7 +21,8 @@ export type CompanyError =
   | { kind: 'invalid_input' }
   | { kind: 'not_found' }
   | { kind: 'validation'; issues: ValidationIssue[] }
-  | { kind: 'stale_write'; currentUpdatedAt: string };
+  | { kind: 'stale_write'; currentUpdatedAt: string }
+  | { kind: 'in_use'; reason: string };
 
 /**
  * Company lifecycle (REQ-FDN-002, REQ-SEC-014). Creating a company — including
@@ -109,6 +110,27 @@ export class CompanyService {
   }
 
   /**
+   * All companies, with each one's project count (REQ-SEC-015). Instance-
+   * administration surface only — a member of a company cannot list every
+   * tenant, only read their own (see `get`).
+   */
+  async list(
+    actorId: string,
+  ): Promise<Result<(CompanyRecord & { projectCount: number })[], CompanyError>> {
+    if (!(await this.permissions.canAdministerInstance(actorId))) {
+      return err({ kind: 'forbidden' });
+    }
+    const companies = await this.companies.listCompanies();
+    const withCounts = await Promise.all(
+      companies.map(async (company) => ({
+        ...company,
+        projectCount: await this.companies.countProjectsForCompany(company.id),
+      })),
+    );
+    return ok(withCounts);
+  }
+
+  /**
    * Read a company's own identity. The instance administrator reads any
    * company (REQ-SEC-014); anyone else may only read the company they
    * belong to — this is identity, not documentation content, so no project
@@ -170,6 +192,27 @@ export class CompanyService {
         currentUpdatedAt: current?.updatedAt ?? previousUpdatedAt,
       });
     }
+    return ok({ ok: true });
+  }
+
+  /**
+   * Permanently deletes a company and everything scoped to it (REQ-SEC-015,
+   * ADR-0027) — instance-administration only, since this is exactly the
+   * "recoverability requires this" power that flag exists for; a company's
+   * own Admin cannot delete their own tenant. No undo.
+   */
+  async deleteCompany(
+    actorId: string,
+    companyId: string,
+  ): Promise<Result<{ ok: true }, CompanyError>> {
+    if (!(await this.permissions.canAdministerInstance(actorId))) {
+      return err({ kind: 'forbidden' });
+    }
+    const company = await this.companies.getCompanyById(companyId);
+    if (company === null) {
+      return err({ kind: 'not_found' });
+    }
+    await this.companies.deleteCompanyCascade(companyId);
     return ok({ ok: true });
   }
 }

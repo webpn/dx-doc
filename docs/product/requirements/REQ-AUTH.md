@@ -67,31 +67,11 @@ Hierarchically organised unstructured pages covering what the previous documenta
 - The flag's enforcement is REQ-SEC-012 — index exclusion and artefact omission, tested per path.
 - Free pages have their own hierarchy, independent of the Page/Screen hierarchy.
 
-> **Hierarchy implemented on 2026-08-24 (migration 017).** `free_pages` had no
-> parent link at all, so this acceptance criterion was unimplementable: a free
-> page could only ever be flat. `017_free_page_hierarchy` adds a nullable
-> self-referencing `parent_id` (`char(36)`) plus `idx_free_pages_parent_id`,
-> modelled on `pages.parent_id` so no new traversal pattern enters the codebase.
-> Independence from the Page/Screen tree is structural — the FK targets
-> `free_pages.id` and can never point at `pages`.
->
-> `parentId` is carried through the entity, the Kysely table type, the SQLite
-> adapter (insert, update and row mapping) and `freePageCreateSchema`. On create
-> and on update the service — not the route, so the MCP server inherits it
-> (REQ-FDN-010, ADR-0007) — rejects a parent in a different company/project
-> scope (`not_found`), a page as its own parent (`validation`/`self_parent`) and
-> a move under the page's own descendant (`hierarchy_cycle`, HTTP 400). On
-> update `parentId` is tri-state: absent leaves the parent alone, explicit
-> `null` detaches to a root, an id moves the page.
->
-> `GET /api/companies/:companyId/free-pages` now exists; `listFreePages` had
-> permission checks but no route, so no client could reach it. As with the other
-> company-scoped lists, omitting `?projectId=` means the company catalogue and
-> requires `company.manage_catalogue` — a project-scoped editor gets 403, not an
-> empty list.
->
-> Still open: no free-page editor screen, so the hierarchy has no UI. The
-> publishable-flag enforcement above is REQ-SEC-012 and unchanged by this work.
+`free_pages.parent_id` (migration 017) is a nullable self-referencing FK, modelled on `pages.parent_id`; it can never point at `pages`, so the hierarchy is structurally independent. `parentId` is tri-state on update: absent leaves the parent alone, explicit `null` detaches to a root, an id moves the page. The service (not the route, so the MCP server inherits it — REQ-FDN-010, ADR-0007) rejects a cross-scope parent (`not_found`), self-parenting (`validation`/`self_parent`) and a move under the page's own descendant (`hierarchy_cycle`).
+
+A dedicated authoring screen exists at `/projects/:projectId/free-pages` (list, create, edit): title, slug, parent, publishable flag and Markdown content, plus delete. `GET/POST /api/companies/:companyId/free-pages` and `GET/PATCH/DELETE /api/free-pages/:id` back it; omitting `?projectId=` scopes to the company catalogue and requires `company.manage_catalogue`, where a project-scoped editor gets 403 rather than an empty list.
+
+Still open: the publishable-flag enforcement itself (index exclusion, artefact omission) is tracked and tested under REQ-SEC-012, not here.
 
 ### REQ-AUTH-004 — Mermaid rendering and live preview
 

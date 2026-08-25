@@ -8,6 +8,10 @@ export interface CompanyRecord {
   updatedAt: string;
 }
 
+export interface CompanySummary extends CompanyRecord {
+  projectCount: number;
+}
+
 export interface CompanyCreateInput {
   name: string;
   slug: string;
@@ -25,6 +29,9 @@ export interface CompanyUpdateInput extends Partial<CompanyCreateInput> {
 }
 
 export const companiesApi = {
+  list(): Promise<CompanySummary[]> {
+    return apiRequest<CompanySummary[]>('/api/companies');
+  },
   create(input: CompanyCreateInput): Promise<{ companyId: string }> {
     return apiRequest<{ companyId: string }>('/api/companies', {
       method: 'POST',
@@ -38,6 +45,11 @@ export const companiesApi = {
     return apiRequest<{ ok: true }>(`/api/companies/${encodeURIComponent(id)}`, {
       method: 'PATCH',
       body: JSON.stringify(input),
+    });
+  },
+  remove(id: string): Promise<{ ok: true } | null> {
+    return apiRequest<{ ok: true } | null>(`/api/companies/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
     });
   },
 };
