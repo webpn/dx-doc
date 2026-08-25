@@ -25,7 +25,9 @@
     "docs:check-links": "node scripts/docs-links.mjs check",
     "docs:sync-links": "node scripts/docs-links.mjs sync",
     "docs:check-index": "node scripts/docs-index.mjs check",
-    "docs:generate-index": "node scripts/docs-index.mjs generate"
+    "docs:generate-index": "node scripts/docs-index.mjs generate",
+    "lockfile:check": "node scripts/lockfile-registry.mjs check",
+    "lockfile:normalize": "node scripts/lockfile-registry.mjs normalize"
   },
   "engines": {
     "node": ">=22.0.0"

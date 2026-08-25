@@ -69,6 +69,14 @@ jobs:
           node-version: 22
           cache: 'npm'
 
+      # Before `npm ci`, not after: a lockfile pointing at an unreachable
+      # mirror makes npm hang on the socket and exit with "Exit handler never
+      # called!", which reads as an npm bug and sends you looking at Node
+      # versions. Needs no dependencies, so it can run first and say what is
+      # actually wrong.
+      - name: Lockfile registry
+        run: npm run lockfile:check
+
       - run: npm ci
 
       - name: Type check
@@ -150,6 +158,13 @@ jobs:
         with:
           node-version: 22
           cache: 'npm'
+
+      # Duplicated from `quality` rather than inherited: this job has no `needs`
+      # so it starts in parallel, and without the check here its `npm ci` fails
+      # with the same misleading error. (`image` needs `quality`, so it is
+      # already covered.)
+      - name: Lockfile registry
+        run: npm run lockfile:check
 
       - run: npm ci
 
