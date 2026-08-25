@@ -89,14 +89,16 @@ for (const url of offending) {
 
 const roots = [...byOrigin.values()].map((urls) => registryRoot(urls));
 
+// Deliberately reports counts and never the offending hostnames. This runs in
+// CI, whose logs are world-readable on a public repository, and a mirror's
+// hostname is internal infrastructure — the very thing the check exists to keep
+// out of the repo. It is also not actionable: the fix is the same command
+// whatever the mirror is called.
 if (MODE === 'check') {
   console.error(
-    `package-lock.json: ${offending.length} resolved URL(s) point at a non-public registry.`,
+    `package-lock.json: ${offending.length} resolved URL(s) across ` +
+      `${byOrigin.size} host(s) point at a non-public registry.`,
   );
-  for (const [origin, urls] of byOrigin) {
-    console.error(`  ${origin} — ${urls.length} entr${urls.length === 1 ? 'y' : 'ies'}`);
-  }
-  console.error('');
   console.error('`npm ci` cannot reach these outside the network that produced them.');
   console.error('Fix with: npm run lockfile:normalize');
   process.exit(1);
@@ -125,15 +127,16 @@ const updated = original.replace(RESOLVED_PATTERN, (whole, open, url, close) => 
 
 if (unmapped.length > 0) {
   console.error(`Could not map ${unmapped.length} URL(s) to the public registry:`);
-  for (const url of unmapped.slice(0, 10)) console.error(`  ${url}`);
+  // Path only, for the same reason the check reports no hostnames: it names the
+  // package without naming the mirror.
+  for (const url of unmapped.slice(0, 10)) console.error(`  ${new URL(url).pathname}`);
   console.error('Nothing was written. Resolve these by hand or regenerate the lockfile.');
   process.exit(1);
 }
 
 fs.writeFileSync(lockfilePath, updated);
-console.log(`package-lock.json: rewrote ${rewritten} resolved URL(s) to ${PUBLIC_REGISTRY}`);
-for (const [origin, urls] of byOrigin) {
-  console.log(`  was ${origin} — ${urls.length}`);
-}
-console.log('');
+console.log(
+  `package-lock.json: rewrote ${rewritten} resolved URL(s) from ` +
+    `${byOrigin.size} host(s) to ${PUBLIC_REGISTRY}`,
+);
 console.log('Versions and integrity hashes are unchanged: only the host moved.');
