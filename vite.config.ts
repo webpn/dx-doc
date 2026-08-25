@@ -22,6 +22,16 @@ export default defineConfig({
   test: {
     pool: 'forks',
     fileParallelism: false,
+    // Coverage shows which code no test exercises. It is a report to read, not
+    // a number to hit: ADR-0017 states that "coverage targets are not a goal.
+    // Meaningful coverage is." No thresholds are configured here, and adding
+    // one would turn the report into something to satisfy — which is how a
+    // suite ends up green over code nobody verified.
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', 'html'],
+      include: ['src/**'],
+    },
     // Generous per-test budgets: this repository is typically checked out inside
     // a OneDrive-synced folder, where cold module resolution and SQLite file I/O
     // are far slower than on local disk.
