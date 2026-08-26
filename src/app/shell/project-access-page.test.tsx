@@ -24,7 +24,7 @@ const removeGrant = vi.fn();
 // makes every `grants()` call an unsafe return.
 const grants = vi.fn<
   () => {
-    data: { grants: { projectId: string; userId: string; roleName: RoleName }[] } | undefined;
+    data: { grants: { userId: string; email: string; roleName: RoleName | null }[] } | undefined;
     isLoading: boolean;
     isError: boolean;
   }
@@ -57,8 +57,8 @@ describe('ProjectAccessPage', () => {
     grants.mockReturnValue({
       data: {
         grants: [
-          { projectId: 'prj_1', userId: 'usr_1', roleName: 'editor' },
-          { projectId: 'prj_1', userId: 'usr_2', roleName: 'viewer' },
+          { userId: 'usr_1', email: 'usr1@acme.test', roleName: 'editor' },
+          { userId: 'usr_2', email: 'usr2@acme.test', roleName: 'viewer' },
         ],
       },
       isLoading: false,
@@ -67,9 +67,34 @@ describe('ProjectAccessPage', () => {
 
     renderWithProviders(<ProjectAccessPage />, { route, routePath });
 
-    expect(await screen.findByText('usr_1')).toBeInTheDocument();
-    expect(screen.getByText('usr_2')).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Role for usr_1' })).toHaveValue('editor');
+    expect(await screen.findByText('usr1@acme.test')).toBeInTheDocument();
+    expect(screen.getByText('usr2@acme.test')).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Role for usr1@acme.test' })).toHaveValue('editor');
+  });
+
+  it('shows an invited, ungranted member as eligible for a first role', async () => {
+    const user = userEvent.setup();
+    grants.mockReturnValue({
+      data: { grants: [{ userId: 'usr_9', email: 'new@acme.test', roleName: null }] },
+      isLoading: false,
+      isError: false,
+    });
+    setGrant.mockResolvedValue({ projectId: 'prj_1', userId: 'usr_9', roleName: 'editor' });
+
+    renderWithProviders(<ProjectAccessPage />, { route, routePath });
+
+    const roleSelect = await screen.findByRole('combobox', { name: 'Role for new@acme.test' });
+    expect(roleSelect).toHaveValue('');
+    // No role granted yet, so there is nothing to revoke.
+    expect(
+      screen.queryByRole('button', { name: 'Revoke access for new@acme.test' }),
+    ).not.toBeInTheDocument();
+
+    await user.selectOptions(roleSelect, 'editor');
+
+    await waitFor(() => {
+      expect(setGrant).toHaveBeenCalledWith({ userId: 'usr_9', roleName: 'editor' });
+    });
   });
 
   it('invites a user into the company without granting any access', async () => {
@@ -91,7 +116,7 @@ describe('ProjectAccessPage', () => {
   it('changes a role through the grant API', async () => {
     const user = userEvent.setup();
     grants.mockReturnValue({
-      data: { grants: [{ projectId: 'prj_1', userId: 'usr_1', roleName: 'viewer' }] },
+      data: { grants: [{ userId: 'usr_1', email: 'usr1@acme.test', roleName: 'viewer' }] },
       isLoading: false,
       isError: false,
     });
@@ -100,7 +125,7 @@ describe('ProjectAccessPage', () => {
     renderWithProviders(<ProjectAccessPage />, { route, routePath });
 
     await user.selectOptions(
-      await screen.findByRole('combobox', { name: 'Role for usr_1' }),
+      await screen.findByRole('combobox', { name: 'Role for usr1@acme.test' }),
       'editor',
     );
 
@@ -112,7 +137,7 @@ describe('ProjectAccessPage', () => {
   it('revokes access', async () => {
     const user = userEvent.setup();
     grants.mockReturnValue({
-      data: { grants: [{ projectId: 'prj_1', userId: 'usr_1', roleName: 'viewer' }] },
+      data: { grants: [{ userId: 'usr_1', email: 'usr1@acme.test', roleName: 'viewer' }] },
       isLoading: false,
       isError: false,
     });
@@ -120,7 +145,9 @@ describe('ProjectAccessPage', () => {
 
     renderWithProviders(<ProjectAccessPage />, { route, routePath });
 
-    await user.click(await screen.findByRole('button', { name: 'Revoke access for usr_1' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Revoke access for usr1@acme.test' }),
+    );
 
     await waitFor(() => {
       expect(removeGrant).toHaveBeenCalledWith('usr_1');

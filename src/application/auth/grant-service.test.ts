@@ -25,6 +25,10 @@ class FakeAccounts implements AccountRepository {
   listUsersByEmail(email: string): Promise<UserAccount[]> {
     return Promise.resolve([...this.users.values()].filter((u) => u.email === email));
   }
+
+  listUsersForCompany(companyId: string): Promise<UserAccount[]> {
+    return Promise.resolve([...this.users.values()].filter((u) => u.companyId === companyId));
+  }
   roles = new Map<string, CompanyRole>();
   grants: ProjectGrant[] = [];
 
@@ -332,6 +336,38 @@ describe('GrantService (REQ-SEC-003, M1.12)', () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.value).toHaveLength(2);
+    }
+  });
+
+  it('surfaces an invited, ungranted company member as a null-role row (REQ-SEC-012)', async () => {
+    const { accounts, grants, adminId } = build();
+    // addUser only creates the account — mirroring what an invite does: no
+    // grant at all (REQ-SEC-012).
+    addUser(accounts, 'invitee', 'c1', 'viewer');
+
+    const result = await grants.list(adminId, 'p1');
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const row = result.value.find((candidate) => candidate.userId === 'invitee');
+      expect(row).toEqual({ userId: 'invitee', email: 'invitee@acme.test', roleName: null });
+    }
+  });
+
+  it('excludes a deactivated member from the eligible-for-a-first-grant rows', async () => {
+    const { accounts, grants, adminId } = build();
+    addUser(accounts, 'gone', 'c1', 'viewer');
+    const gone = await accounts.getUserById('gone');
+    if (gone) {
+      gone.active = false;
+      await accounts.updateUser(gone);
+    }
+
+    const result = await grants.list(adminId, 'p1');
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.some((row) => row.userId === 'gone')).toBe(false);
     }
   });
 

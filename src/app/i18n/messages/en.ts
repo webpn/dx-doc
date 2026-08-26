@@ -162,6 +162,7 @@ export const en = {
   'access.empty': 'Nobody has been granted access to this project yet.',
   'access.loadError': 'Unable to load project access.',
   'access.roleFor': 'Role for {user}',
+  'access.noRole': 'No role yet',
   'access.revokeFor': 'Revoke access for {user}',
   'access.revoke': 'Revoke',
   'access.invite.title': 'Invite someone to the company',

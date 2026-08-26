@@ -78,6 +78,10 @@ class FakeAccounts implements AccountRepository {
     return Promise.resolve([...this.users.values()].filter((u) => u.email === email));
   }
 
+  listUsersForCompany(companyId: string): Promise<UserAccount[]> {
+    return Promise.resolve([...this.users.values()].filter((u) => u.companyId === companyId));
+  }
+
   updateUser(user: UserAccount): Promise<void> {
     this.users.set(user.id, user);
     return Promise.resolve();

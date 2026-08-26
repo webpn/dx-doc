@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { err, ok, type Result } from '@project/shared';
 
-import type { ProjectGrant, AccountRepository } from '../ports/account-repository';
+import type { AccountRepository } from '../ports/account-repository';
 import type { ProjectRepository } from '../ports/project-repository';
 import type { AuditLogRepository } from '../ports/tracking-repositories';
 
@@ -11,6 +11,17 @@ import { isCompanyRoleName, type CompanyRoleName } from './roles';
 
 export type GrantServiceError =
   { kind: 'forbidden' } | { kind: 'not_found' } | { kind: 'invalid_role' };
+
+/**
+ * One row of the project access screen: either an existing grant, or an
+ * active company member who has none yet and is eligible for a first one
+ * (`roleName: null`) — an invitation alone creates no access (REQ-SEC-012).
+ */
+export interface ProjectAccessRow {
+  userId: string;
+  email: string;
+  roleName: CompanyRoleName | null;
+}
 
 /** The project action that gates grant administration (REQ-SEC-003). */
 export const GRANT_ADMIN_ACTION: ProjectAction = 'project.manage_access';
@@ -136,10 +147,16 @@ export class GrantService {
     return ok({ ok: true });
   }
 
+  /**
+   * Every existing grant on the project, plus every active company member who
+   * has none yet (`roleName: null`) — the two-step invite/grant model
+   * (REQ-SEC-012) means an invited user is otherwise invisible here, with no
+   * way to give them a first role at all.
+   */
   async list(
     actorId: string,
     projectId: string,
-  ): Promise<Result<ProjectGrant[] | null, GrantServiceError>> {
+  ): Promise<Result<ProjectAccessRow[], GrantServiceError>> {
     if (!(await this.permissions.canOnProject(actorId, projectId, GRANT_ADMIN_ACTION))) {
       return err({ kind: 'forbidden' });
     }
@@ -147,6 +164,26 @@ export class GrantService {
     if (project === null) {
       return err({ kind: 'not_found' });
     }
-    return ok(await this.accounts.listGrantsForProject(projectId));
+
+    const grants = await this.accounts.listGrantsForProject(projectId);
+    const rows: ProjectAccessRow[] = [];
+    for (const grant of grants) {
+      const user = await this.accounts.getUserById(grant.userId);
+      rows.push({
+        userId: grant.userId,
+        email: user?.email ?? grant.userId,
+        roleName: grant.roleName,
+      });
+    }
+
+    const grantedUserIds = new Set(grants.map((grant) => grant.userId));
+    const members = await this.accounts.listUsersForCompany(project.companyId);
+    for (const member of members) {
+      if (member.active && !grantedUserIds.has(member.id)) {
+        rows.push({ userId: member.id, email: member.email, roleName: null });
+      }
+    }
+
+    return ok(rows);
   }
 }

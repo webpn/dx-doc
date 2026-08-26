@@ -136,6 +136,39 @@ describe('SqliteAccountRepository (against the real schema)', () => {
     expect(await repo.getUserByEmail(companyId, 'x@beta.test')).toBeNull();
   });
 
+  it('lists every user of a company, granted or not', async () => {
+    await repo.createUser({
+      id: 'u-m1',
+      companyId,
+      email: 'member1@acme.test',
+      passwordHash: null,
+      createdAt: t(),
+    });
+    await repo.createUser({
+      id: 'u-m2',
+      companyId,
+      email: 'member2@acme.test',
+      passwordHash: 'h',
+      createdAt: t(),
+    });
+    const otherId = 'c9000000-0000-0000-0000-000000000002';
+    await connection.kysely
+      .insertInto('company')
+      .values({ id: otherId, name: 'Gamma', slug: 'gamma', created_at: t(), updated_at: t() })
+      .execute();
+    await repo.createUser({
+      id: 'u-other',
+      companyId: otherId,
+      email: 'other@gamma.test',
+      passwordHash: null,
+      createdAt: t(),
+    });
+
+    const members = await repo.listUsersForCompany(companyId);
+
+    expect(members.map((member) => member.id).sort()).toEqual(['u-m1', 'u-m2']);
+  });
+
   it('updates a user (role, instance_admin, deactivation)', async () => {
     const createAt = t();
     await repo.createUser({

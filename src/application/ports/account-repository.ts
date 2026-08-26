@@ -72,6 +72,8 @@ export interface AccountRepository {
    * resolves to.
    */
   listUsersByEmail(email: string): Promise<UserAccount[]>;
+  /** Every account belonging to the company, granted or not (M1.15 access screen). */
+  listUsersForCompany(companyId: string): Promise<UserAccount[]>;
   updateUser(user: UserAccount): Promise<void>;
   /** Number of users in the whole instance, used by the first-run bootstrap. */
   countUsers(): Promise<number>;

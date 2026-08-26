@@ -15,12 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from '@project/design-system';
+import { useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactElement, type SyntheticEvent } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { ROLE_NAMES, type RoleName } from '../api';
 import { apiErrorMessageKey, useTranslate } from '../i18n';
-import { useGrants, useInviteUser, useRemoveGrant, useSetGrant } from '../queries';
+import { queryKeys, useGrants, useInviteUser, useRemoveGrant, useSetGrant } from '../queries';
 
 /**
  * Who can reach this project, and in which role (M1.15).
@@ -33,6 +34,7 @@ import { useGrants, useInviteUser, useRemoveGrant, useSetGrant } from '../querie
  */
 export function ProjectAccessPage(): ReactElement {
   const t = useTranslate();
+  const queryClient = useQueryClient();
   const { companyId, projectId } = useParams<{ companyId: string; projectId: string }>();
   const grants = useGrants(projectId ?? '');
   const inviteUser = useInviteUser(companyId ?? '');
@@ -55,6 +57,10 @@ export function ProjectAccessPage(): ReactElement {
 
     try {
       await inviteUser.mutateAsync(email.trim());
+      // The invitee is now a company member eligible for a first grant, which
+      // makes them a new row here even though the invite itself granted them
+      // nothing (REQ-SEC-012).
+      void queryClient.invalidateQueries({ queryKey: queryKeys.grants(projectId ?? '') });
       setNotice(t('access.invite.sent'));
       setEmail('');
     } catch (cause) {
@@ -108,18 +114,23 @@ export function ProjectAccessPage(): ReactElement {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((grant) => (
-                <TableRow key={grant.userId}>
-                  <TableCell>{grant.userId}</TableCell>
+              {rows.map((row) => (
+                <TableRow key={row.userId}>
+                  <TableCell>{row.email}</TableCell>
                   <TableCell>
                     <select
-                      aria-label={t('access.roleFor', { user: grant.userId })}
+                      aria-label={t('access.roleFor', { user: row.email })}
                       className="h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 text-sm"
                       onChange={(event) => {
-                        void handleRoleChange(grant.userId, event.target.value as RoleName);
+                        void handleRoleChange(row.userId, event.target.value as RoleName);
                       }}
-                      value={grant.roleName}
+                      value={row.roleName ?? ''}
                     >
+                      {row.roleName === null ? (
+                        <option disabled value="">
+                          {t('access.noRole')}
+                        </option>
+                      ) : null}
                       {ROLE_NAMES.map((role) => (
                         <option key={role} value={role}>
                           {role}
@@ -128,16 +139,18 @@ export function ProjectAccessPage(): ReactElement {
                     </select>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      aria-label={t('access.revokeFor', { user: grant.userId })}
-                      onClick={() => {
-                        void handleRevoke(grant.userId);
-                      }}
-                      type="button"
-                      variant="secondary"
-                    >
-                      {t('access.revoke')}
-                    </Button>
+                    {row.roleName !== null ? (
+                      <Button
+                        aria-label={t('access.revokeFor', { user: row.email })}
+                        onClick={() => {
+                          void handleRevoke(row.userId);
+                        }}
+                        type="button"
+                        variant="secondary"
+                      >
+                        {t('access.revoke')}
+                      </Button>
+                    ) : null}
                   </TableCell>
                 </TableRow>
               ))}

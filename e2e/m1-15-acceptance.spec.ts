@@ -128,9 +128,13 @@ test('bootstrap admin onboards a project and an editor sees only that project', 
   expect(projectId).toBeDefined();
 
   // Invite the editor into the company, then grant them a role on this project.
-  // Two deliberate steps: the invite alone gives no project access at all.
+  // Two deliberate steps: the invite alone gives no project access at all. The
+  // creator was auto-granted admin on project creation, so the access list is
+  // never empty here — assert on that row instead of an empty-state message.
   await page.goto(`/companies/${String(companyId)}/projects/${String(projectId)}/access`);
-  await expect(page.getByText('Nobody has been granted access to this project yet.')).toBeVisible();
+  await expect(page.getByRole('combobox', { name: `Role for ${bootstrapEmail}` })).toHaveValue(
+    'admin',
+  );
 
   await page.getByLabel('Invite by email').fill(editorEmail);
   await page.getByRole('button', { name: 'Send invite' }).click();
@@ -145,10 +149,9 @@ test('bootstrap admin onboards a project and an editor sees only that project', 
   expect(resetRequestResponse.ok()).toBe(true);
   const resetToken = await readLatestResetTokenFromMailpit(request, editorEmail);
 
-  // Grant the editor role. The user list is keyed by user id, so read it off the
-  // row the invite created rather than assuming an ordering.
-  await page.reload();
-  const roleSelect = page.getByRole('combobox', { name: /^Role for / }).first();
+  // Grant the editor role. The invite made them an eligible-but-ungranted row
+  // (REQ-SEC-012), so their combobox exists but starts with no role selected.
+  const roleSelect = page.getByRole('combobox', { name: `Role for ${editorEmail}` });
   await expect(roleSelect).toBeVisible();
   await roleSelect.selectOption('editor');
   await expect(roleSelect).toHaveValue('editor');

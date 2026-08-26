@@ -91,6 +91,15 @@ export class SqliteAccountRepository implements AccountRepository {
     return rows.map(toUser);
   }
 
+  async listUsersForCompany(companyId: string): Promise<UserAccount[]> {
+    const rows = await this.db
+      .selectFrom('users')
+      .selectAll()
+      .where('company_id', '=', companyId)
+      .execute();
+    return rows.map(toUser);
+  }
+
   async countUsers(): Promise<number> {
     const result = await this.db
       .selectFrom('users')

@@ -9,9 +9,20 @@ export interface ProjectGrant {
   roleName: RoleName;
 }
 
+/**
+ * One row of the project access screen: an existing grant, or an active
+ * company member who has none yet (`roleName: null`) and is eligible for a
+ * first one.
+ */
+export interface ProjectAccessRow {
+  userId: string;
+  email: string;
+  roleName: RoleName | null;
+}
+
 export const grantsApi = {
-  list(projectId: string): Promise<{ grants: ProjectGrant[] }> {
-    return apiRequest<{ grants: ProjectGrant[] }>(
+  list(projectId: string): Promise<{ grants: ProjectAccessRow[] }> {
+    return apiRequest<{ grants: ProjectAccessRow[] }>(
       `/api/projects/${encodeURIComponent(projectId)}/grants`,
     );
   },
