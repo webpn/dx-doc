@@ -235,6 +235,24 @@ jobs:
           body="${body//$'\r'/'%0D'}"
           echo "::error title=End-to-end output::$body"
 
+      # Playwright writes an aria snapshot of the page as it stood at the moment
+      # of failure to test-results/**/error-context.md. That snapshot is what
+      # separates "the app went somewhere unexpected" from "the element was
+      # renamed" — a distinction the assertion message alone cannot make. The
+      # trace zip beside it is richer, but reading it means downloading the
+      # artifact, which needs credentials a plain clone does not have.
+      - name: Report the page snapshot as an annotation
+        if: failure()
+        run: |
+          snap=$(find test-results -name error-context.md -print0 2>/dev/null \
+                   | xargs -0 -r head -n 80 | tail -c 3000)
+          if [ -n "$snap" ]; then
+            snap="${snap//'%'/'%25'}"
+            snap="${snap//$'\n'/'%0A'}"
+            snap="${snap//$'\r'/'%0D'}"
+            echo "::error title=Page at failure::$snap"
+          fi
+
       # `trace: 'retain-on-failure'` is already configured, so a failed run
       # leaves a trace here. Download it and open it locally with
       # `npx playwright show-trace <file>` — no Docker needed to debug.
