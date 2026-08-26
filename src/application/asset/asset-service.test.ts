@@ -1,3 +1,10 @@
+// The real image processor, not a fake, and the only infrastructure this file
+// touches — everything else below is a stub or an in-memory fake. A fake
+// processor would return whatever dimensions the test told it to, so it would
+// prove nothing about resizing; the assertions here are on actual pixel output,
+// read back through `sharp`. Narrow exemption rather than a rule-wide one for
+// test files, so the accidental case still gets caught (ADR-0017).
+// eslint-disable-next-line no-restricted-imports
 import { SharpImageProcessor } from '@project/infrastructure/images/sharp-image-processor';
 import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';

@@ -151,16 +151,26 @@ Global state is only introduced with a documented reason. Avoid prop drilling on
 
 ## Testing strategy
 
-| Layer          | Test type          | Focus                                              |
-| -------------- | ------------------ | -------------------------------------------------- |
-| Domain         | Unit               | Pure business logic, invariants, value objects     |
-| Application    | Unit / Integration | Use cases with mocked ports                        |
-| Infrastructure | Integration        | Repository implementations against a test database |
-| API            | Integration        | Endpoint behavior, validation, auth                |
-| UI             | Component          | Meaningful behavior, not implementation details    |
-| E2E            | End-to-end         | Critical user journeys                             |
+| Layer          | Test type          | Focus                                                                             |
+| -------------- | ------------------ | --------------------------------------------------------------------------------- |
+| Domain         | Unit               | Pure business logic, invariants, value objects                                    |
+| Application    | Unit / Integration | Use cases; faked ports by default, real adapters where a fake would prove nothing |
+| Infrastructure | Integration        | Repository implementations against a test database                                |
+| API            | Integration        | Endpoint behavior, validation, auth                                               |
+| UI             | Component          | Meaningful behavior, not implementation details                                   |
+| E2E            | End-to-end         | Critical user journeys                                                            |
 
 Tests assert behavior, not internal structure. Avoid tests that merely confirm React rendered a div — test what matters.
+
+### Where a test file lives
+
+Tests are co-located with the code they cover (`STYLE_GUIDE.md`), with one exception: **an application-layer test that wires real infrastructure lives in `tests/integration/` instead.**
+
+The reason is the layer boundary, not the test's subject. `no-restricted-imports` forbids `src/application/**` from naming `src/infrastructure/**` — the constraint that keeps the R2 MariaDB/Postgres adapters (ADR-0020, ADR-0003) and the MCP server (ADR-0007) possible. The rule matches on file path, so it cannot distinguish a test that deliberately composes the real adapters from production code that smuggles in a dependency. Rather than exempt every test under `src/application/`, which would stop catching the accidental case too, the deliberate ones move out of the rule's reach.
+
+An application test whose ports are all faked stays co-located: it does not import infrastructure, so nothing pushes it out. Where the real thing is needed for a single dependency and the rest are fakes, keep the file where it is and exempt that one import inline with a comment saying why (see `src/application/asset/asset-service.test.ts`, which needs a real image processor because a fake one cannot demonstrate that resizing works).
+
+Vitest collects `tests/**` already — the `node` project selects by exclusion, not inclusion — so moving a file there does not remove it from the suite.
 
 ## Error handling strategy
 

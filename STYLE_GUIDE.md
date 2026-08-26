@@ -121,7 +121,7 @@ Key settings:
 
 ## Test Naming
 
-- Test files: `*.test.ts` or `*.test.tsx`, co-located or in `__tests__/` alongside the source.
+- Test files: `*.test.ts` or `*.test.tsx`, co-located or in `__tests__/` alongside the source. Application-layer tests that wire real infrastructure live in `tests/integration/` instead — see "Where a test file lives" in `ARCHITECTURE.md` for why.
 - Test descriptions: `describe('TrackingService', () => { it('detaches module when all its properties are removed', () => { ... }) })`
 - Test structure: Arrange → Act → Assert, separated by blank lines.
 - Test behavior, not implementation. A test titled "calls the repository" is about implementation. A test titled "returns the tracking with the added property" is about behavior.

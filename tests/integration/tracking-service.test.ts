@@ -1,17 +1,32 @@
+// Integration test for TrackingService, wired to real infrastructure: a real
+// SQLite file, the real migrations, twelve real repositories and real bcrypt.
+//
+// It lives here rather than beside the service because of what it needs, not
+// because of what it tests. The `no-restricted-imports` rule forbids the
+// application layer from naming infrastructure — that boundary is what keeps
+// the MariaDB/Postgres adapters (ADR-0020, ADR-0003) and the MCP server
+// (ADR-0007) possible. A test that deliberately wires the real adapters is
+// exercising the composition rather than violating the layering, but the rule
+// matches on file path and cannot tell the two apart. Moving the file is
+// therefore preferred to disabling the rule for every test under
+// `src/application/`, which would also stop catching the accidental case.
+//
+// Query-level bugs — a wrong join, a missing constraint, a migration that does
+// not apply cleanly — only appear against a real database, which is why the
+// repositories here are not faked (ADR-0017).
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-
-import { applyMigrations } from '../../../tests/support/apply-migrations';
-import { SqliteAccountRepository } from '../../infrastructure/persistence/sqlite-account-repository';
+import { PermissionService } from '@project/application/auth/permissions';
+import { TrackingService } from '@project/application/tracking/tracking-service';
+import { SqliteAccountRepository } from '@project/infrastructure/persistence/sqlite-account-repository';
 import {
   closeSqliteConnection,
   openSqliteConnection,
   type Connection,
-} from '../../infrastructure/persistence/sqlite-kysely';
-import { SqliteProjectRepository } from '../../infrastructure/persistence/sqlite-project-repository';
+} from '@project/infrastructure/persistence/sqlite-kysely';
+import { SqliteProjectRepository } from '@project/infrastructure/persistence/sqlite-project-repository';
 import {
   SqliteDestinationRepository,
   SqliteFlowRepository,
@@ -25,11 +40,11 @@ import {
   SqliteVersionRepository,
   SqliteSharedPasswordRepository,
   SqliteAuditLogRepository,
-} from '../../infrastructure/persistence/sqlite-tracking-repositories';
-import { BcryptPasswordHasher } from '../../infrastructure/security/bcrypt-password-hasher';
-import { PermissionService } from '../auth/permissions';
+} from '@project/infrastructure/persistence/sqlite-tracking-repositories';
+import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { TrackingService } from './tracking-service';
+import { applyMigrations } from '../support/apply-migrations';
 
 function t(): string {
   return new Date().toISOString();
