@@ -179,6 +179,20 @@ jobs:
           AWS_SECRET_ACCESS_KEY: minioadmin
           AWS_DEFAULT_REGION: us-east-1
 
+      # The client has to be built before the suite runs. `composition-root.ts`
+      # registers @fastify/static and the SPA fallback only `if (existsSync(dist))`,
+      # so without a build the server boots fine but answers 404 on every page
+      # route — and Playwright's webServer only treats 200-399 as ready. The
+      # result is a 180s timeout with the process alive, no test ever started and
+      # no `test-results/` to upload, which is exactly how this job first failed.
+      #
+      # `npm run build` runs typecheck again (the `quality` job already does),
+      # which costs about a minute. Kept anyway: this job has no `needs` so it
+      # cannot inherit that artifact, and building by any other command would
+      # mean the E2E suite exercises a build nothing else produces.
+      - name: Build
+        run: npm run build
+
       # playwright.config.ts leaves PLAYWRIGHT_CHANNEL unset in CI so the
       # pinned bundled build is used rather than a system browser.
       - name: Install Playwright browser
@@ -191,11 +205,11 @@ jobs:
           set -o pipefail
           npm run test:e2e 2>&1 | tee e2e-output.log
 
-      # Downloading a job log through the API requires repository admin rights,
-      # so without this a failure here is unreadable to everyone else. The step
-      # summary is published on the check-run and is public, so the tail of the
-      # output goes there. Keep what reaches it to localhost and our own code —
-      # the summary is exactly as world-readable as the log.
+      # Two channels, because they reach different readers.
+      #
+      # The step summary renders in the web UI, which is where a person looks.
+      # It is NOT readable through the API: `GET /check-runs/{id}` comes back
+      # with `output` null for Actions jobs (measured, not assumed).
       - name: Publish the failure tail
         if: failure()
         run: |
@@ -206,6 +220,20 @@ jobs:
             tail -n 150 e2e-output.log
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # An `::error::` workflow command becomes a check-run annotation, and
+      # annotations *are* public through the API — no repository admin rights,
+      # which downloading a job log does require. So this is the only failure
+      # detail readable from a plain clone. Newlines have to be percent-encoded
+      # or the message stops at the first one.
+      - name: Report the failure tail as an annotation
+        if: failure()
+        run: |
+          body=$(tail -n 40 e2e-output.log | tail -c 3000)
+          body="${body//'%'/'%25'}"
+          body="${body//$'\n'/'%0A'}"
+          body="${body//$'\r'/'%0D'}"
+          echo "::error title=End-to-end output::$body"
 
       # `trace: 'retain-on-failure'` is already configured, so a failed run
       # leaves a trace here. Download it and open it locally with
