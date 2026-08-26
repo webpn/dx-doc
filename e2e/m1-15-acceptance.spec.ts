@@ -131,10 +131,14 @@ test('bootstrap admin onboards a project and an editor sees only that project', 
   // Two deliberate steps: the invite alone gives no project access at all. The
   // creator was auto-granted admin on project creation, so the access list is
   // never empty here — assert on that row instead of an empty-state message.
+  // The company's own first Admin shares the instance administrator's email
+  // (both were provisioned with `bootstrapEmail`) but is a distinct, ungranted
+  // user, so a row for that email exists too — the Revoke button is unique to
+  // the granted row and is what actually distinguishes them.
   await page.goto(`/companies/${String(companyId)}/projects/${String(projectId)}/access`);
-  await expect(page.getByRole('combobox', { name: `Role for ${bootstrapEmail}` })).toHaveValue(
-    'admin',
-  );
+  await expect(
+    page.getByRole('button', { name: `Revoke access for ${bootstrapEmail}` }),
+  ).toBeVisible();
 
   await page.getByLabel('Invite by email').fill(editorEmail);
   await page.getByRole('button', { name: 'Send invite' }).click();
