@@ -106,8 +106,17 @@ test('bootstrap admin onboards a project and an editor sees only that project', 
   const companyId = /\/companies\/([^/]+)\/projects/.exec(page.url())?.[1];
   expect(companyId).toBeDefined();
 
-  // Create a project inside it.
-  await page.goto(`/companies/${String(companyId)}/projects/new`);
+  // The instance administrator holds no membership in the company they just
+  // created (REQ-SEC-014), so creating a project in it needs an audited
+  // step-up window first (ADR-0027) — the empty project list offers exactly
+  // that as its next action.
+  await page.getByRole('link', { name: 'Administer this company' }).click();
+  await expect(page.getByRole('heading', { name: 'Administer this company' })).toBeVisible();
+  await page.getByLabel('Password').fill(newAdminPassword);
+  await page.getByRole('button', { name: 'Open step-up' }).click();
+
+  // Opening the step-up window lands back on project creation for this company.
+  await expect(page).toHaveURL(`/companies/${String(companyId)}/projects/new`);
   await page.getByLabel('Project name').fill('Docs');
   await page.getByLabel('Slug').fill(projectSlug);
   await page.getByLabel('Platform').selectOption('web');
