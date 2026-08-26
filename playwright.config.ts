@@ -15,7 +15,12 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   workers: 1,
-  reporter: 'list',
+  // The `github` reporter emits GitHub annotations for failed tests. That is
+  // what makes a CI failure diagnosable here: downloading a job log through the
+  // API needs repository admin rights, while annotations and the step summary
+  // are published on the check-run, which is public. `list` stays alongside it
+  // so the log itself is still readable by anyone who does have those rights.
+  reporter: process.env.CI ? [['github'], ['list']] : 'list',
   use: {
     baseURL: BASE_URL,
     trace: 'retain-on-failure',
@@ -39,6 +44,11 @@ export default defineConfig({
     command: 'npm run test:e2e:server',
     url: BASE_URL,
     reuseExistingServer: false,
+    // Playwright discards webServer stdout by default (stderr is piped
+    // already). A boot failure then surfaces as a bare timeout with no cause,
+    // which is precisely what the suite's first CI run produced: exit 1 and no
+    // `test-results/` at all, because no test ever started.
+    stdout: 'pipe',
     // Generous: this boots tsx + migrations + the real server, and on a
     // OneDrive-backed working copy module resolution alone can take a minute.
     timeout: 180_000,

@@ -184,8 +184,28 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
+      # `set -o pipefail` is not on by default: without it the step's exit code
+      # would be tee's, and a red suite would report green.
       - name: End-to-end tests
-        run: npm run test:e2e
+        run: |
+          set -o pipefail
+          npm run test:e2e 2>&1 | tee e2e-output.log
+
+      # Downloading a job log through the API requires repository admin rights,
+      # so without this a failure here is unreadable to everyone else. The step
+      # summary is published on the check-run and is public, so the tail of the
+      # output goes there. Keep what reaches it to localhost and our own code —
+      # the summary is exactly as world-readable as the log.
+      - name: Publish the failure tail
+        if: failure()
+        run: |
+          {
+            echo '## End-to-end failure'
+            echo
+            echo '```'
+            tail -n 150 e2e-output.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       # `trace: 'retain-on-failure'` is already configured, so a failed run
       # leaves a trace here. Download it and open it locally with
