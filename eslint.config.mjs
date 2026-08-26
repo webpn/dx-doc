@@ -135,9 +135,15 @@ export default tseslint.config(
     files: ['**/*.{js,mjs,cjs}'],
     extends: [js.configs.recommended],
     languageOptions: {
+      // Listed by hand rather than pulled from the `globals` package, which is
+      // only a transitive dependency of eslint here — importing it directly
+      // would be relying on something the lockfile does not promise. The cost
+      // is that a script using a Node global not listed here fails `no-undef`
+      // with a confusing message; add the global, do not disable the rule.
       globals: {
         process: 'readonly',
         console: 'readonly',
+        URL: 'readonly',
       },
     },
   },
