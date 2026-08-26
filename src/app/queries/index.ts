@@ -7,6 +7,7 @@ export {
   useConfirmPasswordReset,
 } from './auth';
 export { useCompanies, useCompany, useCreateCompany, useDeleteCompany } from './companies';
+export { useStepUps, useOpenStepUp } from './instance-admin';
 export { useProjects, useProject, useCreateProject, useUpdateProject } from './projects';
 export { useGrants, useSetGrant, useRemoveGrant } from './grants';
 export { useInviteUser } from './users';

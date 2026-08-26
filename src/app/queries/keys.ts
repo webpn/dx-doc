@@ -30,4 +30,5 @@ export const queryKeys = {
   trackingTemplates: (companyId: string, projectId?: string) =>
     ['companies', companyId, 'tracking-templates', projectId ?? null] as const,
   trackingTemplate: (templateId: string) => ['tracking-templates', templateId] as const,
+  stepUps: () => ['instance-admin', 'step-ups'] as const,
 };

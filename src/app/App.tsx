@@ -23,6 +23,7 @@ import { ProjectCreatePage } from './shell/project-create-page';
 import { ProjectListPage } from './shell/project-list-page';
 import { ProjectPage } from './shell/project-page';
 import { PropertyEditorPage } from './shell/property-editor-page';
+import { StepUpPage } from './shell/step-up-page';
 import { TemplateEditorPage } from './shell/template-editor-page';
 import { TrackingEditorPage } from './shell/tracking-editor-page';
 import { useSessionStore } from './stores/session-store';
@@ -78,6 +79,7 @@ export function App(): ReactElement {
         <Route element={<CompanyCreatePage />} path="/companies/new" />
         <Route element={<ProjectListPage />} path="/companies/:companyId/projects" />
         <Route element={<ProjectCreatePage />} path="/companies/:companyId/projects/new" />
+        <Route element={<StepUpPage />} path="/companies/:companyId/step-up" />
         <Route
           element={<ProjectAccessPage />}
           path="/companies/:companyId/projects/:projectId/access"

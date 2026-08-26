@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import type { ProjectRecord } from '../api';
 import { useTranslate } from '../i18n';
-import { useProjects } from '../queries';
+import { useProjects, useStepUps } from '../queries';
 import { useSessionStore } from '../stores/session-store';
 
 export function ProjectListPage(): ReactElement {
@@ -28,6 +28,39 @@ export function ProjectListPage(): ReactElement {
   // With no company anywhere there is nothing to list and no request to make,
   // so the screen must offer the one action that breaks the deadlock.
   const needsCompany = isInstanceAdmin && companyId === null;
+  const emptyMessageKey = needsCompany ? 'project.list.emptyInstanceAdmin' : 'project.list.empty';
+
+  // Only an instance administrator ever needs a step-up (ADR-0027) — anyone
+  // else already holds whatever company role authorises them, so the server
+  // is the only gate for them and this query would be a wasted 403.
+  const stepUps = useStepUps(isInstanceAdmin);
+  const hasActiveStepUp =
+    companyId !== null &&
+    (stepUps.data?.some(
+      (stepUp) => stepUp.companyId === companyId && new Date(stepUp.expiresAt) > new Date(),
+    ) ??
+      false);
+
+  // This is the only place in the app that can reach project creation
+  // (M1.15): every actor needs it, but an instance administrator holds no
+  // company role to reach it with, so they see the step-up prompt instead
+  // until a window is open for this company.
+  const projectAction =
+    companyId === null ? null : !isInstanceAdmin || hasActiveStepUp ? (
+      <Link
+        className="inline-flex h-10 items-center rounded-md bg-[var(--color-primary)] px-4 text-sm font-semibold text-white"
+        to={`/companies/${companyId}/projects/new`}
+      >
+        {t('project.list.newProject')}
+      </Link>
+    ) : (
+      <Link
+        className="inline-flex h-10 items-center rounded-md bg-[var(--color-primary)] px-4 text-sm font-semibold text-white"
+        to={`/companies/${companyId}/step-up`}
+      >
+        {t('project.list.administerCompany')}
+      </Link>
+    );
 
   return (
     <div>
@@ -52,40 +85,43 @@ export function ProjectListPage(): ReactElement {
 
       {(projects.data !== undefined && projectCount === 0) || needsCompany ? (
         <Card className="grid justify-items-start gap-4">
-          <p className="text-[var(--color-muted)]">
-            {isInstanceAdmin ? t('project.list.emptyInstanceAdmin') : t('project.list.empty')}
-          </p>
-          {isInstanceAdmin ? (
+          <p className="text-[var(--color-muted)]">{t(emptyMessageKey)}</p>
+          {needsCompany ? (
             <Link
               className="inline-flex h-10 items-center rounded-md bg-[var(--color-primary)] px-4 text-sm font-semibold text-white"
               to="/companies/new"
             >
               {t('company.create.link')}
             </Link>
-          ) : null}
+          ) : (
+            projectAction
+          )}
         </Card>
       ) : null}
 
       {projects.data !== undefined && projectCount > 0 ? (
-        <div className="grid grid-cols-3 gap-4">
-          {projects.data.map((project: ProjectRecord) => (
-            <Card className="grid gap-3 text-left" key={project.id}>
-              <span className="text-base font-semibold text-[var(--color-ink)]">
-                {project.name}
-              </span>
-              <span className="text-sm text-[var(--color-muted)]">
-                {project.platform} · {project.slug}
-              </span>
-              <Button
-                onClick={() => {
-                  void navigate(`/projects/${project.id}`);
-                }}
-                variant="secondary"
-              >
-                {t('project.list.open')}
-              </Button>
-            </Card>
-          ))}
+        <div className="grid gap-4">
+          <div>{projectAction}</div>
+          <div className="grid grid-cols-3 gap-4">
+            {projects.data.map((project: ProjectRecord) => (
+              <Card className="grid gap-3 text-left" key={project.id}>
+                <span className="text-base font-semibold text-[var(--color-ink)]">
+                  {project.name}
+                </span>
+                <span className="text-sm text-[var(--color-muted)]">
+                  {project.platform} · {project.slug}
+                </span>
+                <Button
+                  onClick={() => {
+                    void navigate(`/projects/${project.id}`);
+                  }}
+                  variant="secondary"
+                >
+                  {t('project.list.open')}
+                </Button>
+              </Card>
+            ))}
+          </div>
         </div>
       ) : null}
     </div>

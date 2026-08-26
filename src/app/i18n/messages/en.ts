@@ -81,6 +81,8 @@ export const en = {
     'No projects are assigned to this account yet. As an instance administrator, create a company to get started.',
   'project.list.open': 'Open project',
   'project.list.countLabel': '{count} projects',
+  'project.list.newProject': 'New project',
+  'project.list.administerCompany': 'Administer this company',
 
   // Project page
   'project.detail.loadError': 'Unable to load this project.',
@@ -105,6 +107,17 @@ export const en = {
   'company.create.slugTaken': 'That slug is already taken. Choose another.',
   'company.create.cancel': 'Cancel',
   'company.create.link': 'Create a company',
+
+  // Instance-admin step-up (ADR-0027 — re-authenticate to administer a
+  // company the instance administrator does not belong to)
+  'stepUp.eyebrow': 'Instance administration',
+  'stepUp.title': 'Administer this company',
+  'stepUp.description':
+    'Confirm your password to open a short-lived window to administer this company. It expires on its own and is audited.',
+  'stepUp.passwordLabel': 'Password',
+  'stepUp.submit': 'Open step-up',
+  'stepUp.submitting': 'Opening…',
+  'stepUp.missingPassword': 'Enter your password.',
 
   // Company list (REQ-SEC-015 — instance-administration surface)
   'company.list.eyebrow': 'Instance administration',
