@@ -9,8 +9,8 @@ Entry format and status legend: [requirements index](README.md).
 
 | ID          | Requirement                                    | MoSCoW | Rel. | Milestone    | Status      |
 | ----------- | ---------------------------------------------- | ------ | ---- | ------------ | ----------- |
-| REQ-NAV-001 | Page hierarchy with navigable sidebar          | Must   | R1   | M1.6 → M1.17 | Not Started |
-| REQ-NAV-002 | Automatic per-page tracking recap              | Must   | R1   | M1.6 → M1.17 | Not Started |
+| REQ-NAV-001 | Page hierarchy with navigable sidebar          | Must   | R1   | M1.6 → M1.17 | In Progress |
+| REQ-NAV-002 | Automatic per-page tracking recap              | Must   | R1   | M1.6 → M1.17 | In Progress |
 | REQ-NAV-003 | Flow entity                                    | Must   | R1   | M1.6 → M1.17 | In Progress |
 | REQ-NAV-004 | Trigger nodes distinct from visual transitions | Must   | R1   | M1.6 → M1.17 | In Progress |
 | REQ-NAV-005 | Directed graph with labels and conditions      | Must   | R1   | M1.6 → M1.17 | In Progress |
@@ -23,29 +23,29 @@ Entry format and status legend: [requirements index](README.md).
 
 ### REQ-NAV-001 — Page hierarchy with navigable sidebar
 
-**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §8.1, §8.5 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §8.1, §8.5 · **In Progress** · Issue: — · PR: —
 
 Pages and screens are organised in a hierarchy that drives a navigable sidebar. Where content is CMS-driven, only generic page templates are catalogued (_"single news page"_), not individual instances.
 
 **Acceptance**
 
-- The imported product's full hierarchy is navigable end to end without a search.
-- Reordering or reparenting a page changes no identifier (REQ-FDN-004) and breaks no reference.
-- The sidebar remains usable at pilot scale — thousands of trackings across a deep tree.
+- [x] The imported product's full hierarchy is navigable end to end without a search — `PageTreeSidebar` renders the parent/child tree from `GET /api/projects/:id/pages` and links each node to its editor.
+- [x] Reordering or reparenting a page changes no identifier (REQ-FDN-004) and breaks no reference — re-parenting goes through the existing `PATCH /api/pages/:id`, which only ever updates `parentId`.
+- [ ] The sidebar remains usable at pilot scale — thousands of trackings across a deep tree. Not yet measured; the current implementation renders the whole tree eagerly with no virtualization.
 
 > Absence of a navigable content tree was pain point 4 in the previous documentation. This is the requirement that closes it.
 
 ### REQ-NAV-002 — Automatic per-page tracking recap
 
-**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §8.2 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §8.2 · **In Progress** · Issue: — · PR: —
 
 Each page displays an automatic recap of every tracking attached to it — page views, popup views, actions — showing at minimum the tracking name and its specific values.
 
 **Acceptance**
 
-- Opening any page answers "what is tracked here?" with no further navigation.
-- The recap is generated from the model, never maintained by hand.
-- It reflects the draft when viewed by an editor and the published version when viewed by a reader.
+- [x] Opening any page answers "what is tracked here?" with no further navigation — `PageEditorPage` recaps the trackings whose `pageId` matches the open page.
+- [x] The recap is generated from the model, never maintained by hand — it filters the project's own `useTrackings` result; no separate field exists to fall out of sync.
+- [ ] It reflects the draft when viewed by an editor and the published version when viewed by a reader. There is no reader view yet (M1.17), and the recap currently shows only the tracking name — not its specific values.
 
 ### REQ-NAV-003 — Flow entity
 
