@@ -174,7 +174,9 @@ test('bootstrap admin onboards a project and an editor sees only that project', 
   await page.getByRole('button', { name: 'Sign in' }).click();
 
   await expect(page.getByRole('heading', { name: 'Your projects' })).toBeVisible();
-  await expect(page.getByText('Docs')).toBeVisible();
+  // exact: true — the project slug (`docs-<suffix>`) otherwise satisfies
+  // Playwright's default case-insensitive substring match for 'Docs' too.
+  await expect(page.getByText('Docs', { exact: true })).toBeVisible();
   await expect(page.getByText(`web · ${projectSlug}`)).toBeVisible();
   // Exactly one project is visible — the editor was granted exactly this one.
   await expect(page.getByRole('button', { name: 'Open project' })).toHaveCount(1);
