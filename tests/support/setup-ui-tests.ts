@@ -41,6 +41,20 @@ function emptyRectList(): DOMRectList {
 Range.prototype.getBoundingClientRect = (): DOMRect => emptyRect;
 Range.prototype.getClientRects = (): DOMRectList => emptyRectList();
 
+/**
+ * jsdom implements no SVG layout either, so `SVGGraphicsElement.getBBox` is
+ * simply absent — Mermaid (REQ-AUTH-004) calls it while laying out node and
+ * edge labels, and without this the render throws mid-way and every diagram
+ * (even syntactically valid source) surfaces as an error box instead of an
+ * SVG. Same empty-rectangle approach as the Range polyfill above: enough for
+ * the layout code to complete, not real geometry. Assigned unconditionally,
+ * matching the Range overrides above — jsdom does not define it at all, so
+ * there is no existing implementation to preserve.
+ */
+if (typeof SVGGraphicsElement !== 'undefined') {
+  SVGGraphicsElement.prototype.getBBox = (): DOMRect => emptyRect;
+}
+
 afterEach(() => {
   cleanup();
 });

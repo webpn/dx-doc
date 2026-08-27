@@ -14,7 +14,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-AUTH-001 | Markdown editor with the full block set              | Must   | R1   | M1.5 → M1.16 | Not Started |
 | REQ-AUTH-002 | Image upload, 10 MB cap, resize to 2000 px           | Must   | R1   | M1.5 → M1.16 | Not Started |
 | REQ-AUTH-003 | Free wiki pages with publishable flag                | Must   | R1   | M1.5 → M1.16 | In Progress |
-| REQ-AUTH-004 | Mermaid rendering and live preview                   | Must   | R1   | M1.6 → M1.17 | In Progress |
+| REQ-AUTH-004 | Mermaid rendering and live preview                   | Must   | R1   | M1.6 → M1.17 | Implemented |
 | REQ-AUTH-005 | Optimistic concurrency with stale-write rejection    | Must   | R1   | M1.5 → M1.14 | In Progress |
 | REQ-AUTH-006 | Tracking duplication within a project                | Must   | R1   | M1.5 → M1.16 | In Progress |
 | REQ-AUTH-007 | Project-scoped full-text search                      | Must   | R1   | M1.7 → M1.17 | In Progress |
@@ -75,19 +75,17 @@ Still open: the publishable-flag enforcement itself (index exclusion, artefact o
 
 ### REQ-AUTH-004 — Mermaid rendering and live preview
 
-**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §7.1, §8.4 · **In Progress** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §7.1, §8.4 · **Implemented** · Issue: — · PR: —
 
 Mermaid code blocks render, and render live while editing. This is both the format used for hand-written diagrams and the format auto-generated from the flow graph (REQ-NAV-006, also R1/M1.6).
 
 **Acceptance**
 
-- A syntax error shows a legible message and leaves the source editable — it never discards the block.
-- Hand-written Mermaid remains available inside any rich-text content after the flow-graph generator (REQ-NAV-006) lands.
-- A ` ```mermaid ` block authored in R1 renders identically; it was stored verbatim as a fenced block (REQ-AUTH-001) from M1.5.
+- [x] A syntax error shows a legible message and leaves the source editable — it never discards the block. `MermaidDiagram` catches `mermaid.render` rejections and shows the error text in place of the diagram; the underlying code block is untouched.
+- [x] Hand-written Mermaid remains available inside any rich-text content after the flow-graph generator (REQ-NAV-006) lands — the same `MermaidDiagram` component renders both.
+- [x] A ` ```mermaid ` block authored in R1 renders identically; it was stored verbatim as a fenced block (REQ-AUTH-001) from M1.5. `mermaidCodeBlockEditorDescriptor` renders the diagram live below the CodeMirror source, wired into `MarkdownEditor`'s `codeBlockPlugin`.
 
-> **Demoted to R2 (M2.2) on 2026-08-12, then returned to R1 (M1.6) on 2026-08-17** when the Flow entity and its Mermaid generator (REQ-NAV-003…007) were moved into R1. The renderer is built once and serves both the auto-generated flow diagrams and hand-written blocks; it now ships with them rather than a release behind. The prior demotion note — that a ` ```mermaid ` block is a fenced code block, stored verbatim and searchable from R1 but not rendered — documents the state that held only while flows were R2.
-
-> **Carried forward on 2026-08-18.** `generateMermaidDiagram` produces a correct diagram string from the graph, with node shapes and edge labels. Nothing renders it — there is no renderer, no preview and no client. The generator half is done; the requirement is about the rendered result. [M1.17](../milestones.md#m117--consultation-search-and-publication-ui).
+> **Demoted to R2 (M2.2) on 2026-08-12, then returned to R1 (M1.6) on 2026-08-17** when the Flow entity and its Mermaid generator (REQ-NAV-003…007) were moved into R1. The renderer is built once and serves both the auto-generated flow diagrams and hand-written blocks.
 
 ### REQ-AUTH-005 — Optimistic concurrency with stale-write rejection
 

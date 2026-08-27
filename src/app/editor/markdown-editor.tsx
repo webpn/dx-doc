@@ -22,6 +22,8 @@ import { forwardRef, useImperativeHandle, useMemo, useRef, type ReactElement } f
 import { assetsApi } from '../api';
 import { useTranslate } from '../i18n';
 
+import { mermaidCodeBlockEditorDescriptor } from './mermaid-code-block-editor';
+
 export interface MarkdownEditorHandle {
   /** The current document as Markdown — what gets persisted (REQ-AUTH-001). */
   getMarkdown: () => string;
@@ -59,8 +61,9 @@ export interface MarkdownEditorProps {
  * Engine: MDXEditor, per ADR-0023. The plugin set below is exactly the one the
  * ADR-0023 acceptance spike proved round-trips the required block set without
  * losing content — including ` ```mermaid ` fences, which are stored verbatim
- * as code blocks in R1 (rendering them is REQ-AUTH-004, R2). Keep it in step
- * with `spikes/adr-0023-markdown-round-trip/` if either changes.
+ * as code blocks (REQ-AUTH-001) and rendered live by
+ * `mermaidCodeBlockEditorDescriptor` (REQ-AUTH-004). Keep it in step with
+ * `spikes/adr-0023-markdown-round-trip/` if either changes.
  *
  * Two features are switched off deliberately (ADR-0023): AI-assist and
  * CRDT/collaboration. MDXEditor ships both as separate plugins rather than
@@ -113,7 +116,10 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
         // so REQ-AUTH-002's two entry points share one upload path.
         imagePlugin({ imageUploadHandler: (file: File) => uploadImage.current(file) }),
         thematicBreakPlugin(),
-        codeBlockPlugin({ defaultCodeBlockLanguage: 'txt' }),
+        codeBlockPlugin({
+          defaultCodeBlockLanguage: 'txt',
+          codeBlockEditorDescriptors: [mermaidCodeBlockEditorDescriptor],
+        }),
         codeMirrorPlugin({
           codeBlockLanguages: {
             txt: 'Text',

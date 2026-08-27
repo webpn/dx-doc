@@ -84,6 +84,8 @@ Edges are authored through a form-based list within the flow page. (Moved from R
 
 The diagram is generated from the structured graph, not written. Hand-written Mermaid remains available inside any rich-text content for free-form diagrams not derived from the graph. Both rely on the renderer delivered by [REQ-AUTH-004](REQ-AUTH.md#req-auth-004--mermaid-rendering-and-live-preview) in the same milestone — it is built once and serves both.
 
+`generateMermaidDiagram` produces a correct diagram string from the graph, with node shapes and edge labels, and `TrackingService.getFlow` returns it alongside the flow's nodes and edges. The renderer (REQ-AUTH-004) that turns that string into a diagram is now built and shared with hand-written blocks. Still open: no UI screen calls `getFlow` or renders the result — REQ-NAV-003/007 (flow list and editor screens) have not been built, so the generated diagram has no reachable entry point yet.
+
 > Closes pain point 3: journeys drawn by hand with no relationship to the documented pages.
 
 ### REQ-NAV-007 — Sidebar exposing flows alongside the hierarchy
