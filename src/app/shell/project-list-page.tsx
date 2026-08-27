@@ -32,8 +32,10 @@ export function ProjectListPage(): ReactElement {
 
   // Only an instance administrator ever needs a step-up (ADR-0027) — anyone
   // else already holds whatever company role authorises them, so the server
-  // is the only gate for them and this query would be a wasted 403.
-  const stepUps = useStepUps(isInstanceAdmin);
+  // is the only gate for them and this query would be a wasted 403. And with
+  // no company selected at all there is no step-up that could apply, so the
+  // request would just be wasted too.
+  const stepUps = useStepUps(isInstanceAdmin && companyId !== null);
   const hasActiveStepUp =
     companyId !== null &&
     (stepUps.data?.some(

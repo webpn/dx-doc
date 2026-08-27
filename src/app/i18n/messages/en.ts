@@ -118,6 +118,8 @@ export const en = {
   'stepUp.submit': 'Open step-up',
   'stepUp.submitting': 'Opening…',
   'stepUp.missingPassword': 'Enter your password.',
+  'stepUp.indicator': 'Administering company {companyId} — expires {expiresAt}',
+  'stepUp.indicatorMultiple': '{count} step-up windows open — next expires {expiresAt}',
 
   // Company list (REQ-SEC-015 — instance-administration surface)
   'company.list.eyebrow': 'Instance administration',

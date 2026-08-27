@@ -93,14 +93,20 @@ describe('ProjectListPage', () => {
       },
     });
     fetchMock.mockResolvedValueOnce(jsonResponse(200, []));
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, []));
 
     renderWithProviders(<ProjectListPage />, {
       route: '/companies/cmp_42/projects',
       routePath: '/companies/:companyId/projects',
     });
 
-    await screen.findByText(
-      'No projects are assigned to this account yet. As an instance administrator, create a company to get started.',
+    // A company is selected here (via the URL), so this is the plain empty
+    // state, not the instance-administrator "create a company" prompt — that
+    // one is reserved for when there is no company anywhere, covered below.
+    await screen.findByText('No projects are assigned to this account yet.');
+    expect(await screen.findByRole('link', { name: 'Administer this company' })).toHaveAttribute(
+      'href',
+      '/companies/cmp_42/step-up',
     );
     const requestedUrl = (fetchMock.mock.calls[0] as [string])[0];
     expect(requestedUrl).toContain('cmp_42');
