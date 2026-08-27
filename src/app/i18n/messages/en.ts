@@ -194,6 +194,25 @@ export const en = {
   'page.edit.loadError': 'This page could not be loaded.',
   'page.edit.missingName': 'Enter a name.',
   'page.edit.missingSlug': 'Enter a slug.',
+  'page.edit.trackingRecap': 'What is tracked here',
+  'page.edit.trackingRecapEmpty': 'No trackings are attached to this page yet.',
+
+  // Page creation (REQ-DOM-001)
+  'page.create.title': 'New page',
+  'page.create.subtitle': 'Give it a name and a slug; the description can be filled in after.',
+  'page.create.nameLabel': 'Name',
+  'page.create.slugLabel': 'Slug',
+  'page.create.parentLabel': 'Parent page',
+  'page.create.parentNone': 'No parent (top level)',
+  'page.create.submit': 'Create page',
+  'page.create.submitting': 'Creating…',
+  'page.create.missingName': 'Enter a name.',
+  'page.create.missingSlug': 'Enter a slug.',
+
+  // Page hierarchy sidebar (REQ-NAV-001)
+  'page.tree.title': 'Pages',
+  'page.tree.empty': 'No pages yet.',
+  'page.tree.newPage': 'New page',
 
   // Free pages (REQ-AUTH-003)
   'freePage.list.title': 'Free pages',

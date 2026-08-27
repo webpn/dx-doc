@@ -7,10 +7,11 @@ import type * as Queries from '../queries';
 
 import { PageEditorPage } from './page-editor-page';
 
-const { update, pageData, pagesData } = vi.hoisted(() => ({
+const { update, pageData, pagesData, trackingsData } = vi.hoisted(() => ({
   update: vi.fn(),
   pageData: vi.fn(),
   pagesData: vi.fn(),
+  trackingsData: vi.fn(),
 }));
 
 vi.mock('../queries', async (importOriginal) => {
@@ -19,6 +20,7 @@ vi.mock('../queries', async (importOriginal) => {
     ...actual,
     usePage: () => pageData() as unknown,
     usePages: () => pagesData() as unknown,
+    useTrackings: () => trackingsData() as unknown,
     useUpdatePage: () => ({ mutateAsync: update, isPending: false }) as unknown,
   };
 });
@@ -56,6 +58,7 @@ describe('PageEditorPage (REQ-DOM-001, REQ-AUTH-001)', () => {
     update.mockResolvedValue({ ok: true });
     pageData.mockReturnValue({ data: PAGE, isPending: false, error: null });
     pagesData.mockReturnValue({ data: [PAGE], isPending: false, error: null });
+    trackingsData.mockReturnValue({ data: [], isPending: false, error: null });
   });
 
   function renderEditor(): ReturnType<typeof renderWithProviders> {
@@ -115,5 +118,30 @@ describe('PageEditorPage (REQ-DOM-001, REQ-AUTH-001)', () => {
     await user.click(await screen.findByRole('button', { name: /save/i }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
+  });
+
+  it('recaps the trackings attached to this page (REQ-NAV-002)', async () => {
+    trackingsData.mockReturnValue({
+      data: [
+        { id: 'trk1', pageId: 'pg1', name: 'Page view' },
+        { id: 'trk2', pageId: 'pg2', name: 'Other page tracking' },
+      ],
+      isPending: false,
+      error: null,
+    });
+    renderEditor();
+
+    const link = await screen.findByRole('link', { name: 'Page view' });
+    expect(link).toHaveAttribute('href', '/projects/prj_1/trackings/trk1');
+    expect(screen.queryByText('Other page tracking')).not.toBeInTheDocument();
+  });
+
+  it('explains when nothing is tracked on this page yet', async () => {
+    trackingsData.mockReturnValue({ data: [], isPending: false, error: null });
+    renderEditor();
+
+    expect(
+      await screen.findByText('No trackings are attached to this page yet.'),
+    ).toBeInTheDocument();
   });
 });

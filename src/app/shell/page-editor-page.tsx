@@ -9,11 +9,13 @@ import {
   Input,
 } from '@project/design-system';
 import { useEffect, useState, type ReactElement, type SyntheticEvent } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import { MarkdownEditor } from '../editor';
 import { apiErrorMessageKey, useTranslate } from '../i18n';
-import { usePage, usePages, useProject, useUpdatePage } from '../queries';
+import { usePage, usePages, useProject, useTrackings, useUpdatePage } from '../queries';
+
+import { ProjectWorkspace } from './project-workspace';
 
 /**
  * Edit one page: name, slug, parent and behavioural description (REQ-DOM-001).
@@ -24,6 +26,10 @@ import { usePage, usePages, useProject, useUpdatePage } from '../queries';
  *
  * Saving sends the `updatedAt` this screen loaded as `expectedUpdatedAt`
  * (REQ-AUTH-005, ADR-0016): a concurrent edit is reported, never overwritten.
+ *
+ * The tracking recap (REQ-NAV-002) answers "what is tracked here?" without
+ * further navigation: it is filtered from the project's own tracking list,
+ * never a separately maintained field, so it can never drift from the model.
  */
 export function PageEditorPage(): ReactElement {
   const t = useTranslate();
@@ -31,6 +37,7 @@ export function PageEditorPage(): ReactElement {
   const page = usePage(pageId);
   const pages = usePages(projectId);
   const project = useProject(projectId);
+  const trackings = useTrackings(projectId);
   const updatePage = useUpdatePage(pageId ?? '', projectId ?? '');
 
   const [name, setName] = useState('');
@@ -72,8 +79,8 @@ export function PageEditorPage(): ReactElement {
       await updatePage.mutateAsync({
         name: name.trim(),
         slug: slug.trim(),
-        // An omitted parentId means "no parent"; the API treats the absent key
-        // and an empty string differently, so send only a real id.
+        // An omitted parentId means "no parent"; the API treats the absent
+        // key and an empty string differently, so send only a real id.
         ...(parentId === '' ? {} : { parentId }),
         description,
         expectedUpdatedAt: loaded.updatedAt,
@@ -94,62 +101,87 @@ export function PageEditorPage(): ReactElement {
   // A page cannot be its own parent, and the API rejects a cross-project
   // parent (REQ-FDN-013), so only this project's other pages are offered.
   const parentChoices = (pages.data ?? []).filter((candidate) => candidate.id !== loaded.id);
+  const pageTrackings = (trackings.data ?? []).filter((tracking) => tracking.pageId === loaded.id);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t('page.edit.title')}</CardTitle>
-        <CardDescription>{t('page.edit.subtitle')}</CardDescription>
-      </CardHeader>
-      <form onSubmit={(event) => void handleSubmit(event)}>
-        <Field htmlFor="page-name" label={t('page.edit.name')}>
-          <Input
-            id="page-name"
-            onChange={(e) => {
-              setName(e.target.value);
-            }}
-            value={name}
-          />
-        </Field>
-        <Field htmlFor="page-slug" label={t('page.edit.slug')}>
-          <Input
-            id="page-slug"
-            onChange={(e) => {
-              setSlug(e.target.value);
-            }}
-            value={slug}
-          />
-        </Field>
-        <Field htmlFor="page-parent" label={t('page.edit.parent')}>
-          <select
-            id="page-parent"
-            onChange={(e) => {
-              setParentId(e.target.value);
-            }}
-            value={parentId}
-          >
-            <option value="">{t('page.edit.parentNone')}</option>
-            {parentChoices.map((candidate) => (
-              <option key={candidate.id} value={candidate.id}>
-                {candidate.name}
-              </option>
+    <ProjectWorkspace currentPageId={loaded.id} projectId={projectId ?? ''}>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('page.edit.title')}</CardTitle>
+          <CardDescription>{t('page.edit.subtitle')}</CardDescription>
+        </CardHeader>
+        <form onSubmit={(event) => void handleSubmit(event)}>
+          <Field htmlFor="page-name" label={t('page.edit.name')}>
+            <Input
+              id="page-name"
+              onChange={(e) => {
+                setName(e.target.value);
+              }}
+              value={name}
+            />
+          </Field>
+          <Field htmlFor="page-slug" label={t('page.edit.slug')}>
+            <Input
+              id="page-slug"
+              onChange={(e) => {
+                setSlug(e.target.value);
+              }}
+              value={slug}
+            />
+          </Field>
+          <Field htmlFor="page-parent" label={t('page.edit.parent')}>
+            <select
+              id="page-parent"
+              onChange={(e) => {
+                setParentId(e.target.value);
+              }}
+              value={parentId}
+            >
+              <option value="">{t('page.edit.parentNone')}</option>
+              {parentChoices.map((candidate) => (
+                <option key={candidate.id} value={candidate.id}>
+                  {candidate.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field htmlFor="page-description" label={t('page.edit.description')}>
+            <MarkdownEditor
+              companyId={project.data?.companyId}
+              onChange={setDescription}
+              projectId={projectId}
+              value={description}
+            />
+          </Field>
+          {notice !== null ? <Alert variant="success">{notice}</Alert> : null}
+          {error !== null ? <Alert variant="error">{error}</Alert> : null}
+          <Button disabled={updatePage.isPending} type="submit">
+            {t('page.edit.save')}
+          </Button>
+        </form>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>{t('page.edit.trackingRecap')}</CardTitle>
+        </CardHeader>
+        {pageTrackings.length === 0 ? (
+          <p className="text-[var(--color-muted)]">{t('page.edit.trackingRecapEmpty')}</p>
+        ) : (
+          <ul>
+            {pageTrackings.map((tracking) => (
+              <li key={tracking.id}>
+                <Link
+                  className="text-sm font-semibold text-[var(--color-primary)]"
+                  to={`/projects/${projectId ?? ''}/trackings/${tracking.id}`}
+                >
+                  {tracking.name}
+                </Link>
+              </li>
             ))}
-          </select>
-        </Field>
-        <Field htmlFor="page-description" label={t('page.edit.description')}>
-          <MarkdownEditor
-            companyId={project.data?.companyId}
-            onChange={setDescription}
-            projectId={projectId}
-            value={description}
-          />
-        </Field>
-        {notice !== null ? <Alert variant="success">{notice}</Alert> : null}
-        {error !== null ? <Alert variant="error">{error}</Alert> : null}
-        <Button disabled={updatePage.isPending} type="submit">
-          {t('page.edit.save')}
-        </Button>
-      </form>
-    </Card>
+          </ul>
+        )}
+      </Card>
+    </ProjectWorkspace>
   );
 }

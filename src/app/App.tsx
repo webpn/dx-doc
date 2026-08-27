@@ -17,6 +17,7 @@ import { FreePageCreatePage } from './shell/free-page-create-page';
 import { FreePageEditorPage } from './shell/free-page-editor-page';
 import { FreePageListPage } from './shell/free-page-list-page';
 import { ModuleEditorPage } from './shell/module-editor-page';
+import { PageCreatePage } from './shell/page-create-page';
 import { PageEditorPage } from './shell/page-editor-page';
 import { ProjectAccessPage } from './shell/project-access-page';
 import { ProjectCreatePage } from './shell/project-create-page';
@@ -97,6 +98,7 @@ export function App(): ReactElement {
           element={<FreePageEditorPage />}
           path="/projects/:projectId/free-pages/:freePageId"
         />
+        <Route element={<PageCreatePage />} path="/projects/:projectId/pages/new" />
         <Route element={<PageEditorPage />} path="/projects/:projectId/pages/:pageId" />
         <Route
           element={<PropertyEditorPage />}
