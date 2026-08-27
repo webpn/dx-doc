@@ -47,6 +47,7 @@ jobs:
         image: axllent/mailpit
         ports:
           - 1025:1025
+          - 8025:8025
         options: >-
           --health-cmd "wget -qO- http://localhost:8025/readyz"
           --health-interval 5s
@@ -137,6 +138,7 @@ jobs:
         image: axllent/mailpit
         ports:
           - 1025:1025
+          - 8025:8025
         options: >-
           --health-cmd "wget -qO- http://localhost:8025/readyz"
           --health-interval 5s
