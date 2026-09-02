@@ -15,7 +15,7 @@ Entry format and status legend: [requirements index](README.md).
 | REQ-NAV-004 | Trigger nodes distinct from visual transitions | Must   | R1   | M1.6 → M1.17 | In Progress |
 | REQ-NAV-005 | Directed graph with labels and conditions      | Must   | R1   | M1.6 → M1.17 | In Progress |
 | REQ-NAV-006 | Automatic Mermaid generation from the graph    | Must   | R1   | M1.6 → M1.17 | In Progress |
-| REQ-NAV-007 | Sidebar exposing flows alongside the hierarchy | Must   | R1   | M1.6 → M1.17 | Not Started |
+| REQ-NAV-007 | Sidebar exposing flows alongside the hierarchy | Must   | R1   | M1.6 → M1.17 | In Progress |
 | REQ-NAV-008 | Visual drag-and-drop graph editor              | Could  | R3   | M3.5         | Not Started |
 | REQ-NAV-009 | Cross-project search                           | Won't  | —    | —            | Rejected    |
 
@@ -72,6 +72,8 @@ The graph has two node types. A plain Page→Page connection is **purely visual*
 
 > Why two node types: an edge-only model can express "the click that moves the user from step 2 to step 3" but has nowhere to put a non-navigating action, and needs a special cross-page attachment mode for actions on many screens. The Trigger handles all three cases uniformly and removes the special case — which is why REQ-DOM-002 has no cross-page attachment mode.
 
+> **Found 2026-09-01.** `TriggerEditorPage` only edits a Trigger that already exists (`/projects/:projectId/triggers/:triggerId`); there is no `/triggers/new` route or create form, and `useCreateTrigger` (`src/app/queries/flows.ts`) is unused by any screen. An editor cannot add a new Trigger from the browser today.
+
 ### REQ-NAV-005 — Directed graph with labels and conditions
 
 **Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §8.3, §8.4 · **In Progress** · Issue: — · PR: —
@@ -84,15 +86,19 @@ Edges are authored through a form-based list within the flow page. (Moved from R
 
 The diagram is generated from the structured graph, not written. Hand-written Mermaid remains available inside any rich-text content for free-form diagrams not derived from the graph. Both rely on the renderer delivered by [REQ-AUTH-004](REQ-AUTH.md#req-auth-004--mermaid-rendering-and-live-preview) in the same milestone — it is built once and serves both.
 
-`generateMermaidDiagram` produces a correct diagram string from the graph, with node shapes and edge labels, and `TrackingService.getFlow` returns it alongside the flow's nodes and edges. The renderer (REQ-AUTH-004) that turns that string into a diagram is now built and shared with hand-written blocks. Still open: no UI screen calls `getFlow` or renders the result — REQ-NAV-003/007 (flow list and editor screens) have not been built, so the generated diagram has no reachable entry point yet.
+`generateMermaidDiagram` produces a correct diagram string from the graph, with node shapes and edge labels, and `TrackingService.getFlow` returns it alongside the flow's nodes and edges. The renderer (REQ-AUTH-004) that turns that string into a diagram is now built and shared with hand-written blocks.
 
 > Closes pain point 3: journeys drawn by hand with no relationship to the documented pages.
 
+> **Found 2026-09-01 — supersedes the "no reachable entry point yet" note above.** `FlowListPage`, `FlowCreatePage`, `FlowEditorPage` and `TriggerEditorPage` now exist and are routed (`/projects/:projectId/flows`, `/flows/new`, `/flows/:flowId`, `/triggers/:triggerId`), so `getFlow` and the rendered diagram do have an entry point. But: this code is **uncommitted on branch `r1`**, has **zero automated test coverage** (no `flow-*.test.tsx` or `trigger-editor-page.test.tsx` exists), and has not been exercised in a browser — none of that is evidence the screens work, only that they exist. Do not read this as "REQ-NAV-006 done."
+
 ### REQ-NAV-007 — Sidebar exposing flows alongside the hierarchy
 
-**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §8.5 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.6](../milestones.md#m16--structure-and-navigation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §8.5 · **In Progress** · Issue: — · PR: —
 
 The sidebar exposes both the page hierarchy and the flows, so the inventory can be navigated either way.
+
+> **Found 2026-09-01.** `PageTreeSidebar` now calls `useFlows(projectId)` alongside `usePages(projectId)` and renders a flows section with its own load-error alert. Uncommitted on branch `r1`; introduced a regression in `page-editor-page.test.tsx` (a second `role="alert"` rendered by the sidebar's unmocked flow fetch alongside the page editor's own save-failure alert) that was fixed in the test file but not yet re-verified end to end. Moved from `Not Started` on the strength of code existing, not on the strength of it being tested or merged — this is not an `Implemented` claim.
 
 ### REQ-NAV-008 — Visual drag-and-drop graph editor
 

@@ -10,11 +10,11 @@ Entry format and status legend: [requirements index](README.md).
 | ID          | Requirement                                           | MoSCoW | Rel. | Milestone    | Status      |
 | ----------- | ----------------------------------------------------- | ------ | ---- | ------------ | ----------- |
 | REQ-DOM-001 | Page/Screen entity                                    | Must   | R1   | M1.1 → M1.16 | In Progress |
-| REQ-DOM-002 | Tracking entity with navigation event and attachment  | Must   | R1   | M1.1         | Implemented |
-| REQ-DOM-003 | Data Layer Property, full attribute set               | Must   | R1   | M1.1         | Implemented |
+| REQ-DOM-002 | Tracking entity with navigation event and attachment  | Must   | R1   | M1.1 → M1.16 | In Progress |
+| REQ-DOM-003 | Data Layer Property, full attribute set               | Must   | R1   | M1.1 → M1.16 | In Progress |
 | REQ-DOM-004 | `object` property type with parent-child hierarchy    | Must   | R1   | M1.1         | Implemented |
 | REQ-DOM-005 | `business_label` field                                | Must   | R1   | M1.1         | Implemented |
-| REQ-DOM-006 | Module entity, project-scoped, inheritable            | Must   | R1   | M1.1         | Implemented |
+| REQ-DOM-006 | Module entity, project-scoped, inheritable            | Must   | R1   | M1.1 → M1.16 | In Progress |
 | REQ-DOM-007 | Opt-in propagation of module changes                  | Must   | R1   | M1.1 → M1.16 | In Progress |
 | REQ-DOM-008 | Property removal with automatic module detachment     | Must   | R1   | M1.1         | Implemented |
 | REQ-DOM-009 | Tracking Template, editor-configurable                | Must   | R1   | M1.1 → M1.16 | In Progress |
@@ -58,7 +58,7 @@ The description is Markdown, like every other rich-text field (REQ-AUTH-001), an
 
 ### REQ-DOM-002 — Tracking entity with navigation event and attachment
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.7 · **Implemented** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) → [M1.16](../milestones.md#m116--authoring-ui) · spec §6.7 · **In Progress** · Issue: — · PR: —
 
 A single tracked event. Attaches either to a specific Page or to a page template. Carries name, navigation event (screen view / popup view / element click / form submission / user error, extensible), applied modules, resulting property set (a set of TrackingProperty records, REQ-DOM-027), specific values, rich-text description, and associated flow edges.
 
@@ -67,10 +67,13 @@ A single tracked event. Attaches either to a specific Page or to a page template
 - The navigation-event list is **project-scoped data owned by editors** (Admin, Project Manager and Editor), not a hard-coded enum in application logic and not instance- or company-wide configuration. An editor can add, rename and deactivate events from the project settings; every tracking's event references that project's list.
 - There is no "cross-page" attachment mode: an action appearing on many screens is a Trigger with several source Pages (REQ-NAV-004).
 - There is no variant mechanism; scenario differences are expressed as property conditions (REQ-DOM-012).
+- [ ] An editor creates a brand-new Tracking from the browser. Not yet true: `TrackingEditorPage` (`useTracking`/`useUpdateTracking`) only edits a Tracking that already exists, and no route reaches a create form — `useCreateTracking` exists in `src/app/queries/trackings.ts` but nothing in `App.tsx` calls it.
+
+> **Found 2026-09-01.** Same defect class as the [2026-08-18 carry-forward](#req-dom--domain-model) above: a service layer with no reachable entry point. Directly blocks the [M1.16 exit criterion](../milestones.md#m116--authoring-ui) ("two trackings, their modules, properties... using the browser only").
 
 ### REQ-DOM-003 — Data Layer Property, full attribute set
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.4 · **Implemented** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) → [M1.16](../milestones.md#m116--authoring-ui) · spec §6.4 · **In Progress** · Issue: — · PR: —
 
 The central entity. Attributes: `id`, `name`, `business_label`, `description`, `data_source` (`development` / `tag_manager` / `other`), `type`, `format_pattern`, `allowed_values`, `example_values`, `pii_flag`, `hashing_policy`, `status`, `introduced_in_version`, `analysis_notes`, `aep_field_group`, `parent_property`, `derived_from`, `destinations`.
 
@@ -81,6 +84,9 @@ The central entity. Attributes: `id`, `name`, `business_label`, `description`, `
 - `introduced_in_version` is set automatically at first publication and never edited by hand.
 - `status` supports `deprecated` without deletion; deprecation is manual, never scheduled.
 - Identifiers are documented as collected in clear text, with `hashing_policy` recording which algorithm applies to which destination — the hashing itself happens downstream.
+- [ ] An editor creates a brand-new Property from the browser. Not yet true: `PropertyEditorPage` only edits an existing Property, and the only way a Property reaches a project is [REQ-DOM-019](#req-dom-019--company-catalogue-copy-on-project-creation)'s catalogue copy — which requires the Property to already exist at company level.
+
+> **Found 2026-09-01.** Same defect class as the [2026-08-18 carry-forward](#req-dom--domain-model) above. Directly blocks the [M1.16 exit criterion](../milestones.md#m116--authoring-ui).
 
 ### REQ-DOM-004 — `object` property type with parent-child hierarchy
 
@@ -112,7 +118,7 @@ A human-readable label alongside the technical name, reserved for the future bus
 
 ### REQ-DOM-006 — Module entity, project-scoped, inheritable
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) · spec §6.5 · **Implemented** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) → [M1.16](../milestones.md#m116--authoring-ui) · spec §6.5 · **In Progress** · Issue: — · PR: —
 
 A named, project-scoped bundle of Data Layer Properties used to add properties to a tracking in bulk. Modules contain properties only and are **not nestable**. They may be inherited from the company catalogue at project creation.
 
@@ -120,6 +126,9 @@ A named, project-scoped bundle of Data Layer Properties used to add properties t
 
 - A module cannot contain another module; the attempt is rejected at the domain level.
 - A module belongs to exactly one project.
+- [ ] An editor creates a brand-new Module from the browser. Not yet true: `ModuleEditorPage` only edits an existing Module (name, description, attached properties); the only way a Module reaches a project is [REQ-DOM-019](#req-dom-019--company-catalogue-copy-on-project-creation)'s catalogue copy.
+
+> **Found 2026-09-01.** Same defect class as the [2026-08-18 carry-forward](#req-dom--domain-model) above. Directly blocks the [M1.16 exit criterion](../milestones.md#m116--authoring-ui).
 
 ### REQ-DOM-007 — Opt-in propagation of module changes
 

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 import type { Page } from '../api';
 import { apiErrorMessageKey, useTranslate } from '../i18n';
-import { usePages } from '../queries';
+import { useFlows, usePages } from '../queries';
 
 interface PageTreeNode {
   page: Page;
@@ -101,6 +101,7 @@ export function PageTreeSidebar(props: PageTreeSidebarProps): ReactElement {
   const { projectId, currentPageId } = props;
   const t = useTranslate();
   const pages = usePages(projectId);
+  const flows = useFlows(projectId);
 
   return (
     <nav
@@ -132,6 +133,37 @@ export function PageTreeSidebar(props: PageTreeSidebarProps): ReactElement {
               node={node}
               projectId={projectId}
             />
+          ))}
+        </ul>
+      ) : null}
+
+      {/* Flows exposed alongside the hierarchy (REQ-NAV-007). */}
+      <div className="mb-3 mt-6 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t('flow.list.title')}</h2>
+        <Button asChild size="sm" variant="ghost">
+          <Link to={`/projects/${projectId}/flows/new`}>{t('flow.list.create')}</Link>
+        </Button>
+      </div>
+
+      {flows.isLoading ? <Skeleton className="h-24" /> : null}
+
+      {flows.isError ? <Alert variant="error">{t(apiErrorMessageKey(flows.error))}</Alert> : null}
+
+      {flows.data?.length === 0 ? (
+        <p className="text-sm text-[var(--color-muted)]">{t('flow.list.empty')}</p>
+      ) : null}
+
+      {flows.data !== undefined && flows.data.length > 0 ? (
+        <ul>
+          {flows.data.map((flow) => (
+            <li key={flow.id}>
+              <Link
+                className="block rounded-md px-2 py-1.5 text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
+                to={`/projects/${projectId}/flows/${flow.id}`}
+              >
+                {flow.name}
+              </Link>
+            </li>
           ))}
         </ul>
       ) : null}

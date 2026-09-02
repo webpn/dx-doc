@@ -7,11 +7,12 @@ import type * as Queries from '../queries';
 
 import { PageEditorPage } from './page-editor-page';
 
-const { update, pageData, pagesData, trackingsData } = vi.hoisted(() => ({
+const { update, pageData, pagesData, trackingsData, flowsData } = vi.hoisted(() => ({
   update: vi.fn(),
   pageData: vi.fn(),
   pagesData: vi.fn(),
   trackingsData: vi.fn(),
+  flowsData: vi.fn(),
 }));
 
 vi.mock('../queries', async (importOriginal) => {
@@ -22,6 +23,7 @@ vi.mock('../queries', async (importOriginal) => {
     usePages: () => pagesData() as unknown,
     useTrackings: () => trackingsData() as unknown,
     useUpdatePage: () => ({ mutateAsync: update, isPending: false }) as unknown,
+    useFlows: () => flowsData() as unknown,
   };
 });
 

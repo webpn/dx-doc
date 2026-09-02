@@ -33,6 +33,24 @@ export {
   type FreePageUpdateInput,
 } from './free-pages';
 export {
+  flowsApi,
+  triggersApi,
+  type Flow,
+  type FlowNode,
+  type FlowEdge,
+  type FlowNodeType,
+  type FlowDetail,
+  type FlowCreateInput,
+  type FlowUpdateInput,
+  type FlowNodeInput,
+  type FlowEdgeInput,
+  type FlowGraphInput,
+  type Trigger,
+  type TriggerDetail,
+  type TriggerCreateInput,
+  type TriggerUpdateInput,
+} from './flows';
+export {
   trackingsApi,
   navigationEventsApi,
   modulesApi,

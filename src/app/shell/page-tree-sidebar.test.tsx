@@ -6,8 +6,9 @@ import type * as Queries from '../queries';
 
 import { PageTreeSidebar } from './page-tree-sidebar';
 
-const { pagesData } = vi.hoisted(() => ({
+const { pagesData, flowsData } = vi.hoisted(() => ({
   pagesData: vi.fn(),
+  flowsData: vi.fn(),
 }));
 
 vi.mock('../queries', async (importOriginal) => {
@@ -15,6 +16,7 @@ vi.mock('../queries', async (importOriginal) => {
   return {
     ...actual,
     usePages: () => pagesData() as unknown,
+    useFlows: () => flowsData() as unknown,
   };
 });
 
@@ -34,6 +36,7 @@ const ORPHAN = { id: 'pg4', name: 'Orphan page', slug: 'orphan', parentId: 'miss
 describe('PageTreeSidebar (REQ-NAV-001)', () => {
   beforeEach(() => {
     pagesData.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
+    flowsData.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
   });
 
   function renderSidebar(currentPageId?: string): ReturnType<typeof renderWithProviders> {

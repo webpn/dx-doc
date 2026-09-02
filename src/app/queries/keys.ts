@@ -15,6 +15,10 @@ export const queryKeys = {
   freePages: (companyId: string, projectId: string | null) =>
     ['companies', companyId, 'free-pages', projectId] as const,
   freePage: (freePageId: string) => ['free-pages', freePageId] as const,
+  flows: (projectId: string) => ['projects', projectId, 'flows'] as const,
+  flow: (flowId: string) => ['flows', flowId] as const,
+  triggers: (projectId: string) => ['projects', projectId, 'triggers'] as const,
+  trigger: (triggerId: string) => ['triggers', triggerId] as const,
   trackings: (projectId: string) => ['projects', projectId, 'trackings'] as const,
   tracking: (trackingId: string) => ['trackings', trackingId] as const,
   navigationEvents: (projectId: string) => ['projects', projectId, 'navigation-events'] as const,

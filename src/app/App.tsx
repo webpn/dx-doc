@@ -13,6 +13,9 @@ import { CatalogueCopyPage } from './shell/catalogue-copy-page';
 import { CompanyCreatePage } from './shell/company-create-page';
 import { CompanyListPage } from './shell/company-list-page';
 import { DestinationEditorPage } from './shell/destination-editor-page';
+import { FlowCreatePage } from './shell/flow-create-page';
+import { FlowEditorPage } from './shell/flow-editor-page';
+import { FlowListPage } from './shell/flow-list-page';
 import { FreePageCreatePage } from './shell/free-page-create-page';
 import { FreePageEditorPage } from './shell/free-page-editor-page';
 import { FreePageListPage } from './shell/free-page-list-page';
@@ -27,6 +30,7 @@ import { PropertyEditorPage } from './shell/property-editor-page';
 import { StepUpPage } from './shell/step-up-page';
 import { TemplateEditorPage } from './shell/template-editor-page';
 import { TrackingEditorPage } from './shell/tracking-editor-page';
+import { TriggerEditorPage } from './shell/trigger-editor-page';
 import { useSessionStore } from './stores/session-store';
 
 /**
@@ -92,6 +96,13 @@ export function App(): ReactElement {
           path="/projects/:projectId/destinations/:destinationId"
         />
         <Route element={<ModuleEditorPage />} path="/projects/:projectId/modules/:moduleId" />
+        <Route element={<FlowListPage />} path="/projects/:projectId/flows" />
+        <Route element={<FlowCreatePage />} path="/projects/:projectId/flows/new" />
+        <Route element={<FlowEditorPage />} path="/projects/:projectId/flows/:flowId" />
+        <Route
+          element={<TriggerEditorPage />}
+          path="/projects/:projectId/triggers/:triggerId"
+        />
         <Route element={<FreePageListPage />} path="/projects/:projectId/free-pages" />
         <Route element={<FreePageCreatePage />} path="/projects/:projectId/free-pages/new" />
         <Route
