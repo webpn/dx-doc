@@ -250,6 +250,7 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
     auditLogs,
     hasher,
     projects,
+    pages,
     permissions,
     search,
   );

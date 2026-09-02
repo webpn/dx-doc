@@ -26,6 +26,7 @@ import {
   openSqliteConnection,
   type Connection,
 } from '@project/infrastructure/persistence/sqlite-kysely';
+import { SqlitePageRepository } from '@project/infrastructure/persistence/sqlite-page-repository';
 import { SqliteProjectRepository } from '@project/infrastructure/persistence/sqlite-project-repository';
 import {
   SqliteDestinationRepository,
@@ -166,6 +167,7 @@ describe('TrackingService (M1.1 Application Service)', () => {
     const accountRepo = new SqliteAccountRepository(connection.kysely);
     const permissions = new PermissionService(accountRepo);
     const projectRepo = new SqliteProjectRepository(connection.kysely);
+    const pageRepo = new SqlitePageRepository(connection.kysely);
     propRepo = new SqlitePropertyRepository(connection.kysely);
     modRepo = new SqliteModuleRepository(connection.kysely);
     const destRepo = new SqliteDestinationRepository(connection.kysely);
@@ -196,6 +198,7 @@ describe('TrackingService (M1.1 Application Service)', () => {
       auditLogRepo,
       hasher,
       projectRepo,
+      pageRepo,
       permissions,
     );
   });

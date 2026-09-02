@@ -14,6 +14,7 @@ import {
   openSqliteConnection,
   type Connection,
 } from '@project/infrastructure/persistence/sqlite-kysely';
+import { SqlitePageRepository } from '@project/infrastructure/persistence/sqlite-page-repository';
 import { SqliteProjectRepository } from '@project/infrastructure/persistence/sqlite-project-repository';
 import { SqliteServiceTokenRepository } from '@project/infrastructure/persistence/sqlite-service-token-repository';
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
@@ -58,6 +59,10 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
   let sessionTokenVal: string;
   const companyId = 'comp-api-test';
   const projectId = 'proj-api-test';
+  const otherProjectId = 'proj-api-other';
+  const ownPageId = 'page-api-own';
+  const otherPageId = 'page-api-other';
+  const otherNavEventId = 'nav-api-other';
 
   beforeEach(async () => {
     dir = mkdtempSync(path.join(tmpdir(), 'dxdoc-tracking-api-'));
@@ -121,6 +126,58 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
       })
       .execute();
 
+    // REQ-DOM-028 fixtures need a second project in the same company to prove
+    // cross-project references are rejected rather than merely absent.
+    await connection.kysely
+      .insertInto('projects')
+      .values({
+        id: otherProjectId,
+        company_id: companyId,
+        name: 'API Other Project',
+        slug: 'api-proj-other',
+        platform: 'web',
+        created_at: nowIso,
+        updated_at: nowIso,
+      })
+      .execute();
+
+    await connection.kysely
+      .insertInto('pages')
+      .values([
+        {
+          id: ownPageId,
+          project_id: projectId,
+          parent_id: null,
+          name: 'Own Home',
+          slug: 'own-home',
+          custom_id: null,
+          created_at: nowIso,
+          updated_at: nowIso,
+        },
+        {
+          id: otherPageId,
+          project_id: otherProjectId,
+          parent_id: null,
+          name: 'Other Home',
+          slug: 'other-home',
+          custom_id: null,
+          created_at: nowIso,
+          updated_at: nowIso,
+        },
+      ])
+      .execute();
+
+    await connection.kysely
+      .insertInto('navigation_events')
+      .values({
+        id: otherNavEventId,
+        project_id: otherProjectId,
+        name: 'Other Screen View',
+        created_at: nowIso,
+        updated_at: nowIso,
+      })
+      .execute();
+
     await connection.kysely
       .insertInto('project_grants')
       .values({
@@ -145,6 +202,7 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     const permissions = new PermissionService(accounts);
 
     const projectRepo = new SqliteProjectRepository(connection.kysely);
+    const pageRepo = new SqlitePageRepository(connection.kysely);
     const propRepo = new SqlitePropertyRepository(connection.kysely);
     const modRepo = new SqliteModuleRepository(connection.kysely);
     const destRepo = new SqliteDestinationRepository(connection.kysely);
@@ -174,6 +232,7 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
       auditLogRepo,
       hasher,
       projectRepo,
+      pageRepo,
       permissions,
       searchIndex,
     );
@@ -476,5 +535,117 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     const results = searchRes.json<{ documentId: string; title: string }[]>();
     expect(results.length).toBeGreaterThan(0);
     expect(results[0]?.title).toContain('page_type');
+  });
+
+  it("rejects creating a tracking that references another project's page (REQ-DOM-028)", async () => {
+    const navRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/navigation-events`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'Screen View' },
+    });
+    expect(navRes.statusCode).toBe(201);
+    const navId = navRes.json<{ id: string }>().id;
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/trackings`,
+      headers: { cookie: editorCookie },
+      payload: {
+        name: 'Foreign Page Load',
+        slug: 'foreign-page-load',
+        navigationEventId: navId,
+        pageId: otherPageId,
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json<{ error: { code: string } }>().error.code).toBe('CROSS_PROJECT_REFERENCE');
+  });
+
+  it("rejects updating a tracking to reference another project's page (REQ-DOM-028)", async () => {
+    const navRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/navigation-events`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'Screen View' },
+    });
+    expect(navRes.statusCode).toBe(201);
+    const navId = navRes.json<{ id: string }>().id;
+
+    const trkRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/trackings`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'Home Page Load', slug: 'home-page-load', navigationEventId: navId },
+    });
+    expect(trkRes.statusCode).toBe(201);
+    const trkId = trkRes.json<{ id: string }>().id;
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/api/trackings/${trkId}`,
+      headers: { cookie: editorCookie },
+      payload: { pageId: otherPageId },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json<{ error: { code: string } }>().error.code).toBe('CROSS_PROJECT_REFERENCE');
+  });
+
+  it("rejects updating a tracking to reference another project's navigation event (REQ-DOM-028)", async () => {
+    const navRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/navigation-events`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'Screen View' },
+    });
+    expect(navRes.statusCode).toBe(201);
+    const navId = navRes.json<{ id: string }>().id;
+
+    const trkRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/trackings`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'Home Page Load', slug: 'home-page-load', navigationEventId: navId },
+    });
+    expect(trkRes.statusCode).toBe(201);
+    const trkId = trkRes.json<{ id: string }>().id;
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/api/trackings/${trkId}`,
+      headers: { cookie: editorCookie },
+      payload: { navigationEventId: otherNavEventId },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json<{ error: { code: string } }>().error.code).toBe('CROSS_PROJECT_REFERENCE');
+  });
+
+  it('creates a tracking with a same-project page reference (REQ-DOM-028 positive control)', async () => {
+    const navRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/navigation-events`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'Screen View' },
+    });
+    expect(navRes.statusCode).toBe(201);
+    const navId = navRes.json<{ id: string }>().id;
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/trackings`,
+      headers: { cookie: editorCookie },
+      payload: {
+        name: 'Own Page Load',
+        slug: 'own-page-load',
+        navigationEventId: navId,
+        pageId: ownPageId,
+      },
+    });
+
+    expect(res.statusCode).toBe(201);
+    expect(res.json<{ id: string }>().id).toBeDefined();
   });
 });

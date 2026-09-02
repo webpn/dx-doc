@@ -44,6 +44,7 @@ import { generateMermaidDiagram } from '@project/domain/mermaid';
 import { err, ok, type Result } from '@project/shared/result';
 
 import type { PermissionService } from '../auth/permissions';
+import type { PageRepository } from '../ports/page-repository';
 import type { PasswordHasher } from '../ports/password-hasher';
 import type { ProjectRepository } from '../ports/project-repository';
 import type { IndexableDocument, SearchIndex, SearchResult } from '../ports/search';
@@ -156,6 +157,7 @@ export class TrackingService {
     private readonly auditLogs: AuditLogRepository,
     private readonly passwordHasher: PasswordHasher,
     private readonly projects: ProjectRepository,
+    private readonly pages: PageRepository,
     private readonly permissions: PermissionService,
     private readonly searchIndex?: SearchIndex,
     private readonly now: () => Date = () => new Date(),
@@ -1617,13 +1619,22 @@ export class TrackingService {
       return err({ kind: 'not_found' });
     }
 
+    const pageId = templateConfig.pageId ?? parsed.value.pageId ?? null;
+    if (pageId !== null) {
+      const page = await this.pages.getPageById(pageId);
+      // REQ-DOM-028: Check project match
+      if (page?.projectId !== projectId) {
+        return err({ kind: 'cross_project_reference' });
+      }
+    }
+
     const trackingId = this.newId();
     const nowIso = this.now().toISOString();
 
     await this.trackings.createTracking({
       id: trackingId,
       projectId,
-      pageId: templateConfig.pageId ?? parsed.value.pageId ?? null,
+      pageId,
       navigationEventId,
       name: parsed.value.name,
       slug: parsed.value.slug,
@@ -1632,6 +1643,16 @@ export class TrackingService {
       createdAt: nowIso,
       updatedAt: nowIso,
     });
+
+    if (templateConfig.moduleIds !== undefined) {
+      for (const moduleId of templateConfig.moduleIds) {
+        const mod = await this.modules.getModuleById(moduleId);
+        // REQ-DOM-028: Check project match — catalogue modules (projectId null) are allowed
+        if (!mod || (mod.projectId !== null && mod.projectId !== projectId)) {
+          return err({ kind: 'cross_project_reference' });
+        }
+      }
+    }
 
     if (templateConfig.moduleIds !== undefined && templateConfig.moduleIds.length > 0) {
       await this.trackings.setTrackingModules(trackingId, templateConfig.moduleIds, nowIso);
@@ -1728,6 +1749,21 @@ export class TrackingService {
     const parsed = validate(trackingUpdateSchema, input);
     if (!parsed.ok) {
       return err({ kind: 'validation', issues: parsed.error });
+    }
+
+    if (parsed.value.pageId !== undefined) {
+      const page = await this.pages.getPageById(parsed.value.pageId);
+      // REQ-DOM-028: Check project match
+      if (page?.projectId !== tracking.projectId) {
+        return err({ kind: 'cross_project_reference' });
+      }
+    }
+    if (parsed.value.navigationEventId !== undefined) {
+      const navEvent = await this.navEvents.getNavigationEventById(parsed.value.navigationEventId);
+      // REQ-DOM-028: Check project match
+      if (navEvent?.projectId !== tracking.projectId) {
+        return err({ kind: 'cross_project_reference' });
+      }
     }
 
     // Optimistic concurrency check (REQ-AUTH-005, ADR-0016): the guard is
