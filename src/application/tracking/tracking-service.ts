@@ -404,20 +404,22 @@ export class TrackingService {
       });
     }
 
-    const project = await this.projects.getProjectById(prop.companyId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId: prop.companyId,
-        projectId: prop.projectId,
-        actorId,
-        action: 'property.updated',
-        entityType: 'property',
-        entityId: propertyId,
-        details: { name: updated.name, dataSource: updated.dataSource },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity updates are always audited. The permission guard
+    // above already authorized the actor against the entity's own project
+    // or company scope, and a catalogue update legitimately has no project
+    // — the audit_logs.project_id column is nullable, matching the
+    // company-level auth events that write null the same way.
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: prop.companyId,
+      projectId: prop.projectId,
+      actorId,
+      action: 'property.updated',
+      entityType: 'property',
+      entityId: propertyId,
+      details: { name: updated.name, dataSource: updated.dataSource },
+      createdAt: nowIso,
+    });
 
     return ok({ ok: true });
   }
@@ -456,20 +458,22 @@ export class TrackingService {
 
     await this.properties.deleteProperty(propertyId);
 
-    const project = await this.projects.getProjectById(prop.companyId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId: prop.companyId,
-        projectId: prop.projectId,
-        actorId,
-        action: 'property.deleted',
-        entityType: 'property',
-        entityId: propertyId,
-        details: { name: prop.name },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity deletions are always audited. The permission
+    // guard above already authorized the actor against the entity's own
+    // project or company scope, and a catalogue deletion legitimately has
+    // no project — the audit_logs.project_id column is nullable, matching
+    // the company-level auth events that write null the same way.
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: prop.companyId,
+      projectId: prop.projectId,
+      actorId,
+      action: 'property.deleted',
+      entityType: 'property',
+      entityId: propertyId,
+      details: { name: prop.name },
+      createdAt: nowIso,
+    });
 
     return ok({ ok: true });
   }
@@ -643,23 +647,25 @@ export class TrackingService {
       await this.modules.setModuleProperties(moduleId, parsed.value.propertyIds, nowIso);
     }
 
-    const project = await this.projects.getProjectById(mod.companyId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId: mod.companyId,
-        projectId: mod.projectId,
-        actorId,
-        action: 'module.updated',
-        entityType: 'module',
-        entityId: moduleId,
-        details: {
-          name: parsed.value.name ?? mod.name,
-          propertyIdsChanged: parsed.value.propertyIds !== undefined,
-        },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity updates are always audited. The permission guard
+    // above already authorized the actor against the entity's own project
+    // or company scope, and a catalogue update legitimately has no project
+    // — the audit_logs.project_id column is nullable, matching the
+    // company-level auth events that write null the same way.
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: mod.companyId,
+      projectId: mod.projectId,
+      actorId,
+      action: 'module.updated',
+      entityType: 'module',
+      entityId: moduleId,
+      details: {
+        name: parsed.value.name ?? mod.name,
+        propertyIdsChanged: parsed.value.propertyIds !== undefined,
+      },
+      createdAt: nowIso,
+    });
 
     return ok({ ok: true });
   }
@@ -695,20 +701,22 @@ export class TrackingService {
 
     await this.modules.deleteModule(moduleId);
 
-    const project = await this.projects.getProjectById(mod.companyId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId: mod.companyId,
-        projectId: mod.projectId,
-        actorId,
-        action: 'module.deleted',
-        entityType: 'module',
-        entityId: moduleId,
-        details: { name: mod.name },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity deletions are always audited. The permission
+    // guard above already authorized the actor against the entity's own
+    // project or company scope, and a catalogue deletion legitimately has
+    // no project — the audit_logs.project_id column is nullable, matching
+    // the company-level auth events that write null the same way.
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: mod.companyId,
+      projectId: mod.projectId,
+      actorId,
+      action: 'module.deleted',
+      entityType: 'module',
+      entityId: moduleId,
+      details: { name: mod.name },
+      createdAt: nowIso,
+    });
 
     return ok({ ok: true });
   }
@@ -877,20 +885,22 @@ export class TrackingService {
       });
     }
 
-    const project = await this.projects.getProjectById(dest.companyId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId: dest.companyId,
-        projectId: dest.projectId,
-        actorId,
-        action: 'destination.updated',
-        entityType: 'destination',
-        entityId: destinationId,
-        details: { name: dest.name, platform: dest.platform },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity updates are always audited. The permission guard
+    // above already authorized the actor against the entity's own project
+    // or company scope, and a catalogue update legitimately has no project
+    // — the audit_logs.project_id column is nullable, matching the
+    // company-level auth events that write null the same way.
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: dest.companyId,
+      projectId: dest.projectId,
+      actorId,
+      action: 'destination.updated',
+      entityType: 'destination',
+      entityId: destinationId,
+      details: { name: dest.name, platform: dest.platform },
+      createdAt: nowIso,
+    });
 
     return ok({ ok: true });
   }
@@ -926,20 +936,22 @@ export class TrackingService {
 
     await this.destinations.deleteDestination(destinationId);
 
-    const project = await this.projects.getProjectById(dest.companyId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId: dest.companyId,
-        projectId: dest.projectId,
-        actorId,
-        action: 'destination.deleted',
-        entityType: 'destination',
-        entityId: destinationId,
-        details: { name: dest.name },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity deletions are always audited. The permission
+    // guard above already authorized the actor against the entity's own
+    // project or company scope, and a catalogue deletion legitimately has
+    // no project — the audit_logs.project_id column is nullable, matching
+    // the company-level auth events that write null the same way.
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: dest.companyId,
+      projectId: dest.projectId,
+      actorId,
+      action: 'destination.deleted',
+      entityType: 'destination',
+      entityId: destinationId,
+      details: { name: dest.name },
+      createdAt: nowIso,
+    });
 
     return ok({ ok: true });
   }
@@ -1313,20 +1325,22 @@ export class TrackingService {
       });
     }
 
-    const project = await this.projects.getProjectById(tpl.companyId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId: tpl.companyId,
-        projectId: tpl.projectId,
-        actorId,
-        action: 'tracking_template.updated',
-        entityType: 'tracking_template',
-        entityId: templateId,
-        details: { name: tpl.name },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity updates are always audited. The permission guard
+    // above already authorized the actor against the entity's own project
+    // or company scope, and a catalogue update legitimately has no project
+    // — the audit_logs.project_id column is nullable, matching the
+    // company-level auth events that write null the same way.
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: tpl.companyId,
+      projectId: tpl.projectId,
+      actorId,
+      action: 'tracking_template.updated',
+      entityType: 'tracking_template',
+      entityId: templateId,
+      details: { name: tpl.name },
+      createdAt: nowIso,
+    });
 
     return ok({ ok: true });
   }
@@ -1354,20 +1368,22 @@ export class TrackingService {
 
     const nowIso = this.now().toISOString();
 
-    const project = await this.projects.getProjectById(tpl.companyId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId: tpl.companyId,
-        projectId: tpl.projectId,
-        actorId,
-        action: 'tracking_template.deleted',
-        entityType: 'tracking_template',
-        entityId: templateId,
-        details: { name: tpl.name },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity deletions are always audited. The permission
+    // guard above already authorized the actor against the entity's own
+    // project or company scope, and a catalogue deletion legitimately has
+    // no project — the audit_logs.project_id column is nullable, matching
+    // the company-level auth events that write null the same way.
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: tpl.companyId,
+      projectId: tpl.projectId,
+      actorId,
+      action: 'tracking_template.deleted',
+      entityType: 'tracking_template',
+      entityId: templateId,
+      details: { name: tpl.name },
+      createdAt: nowIso,
+    });
 
     return ok({ ok: true });
   }
@@ -1575,20 +1591,22 @@ export class TrackingService {
       });
     }
 
-    const project = await this.projects.getProjectById(fp.companyId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId: fp.companyId,
-        projectId: fp.projectId,
-        actorId,
-        action: 'free_page.updated',
-        entityType: 'free_page',
-        entityId: freePageId,
-        details: { title: fp.title, slug: fp.slug },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity updates are always audited. The permission guard
+    // above already authorized the actor against the entity's own project
+    // or company scope, and a catalogue update legitimately has no project
+    // — the audit_logs.project_id column is nullable, matching the
+    // company-level auth events that write null the same way.
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: fp.companyId,
+      projectId: fp.projectId,
+      actorId,
+      action: 'free_page.updated',
+      entityType: 'free_page',
+      entityId: freePageId,
+      details: { title: fp.title, slug: fp.slug },
+      createdAt: nowIso,
+    });
 
     return ok({ ok: true });
   }
@@ -1614,21 +1632,23 @@ export class TrackingService {
 
     await this.freePages.deleteFreePage(freePageId);
 
-    const project = await this.projects.getProjectById(fp.companyId);
-    if (project) {
-      const nowIso = this.now().toISOString();
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId: fp.companyId,
-        projectId: fp.projectId,
-        actorId,
-        action: 'free_page.deleted',
-        entityType: 'free_page',
-        entityId: freePageId,
-        details: { title: fp.title, slug: fp.slug },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity deletions are always audited. The permission
+    // guard above already authorized the actor against the entity's own
+    // project or company scope, and a catalogue deletion legitimately has
+    // no project — the audit_logs.project_id column is nullable, matching
+    // the company-level auth events that write null the same way.
+    const nowIso = this.now().toISOString();
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: fp.companyId,
+      projectId: fp.projectId,
+      actorId,
+      action: 'free_page.deleted',
+      entityType: 'free_page',
+      entityId: freePageId,
+      details: { title: fp.title, slug: fp.slug },
+      createdAt: nowIso,
+    });
 
     return ok({ ok: true });
   }

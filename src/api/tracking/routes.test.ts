@@ -874,6 +874,222 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     expectCatalogueEntry('free_page.created', pageId);
   });
 
+  it('appends an audit entry for every project-scoped entity update and delete (REQ-SEC-006)', async () => {
+    // Regression guard: each of these update and delete paths used to
+    // resolve their audit-log guard's project with the company id, never
+    // matched, and silently wrote no entry — the update and delete event
+    // classes REQ-SEC-006 requires.
+    const propRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/properties`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'page_language', type: 'string', dataSource: 'development' },
+    });
+    expect(propRes.statusCode).toBe(201);
+    const propId = propRes.json<{ id: string }>().id;
+
+    const modRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/modules`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'Localization Module' },
+    });
+    expect(modRes.statusCode).toBe(201);
+    const modId = modRes.json<{ id: string }>().id;
+
+    const destRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/destinations?projectId=${projectId}`,
+      headers: { cookie: editorCookie },
+      payload: {
+        platform: 'web',
+        variableType: 'js_variable',
+        identifier: 'window.dataLayer',
+        name: 'Data Layer',
+      },
+    });
+    expect(destRes.statusCode).toBe(201);
+    const destId = destRes.json<{ id: string }>().id;
+
+    const tplRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/tracking-templates?projectId=${projectId}`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'Page View' },
+    });
+    expect(tplRes.statusCode).toBe(201);
+    const tplId = tplRes.json<{ id: string }>().id;
+
+    const pageRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/free-pages?projectId=${projectId}`,
+      headers: { cookie: editorCookie },
+      payload: { title: 'Integration', slug: 'audit-integration', content: '# Integration' },
+    });
+    expect(pageRes.statusCode).toBe(201);
+    const pageId = pageRes.json<{ id: string }>().id;
+
+    const updates: { url: string; payload: Record<string, string> }[] = [
+      { url: `/api/properties/${propId}`, payload: { name: 'page_language_v2' } },
+      { url: `/api/modules/${modId}`, payload: { name: 'Localization Module v2' } },
+      { url: `/api/destinations/${destId}`, payload: { name: 'Data Layer v2' } },
+      { url: `/api/tracking-templates/${tplId}`, payload: { name: 'Page View v2' } },
+      { url: `/api/free-pages/${pageId}`, payload: { title: 'Integration v2' } },
+    ];
+    for (const update of updates) {
+      const res = await app.inject({
+        method: 'PATCH',
+        url: update.url,
+        headers: { cookie: editorCookie },
+        payload: update.payload,
+      });
+      expect(res.statusCode).toBe(200);
+    }
+
+    // Freshly created entities with no references delete cleanly — the
+    // ADR-0025 referential blockers only fire when trackings, modules or
+    // child properties still point at the row.
+    const deleteUrls = [
+      `/api/properties/${propId}`,
+      `/api/modules/${modId}`,
+      `/api/destinations/${destId}`,
+      `/api/tracking-templates/${tplId}`,
+      `/api/free-pages/${pageId}`,
+    ];
+    for (const url of deleteUrls) {
+      const res = await app.inject({ method: 'DELETE', url, headers: { cookie: editorCookie } });
+      expect(res.statusCode).toBe(200);
+    }
+
+    const logs = await auditLogRepo.listLogsForProject(projectId, 500);
+    const expectAuditEntry = (action: string, entityId: string, entityType: string): void => {
+      const entry = logs.find((l) => l.action === action && l.entityId === entityId);
+      expect(entry).toBeDefined();
+      expect(entry?.entityType).toBe(entityType);
+      expect(entry?.projectId).toBe(projectId);
+      expect(entry?.companyId).toBe(companyId);
+      expect(entry?.actorId).toBe('user-editor');
+    };
+    expectAuditEntry('property.updated', propId, 'property');
+    expectAuditEntry('module.updated', modId, 'module');
+    expectAuditEntry('destination.updated', destId, 'destination');
+    expectAuditEntry('tracking_template.updated', tplId, 'tracking_template');
+    expectAuditEntry('free_page.updated', pageId, 'free_page');
+    expectAuditEntry('property.deleted', propId, 'property');
+    expectAuditEntry('module.deleted', modId, 'module');
+    expectAuditEntry('destination.deleted', destId, 'destination');
+    expectAuditEntry('tracking_template.deleted', tplId, 'tracking_template');
+    expectAuditEntry('free_page.deleted', pageId, 'free_page');
+  });
+
+  it('appends company-level audit entries for every catalogue entity update and delete (REQ-SEC-006)', async () => {
+    // Catalogue scope requires company.manage_catalogue — an admin company
+    // role the project-only editor lacks. The entries must carry a null
+    // project: audit_logs.project_id is nullable and the company-level auth
+    // events (login, invitation, ...) already write null the same way.
+    const propRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/properties`,
+      headers: { cookie: adminCookie },
+      payload: { name: 'catalogue_page_language', type: 'string', dataSource: 'development' },
+    });
+    expect(propRes.statusCode).toBe(201);
+    const propId = propRes.json<{ id: string }>().id;
+
+    const modRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/modules`,
+      headers: { cookie: adminCookie },
+      payload: { name: 'Catalogue Module' },
+    });
+    expect(modRes.statusCode).toBe(201);
+    const modId = modRes.json<{ id: string }>().id;
+
+    const destRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/destinations`,
+      headers: { cookie: adminCookie },
+      payload: {
+        platform: 'web',
+        variableType: 'js_variable',
+        identifier: 'window.dataLayer',
+        name: 'Catalogue Data Layer',
+      },
+    });
+    expect(destRes.statusCode).toBe(201);
+    const destId = destRes.json<{ id: string }>().id;
+
+    const tplRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/tracking-templates`,
+      headers: { cookie: adminCookie },
+      payload: { name: 'Catalogue Page View' },
+    });
+    expect(tplRes.statusCode).toBe(201);
+    const tplId = tplRes.json<{ id: string }>().id;
+
+    const pageRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/free-pages`,
+      headers: { cookie: adminCookie },
+      payload: {
+        title: 'Catalogue Integration',
+        slug: 'catalogue-integration',
+        content: '# Catalogue',
+      },
+    });
+    expect(pageRes.statusCode).toBe(201);
+    const pageId = pageRes.json<{ id: string }>().id;
+
+    const updates: { url: string; payload: Record<string, string> }[] = [
+      { url: `/api/properties/${propId}`, payload: { name: 'catalogue_page_language_v2' } },
+      { url: `/api/modules/${modId}`, payload: { name: 'Catalogue Module v2' } },
+      { url: `/api/destinations/${destId}`, payload: { name: 'Catalogue Data Layer v2' } },
+      { url: `/api/tracking-templates/${tplId}`, payload: { name: 'Catalogue Page View v2' } },
+      { url: `/api/free-pages/${pageId}`, payload: { title: 'Catalogue Integration v2' } },
+    ];
+    for (const update of updates) {
+      const res = await app.inject({
+        method: 'PATCH',
+        url: update.url,
+        headers: { cookie: adminCookie },
+        payload: update.payload,
+      });
+      expect(res.statusCode).toBe(200);
+    }
+
+    const deleteUrls = [
+      `/api/properties/${propId}`,
+      `/api/modules/${modId}`,
+      `/api/destinations/${destId}`,
+      `/api/tracking-templates/${tplId}`,
+      `/api/free-pages/${pageId}`,
+    ];
+    for (const url of deleteUrls) {
+      const res = await app.inject({ method: 'DELETE', url, headers: { cookie: adminCookie } });
+      expect(res.statusCode).toBe(200);
+    }
+
+    const logs = await auditLogRepo.listLogsForCompany(companyId, 500);
+    const expectCatalogueEntry = (action: string, entityId: string): void => {
+      const entry = logs.find((l) => l.action === action && l.entityId === entityId);
+      expect(entry).toBeDefined();
+      expect(entry?.projectId).toBeNull();
+      expect(entry?.companyId).toBe(companyId);
+      expect(entry?.actorId).toBe('user-admin');
+    };
+    expectCatalogueEntry('property.updated', propId);
+    expectCatalogueEntry('module.updated', modId);
+    expectCatalogueEntry('destination.updated', destId);
+    expectCatalogueEntry('tracking_template.updated', tplId);
+    expectCatalogueEntry('free_page.updated', pageId);
+    expectCatalogueEntry('property.deleted', propId);
+    expectCatalogueEntry('module.deleted', modId);
+    expectCatalogueEntry('destination.deleted', destId);
+    expectCatalogueEntry('tracking_template.deleted', tplId);
+    expectCatalogueEntry('free_page.deleted', pageId);
+  });
+
   it('rejects an unauthenticated project-level property create', async () => {
     const res = await app.inject({
       method: 'POST',
