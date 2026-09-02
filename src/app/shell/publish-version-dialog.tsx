@@ -17,7 +17,13 @@ import { Link } from 'react-router-dom';
 
 import { ApiClientError, type PublishVersionInput } from '../api';
 import { apiErrorMessageKey, useTranslate } from '../i18n';
-import { usePublicationPreview, usePublishVersion } from '../queries';
+import {
+  useFlows,
+  useFreePages,
+  usePublicationPreview,
+  usePublishVersion,
+  useTrackings,
+} from '../queries';
 
 import { ChangelogList } from './changelog-list';
 
@@ -29,9 +35,10 @@ export interface PublishVersionDialogProps {
 }
 
 /**
- * The publication flow in one dialog (M1.17, REQ-VER-004, REQ-VER-005): the
- * pre-publication diff the editor reviews before confirming, the version
- * metadata they supply at publication, and the success/error states of the
+ * The publication flow in one dialog (M1.17, REQ-VER-003, REQ-VER-004,
+ * REQ-VER-005): the pre-publication diff the editor reviews before
+ * confirming, the entities they can hold back from this publication only,
+ * the version metadata they supply, and the success/error states of the
  * command itself.
  *
  * Radix unmounts a closed dialog's content, so the form state resets on
@@ -63,11 +70,22 @@ function PublishVersionForm(props: {
   const t = useTranslate();
   const [title, setTitle] = useState('');
   const [releaseNotes, setReleaseNotes] = useState('');
+  const [holdBackOpen, setHoldBackOpen] = useState(false);
+  const [excludedTrackingIds, setExcludedTrackingIds] = useState<string[]>([]);
+  const [excludedPageIds, setExcludedPageIds] = useState<string[]>([]);
+  const [excludedFlowIds, setExcludedFlowIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [publishedNumber, setPublishedNumber] = useState<number | null>(null);
 
   const preview = usePublicationPreview(companyId, projectId, true);
   const publish = usePublishVersion(companyId, projectId);
+  const trackings = useTrackings(projectId);
+  const pages = useFreePages(companyId, projectId);
+  const flows = useFlows(projectId);
+
+  function toggle(list: string[], id: string): string[] {
+    return list.includes(id) ? list.filter((entry) => entry !== id) : [...list, id];
+  }
 
   async function handleConfirm(): Promise<void> {
     setError(null);
@@ -77,6 +95,11 @@ function PublishVersionForm(props: {
     const input: PublishVersionInput = {};
     if (title !== '') input.title = title;
     if (releaseNotes !== '') input.releaseNotes = releaseNotes;
+    // Selective publication (REQ-VER-003): a held-back entity travels in the
+    // publish body; an omitted array is the server's "publish everything".
+    if (excludedTrackingIds.length > 0) input.excludedTrackingIds = excludedTrackingIds;
+    if (excludedPageIds.length > 0) input.excludedPageIds = excludedPageIds;
+    if (excludedFlowIds.length > 0) input.excludedFlowIds = excludedFlowIds;
 
     try {
       const result = await publish.mutateAsync(input);
@@ -148,6 +171,62 @@ function PublishVersionForm(props: {
         {preview.data?.changelog.length ? <ChangelogList entries={preview.data.changelog} /> : null}
       </section>
 
+      <section className="mt-4">
+        <button
+          aria-expanded={holdBackOpen}
+          className="text-sm font-semibold text-[var(--color-ink)] underline underline-offset-2"
+          onClick={() => {
+            setHoldBackOpen((current) => !current);
+          }}
+          type="button"
+        >
+          {t('publish.holdBack.summary')}
+        </button>
+        {holdBackOpen ? (
+          <div className="mt-2 grid gap-3">
+            <p className="text-sm text-[var(--color-muted)]">{t('publish.holdBack.hint')}</p>
+            <HoldBackGroup
+              idPrefix="publish-hold-back-tracking"
+              isError={trackings.isError}
+              isLoading={trackings.isLoading}
+              items={(trackings.data ?? []).map((tracking) => ({
+                id: tracking.id,
+                name: tracking.name,
+              }))}
+              legend={t('publish.holdBack.trackings')}
+              onToggle={(id) => {
+                setExcludedTrackingIds((current) => toggle(current, id));
+              }}
+              selectedIds={excludedTrackingIds}
+            />
+            <HoldBackGroup
+              idPrefix="publish-hold-back-page"
+              isError={pages.isError}
+              isLoading={pages.isLoading}
+              items={(pages.data ?? [])
+                .filter((page) => page.publishable)
+                .map((page) => ({ id: page.id, name: page.title }))}
+              legend={t('publish.holdBack.pages')}
+              onToggle={(id) => {
+                setExcludedPageIds((current) => toggle(current, id));
+              }}
+              selectedIds={excludedPageIds}
+            />
+            <HoldBackGroup
+              idPrefix="publish-hold-back-flow"
+              isError={flows.isError}
+              isLoading={flows.isLoading}
+              items={(flows.data ?? []).map((flow) => ({ id: flow.id, name: flow.name }))}
+              legend={t('publish.holdBack.flows')}
+              onToggle={(id) => {
+                setExcludedFlowIds((current) => toggle(current, id));
+              }}
+              selectedIds={excludedFlowIds}
+            />
+          </div>
+        ) : null}
+      </section>
+
       <div className="mt-4 grid gap-4">
         <Field htmlFor="publish-title" label={t('publish.titleLabel')}>
           <Input
@@ -185,5 +264,58 @@ function PublishVersionForm(props: {
         </Button>
       </DialogFooter>
     </form>
+  );
+}
+
+/**
+ * One checkbox group of the hold-back section (REQ-VER-003): a fieldset with
+ * a legend names the group for assistive tech, and native checkboxes keep it
+ * keyboard operable without extra wiring.
+ */
+function HoldBackGroup(props: {
+  idPrefix: string;
+  isError: boolean;
+  isLoading: boolean;
+  items: { id: string; name: string }[];
+  legend: string;
+  onToggle: (id: string) => void;
+  selectedIds: string[];
+}): ReactElement {
+  const t = useTranslate();
+  return (
+    <fieldset>
+      <legend className="text-sm font-semibold text-[var(--color-ink)]">{props.legend}</legend>
+      {props.isLoading ? (
+        <p className="text-sm text-[var(--color-muted)]" role="status">
+          {t('publish.holdBack.loading')}
+        </p>
+      ) : null}
+      {props.isError ? (
+        <p className="text-sm text-[var(--color-muted)]">{t('publish.holdBack.loadError')}</p>
+      ) : null}
+      {!props.isLoading && !props.isError && props.items.length === 0 ? (
+        <p className="text-sm text-[var(--color-muted)]">{t('publish.holdBack.empty')}</p>
+      ) : null}
+      {props.items.length > 0 ? (
+        <ul className="mt-1 grid gap-1">
+          {props.items.map((item) => {
+            const inputId = `${props.idPrefix}-${item.id}`;
+            return (
+              <li className="flex items-center gap-2" key={item.id}>
+                <input
+                  checked={props.selectedIds.includes(item.id)}
+                  id={inputId}
+                  onChange={() => {
+                    props.onToggle(item.id);
+                  }}
+                  type="checkbox"
+                />
+                <label htmlFor={inputId}>{item.name}</label>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </fieldset>
   );
 }

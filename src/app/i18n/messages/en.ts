@@ -553,6 +553,16 @@ export const en = {
   'publish.previewLoading': 'Comparing the draft with the last publication…',
   'publish.previewLoadError': 'The pre-publication diff could not be loaded.',
   'publish.previewEmpty': 'Nothing has changed since the last publication.',
+  'publish.holdBack.summary': 'Hold back from this publication',
+  'publish.holdBack.hint':
+    'Excluded items are not lost: they stay in the draft and can be included in a later publication.',
+  'publish.holdBack.trackings': 'Trackings',
+  'publish.holdBack.pages': 'Pages',
+  'publish.holdBack.flows': 'Flows',
+  'publish.holdBack.loading': 'Loading the project items…',
+  'publish.holdBack.loadError':
+    'This list could not be loaded, so nothing can be held back from it.',
+  'publish.holdBack.empty': 'Nothing here yet.',
   'publish.confirm': 'Publish version',
   'publish.confirming': 'Publishing…',
   'publish.cancel': 'Cancel',

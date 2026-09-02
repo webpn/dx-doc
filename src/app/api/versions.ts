@@ -68,9 +68,10 @@ export interface PublishVersionResult {
 
 /**
  * The diff between the draft and the last publication, as the pre-publication
- * preview returns it (REQ-VER-005). No exclusions are applied server-side —
- * the dialog narrows the display by the editor's exclusion selection, and the
- * server re-checks referential integrity at publish time.
+ * preview returns it (REQ-VER-005). The preview endpoint takes no exclusion
+ * parameters, so the diff is always the whole-draft view: the editor's
+ * exclusions apply when the publish command itself runs, and the server
+ * re-checks referential integrity there (REQ-VER-003).
  */
 export interface PublicationPreviewRecord {
   changelog: ChangelogEntryRecord[];
