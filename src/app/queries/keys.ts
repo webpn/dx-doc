@@ -34,5 +34,16 @@ export const queryKeys = {
   trackingTemplates: (companyId: string, projectId?: string) =>
     ['companies', companyId, 'tracking-templates', projectId ?? null] as const,
   trackingTemplate: (templateId: string) => ['tracking-templates', templateId] as const,
+  /**
+   * Version history for a project (M1.17). The nested publication keys share
+   * this prefix so one publish-mutation invalidation refreshes the list, the
+   * indicator and the preview together.
+   */
+  versions: (projectId: string) => ['projects', projectId, 'versions'] as const,
+  version: (versionId: string) => ['versions', versionId] as const,
+  publicationPreview: (projectId: string) =>
+    ['projects', projectId, 'versions', 'preview-diff'] as const,
+  unpublishedChanges: (projectId: string) =>
+    ['projects', projectId, 'versions', 'unpublished-changes'] as const,
   stepUps: () => ['instance-admin', 'step-ups'] as const,
 };

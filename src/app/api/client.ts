@@ -27,6 +27,8 @@ export class ApiClientError extends Error {
   readonly code: string;
   readonly issues?: ValidationIssue[];
   readonly currentUpdatedAt?: string;
+  /** Set only for `PUBLICATION_INTEGRITY` (409): what blocks the publication. */
+  readonly reason?: string;
   /** Set only for `COMPANY_SELECTION_REQUIRED` (409). */
   readonly companyIds?: string[];
 
@@ -37,6 +39,7 @@ export class ApiClientError extends Error {
     this.code = body.code;
     if (body.issues !== undefined) this.issues = body.issues;
     if (body.currentUpdatedAt !== undefined) this.currentUpdatedAt = body.currentUpdatedAt;
+    if (body.reason !== undefined) this.reason = body.reason;
     if (body.companyIds !== undefined) this.companyIds = body.companyIds;
   }
 }

@@ -1,6 +1,19 @@
 export { ApiClientError, ApiNetworkError, type ApiErrorBody, type ValidationIssue } from './client';
 export { authApi, type AuthenticatedUser, type LoginResponse } from './auth';
 export {
+  versionsApi,
+  CHANGELOG_ENTRY_TYPES,
+  CHANGELOG_ENTITY_TYPES,
+  type ChangelogEntryType,
+  type ChangelogEntityType,
+  type ChangelogEntryRecord,
+  type VersionRecord,
+  type PublishVersionInput,
+  type PublishVersionResult,
+  type PublicationPreviewRecord,
+  type UnpublishedChangesRecord,
+} from './versions';
+export {
   companiesApi,
   type CompanyRecord,
   type CompanySummary,

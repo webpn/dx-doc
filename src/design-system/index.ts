@@ -36,4 +36,5 @@ export { Label } from './components/label';
 export { AppShell, AppHeader, AppMain } from './components/layout';
 export { Skeleton } from './components/skeleton';
 export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './components/table';
+export { Textarea } from './components/textarea';
 export { cn } from './lib/cn';

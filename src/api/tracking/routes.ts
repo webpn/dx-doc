@@ -870,6 +870,43 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
   });
 
   // ── VERSIONING & PUBLICATION (REQ-VER-001 .. REQ-VER-007) ──
+  app.get(
+    '/api/companies/:companyId/projects/:projectId/versions/preview-diff',
+    async (request, reply) => {
+      const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+      if (!actor) return unauthenticated(reply);
+      const userId = actor.userId;
+
+      const { companyId, projectId } = request.params as {
+        companyId: string;
+        projectId: string;
+      };
+      const result = await trackingService.previewPublication(userId, companyId, projectId);
+      if (!result.ok) return replyServiceError(reply, result.error);
+      return { changelog: result.value.changelog };
+    },
+  );
+
+  app.get(
+    '/api/companies/:companyId/projects/:projectId/versions/unpublished-changes',
+    async (request, reply) => {
+      const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+      if (!actor) return unauthenticated(reply);
+      const userId = actor.userId;
+
+      const { companyId, projectId } = request.params as {
+        companyId: string;
+        projectId: string;
+      };
+      const result = await trackingService.previewPublication(userId, companyId, projectId);
+      if (!result.ok) return replyServiceError(reply, result.error);
+      return {
+        hasUnpublishedChanges: result.value.hasUnpublishedChanges,
+        changedEntityCount: result.value.changedEntityCount,
+      };
+    },
+  );
+
   app.post('/api/companies/:companyId/projects/:projectId/versions', async (request, reply) => {
     const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
     if (!actor) return unauthenticated(reply);

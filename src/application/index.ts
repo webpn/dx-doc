@@ -82,7 +82,7 @@ export type {
   TrackingRepository,
 } from './ports/tracking-repositories';
 export { TrackingService } from './tracking/tracking-service';
-export type { TrackingServiceError } from './tracking/tracking-service';
+export type { PublicationPreview, TrackingServiceError } from './tracking/tracking-service';
 
 export { validate } from './validation/validate';
 export {

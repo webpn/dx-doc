@@ -1151,4 +1151,118 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     });
     expect(modRes.statusCode).toBe(403);
   });
+
+  it('reports unpublished changes and previews the diff before publishing (M1.17, REQ-VER-002, REQ-VER-005)', async () => {
+    // An empty project with no publication has nothing to publish yet.
+    const cleanIndicator = await app.inject({
+      method: 'GET',
+      url: `/api/companies/${companyId}/projects/${projectId}/versions/unpublished-changes`,
+      headers: { cookie: editorCookie },
+    });
+    expect(cleanIndicator.statusCode).toBe(200);
+    expect(cleanIndicator.json()).toEqual({ hasUnpublishedChanges: false, changedEntityCount: 0 });
+
+    // A draft edit makes the indicator true and names the change in the diff.
+    const createRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/properties`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'page_language' },
+    });
+    expect(createRes.statusCode).toBe(201);
+
+    const dirtyIndicator = await app.inject({
+      method: 'GET',
+      url: `/api/companies/${companyId}/projects/${projectId}/versions/unpublished-changes`,
+      headers: { cookie: editorCookie },
+    });
+    expect(dirtyIndicator.statusCode).toBe(200);
+    expect(dirtyIndicator.json()).toEqual({ hasUnpublishedChanges: true, changedEntityCount: 1 });
+
+    const diffRes = await app.inject({
+      method: 'GET',
+      url: `/api/companies/${companyId}/projects/${projectId}/versions/preview-diff`,
+      headers: { cookie: editorCookie },
+    });
+    expect(diffRes.statusCode).toBe(200);
+    const diff = diffRes.json<{
+      changelog: { type: string; entityType: string; entityId: string; name: string }[];
+    }>();
+    expect(diff.changelog).toHaveLength(1);
+    expect(diff.changelog[0]).toMatchObject({
+      type: 'added',
+      entityType: 'property',
+      name: 'page_language',
+    });
+    expect(typeof diff.changelog[0]?.entityId).toBe('string');
+  });
+
+  it('clears the indicator and the diff once the draft is published (M1.17, REQ-VER-001)', async () => {
+    const publishRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/projects/${projectId}/versions`,
+      headers: { cookie: editorCookie },
+      payload: { title: 'First release' },
+    });
+    expect(publishRes.statusCode).toBe(201);
+    const published = publishRes.json<{ versionId: string; versionNumber: number }>();
+    expect(published.versionNumber).toBe(1);
+    expect(typeof published.versionId).toBe('string');
+
+    const indicator = await app.inject({
+      method: 'GET',
+      url: `/api/companies/${companyId}/projects/${projectId}/versions/unpublished-changes`,
+      headers: { cookie: editorCookie },
+    });
+    expect(indicator.statusCode).toBe(200);
+    expect(indicator.json()).toEqual({ hasUnpublishedChanges: false, changedEntityCount: 0 });
+
+    const diffRes = await app.inject({
+      method: 'GET',
+      url: `/api/companies/${companyId}/projects/${projectId}/versions/preview-diff`,
+      headers: { cookie: editorCookie },
+    });
+    expect(diffRes.statusCode).toBe(200);
+    expect(diffRes.json()).toEqual({ changelog: [] });
+  });
+
+  it('rejects the publication preview and publish for a mismatched company scope', async () => {
+    // The company in the path is part of the command's address: a project
+    // fetched under a foreign company id is refused, not silently emptied.
+    const diffRes = await app.inject({
+      method: 'GET',
+      url: `/api/companies/comp-foreign/projects/${projectId}/versions/preview-diff`,
+      headers: { cookie: editorCookie },
+    });
+    expect(diffRes.statusCode).toBe(403);
+
+    const indicatorRes = await app.inject({
+      method: 'GET',
+      url: `/api/companies/comp-foreign/projects/${projectId}/versions/unpublished-changes`,
+      headers: { cookie: editorCookie },
+    });
+    expect(indicatorRes.statusCode).toBe(403);
+
+    const publishRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/comp-foreign/projects/${projectId}/versions`,
+      headers: { cookie: editorCookie },
+      payload: { title: 'Foreign scope' },
+    });
+    expect(publishRes.statusCode).toBe(403);
+  });
+
+  it('rejects an unauthenticated publication preview and indicator', async () => {
+    const diffRes = await app.inject({
+      method: 'GET',
+      url: `/api/companies/${companyId}/projects/${projectId}/versions/preview-diff`,
+    });
+    expect(diffRes.statusCode).toBe(401);
+
+    const indicatorRes = await app.inject({
+      method: 'GET',
+      url: `/api/companies/${companyId}/projects/${projectId}/versions/unpublished-changes`,
+    });
+    expect(indicatorRes.statusCode).toBe(401);
+  });
 });

@@ -34,6 +34,8 @@ import { TemplateEditorPage } from './shell/template-editor-page';
 import { TrackingCreatePage } from './shell/tracking-create-page';
 import { TrackingEditorPage } from './shell/tracking-editor-page';
 import { TriggerEditorPage } from './shell/trigger-editor-page';
+import { VersionDetailPage } from './shell/version-detail-page';
+import { VersionHistoryPage } from './shell/version-history-page';
 import { useSessionStore } from './stores/session-store';
 
 /**
@@ -94,6 +96,8 @@ export function App(): ReactElement {
         />
         <Route element={<ProjectPage />} path="/projects/:projectId" />
         <Route element={<CatalogueCopyPage />} path="/projects/:projectId/catalogue" />
+        <Route element={<VersionHistoryPage />} path="/projects/:projectId/versions" />
+        <Route element={<VersionDetailPage />} path="/projects/:projectId/versions/:versionId" />
         <Route
           element={<DestinationEditorPage />}
           path="/projects/:projectId/destinations/:destinationId"

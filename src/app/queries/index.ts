@@ -9,6 +9,13 @@ export {
 export { useCompanies, useCompany, useCreateCompany, useDeleteCompany } from './companies';
 export { useStepUps, useOpenStepUp } from './instance-admin';
 export { useProjects, useProject, useCreateProject, useUpdateProject } from './projects';
+export {
+  useVersions,
+  useVersion,
+  useUnpublishedChanges,
+  usePublicationPreview,
+  usePublishVersion,
+} from './versions';
 export { useGrants, useSetGrant, useRemoveGrant } from './grants';
 export { useInviteUser } from './users';
 export { usePages, usePage, useCreatePage, useUpdatePage, useDeletePage } from './pages';

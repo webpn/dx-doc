@@ -504,6 +504,64 @@ export const en = {
   'trigger.edit.delete': 'Delete trigger',
   'trigger.edit.deleteConfirm': 'Delete this trigger? This cannot be undone.',
 
+  // Version history (M1.17, REQ-VER-006, REQ-VER-007)
+  'version.list.title': 'Version history',
+  'version.list.subtitle':
+    'Every publication of this project, with the changelog generated from the diff.',
+  'version.list.loading': 'Loading versions…',
+  'version.list.loadError': 'Version history could not be loaded.',
+  'version.list.empty': 'Nothing has been published yet.',
+  'version.list.versionColumn': 'Version',
+  'version.list.createdColumn': 'Created',
+  'version.list.creatorColumn': 'Created by',
+  'version.list.changesColumn': 'Changes',
+  'version.list.open': 'Open',
+  'version.list.untitled': 'Untitled',
+  'version.list.changesSummary': '{added} added, {modified} modified, {removed} removed',
+
+  // Version detail (M1.17, REQ-VER-007 — read-only consultation)
+  'version.detail.loading': 'Loading version…',
+  'version.detail.loadError': 'This version could not be loaded.',
+  'version.detail.title': 'Version {number}',
+  'version.detail.publishedAt': 'Published {date}',
+  'version.detail.releaseNotes': 'Release notes',
+  'version.detail.changelog': 'Changelog',
+  'version.detail.changelogEmpty': 'No changes were recorded for this version.',
+  'version.detail.backToHistory': 'Back to version history',
+
+  // Generated changelog (REQ-VER-006) — shared by the history screens and the publish dialog
+  'changelog.group.added': 'Added',
+  'changelog.group.modified': 'Modified',
+  'changelog.group.removed': 'Removed',
+  'changelog.entityType.property': 'Property',
+  'changelog.entityType.module': 'Module',
+  'changelog.entityType.destination': 'Destination',
+  'changelog.entityType.page': 'Page',
+  'changelog.entityType.tracking': 'Tracking',
+  'changelog.entityType.flow': 'Flow',
+
+  // Publish flow (M1.17, REQ-VER-002, REQ-VER-004, REQ-VER-005)
+  'publish.indicator.one': '1 unpublished change.',
+  'publish.indicator.many': '{count} unpublished changes.',
+  'publish.action': 'Publish',
+  'publish.dialogTitle': 'Publish version',
+  'publish.dialogDescription':
+    'Review what this publication would contain, add the version metadata, and confirm.',
+  'publish.titleLabel': 'Title',
+  'publish.releaseNotesLabel': 'Release notes',
+  'publish.previewTitle': 'What would this publication contain?',
+  'publish.previewLoading': 'Comparing the draft with the last publication…',
+  'publish.previewLoadError': 'The pre-publication diff could not be loaded.',
+  'publish.previewEmpty': 'Nothing has changed since the last publication.',
+  'publish.confirm': 'Publish version',
+  'publish.confirming': 'Publishing…',
+  'publish.cancel': 'Cancel',
+  'publish.close': 'Close',
+  'publish.success': 'Version {number} published.',
+  'publish.successHistoryLink': 'Open it in the version history',
+  'publish.error.integrity': 'This publication cannot be saved: {reason}',
+  'publish.versionLink': 'Version history',
+
   // Errors surfaced from the API (REQ-NFR-010: including API error messages)
   'error.invalidCredentials': 'Invalid email or password.',
   'error.unreachable': 'Unable to reach the server. Check your connection and try again.',
