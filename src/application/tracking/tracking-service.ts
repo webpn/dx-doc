@@ -232,20 +232,22 @@ export class TrackingService {
 
     await this.properties.createProperty(propRecord);
 
-    const project = await this.projects.getProjectById(propRecord.companyId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId: propRecord.companyId,
-        projectId: propRecord.projectId,
-        actorId,
-        action: 'property.created',
-        entityType: 'property',
-        entityId: propertyId,
-        details: { name: propRecord.name, dataSource: propRecord.dataSource },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity creation is always audited. The permission guard
+    // above already resolved and verified the project for project-scoped
+    // creates, and a catalogue create legitimately has no project — the
+    // audit_logs.project_id column is nullable, matching the company-level
+    // auth events that write null the same way.
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: propRecord.companyId,
+      projectId: propRecord.projectId,
+      actorId,
+      action: 'property.created',
+      entityType: 'property',
+      entityId: propertyId,
+      details: { name: propRecord.name, dataSource: propRecord.dataSource },
+      createdAt: nowIso,
+    });
 
     return ok({ propertyId });
   }
@@ -515,20 +517,22 @@ export class TrackingService {
       await this.modules.setModuleProperties(moduleId, parsed.value.propertyIds, nowIso);
     }
 
-    const project = await this.projects.getProjectById(companyId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId,
-        projectId,
-        actorId,
-        action: 'module.created',
-        entityType: 'module',
-        entityId: moduleId,
-        details: { name: parsed.value.name, propertyCount: parsed.value.propertyIds.length },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity creation is always audited. The permission guard
+    // above already resolved and verified the project for project-scoped
+    // creates, and a catalogue create legitimately has no project — the
+    // audit_logs.project_id column is nullable, matching the company-level
+    // auth events that write null the same way.
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId,
+      projectId,
+      actorId,
+      action: 'module.created',
+      entityType: 'module',
+      entityId: moduleId,
+      details: { name: parsed.value.name, propertyCount: parsed.value.propertyIds.length },
+      createdAt: nowIso,
+    });
 
     return ok({ moduleId });
   }
@@ -753,24 +757,26 @@ export class TrackingService {
       updatedAt: nowIso,
     });
 
-    const project = await this.projects.getProjectById(companyId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId,
-        projectId,
-        actorId,
-        action: 'destination.created',
-        entityType: 'destination',
-        entityId: destinationId,
-        details: {
-          name: parsed.value.name,
-          platform: parsed.value.platform,
-          variableType: parsed.value.variableType,
-        },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity creation is always audited. The permission guard
+    // above already resolved and verified the project for project-scoped
+    // creates, and a catalogue create legitimately has no project — the
+    // audit_logs.project_id column is nullable, matching the company-level
+    // auth events that write null the same way.
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId,
+      projectId,
+      actorId,
+      action: 'destination.created',
+      entityType: 'destination',
+      entityId: destinationId,
+      details: {
+        name: parsed.value.name,
+        platform: parsed.value.platform,
+        variableType: parsed.value.variableType,
+      },
+      createdAt: nowIso,
+    });
 
     return ok({ destinationId });
   }
@@ -1193,20 +1199,22 @@ export class TrackingService {
       updatedAt: nowIso,
     });
 
-    const project = await this.projects.getProjectById(companyId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId,
-        projectId,
-        actorId,
-        action: 'tracking_template.created',
-        entityType: 'tracking_template',
-        entityId: templateId,
-        details: { name: parsed.value.name },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity creation is always audited. The permission guard
+    // above already resolved and verified the project for project-scoped
+    // creates, and a catalogue create legitimately has no project — the
+    // audit_logs.project_id column is nullable, matching the company-level
+    // auth events that write null the same way.
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId,
+      projectId,
+      actorId,
+      action: 'tracking_template.created',
+      entityType: 'tracking_template',
+      entityId: templateId,
+      details: { name: parsed.value.name },
+      createdAt: nowIso,
+    });
 
     return ok({ templateId });
   }
@@ -1417,20 +1425,22 @@ export class TrackingService {
       updatedAt: nowIso,
     });
 
-    const project = await this.projects.getProjectById(companyId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId,
-        projectId,
-        actorId,
-        action: 'free_page.created',
-        entityType: 'free_page',
-        entityId: freePageId,
-        details: { title: parsed.value.title, slug: parsed.value.slug },
-        createdAt: nowIso,
-      });
-    }
+    // REQ-SEC-006: entity creation is always audited. The permission guard
+    // above already resolved and verified the project for project-scoped
+    // creates, and a catalogue create legitimately has no project — the
+    // audit_logs.project_id column is nullable, matching the company-level
+    // auth events that write null the same way.
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId,
+      projectId,
+      actorId,
+      action: 'free_page.created',
+      entityType: 'free_page',
+      entityId: freePageId,
+      details: { title: parsed.value.title, slug: parsed.value.slug },
+      createdAt: nowIso,
+    });
 
     return ok({ freePageId });
   }

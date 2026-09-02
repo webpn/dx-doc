@@ -56,6 +56,8 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
   let auth: AuthService;
   let sessions: SessionService;
   let editorCookie: string;
+  let adminCookie: string;
+  let auditLogRepo: SqliteAuditLogRepository;
   let sessionTokenVal: string;
   const companyId = 'comp-api-test';
   const projectId = 'proj-api-test';
@@ -105,6 +107,35 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
         company_id: companyId,
         role_id: editorRoleId,
         email: 'editor@api.com',
+        password_hash: hash,
+        active: 1,
+        password_must_change: 0,
+        created_at: nowIso,
+        updated_at: nowIso,
+      })
+      .execute();
+
+    // Company-catalogue endpoints require company.manage_catalogue, which is
+    // an admin's company role — the editor only holds a project grant.
+    const adminRoleId = 'role-admin';
+    await connection.kysely
+      .insertInto('roles')
+      .values({
+        id: adminRoleId,
+        company_id: companyId,
+        name: 'admin',
+        created_at: nowIso,
+        updated_at: nowIso,
+      })
+      .execute();
+
+    await connection.kysely
+      .insertInto('users')
+      .values({
+        id: 'user-admin',
+        company_id: companyId,
+        role_id: adminRoleId,
+        email: 'admin@api.com',
         password_hash: hash,
         active: 1,
         password_must_change: 0,
@@ -191,7 +222,7 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
       .execute();
 
     const accounts = new SqliteAccountRepository(connection.kysely);
-    const auditLogRepo = new SqliteAuditLogRepository(connection.kysely);
+    auditLogRepo = new SqliteAuditLogRepository(connection.kysely);
     const sessionRepo = new SqliteSessionRepository(connection.kysely);
     sessions = new SessionService(sessionRepo, TTL_MS, auditLogRepo);
     const serviceTokens = new ServiceTokenService(
@@ -263,6 +294,10 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     if (!loginRes.ok) throw new Error('Login failed');
     sessionTokenVal = loginRes.session.token;
     editorCookie = `${cookieName}=${sessionTokenVal}`;
+
+    const adminLoginRes = await auth.login(companyId, 'admin@api.com', PASSWORD);
+    if (!adminLoginRes.ok) throw new Error('Admin login failed');
+    adminCookie = `${cookieName}=${adminLoginRes.session.token}`;
   });
 
   afterEach(async () => {
@@ -693,6 +728,150 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
       module: { projectId },
       propertyIds: [propId],
     });
+  });
+
+  it('appends an audit entry for every project-scoped entity create (REQ-SEC-006)', async () => {
+    // Regression guard: each of these create paths used to resolve its
+    // audit-log guard's project with the company id, never matched, and
+    // silently wrote no entry — the create event class REQ-SEC-006 requires.
+    const propRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/properties`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'page_language', type: 'string', dataSource: 'development' },
+    });
+    expect(propRes.statusCode).toBe(201);
+    const propId = propRes.json<{ id: string }>().id;
+
+    const modRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/modules`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'Localization Module' },
+    });
+    expect(modRes.statusCode).toBe(201);
+    const modId = modRes.json<{ id: string }>().id;
+
+    const destRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/destinations?projectId=${projectId}`,
+      headers: { cookie: editorCookie },
+      payload: {
+        platform: 'web',
+        variableType: 'js_variable',
+        identifier: 'window.dataLayer',
+        name: 'Data Layer',
+      },
+    });
+    expect(destRes.statusCode).toBe(201);
+    const destId = destRes.json<{ id: string }>().id;
+
+    const tplRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/tracking-templates?projectId=${projectId}`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'Page View' },
+    });
+    expect(tplRes.statusCode).toBe(201);
+    const tplId = tplRes.json<{ id: string }>().id;
+
+    const pageRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/free-pages?projectId=${projectId}`,
+      headers: { cookie: editorCookie },
+      payload: { title: 'Integration', slug: 'audit-integration', content: '# Integration' },
+    });
+    expect(pageRes.statusCode).toBe(201);
+    const pageId = pageRes.json<{ id: string }>().id;
+
+    const logs = await auditLogRepo.listLogsForProject(projectId, 500);
+    const expectCreateEntry = (action: string, entityId: string, entityType: string): void => {
+      const entry = logs.find((l) => l.action === action && l.entityId === entityId);
+      expect(entry).toBeDefined();
+      expect(entry?.entityType).toBe(entityType);
+      expect(entry?.projectId).toBe(projectId);
+      expect(entry?.companyId).toBe(companyId);
+      expect(entry?.actorId).toBe('user-editor');
+    };
+    expectCreateEntry('property.created', propId, 'property');
+    expectCreateEntry('module.created', modId, 'module');
+    expectCreateEntry('destination.created', destId, 'destination');
+    expectCreateEntry('tracking_template.created', tplId, 'tracking_template');
+    expectCreateEntry('free_page.created', pageId, 'free_page');
+  });
+
+  it('appends a company-level audit entry for every catalogue entity create (REQ-SEC-006)', async () => {
+    // Catalogue scope requires company.manage_catalogue — an admin company
+    // role the project-only editor lacks. The entries must carry a null
+    // project: audit_logs.project_id is nullable and the company-level auth
+    // events (login, invitation, ...) already write null the same way.
+    const propRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/properties`,
+      headers: { cookie: adminCookie },
+      payload: { name: 'catalogue_page_language', type: 'string', dataSource: 'development' },
+    });
+    expect(propRes.statusCode).toBe(201);
+    const propId = propRes.json<{ id: string }>().id;
+
+    const modRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/modules`,
+      headers: { cookie: adminCookie },
+      payload: { name: 'Catalogue Module' },
+    });
+    expect(modRes.statusCode).toBe(201);
+    const modId = modRes.json<{ id: string }>().id;
+
+    const destRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/destinations`,
+      headers: { cookie: adminCookie },
+      payload: {
+        platform: 'web',
+        variableType: 'js_variable',
+        identifier: 'window.dataLayer',
+        name: 'Catalogue Data Layer',
+      },
+    });
+    expect(destRes.statusCode).toBe(201);
+    const destId = destRes.json<{ id: string }>().id;
+
+    const tplRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/tracking-templates`,
+      headers: { cookie: adminCookie },
+      payload: { name: 'Catalogue Page View' },
+    });
+    expect(tplRes.statusCode).toBe(201);
+    const tplId = tplRes.json<{ id: string }>().id;
+
+    const pageRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/free-pages`,
+      headers: { cookie: adminCookie },
+      payload: {
+        title: 'Catalogue Integration',
+        slug: 'catalogue-integration',
+        content: '# Catalogue',
+      },
+    });
+    expect(pageRes.statusCode).toBe(201);
+    const pageId = pageRes.json<{ id: string }>().id;
+
+    const logs = await auditLogRepo.listLogsForCompany(companyId, 500);
+    const expectCatalogueEntry = (action: string, entityId: string): void => {
+      const entry = logs.find((l) => l.action === action && l.entityId === entityId);
+      expect(entry).toBeDefined();
+      expect(entry?.projectId).toBeNull();
+      expect(entry?.companyId).toBe(companyId);
+      expect(entry?.actorId).toBe('user-admin');
+    };
+    expectCatalogueEntry('property.created', propId);
+    expectCatalogueEntry('module.created', modId);
+    expectCatalogueEntry('destination.created', destId);
+    expectCatalogueEntry('tracking_template.created', tplId);
+    expectCatalogueEntry('free_page.created', pageId);
   });
 
   it('rejects an unauthenticated project-level property create', async () => {
