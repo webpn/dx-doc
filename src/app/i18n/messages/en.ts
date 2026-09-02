@@ -540,6 +540,35 @@ export const en = {
   'changelog.entityType.tracking': 'Tracking',
   'changelog.entityType.flow': 'Flow',
 
+  // Reader (M1.17, REQ-VIEW-001 — shared-password access to published
+  // documentation). This surface sits outside the authenticated shell: no
+  // company/switcher chromes, no edit affordances.
+  'reader.access.eyebrow': 'Shared documentation',
+  'reader.access.title': 'Access published documentation',
+  'reader.access.description':
+    'This project shares its published documentation with a password. Enter it to open the read-only view.',
+  'reader.access.passwordLabel': 'Shared password',
+  'reader.access.submit': 'Open documentation',
+  'reader.access.submitting': 'Opening…',
+  'reader.access.missingPassword': 'Enter the shared password.',
+  'reader.access.wrongPassword':
+    'That shared password was not recognized. Ask the person who shared it with you and try again.',
+  'reader.eyebrow': 'Shared documentation',
+  'reader.header.versionTitle': 'Version {number}',
+  'reader.header.publishedAt': 'Published {date}',
+  'reader.header.reEnter': 'Enter the shared password again',
+  'reader.pagesLabel': 'Pages',
+  'reader.pagesEmpty': 'This version has no published pages yet.',
+  'reader.releaseNotes': 'Release notes',
+  'reader.loadError': 'The published documentation could not be loaded.',
+  'reader.expired.title': 'Access expired',
+  'reader.expired.description':
+    'Your shared access to this documentation has expired. Enter the shared password again to continue reading.',
+  'reader.expired.action': 'Enter the shared password',
+  'reader.notPublished.title': 'Nothing published yet',
+  'reader.notPublished.description':
+    'Nothing has been published for this project yet. Check back once the team publishes a version.',
+
   // Publish flow (M1.17, REQ-VER-002, REQ-VER-004, REQ-VER-005)
   'publish.indicator.one': '1 unpublished change.',
   'publish.indicator.many': '{count} unpublished changes.',

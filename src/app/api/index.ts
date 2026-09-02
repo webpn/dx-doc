@@ -38,6 +38,12 @@ export {
 export { instanceAdminApi, type InstanceAdminStepUp, type StepUpOpenInput } from './instance-admin';
 export { usersApi } from './users';
 export { assetsApi, type AssetRecord, type AssetUploadResult } from './assets';
+export {
+  readerApi,
+  type SharedPasswordVerifyResult,
+  type PublishedReaderSnapshot,
+  type PublishedReaderContent,
+} from './reader';
 export { pagesApi, type Page, type PageCreateInput, type PageUpdateInput } from './pages';
 export {
   freePagesApi,

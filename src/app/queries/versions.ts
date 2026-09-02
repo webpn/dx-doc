@@ -69,8 +69,11 @@ export function usePublishVersion(
     mutationFn: (input: PublishVersionInput) => versionsApi.publish(companyId, projectId, input),
     onSuccess: () => {
       // The `versions` prefix covers the list, the preview diff and the
-      // unpublished-changes indicator in one invalidation.
+      // unpublished-changes indicator in one invalidation. The reader key
+      // shares the project-scoped prefix because a publication is exactly
+      // what changes what a shared-password reader sees (REQ-VIEW-001).
       void queryClient.invalidateQueries({ queryKey: queryKeys.versions(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.reader(projectId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
     },
   });

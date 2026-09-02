@@ -8,6 +8,8 @@ import { PasswordChangePage } from './routes/auth/password-change-page';
 import { PasswordResetConfirmPage } from './routes/auth/password-reset-confirm-page';
 import { PasswordResetRequestPage } from './routes/auth/password-reset-request-page';
 import { DesignReviewPage } from './routes/design-review-page';
+import { ReaderAccessPage } from './routes/reader/reader-access-page';
+import { ReaderViewPage } from './routes/reader/reader-view-page';
 import { AppShell } from './shell/app-shell';
 import { CatalogueCopyPage } from './shell/catalogue-copy-page';
 import { CompanyCreatePage } from './shell/company-create-page';
@@ -48,6 +50,20 @@ function SessionLoading(): ReactElement {
   return <div role="status">{t('auth.session.loading')}</div>;
 }
 
+/**
+ * The reader surface (REQ-VIEW-001) is reachable in EVERY session state:
+ * a shared-password holder is usually anonymous, but an authenticated user
+ * may also want the read-only view. It never renders inside the authenticated
+ * shell — no company/project switcher, no edit chrome. A Fragment because
+ * `createRoutesFromChildren` only descends into Route and Fragment children.
+ */
+const readerRoutes = (
+  <>
+    <Route element={<ReaderAccessPage />} path="/projects/:projectId/reader-access" />
+    <Route element={<ReaderViewPage />} path="/projects/:projectId/reader" />
+  </>
+);
+
 export function App(): ReactElement {
   const session = useSessionStore((state) => state.session);
   // The session cookie survives a full page load but this store does not, so on
@@ -65,6 +81,7 @@ export function App(): ReactElement {
       <Routes>
         <Route element={<PasswordResetRequestPage />} path="/password-reset" />
         <Route element={<PasswordResetConfirmPage />} path="/password-reset/confirm" />
+        {readerRoutes}
         <Route element={<LoginPage />} path="*" />
       </Routes>
     );
@@ -73,6 +90,7 @@ export function App(): ReactElement {
   if (session.passwordChangeRequired) {
     return (
       <Routes>
+        {readerRoutes}
         <Route element={<PasswordChangePage />} path="*" />
       </Routes>
     );
@@ -80,6 +98,7 @@ export function App(): ReactElement {
 
   return (
     <Routes>
+      {readerRoutes}
       <Route element={<AppShell />}>
         <Route element={<DesignReviewPage />} path="/design-review" />
         <Route element={<ProjectListPage />} path="/" />

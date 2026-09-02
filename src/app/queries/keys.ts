@@ -46,4 +46,10 @@ export const queryKeys = {
   unpublishedChanges: (projectId: string) =>
     ['projects', projectId, 'versions', 'unpublished-changes'] as const,
   stepUps: () => ['instance-admin', 'step-ups'] as const,
+  /**
+   * Latest published content for the shared-password reader (REQ-VIEW-001).
+   * Shares the project-scoped prefix so a publication invalidation refreshes
+   * both the authenticated consultation and the reader surface.
+   */
+  reader: (projectId: string) => ['projects', projectId, 'reader'] as const,
 };

@@ -9,7 +9,7 @@ Entry format and status legend: [requirements index](README.md).
 
 | ID           | Requirement                                    | MoSCoW | Rel. | Milestone    | Status      |
 | ------------ | ---------------------------------------------- | ------ | ---- | ------------ | ----------- |
-| REQ-VIEW-001 | In-app read-only view                          | Must   | R1   | M1.9 → M1.17 | Not Started |
+| REQ-VIEW-001 | In-app read-only view                          | Must   | R1   | M1.9 → M1.17 | In Progress |
 | REQ-VIEW-002 | View selector as a presentation filter         | Must   | R2   | M2.5         | Not Started |
 | REQ-VIEW-003 | Profile-aware rendering engine                 | Must   | R2   | M2.5         | Not Started |
 | REQ-VIEW-004 | Per-project static site                        | Should | R2   | M2.6         | Not Started |
@@ -24,7 +24,7 @@ Entry format and status legend: [requirements index](README.md).
 
 ### REQ-VIEW-001 — In-app read-only view
 
-**Must** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §10.4 · **Not Started** · Issue: — · PR: —
+**Must** · R1 · [M1.9](../milestones.md#m19--access-and-consultation) → [M1.17](../milestones.md#m117--consultation-search-and-publication-ui) · spec §10.4 · **In Progress** · Issue: — · PR: —
 
 Read-only consultation behind email + password or a project shared password (REQ-SEC-005). (SSO login is R2 — REQ-SEC-004.)
 
@@ -35,7 +35,9 @@ Read-only consultation behind email + password or a project shared password (REQ
 
 > **Found not implemented on 2026-08-18.** There is no client, so there is no read-only view. The shared-password mechanism it would sit on returns a boolean and issues no session ([REQ-SEC-005](REQ-SEC.md#req-sec-005--project-shared-password-access-with-expiry)), so both halves are missing. The reader session is built at [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) and the view at [M1.17](../milestones.md#m117--consultation-search-and-publication-ui).
 
-> **Backend prerequisite completed on 2026-09-02.** Shared-password readers now receive a project-scoped session and can reach published content through the REST reader endpoint. The in-app read-only client, navigation, rendering and full UI acceptance remain part of M1.17, so this requirement remains **Not Started**.
+> **Backend prerequisite completed on 2026-09-02.** Shared-password readers now receive a project-scoped session and can reach published content through the REST reader endpoint.
+
+> **Client reader surface landed on 2026-09-02, still In Progress.** The shared-password half of the read-only view ships in M1.17: a standalone entry screen (`/projects/:projectId/reader-access`) verifies the shared password and lands on a read-only view (`/projects/:projectId/reader`) rendered outside the authenticated shell — no company/project switcher, no edit chrome. It consumes only the reader endpoint, so the client renders the published snapshot's free-pages documentation (version title, publication date, release notes, page navigation, page content) and nothing else; a missing/expired reader session (401) and a never-published project (404) each get an explicit state with a path back to the password entry. Remaining for the exit criterion, and not delivered by this batch: the email + password (invited-account) path, and rendering of the snapshot's non-documentation surfaces (trackings, flows, properties, destinations).
 
 ### REQ-VIEW-002 — View selector as a presentation filter
 

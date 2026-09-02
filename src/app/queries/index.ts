@@ -16,6 +16,7 @@ export {
   usePublicationPreview,
   usePublishVersion,
 } from './versions';
+export { useVerifySharedPassword, usePublishedReaderContent } from './reader';
 export { useGrants, useSetGrant, useRemoveGrant } from './grants';
 export { useInviteUser } from './users';
 export { usePages, usePage, useCreatePage, useUpdatePage, useDeletePage } from './pages';
