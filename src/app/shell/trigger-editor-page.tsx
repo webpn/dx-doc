@@ -12,12 +12,7 @@ import { useEffect, useState, type ReactElement, type SyntheticEvent } from 'rea
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { apiErrorMessageKey, useTranslate } from '../i18n';
-import {
-  useDeleteTrigger,
-  useTrackings,
-  useTrigger,
-  useUpdateTrigger,
-} from '../queries';
+import { useDeleteTrigger, useTrackings, useTrigger, useUpdateTrigger } from '../queries';
 
 import { ProjectWorkspace } from './project-workspace';
 

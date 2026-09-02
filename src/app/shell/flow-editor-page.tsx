@@ -438,7 +438,10 @@ export function FlowEditorPage(): ReactElement {
           ) : (
             <ul>
               {edges.map((edge, index) => (
-                <li className="flex items-center gap-3 py-1" key={edge.id ?? `edge-${String(index)}`}>
+                <li
+                  className="flex items-center gap-3 py-1"
+                  key={edge.id ?? `edge-${String(index)}`}
+                >
                   <span className="text-sm text-[var(--color-ink)]">
                     {nodeLabel(edge.fromNodeId)} → {nodeLabel(edge.toNodeId)}
                   </span>

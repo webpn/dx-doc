@@ -11,16 +11,16 @@ source doc, the source doc wins — go read it.
 
 ## 1. Architecture boundaries (non-negotiable — never bypass "to make it easier")
 
-| Layer / concern | Rule |
-|---|---|
-| `src/domain/`, `src/application/` | Pure TypeScript. No `react`/`react-dom`/any UI lib. No infrastructure imports — use port interfaces in `src/application/ports/`. |
-| Fastify routes | Transport only: HTTP in → application-service call → HTTP out. Business rules live in domain/application (REQ-FDN-010, ADR-0007) so the MCP server also gets them. |
-| Design system | Import only via `@project/design-system`. Never reach into a shadcn/ui component's own path. Never restyle a shadcn/ui component "to taste" — divergence from upstream must be deliberate and reviewed (ADR-0011). |
-| Data fetching | React components never call `fetch`/`axios` directly. Go through `src/infrastructure/api-client/`; server state owned by TanStack Query — every read a query, every write a mutation that invalidates what it affects (ADR-0012). Never hand-copy server data into client state. |
-| Multi-tenancy | Every query/command scoped to company (from the authenticated session, never request params) and project. No cross-project references — an entity only references entities in its own project. |
-| Draft vs. published | All edits accumulate in one draft stream per project. Publish = immutable snapshot. No branches, no merge workflows. |
-| Identifiers | Internal IDs are separate from name/slug and never change. Scheme must support stable IRIs from R0 even though IRIs are deferred. |
-| General | No circular deps (enforced via `eslint-plugin-import`). No module-level mutable state. DI is explicit (constructor/params/composition) — no service locators/hidden globals. |
+| Layer / concern                   | Rule                                                                                                                                                                                                                                                                             |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/domain/`, `src/application/` | Pure TypeScript. No `react`/`react-dom`/any UI lib. No infrastructure imports — use port interfaces in `src/application/ports/`.                                                                                                                                                 |
+| Fastify routes                    | Transport only: HTTP in → application-service call → HTTP out. Business rules live in domain/application (REQ-FDN-010, ADR-0007) so the MCP server also gets them.                                                                                                               |
+| Design system                     | Import only via `@project/design-system`. Never reach into a shadcn/ui component's own path. Never restyle a shadcn/ui component "to taste" — divergence from upstream must be deliberate and reviewed (ADR-0011).                                                               |
+| Data fetching                     | React components never call `fetch`/`axios` directly. Go through `src/infrastructure/api-client/`; server state owned by TanStack Query — every read a query, every write a mutation that invalidates what it affects (ADR-0012). Never hand-copy server data into client state. |
+| Multi-tenancy                     | Every query/command scoped to company (from the authenticated session, never request params) and project. No cross-project references — an entity only references entities in its own project.                                                                                   |
+| Draft vs. published               | All edits accumulate in one draft stream per project. Publish = immutable snapshot. No branches, no merge workflows.                                                                                                                                                             |
+| Identifiers                       | Internal IDs are separate from name/slug and never change. Scheme must support stable IRIs from R0 even though IRIs are deferred.                                                                                                                                                |
+| General                           | No circular deps (enforced via `eslint-plugin-import`). No module-level mutable state. DI is explicit (constructor/params/composition) — no service locators/hidden globals.                                                                                                     |
 
 ## 2. Prohibited practices (hard stops)
 
@@ -93,7 +93,7 @@ this section unsatisfiable, and an unsatisfiable rule gets resolved by claiming 
   step summary (`$GITHUB_STEP_SUMMARY`) renders in the web UI but comes back `null` from the API for
   Actions jobs. The E2E job instead turns its failure tail and Playwright's aria page-snapshot
   (`error-context.md`) into `::error title=...::` workflow commands, which GitHub attaches to the
-  check-run as annotations — and annotations *are* public through the API:
+  check-run as annotations — and annotations _are_ public through the API:
   ```bash
   gh api repos/webpn/dx-doc/check-runs/<check-run-id>/annotations
   ```
@@ -115,10 +115,10 @@ this section unsatisfiable, and an unsatisfiable rule gets resolved by claiming 
 Tiering means picking the right model per unit of delegated work: **sonnet for thinking, haiku for
 execution.**
 
-| Tier | Criteria | Route to |
-|---|---|---|
+| Tier                  | Criteria                                                                                                                                                                                                                                                                                  | Route to                                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | **Pattern-following** | An established pattern already exists elsewhere in the codebase and the new code should replicate it near-verbatim — a new entity's edit form mirroring an existing editor page, a new repository method mirroring a sibling, tests mirroring analogous existing tests, CRUD boilerplate. | `haiku`. **Name the exact existing file(s) to copy** — never let it infer the pattern from scratch. |
-| **Judgment-required** | A new pattern, an architectural decision, an ambiguous/underspecified requirement, security-sensitive code, or anything AGENTS.md/AI_DEVELOPMENT_GUIDE.md says to "stop and present alternatives" for or create an ADR for. | `sonnet` (the session default) or `opus` for the highest-stakes calls. |
+| **Judgment-required** | A new pattern, an architectural decision, an ambiguous/underspecified requirement, security-sensitive code, or anything AGENTS.md/AI_DEVELOPMENT_GUIDE.md says to "stop and present alternatives" for or create an ADR for.                                                               | `sonnet` (the session default) or `opus` for the highest-stakes calls.                              |
 
 - Code volume/size is **not** a signal. A small but ambiguous or architecturally risky change stays on
   `sonnet`/`opus`.
@@ -152,15 +152,15 @@ and a Sonnet-tier call can run back to back without one leaking into the other.
 
 ## 8. Style essentials
 
-| Element | Convention | Example |
-|---|---|---|
-| Component files | PascalCase | `TrackingDetail.tsx` |
-| Non-component files | kebab-case | `property-service.ts` |
-| Hooks | camelCase, `use` prefix, single responsibility | `useTrackingForm` |
-| Types/branded IDs | PascalCase, `Id` suffix | `ProjectId` |
-| Domain errors | PascalCase, `Error` suffix, `{ _tag, message, ...fields }` | `PropertyNameNotUniqueError` |
-| DB tables | snake_case, plural | `data_layer_properties` |
-| API endpoints | kebab-case | `/projects/:id/data-layer-properties` |
+| Element             | Convention                                                 | Example                               |
+| ------------------- | ---------------------------------------------------------- | ------------------------------------- |
+| Component files     | PascalCase                                                 | `TrackingDetail.tsx`                  |
+| Non-component files | kebab-case                                                 | `property-service.ts`                 |
+| Hooks               | camelCase, `use` prefix, single responsibility             | `useTrackingForm`                     |
+| Types/branded IDs   | PascalCase, `Id` suffix                                    | `ProjectId`                           |
+| Domain errors       | PascalCase, `Error` suffix, `{ _tag, message, ...fields }` | `PropertyNameNotUniqueError`          |
+| DB tables           | snake_case, plural                                         | `data_layer_properties`               |
+| API endpoints       | kebab-case                                                 | `/projects/:id/data-layer-properties` |
 
 - Prefer literal unions over enums. Discriminated unions for state/variant data.
 - `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`,
