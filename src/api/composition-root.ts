@@ -252,6 +252,7 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
     projects,
     pages,
     permissions,
+    sessionService,
     search,
   );
   const assetService = new AssetService(

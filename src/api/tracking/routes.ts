@@ -29,7 +29,12 @@ import type {
 } from '@project/application/validation/schemas';
 import type { FastifyInstance } from 'fastify';
 
-import { authenticateRequest, replyServiceError, unauthenticated } from '../helpers';
+import {
+  authenticateReaderRequest,
+  authenticateRequest,
+  replyServiceError,
+  unauthenticated,
+} from '../helpers';
 
 export interface TrackingRoutesOptions {
   trackingService: TrackingService;
@@ -982,6 +987,25 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
       projectId,
       request.body as ProjectSharedPasswordVerifyInput,
     );
+    if (!result.ok) return replyServiceError(reply, result.error);
+    if (result.value.verified) {
+      reply.setCookie(options.cookieName, result.value.session.token, {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: Math.floor((Date.parse(result.value.session.expiresAt) - Date.now()) / 1000),
+      });
+      return { verified: true, sharedPasswordId: result.value.sharedPasswordId };
+    }
+    return result.value;
+  });
+
+  app.get('/api/projects/:projectId/reader', async (request, reply) => {
+    const { projectId } = request.params as { projectId: string };
+    if (!(await authenticateReaderRequest(request, sessions, cookieName, projectId))) {
+      return unauthenticated(reply);
+    }
+    const result = await trackingService.getPublishedReaderContent(projectId);
     if (!result.ok) return replyServiceError(reply, result.error);
     return result.value;
   });

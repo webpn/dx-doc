@@ -12,6 +12,13 @@ export interface NewSession {
   expiresAt: string;
 }
 
+export interface ReaderSession {
+  sessionId: string;
+  token: string;
+  projectId: string;
+  expiresAt: string;
+}
+
 /**
  * Create, resolve and destroy database-backed sessions (D18). The token is the
  * cookie; the store holds only its hash.
@@ -33,6 +40,8 @@ export class SessionService {
       tokenHash: hashSessionToken(token),
       expiresAt: new Date(this.now().getTime() + this.ttlMs).toISOString(),
       createdAt: this.now().toISOString(),
+      actorKind: 'session',
+      projectId: null,
     };
     await this.sessions.save(session);
     return { sessionId: session.id, token, expiresAt: session.expiresAt };
@@ -48,7 +57,43 @@ export class SessionService {
       await this.sessions.deleteByTokenHash(record.tokenHash);
       return null;
     }
-    return record.userId;
+    return record.actorKind === 'session' ? record.userId : null;
+  }
+
+  async createReader(projectId: string): Promise<ReaderSession> {
+    const token = generateSessionToken();
+    const session: SessionRecord = {
+      id: this.newId(),
+      userId: null,
+      tokenHash: hashSessionToken(token),
+      expiresAt: new Date(this.now().getTime() + this.ttlMs).toISOString(),
+      createdAt: this.now().toISOString(),
+      actorKind: 'reader',
+      projectId,
+    };
+    await this.sessions.save(session);
+    return { sessionId: session.id, token, projectId, expiresAt: session.expiresAt };
+  }
+
+  async resolveReader(token: string): Promise<ReaderSession | null> {
+    const record = await this.sessions.findByTokenHash(hashSessionToken(token));
+    if (
+      record?.actorKind !== 'reader' ||
+      record.projectId === undefined ||
+      record.projectId === null ||
+      Date.parse(record.expiresAt) <= this.now().getTime()
+    ) {
+      if (record?.expiresAt !== undefined && Date.parse(record.expiresAt) <= this.now().getTime()) {
+        await this.sessions.deleteByTokenHash(record.tokenHash);
+      }
+      return null;
+    }
+    return {
+      sessionId: record.id,
+      token,
+      projectId: record.projectId,
+      expiresAt: record.expiresAt,
+    };
   }
 
   async destroy(token: string, userId: string | null, companyId: string | null): Promise<void> {

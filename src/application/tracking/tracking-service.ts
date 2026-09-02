@@ -44,6 +44,7 @@ import { generateMermaidDiagram } from '@project/domain/mermaid';
 import { err, ok, type Result } from '@project/shared/result';
 
 import type { PermissionService } from '../auth/permissions';
+import type { SessionService } from '../auth/session-service';
 import type { PageRepository } from '../ports/page-repository';
 import type { PasswordHasher } from '../ports/password-hasher';
 import type { ProjectRepository } from '../ports/project-repository';
@@ -126,6 +127,16 @@ export interface PublicationPreview {
   changedEntityCount: number;
 }
 
+export interface PublishedReaderContent {
+  versionId: string;
+  projectId: string;
+  versionNumber: number;
+  title: string | null;
+  releaseNotes: string | null;
+  createdAt: string;
+  snapshot: Omit<ProjectVersionSnapshot, 'createdBy'>;
+}
+
 interface TrackingTemplateConfig {
   description?: string;
   pageId?: string;
@@ -172,6 +183,7 @@ export class TrackingService {
     private readonly projects: ProjectRepository,
     private readonly pages: PageRepository,
     private readonly permissions: PermissionService,
+    private readonly sessions: SessionService,
     private readonly searchIndex?: SearchIndex,
     private readonly now: () => Date = () => new Date(),
     private readonly newId: () => string = () => randomUUID(),
@@ -3290,7 +3302,20 @@ export class TrackingService {
   async verifySharedPassword(
     projectId: string,
     input: ProjectSharedPasswordVerifyInput,
-  ): Promise<Result<{ verified: boolean; sharedPasswordId: string | null }, TrackingServiceError>> {
+  ): Promise<
+    Result<
+      | {
+          verified: true;
+          sharedPasswordId: string;
+          session: Awaited<ReturnType<SessionService['createReader']>>;
+        }
+      | {
+          verified: false;
+          sharedPasswordId: null;
+        },
+      TrackingServiceError
+    >
+  > {
     const parsed = validate(projectSharedPasswordVerifySchema, input);
     if (!parsed.ok) return err({ kind: 'validation', issues: parsed.error });
 
@@ -3318,11 +3343,31 @@ export class TrackingService {
             createdAt: nowIso,
           });
         }
-        return ok({ verified: true, sharedPasswordId: sp.id });
+        const session = await this.sessions.createReader(projectId);
+        return ok({ verified: true, sharedPasswordId: sp.id, session });
       }
     }
 
     return ok({ verified: false, sharedPasswordId: null });
+  }
+
+  async getPublishedReaderContent(
+    projectId: string,
+  ): Promise<Result<PublishedReaderContent, TrackingServiceError>> {
+    const version = await this.versions.getLatestVersion(projectId);
+    if (version === null) return err({ kind: 'not_found' });
+    return ok({
+      versionId: version.id,
+      projectId: version.projectId,
+      versionNumber: version.versionNumber,
+      title: version.title,
+      releaseNotes: version.releaseNotes,
+      createdAt: version.createdAt,
+      snapshot: (({ createdBy: _createdBy, ...snapshot }) => ({
+        ...snapshot,
+        freePages: snapshot.freePages.filter((page) => page.publishable),
+      }))(version.snapshot),
+    });
   }
 
   async listSharedPasswords(

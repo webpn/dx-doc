@@ -19,6 +19,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { PermissionService } from '@project/application/auth/permissions';
+import { SessionService } from '@project/application/auth/session-service';
 import { TrackingService } from '@project/application/tracking/tracking-service';
 import { SqliteAccountRepository } from '@project/infrastructure/persistence/sqlite-account-repository';
 import {
@@ -28,6 +29,7 @@ import {
 } from '@project/infrastructure/persistence/sqlite-kysely';
 import { SqlitePageRepository } from '@project/infrastructure/persistence/sqlite-page-repository';
 import { SqliteProjectRepository } from '@project/infrastructure/persistence/sqlite-project-repository';
+import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
 import {
   SqliteDestinationRepository,
   SqliteFlowRepository,
@@ -46,6 +48,8 @@ import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-pa
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { applyMigrations } from '../support/apply-migrations';
+
+const TTL_MS = 8 * 60 * 60 * 1000;
 
 function t(): string {
   return new Date().toISOString();
@@ -200,6 +204,7 @@ describe('TrackingService (M1.1 Application Service)', () => {
       projectRepo,
       pageRepo,
       permissions,
+      new SessionService(new SqliteSessionRepository(connection.kysely), TTL_MS, auditLogRepo),
     );
   });
 
@@ -777,6 +782,10 @@ describe('TrackingService (M1.1 Application Service)', () => {
     expect(verifyRes.ok).toBe(true);
     if (!verifyRes.ok) throw new Error('verify failed');
     expect(verifyRes.value.verified).toBe(true);
+    if (verifyRes.value.verified) {
+      expect(verifyRes.value.session.projectId).toBe(projectId);
+      expect(verifyRes.value.session.token).toEqual(expect.any(String));
+    }
 
     // 3. Verify audit log entry
     const auditRes = await trackingService.listAuditLogs(adminId, companyId, projectId);

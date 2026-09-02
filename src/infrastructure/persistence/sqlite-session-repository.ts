@@ -20,6 +20,8 @@ export class SqliteSessionRepository implements SessionRepository {
         token_hash: session.tokenHash,
         expires_at: session.expiresAt,
         created_at: session.createdAt,
+        actor_kind: session.actorKind ?? 'session',
+        project_id: session.projectId ?? null,
       })
       .execute();
   }
@@ -37,6 +39,8 @@ export class SqliteSessionRepository implements SessionRepository {
       tokenHash: row.token_hash,
       expiresAt: row.expires_at,
       createdAt: row.created_at,
+      actorKind: row.actor_kind,
+      projectId: row.project_id ?? null,
     };
   }
 

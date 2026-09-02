@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -265,6 +266,7 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
       projectRepo,
       pageRepo,
       permissions,
+      sessions,
       searchIndex,
     );
 
@@ -1264,5 +1266,93 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
       url: `/api/companies/${companyId}/projects/${projectId}/versions/unpublished-changes`,
     });
     expect(indicatorRes.statusCode).toBe(401);
+  });
+
+  it('issues a project-scoped reader session for published content only', async () => {
+    const passwordRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/shared-passwords`,
+      headers: { cookie: editorCookie },
+      payload: { password: 'reader-password' },
+    });
+    expect(passwordRes.statusCode).toBe(201);
+
+    const verifyRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/shared-passwords/verify`,
+      payload: { password: 'reader-password' },
+    });
+    expect(verifyRes.statusCode).toBe(200);
+    const verified = verifyRes.json<{ verified: boolean; sharedPasswordId: string }>();
+    expect(verified.verified).toBe(true);
+    expect(verified.sharedPasswordId).toMatch(/.+/);
+    const readerCookie = String(verifyRes.headers['set-cookie'] ?? '').split(';')[0] ?? '';
+    expect(readerCookie).toMatch(/^dxdoc_session=.+/);
+
+    await connection.kysely
+      .insertInto('free_pages')
+      .values({
+        id: 'non-publishable-reader-page',
+        company_id: companyId,
+        project_id: projectId,
+        title: 'Internal credentials',
+        slug: 'internal-credentials',
+        content: 'do-not-release-this-content',
+        // Direct kysely insert: the column is integer, better-sqlite3 cannot bind booleans.
+        publishable: 0,
+        created_at: t(),
+        updated_at: t(),
+      })
+      .execute();
+
+    const published = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/projects/${projectId}/versions`,
+      headers: { cookie: editorCookie },
+      payload: { title: 'Reader release' },
+    });
+    expect(published.statusCode).toBe(201);
+
+    const reader = await app.inject({
+      method: 'GET',
+      url: `/api/projects/${projectId}/reader`,
+      headers: { cookie: readerCookie },
+    });
+    expect(reader.statusCode).toBe(200);
+    const readerBody = reader.json<{
+      title: string;
+      snapshot: { freePages: { content: string }[] };
+    }>();
+    expect(readerBody.title).toBe('Reader release');
+    expect(readerBody.snapshot.freePages).toEqual([]);
+    expect(reader.body).not.toContain('do-not-release-this-content');
+
+    const otherProject = await app.inject({
+      method: 'GET',
+      url: `/api/projects/${otherProjectId}/reader`,
+      headers: { cookie: readerCookie },
+    });
+    expect(otherProject.statusCode).toBe(401);
+
+    const mutation = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/properties`,
+      headers: { cookie: readerCookie },
+      payload: { name: 'blocked' },
+    });
+    expect(mutation.statusCode).toBe(401);
+
+    const token = readerCookie.split('=')[1] ?? '';
+    await connection.kysely
+      .updateTable('sessions')
+      .set({ expires_at: '2000-01-01T00:00:00.000Z' })
+      .where('token_hash', '=', createHash('sha256').update(token).digest('hex'))
+      .execute();
+    const expired = await app.inject({
+      method: 'GET',
+      url: `/api/projects/${projectId}/reader`,
+      headers: { cookie: readerCookie },
+    });
+    expect(expired.statusCode).toBe(401);
   });
 });

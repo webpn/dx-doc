@@ -5,10 +5,12 @@
  */
 export interface SessionRecord {
   id: string;
-  userId: string;
+  userId: string | null;
   tokenHash: string;
   expiresAt: string;
   createdAt: string;
+  actorKind?: 'session' | 'reader';
+  projectId?: string | null;
 }
 
 export interface SessionRepository {

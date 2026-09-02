@@ -41,5 +41,10 @@ export {
 } from './composition-root';
 export type { Composition, CompositionOptions, ReadyStatus, ServedRoute } from './composition-root';
 
-export { authenticateRequest, replyServiceError, unauthenticated } from './helpers';
+export {
+  authenticateReaderRequest,
+  authenticateRequest,
+  replyServiceError,
+  unauthenticated,
+} from './helpers';
 export type { ActorKind, AuthenticatedActor } from './helpers';

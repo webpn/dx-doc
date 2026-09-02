@@ -35,6 +35,8 @@ Read-only consultation behind email + password or a project shared password (REQ
 
 > **Found not implemented on 2026-08-18.** There is no client, so there is no read-only view. The shared-password mechanism it would sit on returns a boolean and issues no session ([REQ-SEC-005](REQ-SEC.md#req-sec-005--project-shared-password-access-with-expiry)), so both halves are missing. The reader session is built at [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening) and the view at [M1.17](../milestones.md#m117--consultation-search-and-publication-ui).
 
+> **Backend prerequisite completed on 2026-09-02.** Shared-password readers now receive a project-scoped session and can reach published content through the REST reader endpoint. The in-app read-only client, navigation, rendering and full UI acceptance remain part of M1.17, so this requirement remains **Not Started**.
+
 ### REQ-VIEW-002 — View selector as a presentation filter
 
 **Must** · R2 · [M2.5](../milestones.md#m25--profile-aware-rendering) · spec §10.1, §10.2, §10.3 · **Not Started** · Issue: — · PR: —

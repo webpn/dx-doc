@@ -11,6 +11,19 @@ export interface AuthenticatedActor {
   actorKind: ActorKind;
 }
 
+export async function authenticateReaderRequest(
+  request: FastifyRequest,
+  sessions: SessionService,
+  cookieName: string,
+  projectId: string,
+): Promise<boolean> {
+  const cookies = request.cookies as Record<string, string | undefined>;
+  const token = cookies[cookieName];
+  if (token === undefined) return false;
+  const session = await sessions.resolveReader(token);
+  return session !== null && session.projectId === projectId;
+}
+
 /**
  * Resolve the authenticated actor from the session cookie or Bearer header
  * (REQ-API-009, D38). Transport concern: the session store and the

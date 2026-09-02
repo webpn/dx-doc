@@ -105,7 +105,7 @@ A project may be exposed read-only behind a shared password. Multiple passwords 
 - Non-publishable free pages are invisible in this mode (REQ-SEC-012).
 - Revoking one password does not affect the others.
 
-> **Partially hardened on 2026-08-19.** Shared-password list responses now omit the bcrypt hash, and deletion verifies that the password belongs to the project whose permission was checked. Expiry and multiple-passwords-per-project continue to work as specified. Verification still returns a boolean and issues no reader session; that remaining capability belongs to [M1.13](../milestones.md#m113--tenancy-and-authorisation-hardening).
+> **Backend reader access completed on 2026-09-02.** Shared-password verification now issues an opaque, expiring, project-scoped reader session through the existing cookie session store. Reader authentication is accepted only by the published-content endpoint; existing user-authenticated routes and all mutation paths reject reader sessions. The endpoint returns the latest published snapshot with non-publishable free pages omitted. The requirement remains **In Progress** because export-path coverage, throttling and the reader UI are still outstanding.
 
 ### REQ-SEC-006 — Append-only audit log, 24-month retention
 

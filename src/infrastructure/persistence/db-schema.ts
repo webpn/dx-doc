@@ -121,7 +121,7 @@ export const SCHEMA_DEFINITIONS: DatabaseSchemaDefinition = {
     'created_at',
     'updated_at',
   ],
-  sessions: ['id', 'user_id', 'token_hash', 'expires_at', 'created_at'],
+  sessions: ['id', 'user_id', 'token_hash', 'expires_at', 'created_at', 'actor_kind', 'project_id'],
   instance_admin_stepups: ['id', 'user_id', 'company_id', 'created_at', 'expires_at'],
   password_reset_tokens: ['id', 'user_id', 'token_hash', 'expires_at', 'used_at', 'created_at'],
   navigation_events: [
@@ -423,10 +423,12 @@ export interface PagesTable {
 
 export interface SessionsTable {
   id: string;
-  user_id: string;
+  user_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
   token_hash: string;
   expires_at: string;
   created_at: string;
+  actor_kind: 'session' | 'reader';
+  project_id: ColumnType<string | null, string | null | undefined, string | null | undefined>;
 }
 
 /** Instance-admin step-up windows (ADR-0027). See migration 015 and REQ-SEC-014. */
