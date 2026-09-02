@@ -29,6 +29,7 @@ import { ProjectPage } from './shell/project-page';
 import { PropertyEditorPage } from './shell/property-editor-page';
 import { StepUpPage } from './shell/step-up-page';
 import { TemplateEditorPage } from './shell/template-editor-page';
+import { TrackingCreatePage } from './shell/tracking-create-page';
 import { TrackingEditorPage } from './shell/tracking-editor-page';
 import { TriggerEditorPage } from './shell/trigger-editor-page';
 import { useSessionStore } from './stores/session-store';
@@ -99,10 +100,7 @@ export function App(): ReactElement {
         <Route element={<FlowListPage />} path="/projects/:projectId/flows" />
         <Route element={<FlowCreatePage />} path="/projects/:projectId/flows/new" />
         <Route element={<FlowEditorPage />} path="/projects/:projectId/flows/:flowId" />
-        <Route
-          element={<TriggerEditorPage />}
-          path="/projects/:projectId/triggers/:triggerId"
-        />
+        <Route element={<TriggerEditorPage />} path="/projects/:projectId/triggers/:triggerId" />
         <Route element={<FreePageListPage />} path="/projects/:projectId/free-pages" />
         <Route element={<FreePageCreatePage />} path="/projects/:projectId/free-pages/new" />
         <Route
@@ -116,6 +114,7 @@ export function App(): ReactElement {
           path="/projects/:projectId/properties/:propertyId"
         />
         <Route element={<TemplateEditorPage />} path="/projects/:projectId/templates/:templateId" />
+        <Route element={<TrackingCreatePage />} path="/projects/:projectId/trackings/new" />
         <Route element={<TrackingEditorPage />} path="/projects/:projectId/trackings/:trackingId" />
         <Route element={<Navigate replace to="/" />} path="*" />
       </Route>

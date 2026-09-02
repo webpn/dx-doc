@@ -6,9 +6,10 @@ import type * as Queries from '../queries';
 
 import { PageTreeSidebar } from './page-tree-sidebar';
 
-const { pagesData, flowsData } = vi.hoisted(() => ({
+const { pagesData, flowsData, trackingsData } = vi.hoisted(() => ({
   pagesData: vi.fn(),
   flowsData: vi.fn(),
+  trackingsData: vi.fn(),
 }));
 
 vi.mock('../queries', async (importOriginal) => {
@@ -17,6 +18,7 @@ vi.mock('../queries', async (importOriginal) => {
     ...actual,
     usePages: () => pagesData() as unknown,
     useFlows: () => flowsData() as unknown,
+    useTrackings: () => trackingsData() as unknown,
   };
 });
 
@@ -37,6 +39,7 @@ describe('PageTreeSidebar (REQ-NAV-001)', () => {
   beforeEach(() => {
     pagesData.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
     flowsData.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
+    trackingsData.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
   });
 
   function renderSidebar(currentPageId?: string): ReturnType<typeof renderWithProviders> {
@@ -104,6 +107,26 @@ describe('PageTreeSidebar (REQ-NAV-001)', () => {
 
     const create = await screen.findByRole('link', { name: 'New page' });
     expect(create).toHaveAttribute('href', '/projects/prj_1/pages/new');
+  });
+
+  it('lists trackings with links to their editors and offers creating one', async () => {
+    trackingsData.mockReturnValue({
+      data: [
+        { id: 'trk1', name: 'Checkout completed', slug: 'checkout-completed' },
+        { id: 'trk2', name: 'Page view', slug: 'page-view' },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    renderSidebar();
+
+    const first = await screen.findByRole('link', { name: 'Checkout completed' });
+    expect(first).toHaveAttribute('href', '/projects/prj_1/trackings/trk1');
+
+    const create = screen.getByRole('link', { name: 'New tracking' });
+    expect(create).toHaveAttribute('href', '/projects/prj_1/trackings/new');
   });
 
   it('surfaces a load error', async () => {

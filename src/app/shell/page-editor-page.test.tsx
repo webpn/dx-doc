@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -61,6 +61,9 @@ describe('PageEditorPage (REQ-DOM-001, REQ-AUTH-001)', () => {
     pageData.mockReturnValue({ data: PAGE, isPending: false, error: null });
     pagesData.mockReturnValue({ data: [PAGE], isPending: false, error: null });
     trackingsData.mockReturnValue({ data: [], isPending: false, error: null });
+    // The sidebar inside ProjectWorkspace reads the project's flows; without a
+    // return value the mock yields undefined and the sidebar render throws.
+    flowsData.mockReturnValue({ data: [], isLoading: false, error: null });
   });
 
   function renderEditor(): ReturnType<typeof renderWithProviders> {
@@ -133,9 +136,19 @@ describe('PageEditorPage (REQ-DOM-001, REQ-AUTH-001)', () => {
     });
     renderEditor();
 
-    const link = await screen.findByRole('link', { name: 'Page view' });
+    // The sidebar now also lists the project's trackings, so the recap's own
+    // filtering is asserted inside the recap card: the heading's parent is its
+    // CardHeader, and the Card wraps header and recap content together.
+    const recapHeading = await screen.findByRole('heading', { name: 'What is tracked here' });
+    const recapCard = recapHeading.parentElement?.parentElement;
+    if (recapCard === null || recapCard === undefined) {
+      throw new Error('Recap card not rendered');
+    }
+    const recap = within(recapCard);
+
+    const link = recap.getByRole('link', { name: 'Page view' });
     expect(link).toHaveAttribute('href', '/projects/prj_1/trackings/trk1');
-    expect(screen.queryByText('Other page tracking')).not.toBeInTheDocument();
+    expect(recap.queryByText('Other page tracking')).not.toBeInTheDocument();
   });
 
   it('explains when nothing is tracked on this page yet', async () => {

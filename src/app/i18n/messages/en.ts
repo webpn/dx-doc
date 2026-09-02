@@ -252,6 +252,27 @@ export const en = {
   'freePage.edit.deleteConfirm': 'Delete this free page? This cannot be undone.',
   'freePage.edit.deleted': 'Free page deleted.',
 
+  // Tracking creation (REQ-DOM-002)
+  'tracking.create.title': 'New tracking',
+  'tracking.create.subtitle':
+    'What is measured and where it fires; modules and properties are attached afterwards.',
+  'tracking.create.nameLabel': 'Name',
+  'tracking.create.slugLabel': 'Slug',
+  'tracking.create.navigationEventLabel': 'Navigation event',
+  'tracking.create.eventNone': 'Choose an event',
+  'tracking.create.pageLabel': 'Page',
+  'tracking.create.pageNone': 'Not attached to a page',
+  'tracking.create.submit': 'Create tracking',
+  'tracking.create.submitting': 'Creating…',
+  'tracking.create.missingName': 'Enter a name.',
+  'tracking.create.missingSlug': 'Enter a slug.',
+  'tracking.create.missingEvent': 'Choose a navigation event.',
+
+  // Tracking list in the project sidebar
+  'tracking.list.title': 'Trackings',
+  'tracking.list.empty': 'No trackings yet.',
+  'tracking.list.create': 'New tracking',
+
   // Tracking editor (REQ-DOM-002, REQ-DOM-008, REQ-DOM-027)
   'tracking.edit.title': 'Edit tracking',
   'tracking.edit.subtitle': 'What is measured, where it fires, and the properties it carries.',
@@ -414,15 +435,15 @@ export const en = {
 
   // Triggers (REQ-NAV-004)
   'trigger.list.title': 'Triggers',
-  'trigger.list.subtitle':
-    'The navigation, system or user actions that cause trackings to fire.',
+  'trigger.list.subtitle': 'The navigation, system or user actions that cause trackings to fire.',
   'trigger.list.loading': 'Loading triggers…',
   'trigger.list.loadError': 'Triggers could not be loaded.',
   'trigger.list.empty': 'No triggers yet.',
   'trigger.list.create': 'New trigger',
   'trigger.list.open': 'Open',
   'trigger.create.title': 'New trigger',
-  'trigger.create.subtitle': 'Give it a name; its description and trackings can be filled in after.',
+  'trigger.create.subtitle':
+    'Give it a name; its description and trackings can be filled in after.',
   'trigger.create.nameLabel': 'Name',
   'trigger.create.submit': 'Create trigger',
   'trigger.create.submitting': 'Creating…',

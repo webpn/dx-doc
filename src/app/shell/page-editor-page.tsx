@@ -181,6 +181,13 @@ export function PageEditorPage(): ReactElement {
             ))}
           </ul>
         )}
+        {/* The create screen preselects this page through ?pageId=, so a new
+            tracking can be attached here without re-picking the page. */}
+        <Button asChild className="mt-4" size="sm" variant="secondary">
+          <Link to={`/projects/${projectId ?? ''}/trackings/new?pageId=${loaded.id}`}>
+            {t('tracking.list.create')}
+          </Link>
+        </Button>
       </Card>
     </ProjectWorkspace>
   );

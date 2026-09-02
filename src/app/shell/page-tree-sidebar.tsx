@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 import type { Page } from '../api';
 import { apiErrorMessageKey, useTranslate } from '../i18n';
-import { useFlows, usePages } from '../queries';
+import { useFlows, usePages, useTrackings } from '../queries';
 
 interface PageTreeNode {
   page: Page;
@@ -102,6 +102,7 @@ export function PageTreeSidebar(props: PageTreeSidebarProps): ReactElement {
   const t = useTranslate();
   const pages = usePages(projectId);
   const flows = useFlows(projectId);
+  const trackings = useTrackings(projectId);
 
   return (
     <nav
@@ -162,6 +163,43 @@ export function PageTreeSidebar(props: PageTreeSidebarProps): ReactElement {
                 to={`/projects/${projectId}/flows/${flow.id}`}
               >
                 {flow.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {/* Trackings alongside the hierarchy and flows, in the same section
+          pattern — until this existed the tracking editor had no entry point
+          outside a page's tracking recap. */}
+      <div className="mb-3 mt-6 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-[var(--color-ink)]">
+          {t('tracking.list.title')}
+        </h2>
+        <Button asChild size="sm" variant="ghost">
+          <Link to={`/projects/${projectId}/trackings/new`}>{t('tracking.list.create')}</Link>
+        </Button>
+      </div>
+
+      {trackings.isLoading ? <Skeleton className="h-24" /> : null}
+
+      {trackings.isError ? (
+        <Alert variant="error">{t(apiErrorMessageKey(trackings.error))}</Alert>
+      ) : null}
+
+      {trackings.data?.length === 0 ? (
+        <p className="text-sm text-[var(--color-muted)]">{t('tracking.list.empty')}</p>
+      ) : null}
+
+      {trackings.data !== undefined && trackings.data.length > 0 ? (
+        <ul>
+          {trackings.data.map((tracking) => (
+            <li key={tracking.id}>
+              <Link
+                className="block rounded-md px-2 py-1.5 text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
+                to={`/projects/${projectId}/trackings/${tracking.id}`}
+              >
+                {tracking.name}
               </Link>
             </li>
           ))}
