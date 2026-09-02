@@ -4,7 +4,14 @@ import { Link } from 'react-router-dom';
 
 import type { Page } from '../api';
 import { apiErrorMessageKey, useTranslate } from '../i18n';
-import { useFlows, usePages, useTrackings } from '../queries';
+import {
+  useFlows,
+  useModules,
+  usePages,
+  useProject,
+  useProperties,
+  useTrackings,
+} from '../queries';
 
 interface PageTreeNode {
   page: Page;
@@ -103,6 +110,11 @@ export function PageTreeSidebar(props: PageTreeSidebarProps): ReactElement {
   const pages = usePages(projectId);
   const flows = useFlows(projectId);
   const trackings = useTrackings(projectId);
+  // Properties and modules are company-scoped with a project filter; the
+  // project supplies the company scope, exactly as the catalogue screen does.
+  const companyId = useProject(projectId).data?.companyId;
+  const properties = useProperties(companyId, projectId);
+  const modules = useModules(companyId, projectId);
 
   return (
     <nav
@@ -200,6 +212,75 @@ export function PageTreeSidebar(props: PageTreeSidebarProps): ReactElement {
                 to={`/projects/${projectId}/trackings/${tracking.id}`}
               >
                 {tracking.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {/* Properties and modules in the same section pattern — until these
+          sections existed the property and module editors had no entry point
+          outside a direct URL. */}
+      <div className="mb-3 mt-6 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-[var(--color-ink)]">
+          {t('property.list.title')}
+        </h2>
+        <Button asChild size="sm" variant="ghost">
+          <Link to={`/projects/${projectId}/properties/new`}>{t('property.list.create')}</Link>
+        </Button>
+      </div>
+
+      {properties.isLoading ? <Skeleton className="h-24" /> : null}
+
+      {properties.isError ? (
+        <Alert variant="error">{t(apiErrorMessageKey(properties.error))}</Alert>
+      ) : null}
+
+      {properties.data?.length === 0 ? (
+        <p className="text-sm text-[var(--color-muted)]">{t('property.list.empty')}</p>
+      ) : null}
+
+      {properties.data !== undefined && properties.data.length > 0 ? (
+        <ul>
+          {properties.data.map((property) => (
+            <li key={property.id}>
+              <Link
+                className="block rounded-md px-2 py-1.5 text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
+                to={`/projects/${projectId}/properties/${property.id}`}
+              >
+                {property.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <div className="mb-3 mt-6 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t('module.list.title')}</h2>
+        <Button asChild size="sm" variant="ghost">
+          <Link to={`/projects/${projectId}/modules/new`}>{t('module.list.create')}</Link>
+        </Button>
+      </div>
+
+      {modules.isLoading ? <Skeleton className="h-24" /> : null}
+
+      {modules.isError ? (
+        <Alert variant="error">{t(apiErrorMessageKey(modules.error))}</Alert>
+      ) : null}
+
+      {modules.data?.length === 0 ? (
+        <p className="text-sm text-[var(--color-muted)]">{t('module.list.empty')}</p>
+      ) : null}
+
+      {modules.data !== undefined && modules.data.length > 0 ? (
+        <ul>
+          {modules.data.map((module) => (
+            <li key={module.id}>
+              <Link
+                className="block rounded-md px-2 py-1.5 text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
+                to={`/projects/${projectId}/modules/${module.id}`}
+              >
+                {module.name}
               </Link>
             </li>
           ))}

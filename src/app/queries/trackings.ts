@@ -9,8 +9,10 @@ import {
   trackingsApi,
   trackingTemplatesApi,
   type DestinationUpdateInput,
+  type ModuleCreateInput,
   type ModuleUpdateInput,
   type Presence,
+  type PropertyCreateInput,
   type PropertyUpdateInput,
   type TrackingCreateInput,
   type TrackingTemplateUpdateInput,
@@ -191,6 +193,36 @@ export function useProperty(propertyId: string | undefined) {
     queryKey: queryKeys.property(propertyId ?? ''),
     queryFn: () => propertiesApi.get(propertyId ?? ''),
     enabled: propertyId !== undefined,
+  });
+}
+
+/**
+ * Create a property inside a project (M1.16, REQ-DOM-003). Invalidates the
+ * project's property list: the sidebar and the catalogue screen read it.
+ */
+export function useCreateProperty(companyId: string, projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: PropertyCreateInput) => propertiesApi.create(projectId, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.properties(companyId, projectId) });
+      void queryClient.invalidateQueries({ queryKey: ['companies'] });
+    },
+  });
+}
+
+/**
+ * Create a module inside a project (M1.16, REQ-DOM-004). The project's module
+ * list changes; the property list does not.
+ */
+export function useCreateModule(companyId: string, projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ModuleCreateInput) => modulesApi.create(projectId, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.modules(companyId, projectId) });
+      void queryClient.invalidateQueries({ queryKey: ['companies'] });
+    },
   });
 }
 

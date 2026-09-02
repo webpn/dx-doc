@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from '@project/design-system';
 import { useState, type ReactElement } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import { apiErrorMessageKey, useTranslate } from '../i18n';
 import { useCopyCatalogue, useModules, useProject, useProperties } from '../queries';
@@ -70,6 +70,25 @@ export function CatalogueCopyPage(): ReactElement {
         <CardTitle>{t('catalogue.copy.title')}</CardTitle>
         <CardDescription>{t('catalogue.copy.subtitle')}</CardDescription>
       </CardHeader>
+
+      {/* Copying covers reusing catalogue items; creating brand-new ones in
+          this project is the other way to fill it, so it is linked here too. */}
+      <p className="text-sm text-[var(--color-muted)]">
+        {t('catalogue.copy.createInstead')}{' '}
+        <Link
+          className="font-medium text-[var(--color-ink)] underline"
+          to={`/projects/${projectId ?? ''}/properties/new`}
+        >
+          {t('property.list.create')}
+        </Link>
+        {' · '}
+        <Link
+          className="font-medium text-[var(--color-ink)] underline"
+          to={`/projects/${projectId ?? ''}/modules/new`}
+        >
+          {t('module.list.create')}
+        </Link>
+      </p>
 
       <section>
         <h3>{t('catalogue.copy.properties')}</h3>

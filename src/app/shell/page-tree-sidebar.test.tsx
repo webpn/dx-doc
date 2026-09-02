@@ -6,11 +6,15 @@ import type * as Queries from '../queries';
 
 import { PageTreeSidebar } from './page-tree-sidebar';
 
-const { pagesData, flowsData, trackingsData } = vi.hoisted(() => ({
-  pagesData: vi.fn(),
-  flowsData: vi.fn(),
-  trackingsData: vi.fn(),
-}));
+const { pagesData, flowsData, trackingsData, projectData, propertiesData, modulesData } =
+  vi.hoisted(() => ({
+    pagesData: vi.fn(),
+    flowsData: vi.fn(),
+    trackingsData: vi.fn(),
+    projectData: vi.fn(),
+    propertiesData: vi.fn(),
+    modulesData: vi.fn(),
+  }));
 
 vi.mock('../queries', async (importOriginal) => {
   const actual = await importOriginal<typeof Queries>();
@@ -19,6 +23,9 @@ vi.mock('../queries', async (importOriginal) => {
     usePages: () => pagesData() as unknown,
     useFlows: () => flowsData() as unknown,
     useTrackings: () => trackingsData() as unknown,
+    useProject: () => projectData() as unknown,
+    useProperties: () => propertiesData() as unknown,
+    useModules: () => modulesData() as unknown,
   };
 });
 
@@ -40,6 +47,14 @@ describe('PageTreeSidebar (REQ-NAV-001)', () => {
     pagesData.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
     flowsData.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
     trackingsData.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
+    projectData.mockReturnValue({
+      data: { id: 'prj_1', companyId: 'cmp_1', name: 'Web analytics' },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    propertiesData.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
+    modulesData.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
   });
 
   function renderSidebar(currentPageId?: string): ReturnType<typeof renderWithProviders> {
@@ -127,6 +142,40 @@ describe('PageTreeSidebar (REQ-NAV-001)', () => {
 
     const create = screen.getByRole('link', { name: 'New tracking' });
     expect(create).toHaveAttribute('href', '/projects/prj_1/trackings/new');
+  });
+
+  it('lists project properties with links to their editors and offers creating one', async () => {
+    propertiesData.mockReturnValue({
+      data: [{ id: 'prop_1', name: 'page_language' }],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    renderSidebar();
+
+    const property = await screen.findByRole('link', { name: 'page_language' });
+    expect(property).toHaveAttribute('href', '/projects/prj_1/properties/prop_1');
+
+    const create = screen.getByRole('link', { name: 'New property' });
+    expect(create).toHaveAttribute('href', '/projects/prj_1/properties/new');
+  });
+
+  it('lists project modules with links to their editors and offers creating one', async () => {
+    modulesData.mockReturnValue({
+      data: [{ id: 'mod_1', name: 'Localization' }],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    renderSidebar();
+
+    const module = await screen.findByRole('link', { name: 'Localization' });
+    expect(module).toHaveAttribute('href', '/projects/prj_1/modules/mod_1');
+
+    const create = screen.getByRole('link', { name: 'New module' });
+    expect(create).toHaveAttribute('href', '/projects/prj_1/modules/new');
   });
 
   it('surfaces a load error', async () => {

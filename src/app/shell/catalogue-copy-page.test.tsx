@@ -57,6 +57,16 @@ describe('CatalogueCopyPage (REQ-DOM-019)', () => {
     expect(screen.getByLabelText('Global Identity')).toBeInTheDocument();
   });
 
+  it('links to creating a brand-new property and module in the project (M1.16)', () => {
+    renderPage();
+
+    const property = screen.getByRole('link', { name: 'New property' });
+    expect(property).toHaveAttribute('href', '/projects/prj_1/properties/new');
+
+    const module = screen.getByRole('link', { name: 'New module' });
+    expect(module).toHaveAttribute('href', '/projects/prj_1/modules/new');
+  });
+
   it('copies only the selected items', async () => {
     const user = userEvent.setup();
     renderPage();

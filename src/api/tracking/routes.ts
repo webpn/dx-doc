@@ -79,6 +79,23 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     return result.value;
   });
 
+  // Project-level create (M1.16): the project is the scope in the URL, so no
+  // companyId query parameter is needed — the service resolves it.
+  app.post('/api/projects/:projectId/properties', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
+
+    const { projectId } = request.params as { projectId: string };
+    const result = await trackingService.createPropertyInProject(
+      userId,
+      projectId,
+      request.body as PropertyCreateInput,
+    );
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return reply.code(201).send({ id: result.value.propertyId });
+  });
+
   app.get('/api/properties/:id', async (request, reply) => {
     const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
     if (!actor) return unauthenticated(reply);
@@ -146,6 +163,22 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     const result = await trackingService.listModules(userId, companyId, projectId);
     if (!result.ok) return replyServiceError(reply, result.error);
     return result.value;
+  });
+
+  // Project-level create (M1.16) — see the project-level property route above.
+  app.post('/api/projects/:projectId/modules', async (request, reply) => {
+    const actor = await authenticateRequest(request, sessions, serviceTokens, cookieName);
+    if (!actor) return unauthenticated(reply);
+    const userId = actor.userId;
+
+    const { projectId } = request.params as { projectId: string };
+    const result = await trackingService.createModuleInProject(
+      userId,
+      projectId,
+      request.body as ModuleCreateInput,
+    );
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return reply.code(201).send({ id: result.value.moduleId });
   });
 
   app.get('/api/modules/:id', async (request, reply) => {

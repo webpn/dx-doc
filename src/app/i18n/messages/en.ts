@@ -314,6 +314,29 @@ export const en = {
   'catalogue.copy.nothingSelected': 'Select at least one property or module to copy.',
   'catalogue.copy.done':
     'Copied {properties} property/properties and {modules} module(s). The copies are independent and no longer linked to the catalogue.',
+  'catalogue.copy.createInstead':
+    'Need something the catalogue does not have? Create it in this project directly:',
+
+  // Property creation (REQ-DOM-003)
+  'property.create.title': 'New property',
+  'property.create.subtitle':
+    'What this data-layer property means and how it must be handled; it can be attached to modules and trackings afterwards.',
+  'property.create.nameLabel': 'Name',
+  'property.create.businessLabel': 'Business label',
+  'property.create.description': 'Description',
+  'property.create.type': 'Type',
+  'property.create.dataSource': 'Data source',
+  'property.create.status': 'Status',
+  'property.create.piiFlag': 'Contains personal data',
+  'property.create.hashingPolicy': 'Hashing policy',
+  'property.create.submit': 'Create property',
+  'property.create.submitting': 'Creating…',
+  'property.create.missingName': 'Enter a name.',
+
+  // Property list in the project sidebar
+  'property.list.title': 'Properties',
+  'property.list.empty': 'No properties yet.',
+  'property.list.create': 'New property',
 
   // Property editor (REQ-DOM-003)
   'property.edit.title': 'Edit property',
@@ -329,6 +352,22 @@ export const en = {
   'property.edit.save': 'Save property',
   'property.edit.saved': 'Property saved.',
   'property.edit.missingName': 'Enter a name.',
+
+  // Module creation (REQ-DOM-004)
+  'module.create.title': 'New module',
+  'module.create.subtitle':
+    'A reusable group of properties; trackings can attach it once it exists.',
+  'module.create.nameLabel': 'Name',
+  'module.create.description': 'Description',
+  'module.create.properties': 'Properties in this module',
+  'module.create.submit': 'Create module',
+  'module.create.submitting': 'Creating…',
+  'module.create.missingName': 'Enter a name.',
+
+  // Module list in the project sidebar
+  'module.list.title': 'Modules',
+  'module.list.empty': 'No modules yet.',
+  'module.list.create': 'New module',
 
   // Module editor (REQ-DOM-004)
   'module.edit.title': 'Edit module',

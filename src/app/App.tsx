@@ -19,6 +19,7 @@ import { FlowListPage } from './shell/flow-list-page';
 import { FreePageCreatePage } from './shell/free-page-create-page';
 import { FreePageEditorPage } from './shell/free-page-editor-page';
 import { FreePageListPage } from './shell/free-page-list-page';
+import { ModuleCreatePage } from './shell/module-create-page';
 import { ModuleEditorPage } from './shell/module-editor-page';
 import { PageCreatePage } from './shell/page-create-page';
 import { PageEditorPage } from './shell/page-editor-page';
@@ -26,6 +27,7 @@ import { ProjectAccessPage } from './shell/project-access-page';
 import { ProjectCreatePage } from './shell/project-create-page';
 import { ProjectListPage } from './shell/project-list-page';
 import { ProjectPage } from './shell/project-page';
+import { PropertyCreatePage } from './shell/property-create-page';
 import { PropertyEditorPage } from './shell/property-editor-page';
 import { StepUpPage } from './shell/step-up-page';
 import { TemplateEditorPage } from './shell/template-editor-page';
@@ -96,6 +98,7 @@ export function App(): ReactElement {
           element={<DestinationEditorPage />}
           path="/projects/:projectId/destinations/:destinationId"
         />
+        <Route element={<ModuleCreatePage />} path="/projects/:projectId/modules/new" />
         <Route element={<ModuleEditorPage />} path="/projects/:projectId/modules/:moduleId" />
         <Route element={<FlowListPage />} path="/projects/:projectId/flows" />
         <Route element={<FlowCreatePage />} path="/projects/:projectId/flows/new" />
@@ -109,6 +112,7 @@ export function App(): ReactElement {
         />
         <Route element={<PageCreatePage />} path="/projects/:projectId/pages/new" />
         <Route element={<PageEditorPage />} path="/projects/:projectId/pages/:pageId" />
+        <Route element={<PropertyCreatePage />} path="/projects/:projectId/properties/new" />
         <Route
           element={<PropertyEditorPage />}
           path="/projects/:projectId/properties/:propertyId"

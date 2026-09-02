@@ -222,6 +222,12 @@ export const modulesApi = {
   get: (moduleId: string): Promise<{ module: Module; propertyIds: string[] }> =>
     apiRequest<{ module: Module; propertyIds: string[] }>(`/api/modules/${moduleId}`),
 
+  create: (projectId: string, input: ModuleCreateInput): Promise<{ id: string }> =>
+    apiRequest<{ id: string }>(`/api/projects/${projectId}/modules`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
   update: (moduleId: string, input: ModuleUpdateInput): Promise<Module> =>
     apiRequest<Module>(`/api/modules/${moduleId}`, {
       method: 'PATCH',
@@ -257,6 +263,25 @@ export interface ModuleUpdateInput {
   expectedUpdatedAt?: string | undefined;
 }
 
+/** Fields for a brand-new property (REQ-DOM-003). Optional keys fall back to the API's defaults. */
+export interface PropertyCreateInput {
+  name: string;
+  businessLabel?: string;
+  description?: string;
+  type?: PropertyDataType;
+  dataSource?: PropertyDataSource;
+  status?: PropertyStatus;
+  piiFlag?: boolean;
+  hashingPolicy?: string;
+}
+
+/** Fields for a brand-new module (REQ-DOM-004). */
+export interface ModuleCreateInput {
+  name: string;
+  description?: string;
+  propertyIds?: string[];
+}
+
 export const propertiesApi = {
   list: (companyId: string, projectId?: string): Promise<DataLayerProperty[]> =>
     apiRequest<DataLayerProperty[]>(
@@ -265,6 +290,12 @@ export const propertiesApi = {
 
   get: (propertyId: string): Promise<DataLayerProperty> =>
     apiRequest<DataLayerProperty>(`/api/properties/${propertyId}`),
+
+  create: (projectId: string, input: PropertyCreateInput): Promise<{ id: string }> =>
+    apiRequest<{ id: string }>(`/api/projects/${projectId}/properties`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
 
   update: (propertyId: string, input: PropertyUpdateInput): Promise<DataLayerProperty> =>
     apiRequest<DataLayerProperty>(`/api/properties/${propertyId}`, {

@@ -648,4 +648,112 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     expect(res.statusCode).toBe(201);
     expect(res.json<{ id: string }>().id).toBeDefined();
   });
+
+  it('creates a property and a module through the project-level routes (M1.16)', async () => {
+    const propRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/properties`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'page_language', type: 'string', dataSource: 'development' },
+    });
+    expect(propRes.statusCode).toBe(201);
+    const propId = propRes.json<{ id: string }>().id;
+    expect(propId).toBeDefined();
+
+    const modRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/modules`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'Localization Module', propertyIds: [propId] },
+    });
+    expect(modRes.statusCode).toBe(201);
+    const modId = modRes.json<{ id: string }>().id;
+    expect(modId).toBeDefined();
+
+    // Both land as project-scoped rows: the project list shows the property,
+    // and the module's property set resolved the reference it was given.
+    const propListRes = await app.inject({
+      method: 'GET',
+      url: `/api/companies/${companyId}/properties?projectId=${projectId}`,
+      headers: { cookie: editorCookie },
+    });
+    expect(propListRes.statusCode).toBe(200);
+    const props = propListRes.json<{ id: string; projectId: string | null }[]>();
+    expect(props.some((p) => p.id === propId && p.projectId === projectId)).toBe(true);
+
+    const modGetRes = await app.inject({
+      method: 'GET',
+      url: `/api/modules/${modId}`,
+      headers: { cookie: editorCookie },
+    });
+    expect(modGetRes.statusCode).toBe(200);
+    expect(
+      modGetRes.json<{ module: { projectId: string | null }; propertyIds: string[] }>(),
+    ).toMatchObject({
+      module: { projectId },
+      propertyIds: [propId],
+    });
+  });
+
+  it('rejects an unauthenticated project-level property create', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/properties`,
+      payload: { name: 'page_language' },
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('rejects a project-level property create with an invalid name', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/properties`,
+      headers: { cookie: editorCookie },
+      payload: { name: '', type: 'string' },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json<{ error: { code: string } }>().error.code).toBe('VALIDATION');
+  });
+
+  it('rejects a project-level module create with an invalid name', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/modules`,
+      headers: { cookie: editorCookie },
+      payload: { name: '' },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json<{ error: { code: string } }>().error.code).toBe('VALIDATION');
+  });
+
+  it('returns 404 for a project-level create on an unknown project', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/projects/proj-does-not-exist/properties',
+      headers: { cookie: editorCookie },
+      payload: { name: 'page_language' },
+    });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('rejects a project-level create for a project the editor has no grant on (REQ-SEC-018)', async () => {
+    // The editor's grant covers `projectId` only; `otherProjectId` belongs to
+    // the same company, so this proves the project — not just the company —
+    // is the authorization boundary for these routes.
+    const propRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${otherProjectId}/properties`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'page_language' },
+    });
+    expect(propRes.statusCode).toBe(403);
+
+    const modRes = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${otherProjectId}/modules`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'Foreign Module' },
+    });
+    expect(modRes.statusCode).toBe(403);
+  });
 });

@@ -250,6 +250,24 @@ export class TrackingService {
     return ok({ propertyId });
   }
 
+  /**
+   * Create a property directly inside a project (M1.16). The project supplies
+   * the company scope, so the wrapper only resolves it — existence, the
+   * company match, `project.edit` permission, validation and the audit entry
+   * all stay in `createProperty`, giving this route and the MCP server one
+   * implementation of the rules (REQ-FDN-010, ADR-0007; parent-scope
+   * verification per REQ-SEC-018).
+   */
+  async createPropertyInProject(
+    actorId: string,
+    projectId: string,
+    input: PropertyCreateInput,
+  ): Promise<Result<{ propertyId: string }, TrackingServiceError>> {
+    const project = await this.projects.getProjectById(projectId);
+    if (!project) return err({ kind: 'not_found' });
+    return this.createProperty(actorId, project.companyId, projectId, input);
+  }
+
   async getProperty(
     actorId: string,
     propertyId: string,
@@ -513,6 +531,22 @@ export class TrackingService {
     }
 
     return ok({ moduleId });
+  }
+
+  /**
+   * Create a module directly inside a project (M1.16). Same shape as
+   * `createPropertyInProject`: the project resolves the company scope and
+   * `createModule` keeps the single implementation of every rule
+   * (REQ-FDN-010, ADR-0007; parent-scope verification per REQ-SEC-018).
+   */
+  async createModuleInProject(
+    actorId: string,
+    projectId: string,
+    input: ModuleCreateInput,
+  ): Promise<Result<{ moduleId: string }, TrackingServiceError>> {
+    const project = await this.projects.getProjectById(projectId);
+    if (!project) return err({ kind: 'not_found' });
+    return this.createModule(actorId, project.companyId, projectId, input);
   }
 
   async getModule(
