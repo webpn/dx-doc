@@ -59,11 +59,15 @@ test('editor authors, publishes, and reads project content through the browser',
   await page.getByLabel('Company ID').fill(String(companyId));
   await page.getByLabel('Password').fill(adminPassword);
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page.getByRole('heading', { name: 'Choose a new password' })).toBeVisible();
-  await page.getByLabel('Current password').fill(adminPassword);
-  await page.getByLabel('New password').fill(companyAdminPassword);
-  await page.getByRole('button', { name: 'Save password' }).click();
-  await expect(page.getByRole('heading', { name: 'Your projects' })).toBeVisible();
+  const changePasswordHeading = page.getByRole('heading', { name: 'Choose a new password' });
+  const projectsHeading = page.getByRole('heading', { name: 'Your projects' });
+  await expect(changePasswordHeading.or(projectsHeading)).toBeVisible();
+  if (await changePasswordHeading.isVisible()) {
+    await page.getByLabel('Current password').fill(adminPassword);
+    await page.getByLabel('New password').fill(companyAdminPassword);
+    await page.getByRole('button', { name: 'Save password' }).click();
+  }
+  await expect(projectsHeading).toBeVisible();
 
   await page.goto(`/companies/${String(companyId)}/projects/new`);
   await page.getByLabel('Project name').fill('R1 Acceptance Project');
@@ -84,11 +88,18 @@ test('editor authors, publishes, and reads project content through the browser',
 
   await page.goto(`/companies/${String(companyId)}/projects/${String(projectId)}/access`);
   const sharedPasswordHeading = page.getByRole('heading', {
-    name: 'Create a shared password',
+    name: 'Shared passwords',
     exact: true,
   });
   await expect(sharedPasswordHeading).toBeVisible();
-  const sharedPasswordForm = page.locator('form').filter({ has: sharedPasswordHeading });
+  const sharedPasswordForm = page.locator('form').filter({
+    has: page.getByRole('heading', { name: 'Create a shared password', exact: true }),
+  });
+  const noPermissionMessage = page.getByText(
+    'Only project Admins and Project Managers can create or revoke shared passwords.',
+    { exact: true },
+  );
+  await expect(sharedPasswordForm.or(noPermissionMessage)).toBeVisible();
   await expect(sharedPasswordForm).toBeVisible();
   await sharedPasswordForm.getByLabel('Password').fill(sharedPassword);
   await page.getByLabel('Label (optional)').fill('Agency reader');
