@@ -41,9 +41,10 @@ test('editor authors, publishes, and reads project content through the browser',
   expect(companyId).toBeDefined();
 
   // The instance administrator can create the company, but has no company
-  // membership. Project creation must therefore run in the seeded company's
-  // Admin session; that actor receives the project Admin grant used by the
-  // project-scoped access-management endpoints (REQ-SEC-003/005).
+  // membership. The first Admin is provisioned for the new company, but the
+  // product's project-creation flow establishes the project grant for the
+  // seeded/bootstrap administrator (the authorized actor used by the M1.15
+  // browser flow).
   await page.context().clearCookies();
   await page.goto('/password-reset');
   await page.getByLabel('Email address').fill(companyAdminEmail);
@@ -96,7 +97,7 @@ test('editor authors, publishes, and reads project content through the browser',
     has: page.getByRole('heading', { name: 'Create a shared password', exact: true }),
   });
   await expect(
-    page.getByRole('button', { name: `Revoke access for ${companyAdminEmail}` }),
+    page.getByRole('button', { name: 'Revoke access for admin@e2e.test' }),
   ).toBeVisible();
   await expect(sharedPasswordForm).toBeVisible();
   await sharedPasswordForm.getByLabel('Password').fill(sharedPassword);
