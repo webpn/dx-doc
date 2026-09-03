@@ -83,10 +83,17 @@ test('editor authors, publishes, and reads project content through the browser',
   ).toBeVisible();
 
   await page.goto(`/companies/${String(companyId)}/projects/${String(projectId)}/access`);
-  await page.getByLabel('Password').fill(sharedPassword);
+  const sharedPasswordHeading = page.getByRole('heading', {
+    name: 'Create a shared password',
+    exact: true,
+  });
+  await expect(sharedPasswordHeading).toBeVisible();
+  const sharedPasswordForm = page.locator('form').filter({ has: sharedPasswordHeading });
+  await expect(sharedPasswordForm).toBeVisible();
+  await sharedPasswordForm.getByLabel('Password').fill(sharedPassword);
   await page.getByLabel('Label (optional)').fill('Agency reader');
   await page.getByRole('button', { name: 'Create shared password' }).click();
-  await expect(page.getByRole('cell', { name: 'Agency reader' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Agency reader', exact: true })).toBeVisible();
   await page.getByLabel('Invite by email').fill(editorEmail);
   await page.getByRole('button', { name: 'Send invite' }).click();
   await expect(page.getByText('Invitation sent.')).toBeVisible();
