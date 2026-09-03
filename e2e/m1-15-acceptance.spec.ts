@@ -1,4 +1,6 @@
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+import { readLatestResetTokenFromMailpit } from './acceptance-helpers';
 
 /**
  * M1.15 acceptance path (docs/product/milestones.md #m115): the bootstrap
@@ -23,7 +25,9 @@ const newAdminPassword = 'new-admin-password-1';
 // it goes straight in with the new password. Making the tests order-independent
 // belongs here — the alternative is a per-test database, which the harness does
 // not provide.
-async function loginAsAdmin(page: Page): Promise<void> {
+/* This spec keeps its stricter first-test helper because it explicitly proves
+ * the one-time forced change; the reusable order-tolerant helper is shared. */
+async function loginAsAdminInThisSpec(page: Page): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Email address').fill(bootstrapEmail);
   await page.getByLabel('Password').fill(bootstrapPassword);
@@ -87,7 +91,7 @@ test('bootstrap admin onboards a project and an editor sees only that project', 
   const editorEmail = `editor-${suffix}@e2e.test`;
   const editorPassword = 'editor-password-1';
 
-  await loginAsAdmin(page);
+  await loginAsAdminInThisSpec(page);
 
   // Create the company. The first Admin is provisioned in the same operation
   // (REQ-SEC-014) — the instance administrator holds no company membership, so
@@ -181,26 +185,3 @@ test('bootstrap admin onboards a project and an editor sees only that project', 
   // Exactly one project is visible — the editor was granted exactly this one.
   await expect(page.getByRole('button', { name: 'Open project' })).toHaveCount(1);
 });
-
-/** Reads the raw reset token out of the last email mailpit received for the address. */
-async function readLatestResetTokenFromMailpit(
-  request: APIRequestContext,
-  toEmail: string,
-): Promise<string> {
-  const mailpitBase = process.env.MAILPIT_API_BASE ?? 'http://127.0.0.1:8025';
-  const search = await request.get(
-    `${mailpitBase}/api/v1/search?query=${encodeURIComponent(`to:${toEmail}`)}`,
-  );
-  const { messages } = (await search.json()) as { messages: { ID: string }[] };
-  const latest = messages[0];
-  if (latest === undefined) {
-    throw new Error(`No email received for ${toEmail}`);
-  }
-  const messageResponse = await request.get(`${mailpitBase}/api/v1/message/${latest.ID}`);
-  const message = (await messageResponse.json()) as { Text: string };
-  const match = /token=([a-zA-Z0-9_-]+)/.exec(message.Text);
-  if (match?.[1] === undefined) {
-    throw new Error('Reset email did not contain a token');
-  }
-  return match[1];
-}

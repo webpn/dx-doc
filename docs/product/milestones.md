@@ -474,6 +474,8 @@ The import script M1.4 was closed without committing: written against the comple
 > - **O13's answer.** The operations editors performed by hand during this import are the evidence base for R2's bulk operations.
 > - **Whether the import script generalises.** The first imported product is one of the products being imported, documented against a template that drifted over years. If the script needed heavy per-product adaptation, that is the signal that the remaining products are a longer job than one script run each — and it is worth knowing before committing to a schedule for them.
 
+> **Acceptance preparation added 2026-09-03.** `e2e/m1-18-acceptance.spec.ts` now exercises the real browser path through bootstrap login/password change, company creation and step-up, project creation, catalogue screen reachability, editor invitation/grant, project-local page/property/module/free-page/flow authoring, and the exact tracking-creation blocker. It intentionally does not bypass the missing browser navigation-event creation screen or the missing shared-password management screen, so it does not claim publication, search or reader coverage. Requirements remain In Progress/Not Started pending those screens and a deployed human run.
+
 ---
 
 ## R2 — Navigation and distribution
