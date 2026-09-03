@@ -8,8 +8,8 @@ import { loginAsAdmin, readLatestResetTokenFromMailpit } from './acceptance-help
  * authoring. The only non-product request is reading an invitation reset link
  * from Mailpit, which stands in for opening the email client.
  *
- * The reader part uses the browser management and verification screens. It
- * stops only if the authored project still cannot produce a published snapshot.
+ * The reader part uses the browser management and verification screens after
+ * publishing a version through the publication dialog.
  */
 
 const adminEmail = 'admin@e2e.test';
@@ -17,7 +17,7 @@ const adminPassword = 'new-admin-password-1';
 const editorPassword = 'editor-password-1';
 const sharedPassword = 'reader-password-1';
 
-test('editor authors project content through the browser until the shared-password blocker', async ({
+test('editor authors, publishes, and reads project content through the browser', async ({
   page,
   request,
 }) => {
@@ -96,24 +96,35 @@ test('editor authors project content through the browser until the shared-passwo
   await createNavigationEvent(page, String(projectId));
   await createTracking(page, String(projectId));
 
-  // Publication is reachable from the project workspace. Assert the real UI
-  // surface, but do not claim that a meaningful version was published.
+  // Publication is completed through the same review surface an editor uses.
   await page.goto(`/projects/${String(projectId)}`);
   await page.getByRole('button', { name: 'Publish' }).click();
   await expect(page.getByRole('heading', { name: 'Publish version' })).toBeVisible();
-  await page.getByRole('button', { name: 'Cancel' }).click();
+  await page.getByLabel('Title').fill('R1 acceptance release');
+  await page.getByLabel('Release notes').fill('Published through the browser acceptance flow.');
+  await expect(page.getByText('Published guide')).toBeVisible();
+  await page.getByRole('button', { name: 'Publish version' }).click();
+  await expect(page.getByRole('status')).toContainText('Version 1 published.');
 
-  await page.getByRole('link', { name: 'Open reader access' }).click();
+  await page.getByRole('link', { name: 'Open it in the version history' }).click();
+  await expect(page).toHaveURL(new RegExp(`/projects/${String(projectId)}/versions$`));
+  await expect(page.getByRole('cell', { name: /v1 — R1 acceptance release/ })).toBeVisible();
+
+  await page.goto(`/projects/${String(projectId)}/reader-access`);
+  await expect(page.getByRole('heading', { name: 'Access published documentation' })).toBeVisible();
   await page.getByLabel('Shared password').fill(sharedPassword);
   await page.getByRole('button', { name: 'Open documentation' }).click();
   await expect(page).toHaveURL(new RegExp(`/projects/${String(projectId)}/reader$`));
-  await expect(page.getByRole('heading', { name: 'Nothing published yet' })).toBeVisible();
-  test.info().annotations.push({
-    type: 'blocker',
-    description:
-      'The current authoring flow reaches publication review but does not create a published snapshot, so the read-only published view cannot be demonstrated.',
-  });
-  test.skip(true, 'Blocked: no published snapshot is available for this authored project.');
+  await expect(
+    page.getByRole('heading', { name: /Version 1 — R1 acceptance release/ }),
+  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Published guide' })).toBeVisible();
+  await expect(page.getByText('Published content')).toBeVisible();
+  await expect(page.getByText('Internal draft')).not.toBeVisible();
+  await expect(page.getByRole('link', { name: /Administer|Edit|Manage|Dashboard/i })).toHaveCount(
+    0,
+  );
+  await expect(page.getByRole('button', { name: /Save|Edit|Publish/i })).toHaveCount(0);
 });
 
 test('reader access entry screen is reachable without an authenticated shell', async ({ page }) => {
