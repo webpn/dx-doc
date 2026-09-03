@@ -65,6 +65,12 @@ export function ProjectPage(): ReactElement {
           >
             {t('publish.versionLink')}
           </Link>
+          <Link
+            className="inline-flex h-10 w-fit items-center rounded-md border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-ink)]"
+            to={`/projects/${project.data.id}/search`}
+          >
+            {t('project.search.open')}
+          </Link>
           <Button
             onClick={() => {
               setPublishOpen(true);

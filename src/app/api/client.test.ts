@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { authApi } from './auth';
 import { ApiClientError, ApiNetworkError, apiRequest } from './client';
 import { companiesApi } from './companies';
+import { searchApi } from './search';
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -109,5 +110,16 @@ describe('api client', () => {
 
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(new Headers(init.headers).get('content-type')).toBe('application/json');
+  });
+
+  it('queries search with an explicit project scope', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, []));
+
+    await searchApi.project('project/1', 'item_id');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/projects/project%2F1/search?q=item_id',
+      expect.objectContaining({ credentials: 'include' }),
+    );
   });
 });

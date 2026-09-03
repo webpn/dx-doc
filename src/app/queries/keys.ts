@@ -52,4 +52,5 @@ export const queryKeys = {
    * both the authenticated consultation and the reader surface.
    */
   reader: (projectId: string) => ['projects', projectId, 'reader'] as const,
+  search: (projectId: string, query: string) => ['projects', projectId, 'search', query] as const,
 };

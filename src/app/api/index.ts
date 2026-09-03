@@ -45,6 +45,7 @@ export {
   type PublishedReaderContent,
 } from './reader';
 export { pagesApi, type Page, type PageCreateInput, type PageUpdateInput } from './pages';
+export { searchApi, type SearchResult } from './search';
 export {
   freePagesApi,
   type FreePage,

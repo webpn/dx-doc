@@ -29,6 +29,7 @@ import { ProjectAccessPage } from './shell/project-access-page';
 import { ProjectCreatePage } from './shell/project-create-page';
 import { ProjectListPage } from './shell/project-list-page';
 import { ProjectPage } from './shell/project-page';
+import { ProjectSearchPage } from './shell/project-search-page';
 import { PropertyCreatePage } from './shell/property-create-page';
 import { PropertyEditorPage } from './shell/property-editor-page';
 import { StepUpPage } from './shell/step-up-page';
@@ -114,6 +115,7 @@ export function App(): ReactElement {
           path="/companies/:companyId/projects/:projectId/access"
         />
         <Route element={<ProjectPage />} path="/projects/:projectId" />
+        <Route element={<ProjectSearchPage />} path="/projects/:projectId/search" />
         <Route element={<CatalogueCopyPage />} path="/projects/:projectId/catalogue" />
         <Route element={<VersionHistoryPage />} path="/projects/:projectId/versions" />
         <Route element={<VersionDetailPage />} path="/projects/:projectId/versions/:versionId" />

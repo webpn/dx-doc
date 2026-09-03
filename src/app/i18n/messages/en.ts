@@ -86,6 +86,19 @@ export const en = {
 
   // Project page
   'project.detail.loadError': 'Unable to load this project.',
+  'project.search.eyebrow': 'Project search',
+  'project.search.title': 'Search documentation',
+  'project.search.description':
+    'Search tracking names, descriptions and specific values in this project.',
+  'project.search.open': 'Search project',
+  'project.search.inputLabel': 'Search this project',
+  'project.search.placeholder': 'Search by tracking name or specific value',
+  'project.search.submit': 'Search',
+  'project.search.hint': 'Enter a search term to find matching tracking documentation.',
+  'project.search.loading': 'Searching project documentation…',
+  'project.search.empty': 'No matching documentation was found in this project.',
+  'project.search.loadError': 'Unable to load this project search.',
+  'project.search.resultsLabel': 'Search results',
 
   // Company creation (REQ-SEC-014 — the first Admin is provisioned with the
   // company, so this screen is one operation, not two)
