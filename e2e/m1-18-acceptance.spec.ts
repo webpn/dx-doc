@@ -9,7 +9,9 @@ import { loginAsAdmin, readLatestResetTokenFromMailpit } from './acceptance-help
  * from Mailpit, which stands in for opening the email client.
  *
  * The reader part uses the browser management and verification screens after
- * publishing a version through the publication dialog.
+ * publishing a version through the publication dialog. Company creation is
+ * performed by the instance administrator, then the seeded company Admin
+ * takes over before project creation and project-scoped setup.
  */
 
 const adminEmail = 'admin@e2e.test';
@@ -37,9 +39,28 @@ test('editor authors, publishes, and reads project content through the browser',
   const companyId = /\/companies\/([^/]+)\/projects/.exec(page.url())?.[1];
   expect(companyId).toBeDefined();
 
-  await page.getByRole('link', { name: 'Administer this company' }).click();
+  // The instance administrator can create the company, but has no company
+  // membership. Project creation must therefore run in the seeded company's
+  // Admin session; that actor receives the project Admin grant used by the
+  // project-scoped access-management endpoints (REQ-SEC-003/005).
+  await page.context().clearCookies();
+  await page.goto('/password-reset');
+  await page.getByLabel('Email address').fill(adminEmail);
+  await page.getByLabel('Company ID').fill(String(companyId));
+  await page.getByRole('button', { name: 'Send reset link' }).click();
+  await expect(page.getByText(/reset link is on its way/i)).toBeVisible();
+  const adminResetToken = await readLatestResetTokenFromMailpit(request, adminEmail);
+  await page.goto(`/password-reset/confirm?token=${adminResetToken}`);
+  await page.getByLabel('New password').fill(adminPassword);
+  await page.getByRole('button', { name: 'Save password' }).click();
+  await page.getByRole('link', { name: 'Continue to sign in' }).click();
+  await page.getByLabel('Email address').fill(adminEmail);
+  await page.getByLabel('Company ID').fill(String(companyId));
   await page.getByLabel('Password').fill(adminPassword);
-  await page.getByRole('button', { name: 'Open step-up' }).click();
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('heading', { name: 'Your projects' })).toBeVisible();
+
+  await page.goto(`/companies/${String(companyId)}/projects/new`);
   await page.getByLabel('Project name').fill('R1 Acceptance Project');
   await page.getByLabel('Slug').fill(projectSlug);
   await page.getByLabel('Platform').selectOption('web');
