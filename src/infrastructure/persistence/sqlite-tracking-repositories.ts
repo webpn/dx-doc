@@ -12,6 +12,8 @@ import type {
   TrackingTemplateRepository,
   TriggerRepository,
   VersionRepository,
+  TrackingWriteRepositories,
+  TrackingWriteTransaction,
 } from '@project/application/ports/tracking-repositories';
 import type {
   AuditLogEntry,
@@ -40,8 +42,35 @@ import type {
 import type { Kysely } from 'kysely';
 
 import type { Database } from './db-schema';
+import { SqliteAccountRepository } from './sqlite-account-repository';
+import { SqlitePageRepository } from './sqlite-page-repository';
+import { SqliteProjectRepository } from './sqlite-project-repository';
 
 type Db = Kysely<Database>;
+
+/** Binds every repository used by a batch to the same dialect transaction. */
+export function createSqliteTrackingWriteTransaction(db: Db): TrackingWriteTransaction {
+  return async <T>(work: (repositories: TrackingWriteRepositories) => Promise<T>): Promise<T> =>
+    db.transaction().execute(async (trx) =>
+      work({
+        accounts: new SqliteAccountRepository(trx),
+        projects: new SqliteProjectRepository(trx),
+        pages: new SqlitePageRepository(trx),
+        properties: new SqlitePropertyRepository(trx),
+        modules: new SqliteModuleRepository(trx),
+        destinations: new SqliteDestinationRepository(trx),
+        navEvents: new SqliteNavigationEventRepository(trx),
+        trackings: new SqliteTrackingRepository(trx),
+        templates: new SqliteTrackingTemplateRepository(trx),
+        freePages: new SqliteFreePageRepository(trx),
+        flows: new SqliteFlowRepository(trx),
+        triggers: new SqliteTriggerRepository(trx),
+        versions: new SqliteVersionRepository(trx),
+        sharedPasswords: new SqliteSharedPasswordRepository(trx),
+        auditLogs: new SqliteAuditLogRepository(trx),
+      }),
+    );
+}
 
 export class SqlitePropertyRepository implements PropertyRepository {
   constructor(private readonly db: Db) {}

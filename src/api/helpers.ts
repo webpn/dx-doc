@@ -77,6 +77,9 @@ interface ServiceErrorShape {
   kind: string;
   issues?: ValidationIssue[];
   reason?: string;
+  entityType?: string;
+  index?: number;
+  cause?: unknown;
   maxBytes?: number;
 }
 
@@ -119,6 +122,16 @@ export function replyServiceError(reply: FastifyReply, error: ServiceErrorShape)
           code: 'PUBLICATION_INTEGRITY',
           message: 'Publication contains a reference to excluded content',
           reason: error.reason,
+        },
+      });
+    case 'batch_failed':
+      return reply.code(400).send({
+        error: {
+          code: 'BATCH_FAILED',
+          message: 'Batch rolled back; no items were persisted',
+          entityType: error.entityType,
+          index: error.index,
+          cause: error.cause,
         },
       });
     case 'cross_project_parent':

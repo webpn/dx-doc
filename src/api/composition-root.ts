@@ -77,6 +77,7 @@ import {
   SqliteTrackingTemplateRepository,
   SqliteTriggerRepository,
   SqliteVersionRepository,
+  createSqliteTrackingWriteTransaction,
 } from '@project/infrastructure/persistence/sqlite-tracking-repositories';
 import { PagefindSearchIndex } from '@project/infrastructure/search/pagefind-search';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
@@ -255,6 +256,9 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
     permissions,
     sessionService,
     search,
+    undefined,
+    undefined,
+    createSqliteTrackingWriteTransaction(connection.kysely),
   );
   const projectService = new ProjectService(projects, permissions, accounts, trackingService);
   const pageService = new PageService(pages, projects, permissions);

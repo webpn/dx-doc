@@ -18,6 +18,10 @@ import type {
   Trigger,
 } from '@project/domain/entities';
 
+import type { AccountRepository } from './account-repository';
+import type { PageRepository } from './page-repository';
+import type { ProjectRepository } from './project-repository';
+
 /** ADR-0025: what blocks a Property's deletion. */
 export interface PropertyDeletionBlockers {
   trackings: number;
@@ -258,3 +262,26 @@ export interface AuditLogRepository {
   listLogsForCompany(companyId: string, limit?: number): Promise<AuditLogEntry[]>;
   listLogsForProject(projectId: string, limit?: number): Promise<AuditLogEntry[]>;
 }
+
+/** Repository set used by one application-level batch transaction. */
+export interface TrackingWriteRepositories {
+  accounts: AccountRepository;
+  projects: ProjectRepository;
+  pages: PageRepository;
+  properties: PropertyRepository;
+  modules: ModuleRepository;
+  destinations: DestinationRepository;
+  navEvents: NavigationEventRepository;
+  trackings: TrackingRepository;
+  templates: TrackingTemplateRepository;
+  freePages: FreePageRepository;
+  flows: FlowRepository;
+  triggers: TriggerRepository;
+  versions: VersionRepository;
+  sharedPasswords: SharedPasswordRepository;
+  auditLogs: AuditLogRepository;
+}
+
+export type TrackingWriteTransaction = <T>(
+  work: (repositories: TrackingWriteRepositories) => Promise<T>,
+) => Promise<T>;

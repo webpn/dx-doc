@@ -44,6 +44,7 @@ import {
   SqliteVersionRepository,
   SqliteSharedPasswordRepository,
   SqliteAuditLogRepository,
+  createSqliteTrackingWriteTransaction,
 } from '@project/infrastructure/persistence/sqlite-tracking-repositories';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -211,6 +212,10 @@ describe('TrackingService (M1.1 Application Service)', () => {
       pageRepo,
       permissions,
       new SessionService(new SqliteSessionRepository(connection.kysely), TTL_MS, auditLogRepo),
+      undefined,
+      undefined,
+      undefined,
+      createSqliteTrackingWriteTransaction(connection.kysely),
     );
   });
 
@@ -1879,7 +1884,7 @@ describe('TrackingService (M1.1 Application Service)', () => {
       expect(auditEntry).toBeDefined();
     });
 
-    it('batchCreate reports per-item results while preserving current partial-success behavior', async () => {
+    it('batchCreate returns a typed failure for an invalid item', async () => {
       // Create batch with valid and invalid items
       const batchRes = await trackingService.batchCreate(adminId, companyId, projectId, {
         properties: [
@@ -1888,13 +1893,9 @@ describe('TrackingService (M1.1 Application Service)', () => {
         ],
       });
 
-      // Verify both results are returned
-      expect(batchRes.results.properties).toHaveLength(2);
-      expect(batchRes.results.properties[0]?.success).toBe(true);
-      expect(batchRes.results.properties[1]?.success).toBe(false);
-
-      // Verify first property was created
-      expect(batchRes.results.properties[0]?.id).toBeDefined();
+      expect(batchRes.ok).toBe(false);
+      if (batchRes.ok) return;
+      expect(batchRes.error.kind).toBe('batch_failed');
     });
 
     it('prevents direct audit-log updates and deletes (REQ-SEC-006)', async () => {

@@ -360,7 +360,7 @@ The boundary is the application service, not the repository: a repository method
 - Flow-graph replacement cannot leave edges referencing deleted nodes, tested by forcing a failure between the two writes.
 - The transaction helper is dialect-portable (REQ-FDN-020): no SQLite-specific transaction handling that the R2 adapters cannot implement.
 
-> **Phase closed at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) on 2026-08-19.** Publication and flow-graph replacement are transactional. Batch writes still report per-item results and are not yet atomic; the requirement remains **In Progress** until a failing item rolls back the entire batch.
+> **Phase closed at [M1.14](../milestones.md#m114--write-integrity-audit-and-publication-correctness) on 2026-08-19.** Publication and flow-graph replacement are transactional. Batch atomicity is implemented in the application service using the injected dialect transaction boundary; exhaustive audit and concurrency acceptance remains open before this requirement can be marked Verified.
 
 ### REQ-FDN-026 — Web client shell built on the design system
 

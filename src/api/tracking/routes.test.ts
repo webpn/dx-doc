@@ -32,6 +32,7 @@ import {
   SqliteVersionRepository,
   SqliteSharedPasswordRepository,
   SqliteAuditLogRepository,
+  createSqliteTrackingWriteTransaction,
 } from '@project/infrastructure/persistence/sqlite-tracking-repositories';
 import { InMemorySearchIndex } from '@project/infrastructure/search/in-memory-search';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
@@ -268,6 +269,9 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
       permissions,
       sessions,
       searchIndex,
+      undefined,
+      undefined,
+      createSqliteTrackingWriteTransaction(connection.kysely),
     );
 
     app = Fastify();
@@ -494,7 +498,7 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
     expect(trkData.properties[0]?.source).toBe('module');
   });
 
-  it('handles batch write endpoints with per-item status (REQ-IMP-005, D35)', async () => {
+  it('rolls back the complete batch when an item fails (REQ-FDN-025, REQ-IMP-005)', async () => {
     const batchRes = await app.inject({
       method: 'POST',
       url: `/api/companies/${companyId}/batch`,
@@ -508,16 +512,79 @@ describe('Import-grade REST API (M1.2, REQ-IMP-002, REQ-IMP-005, REQ-IMP-006, RE
       },
     });
 
+    expect(batchRes.statusCode).toBe(400);
+    expect(batchRes.json<{ error: { code: string; index: number } }>().error).toMatchObject({
+      code: 'BATCH_FAILED',
+      index: 1,
+    });
+    const properties = await connection.kysely
+      .selectFrom('properties')
+      .select('name')
+      .where('name', '=', 'batch_prop_1')
+      .execute();
+    expect(properties).toHaveLength(0);
+  });
+
+  it('returns all successful outcomes and writes their audit entries atomically', async () => {
+    const batchRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/batch`,
+      headers: { cookie: editorCookie },
+      payload: { projectId, properties: [{ name: 'batch_success', type: 'string' }] },
+    });
     expect(batchRes.statusCode).toBe(200);
-    const body = batchRes.json<{
-      results: {
-        properties: { index: number; success: boolean; id?: string; error?: unknown }[];
-      };
-    }>();
-    expect(body.results.properties).toHaveLength(2);
-    expect(body.results.properties[0]?.success).toBe(true);
-    expect(body.results.properties[0]?.id).toBeDefined();
-    expect(body.results.properties[1]?.success).toBe(false);
+    expect(
+      batchRes.json<{ results: { properties: { success: boolean }[] } }>().results.properties[0]
+        ?.success,
+    ).toBe(true);
+    const logs = await auditLogRepo.listLogsForProject(projectId);
+    expect(logs.some((log) => log.action === 'property.created')).toBe(true);
+  });
+
+  it('rolls back properties, modules, destinations, trackings, and their audit rows together', async () => {
+    const navigationResponse = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/navigation-events`,
+      headers: { cookie: editorCookie },
+      payload: { name: 'batch rollback event' },
+    });
+    const navigationId = navigationResponse.json<{ id: string }>().id;
+    const auditCountBeforeBatch = (await auditLogRepo.listLogsForProject(projectId)).length;
+    const batchRes = await app.inject({
+      method: 'POST',
+      url: `/api/companies/${companyId}/batch`,
+      headers: { cookie: editorCookie },
+      payload: {
+        projectId,
+        properties: [{ name: 'rollback_property', type: 'string' }],
+        modules: [{ name: 'rollback_module' }],
+        destinations: [
+          {
+            platform: 'web',
+            variableType: 'dataLayer',
+            identifier: 'rollback',
+            name: 'rollback_destination',
+          },
+        ],
+        trackings: [
+          { navigationEventId: navigationId, name: 'rollback_tracking', slug: 'rollback-tracking' },
+          { navigationEventId: navigationId, name: '', slug: 'invalid-tracking' },
+        ],
+      },
+    });
+    expect(batchRes.statusCode).toBe(400);
+    expect(
+      batchRes.json<{ error: { code: string; entityType: string; index: number } }>().error,
+    ).toMatchObject({
+      code: 'BATCH_FAILED',
+      entityType: 'trackings',
+      index: 1,
+    });
+    for (const table of ['properties', 'modules', 'destinations', 'trackings'] as const) {
+      const rows = await connection.kysely.selectFrom(table).selectAll().execute();
+      expect(rows).toHaveLength(0);
+    }
+    expect((await auditLogRepo.listLogsForProject(projectId)).length).toBe(auditCountBeforeBatch);
   });
 
   it('generates reconciliation report via GET /api/companies/:companyId/projects/:projectId/reconciliation (REQ-IMP-006)', async () => {

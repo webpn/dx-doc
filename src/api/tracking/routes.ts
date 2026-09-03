@@ -1071,8 +1071,8 @@ export function registerTrackingRoutes(app: FastifyInstance, options: TrackingRo
     if (body.destinations) input.destinations = body.destinations;
     if (body.trackings) input.trackings = body.trackings;
 
-    const { results } = await trackingService.batchCreate(userId, companyId, projectId, input);
-
-    return reply.code(200).send({ results });
+    const result = await trackingService.batchCreate(userId, companyId, projectId, input);
+    if (!result.ok) return replyServiceError(reply, result.error);
+    return reply.code(200).send(result.value);
   });
 }

@@ -13,6 +13,8 @@ import type {
   TrackingTemplateRepository,
   TriggerRepository,
   VersionRepository,
+  TrackingWriteRepositories,
+  TrackingWriteTransaction,
 } from '@project/application/ports/tracking-repositories';
 import {
   applyModuleToTracking,
@@ -43,7 +45,7 @@ import type {
 import { generateMermaidDiagram } from '@project/domain/mermaid';
 import { err, ok, type Result } from '@project/shared/result';
 
-import type { PermissionService } from '../auth/permissions';
+import { PermissionService } from '../auth/permissions';
 import type { SessionService } from '../auth/session-service';
 import type { CatalogueCopier, CatalogueCopyCounts } from '../ports/catalogue-copier';
 import type { PageRepository } from '../ports/page-repository';
@@ -113,9 +115,24 @@ export type TrackingServiceError =
   | { kind: 'hierarchy_cycle' }
   | { kind: 'cross_project_reference' }
   | { kind: 'stale_write'; currentUpdatedAt: string }
-  | { kind: 'in_use'; reason: string };
+  | { kind: 'in_use'; reason: string }
+  | {
+      kind: 'batch_failed';
+      entityType: 'properties' | 'modules' | 'destinations' | 'trackings';
+      index: number;
+      cause: TrackingServiceError;
+    };
 
 type SharedPasswordReadModel = Omit<ProjectSharedPassword, 'passwordHash'>;
+
+interface BatchCreateResult {
+  results: {
+    properties: { index: number; success: boolean; id?: string; error?: unknown }[];
+    modules: { index: number; success: boolean; id?: string; error?: unknown }[];
+    destinations: { index: number; success: boolean; id?: string; error?: unknown }[];
+    trackings: { index: number; success: boolean; id?: string; error?: unknown }[];
+  };
+}
 
 /**
  * What the next publication would contain, without publishing it
@@ -226,7 +243,34 @@ export class TrackingService implements CatalogueCopier {
     private readonly searchIndex?: SearchIndex,
     private readonly now: () => Date = () => new Date(),
     private readonly newId: () => string = () => randomUUID(),
+    private readonly writeTransaction?: TrackingWriteTransaction,
   ) {}
+
+  private withWriteRepositories(repositories: TrackingWriteRepositories): TrackingService {
+    return new TrackingService(
+      repositories.properties,
+      repositories.modules,
+      repositories.destinations,
+      repositories.navEvents,
+      repositories.trackings,
+      repositories.templates,
+      repositories.freePages,
+      repositories.flows,
+      repositories.triggers,
+      repositories.versions,
+      repositories.sharedPasswords,
+      repositories.auditLogs,
+      this.passwordHasher,
+      repositories.projects,
+      repositories.pages,
+      new PermissionService(repositories.accounts),
+      this.sessions,
+      this.searchIndex,
+      this.now,
+      this.newId,
+      undefined,
+    );
+  }
 
   // --- PROPERTIES ---
   async createProperty(
@@ -3636,14 +3680,37 @@ export class TrackingService implements CatalogueCopier {
       destinations?: DestinationCreateInput[];
       trackings?: TrackingCreateInput[];
     },
-  ): Promise<{
-    results: {
-      properties: { index: number; success: boolean; id?: string; error?: unknown }[];
-      modules: { index: number; success: boolean; id?: string; error?: unknown }[];
-      destinations: { index: number; success: boolean; id?: string; error?: unknown }[];
-      trackings: { index: number; success: boolean; id?: string; error?: unknown }[];
-    };
-  }> {
+  ): Promise<Result<BatchCreateResult, TrackingServiceError>> {
+    if (this.writeTransaction) {
+      try {
+        return await this.writeTransaction(async (repositories) => {
+          const transactionalService = this.withWriteRepositories(repositories);
+          return transactionalService.batchCreateWithoutTransaction(
+            actorId,
+            companyId,
+            projectId,
+            input,
+          );
+        });
+      } catch (error) {
+        if (error instanceof BatchWriteFailure) return err(error.error);
+        throw error;
+      }
+    }
+    return this.batchCreateWithoutTransaction(actorId, companyId, projectId, input);
+  }
+
+  private async batchCreateWithoutTransaction(
+    actorId: string,
+    companyId: string,
+    projectId: string | null,
+    input: {
+      properties?: PropertyCreateInput[];
+      modules?: ModuleCreateInput[];
+      destinations?: DestinationCreateInput[];
+      trackings?: TrackingCreateInput[];
+    },
+  ): Promise<Result<BatchCreateResult, TrackingServiceError>> {
     const results: {
       properties: { index: number; success: boolean; id?: string; error?: unknown }[];
       modules: { index: number; success: boolean; id?: string; error?: unknown }[];
@@ -3663,7 +3730,12 @@ export class TrackingService implements CatalogueCopier {
         if (res.ok) {
           results.properties.push({ index: i, success: true, id: res.value.propertyId });
         } else {
-          results.properties.push({ index: i, success: false, error: res.error });
+          throw new BatchWriteFailure({
+            kind: 'batch_failed',
+            entityType: 'properties',
+            index: i,
+            cause: res.error,
+          });
         }
         i++;
       }
@@ -3676,7 +3748,12 @@ export class TrackingService implements CatalogueCopier {
         if (res.ok) {
           results.modules.push({ index: i, success: true, id: res.value.moduleId });
         } else {
-          results.modules.push({ index: i, success: false, error: res.error });
+          throw new BatchWriteFailure({
+            kind: 'batch_failed',
+            entityType: 'modules',
+            index: i,
+            cause: res.error,
+          });
         }
         i++;
       }
@@ -3689,7 +3766,12 @@ export class TrackingService implements CatalogueCopier {
         if (res.ok) {
           results.destinations.push({ index: i, success: true, id: res.value.destinationId });
         } else {
-          results.destinations.push({ index: i, success: false, error: res.error });
+          throw new BatchWriteFailure({
+            kind: 'batch_failed',
+            entityType: 'destinations',
+            index: i,
+            cause: res.error,
+          });
         }
         i++;
       }
@@ -3699,20 +3781,34 @@ export class TrackingService implements CatalogueCopier {
       let i = 0;
       for (const item of input.trackings) {
         if (projectId === null) {
-          results.trackings.push({ index: i, success: false, error: { kind: 'not_found' } });
-          i++;
-          continue;
+          throw new BatchWriteFailure({
+            kind: 'batch_failed',
+            entityType: 'trackings',
+            index: i,
+            cause: { kind: 'not_found' },
+          });
         }
         const res = await this.createTracking(actorId, projectId, item);
         if (res.ok) {
           results.trackings.push({ index: i, success: true, id: res.value.trackingId });
         } else {
-          results.trackings.push({ index: i, success: false, error: res.error });
+          throw new BatchWriteFailure({
+            kind: 'batch_failed',
+            entityType: 'trackings',
+            index: i,
+            cause: res.error,
+          });
         }
         i++;
       }
     }
 
-    return { results };
+    return ok({ results });
+  }
+}
+
+class BatchWriteFailure extends Error {
+  constructor(readonly error: Extract<TrackingServiceError, { kind: 'batch_failed' }>) {
+    super('Batch write failed');
   }
 }
