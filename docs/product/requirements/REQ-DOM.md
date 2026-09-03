@@ -276,7 +276,7 @@ The property↔destination relationship carries `destination_name_override`: the
 
 ### REQ-DOM-019 — Company catalogue, copy-on-project-creation
 
-**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) → [M1.16](../milestones.md#m116--authoring-ui) · spec §6.3 · **In Progress** · Issue: — · PR: —
+**Must** · R1 · [M1.1](../milestones.md#m11--tracking-data-model) → [M1.16](../milestones.md#m116--authoring-ui) · spec §6.3 · **Implemented** · Issue: — · PR: —
 
 The company catalogue holds standard properties, modules, templates and free-page templates. At project creation the selected items are **copied** into the project. There is no live link.
 
@@ -292,7 +292,7 @@ The company catalogue holds standard properties, modules, templates and free-pag
 >
 > **Name matching is the deliberate choice, and it has a stated cost.** Renaming a module on either side breaks the correspondence, and two items that coincidentally share a name are treated as the same item. That is acceptable because every feature built on the match is advisory and human-confirmed — REQ-DOM-024 proposes, an editor accepts. The alternative, a stored `catalogue_source_id`, buys precision at the cost of a link the model has otherwise gone to some trouble not to have.
 
-> **Carried forward on 2026-08-18.** `copyCatalogueToProject` is implemented and correct — an independent copy, no provenance link, matching the requirement. It is not copy-**on-project-creation**: nothing invokes it when a project is created, and until [M1.12](../milestones.md#m112--access-administration-and-api-surface-completion) it had no route either. Wired into project creation and given its selection UI at [M1.16](../milestones.md#m116--authoring-ui).
+> **Implemented on 2026-09-03.** The REST project-creation path invokes the copy through `ProjectService`, and direct application-service creation uses the same flow. The standalone catalogue endpoint remains available and idempotently reuses existing project-scoped copies by name, preserving module-to-property remapping. Integration tests cover populated and empty catalogues, tenant/project isolation, and manual re-copy.
 
 ### REQ-DOM-020 — Project-scoped impact analysis
 

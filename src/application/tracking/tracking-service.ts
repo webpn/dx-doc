@@ -45,6 +45,7 @@ import { err, ok, type Result } from '@project/shared/result';
 
 import type { PermissionService } from '../auth/permissions';
 import type { SessionService } from '../auth/session-service';
+import type { CatalogueCopier, CatalogueCopyCounts } from '../ports/catalogue-copier';
 import type { PageRepository } from '../ports/page-repository';
 import type { PasswordHasher } from '../ports/password-hasher';
 import type { ProjectRepository } from '../ports/project-repository';
@@ -165,7 +166,7 @@ function parseTrackingTemplateConfig(configJson: string | null): TrackingTemplat
   }
 }
 
-export class TrackingService {
+export class TrackingService implements CatalogueCopier {
   constructor(
     private readonly properties: PropertyRepository,
     private readonly modules: ModuleRepository,
@@ -2413,6 +2414,14 @@ export class TrackingService {
   }
 
   // --- CATALOGUE COPY (REQ-DOM-019) ---
+
+  /**
+   * Manual catalogue copy for a project (REQ-DOM-019). Requires `project.edit`
+   * on the target project and copies only the explicitly selected catalogue
+   * items. Idempotent: a re-run skips every item whose project-scoped copy
+   * already exists, so re-running after the automatic creation-time copy
+   * (`copyCatalogueIntoProject`) adds nothing.
+   */
   async copyCatalogueToProject(
     actorId: string,
     companyId: string,
@@ -2422,18 +2431,88 @@ export class TrackingService {
       moduleIds?: string[];
     },
   ): Promise<Result<{ copiedProperties: number; copiedModules: number }, TrackingServiceError>> {
+    const project = await this.projects.getProjectById(projectId);
+    if (project?.companyId !== companyId) {
+      return err({ kind: 'not_found' });
+    }
     if (!(await this.permissions.canOnProject(actorId, projectId, 'project.edit'))) {
       return err({ kind: 'forbidden' });
     }
 
+    const counts = await this.copyCatalogueItemsToProject(
+      companyId,
+      projectId,
+      selection.propertyIds ?? [],
+      selection.moduleIds ?? [],
+      this.now().toISOString(),
+    );
+    return ok(counts);
+  }
+
+  /**
+   * Automatic catalogue copy at project creation (Critical Business Rule 3:
+   * copy at project creation, no live link, changes do not propagate). Copies
+   * the whole company catalogue — every company-scoped property and module —
+   * into the new project.
+   *
+   * Permission-free by design: it is invoked from `ProjectService.create`
+   * only, after that service's `company.manage_projects` gate has already
+   * established the caller's company-scope right to create projects and their
+   * contents. Giving it its own check would duplicate the gate and would
+   * require a project grant that does not exist yet mid-creation.
+   */
+  async copyCatalogueIntoProject(
+    companyId: string,
+    projectId: string,
+  ): Promise<Result<CatalogueCopyCounts, never>> {
+    const catalogueProperties = await this.properties.listProperties(companyId, null);
+    const catalogueModules = await this.modules.listModules(companyId, null);
+    const counts = await this.copyCatalogueItemsToProject(
+      companyId,
+      projectId,
+      catalogueProperties.map((property) => property.id),
+      catalogueModules.map((mod) => mod.id),
+      this.now().toISOString(),
+    );
+    return ok(counts);
+  }
+
+  /**
+   * Shared idempotent core of the catalogue copy. A catalogue item whose
+   * project-scoped copy already exists — same name and `custom_id` null, the
+   * marker every copy is written with — is skipped rather than duplicated.
+   * Returns the project id of each item's copy (existing or new) so copied
+   * modules reference project-owned rows, never the catalogue originals: keeping
+   * the catalogue's ids would be a live link to the catalogue by another name,
+   * which REQ-DOM-019 forbids.
+   */
+  private async copyCatalogueItemsToProject(
+    companyId: string,
+    projectId: string,
+    cataloguePropertyIds: string[],
+    catalogueModuleIds: string[],
+    nowIso: string,
+  ): Promise<CatalogueCopyCounts> {
     let copiedProperties = 0;
     let copiedModules = 0;
-    const nowIso = this.now().toISOString();
 
-    // Catalogue property id -> the id of its copy in this project. A copied
-    // module must reference the copies, not the catalogue originals: keeping the
-    // catalogue's ids would be a live link to the catalogue by another name,
-    // which REQ-DOM-019 forbids.
+    // Existing project-scoped rows with `custom_id` null are earlier copies of
+    // the catalogue. Name is the only stable key: a copy is written with a
+    // fresh id and no provenance link (REQ-DOM-019).
+    const projectProps = await this.properties.listProperties(companyId, projectId);
+    const existingPropertyCopyByName = new Map<string, DataLayerProperty>();
+    for (const prop of projectProps) {
+      if (prop.customId === null) existingPropertyCopyByName.set(prop.name, prop);
+    }
+    const projectMods = await this.modules.listModules(companyId, projectId);
+    const existingModuleCopyByName = new Map<string, Module>();
+    for (const mod of projectMods) {
+      if (mod.customId === null) existingModuleCopyByName.set(mod.name, mod);
+    }
+
+    // Catalogue property id -> the id of its copy in this project, so a module
+    // whose properties are copied across several steps always references the
+    // same project-owned copies.
     const copiedPropertyIds = new Map<string, string>();
 
     const copyProperty = async (cataloguePropertyId: string): Promise<string | null> => {
@@ -2441,40 +2520,53 @@ export class TrackingService {
       if (existing !== undefined) return existing;
 
       const catProp = await this.properties.getPropertyById(cataloguePropertyId);
-      if (catProp?.companyId !== companyId) return null;
+      if (catProp?.companyId !== companyId || catProp.projectId !== null) return null;
+
+      const earlierCopy = existingPropertyCopyByName.get(catProp.name);
+      if (earlierCopy !== undefined) {
+        copiedPropertyIds.set(cataloguePropertyId, earlierCopy.id);
+        return earlierCopy.id;
+      }
 
       // Fresh independent copy with no provenance column (REQ-DOM-019)
       const newPropertyId = this.newId();
-      await this.properties.createProperty({
+      const copy: DataLayerProperty = {
         ...catProp,
         id: newPropertyId,
         projectId,
         customId: null,
         createdAt: nowIso,
         updatedAt: nowIso,
-      });
+      };
+      await this.properties.createProperty(copy);
+      // Register the copy so a second catalogue property with the same name —
+      // or a later re-run — reuses this row instead of inserting again.
+      existingPropertyCopyByName.set(catProp.name, copy);
       copiedPropertyIds.set(cataloguePropertyId, newPropertyId);
       copiedProperties++;
       return newPropertyId;
     };
 
-    for (const pId of selection.propertyIds ?? []) {
+    for (const pId of cataloguePropertyIds) {
       await copyProperty(pId);
     }
 
-    for (const mId of selection.moduleIds ?? []) {
+    for (const mId of catalogueModuleIds) {
       const catMod = await this.modules.getModuleById(mId);
-      if (catMod?.companyId !== companyId) continue;
+      if (catMod?.companyId !== companyId || catMod.projectId !== null) continue;
+      if (existingModuleCopyByName.has(catMod.name)) continue;
 
       const newModId = this.newId();
-      await this.modules.createModule({
+      const copy: Module = {
         ...catMod,
         id: newModId,
         projectId,
         customId: null,
         createdAt: nowIso,
         updatedAt: nowIso,
-      });
+      };
+      await this.modules.createModule(copy);
+      existingModuleCopyByName.set(catMod.name, copy);
 
       // A module is only meaningful with its properties, so copy any the caller
       // did not select separately rather than leaving the module pointing at
@@ -2491,7 +2583,7 @@ export class TrackingService {
       copiedModules++;
     }
 
-    return ok({ copiedProperties, copiedModules });
+    return { copiedProperties, copiedModules };
   }
 
   // --- RECONCILIATION REPORT (REQ-IMP-006) ---

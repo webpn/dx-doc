@@ -232,9 +232,10 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
   const assetPublicBaseUrl =
     config.STORAGE_PUBLIC_BASE_URL ?? `${config.STORAGE_S3_ENDPOINT}/${config.STORAGE_S3_BUCKET}`;
 
-  const projectService = new ProjectService(projects, permissions, accounts);
-  const pageService = new PageService(pages, projects, permissions);
-  const grantService = new GrantService(accounts, projects, permissions, auditLogs);
+  // TrackingService is constructed before ProjectService: it implements the
+  // CatalogueCopier port ProjectService requires, so every project created
+  // through the composition root gets its company catalogue copied in at
+  // creation (REQ-DOM-019, Critical Business Rule 3).
   const trackingService = new TrackingService(
     properties,
     modules,
@@ -255,6 +256,9 @@ export function assembleComposition(options: CompositionOptions = {}): Compositi
     sessionService,
     search,
   );
+  const projectService = new ProjectService(projects, permissions, accounts, trackingService);
+  const pageService = new PageService(pages, projects, permissions);
+  const grantService = new GrantService(accounts, projects, permissions, auditLogs);
   const assetService = new AssetService(
     assetRepository,
     projects,

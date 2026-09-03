@@ -11,6 +11,7 @@ import { ServiceTokenService } from '@project/application/auth/service-token-ser
 import { SessionService } from '@project/application/auth/session-service';
 import { CompanyService } from '@project/application/company/company-service';
 import { PageService } from '@project/application/page/page-service';
+import type { CatalogueCopier } from '@project/application/ports/catalogue-copier';
 import type { EmailMessage, EmailSender } from '@project/application/ports/email-sender';
 import { ProjectService } from '@project/application/project/project-service';
 import { SqliteAccountRepository } from '@project/infrastructure/persistence/sqlite-account-repository';
@@ -27,6 +28,7 @@ import { SqliteServiceTokenRepository } from '@project/infrastructure/persistenc
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
 import { SqliteAuditLogRepository } from '@project/infrastructure/persistence/sqlite-tracking-repositories';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
+import { ok } from '@project/shared/result';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -46,6 +48,11 @@ const PASSWORD = 'correct-horse-battery-staple';
 function t(): string {
   return new Date().toISOString();
 }
+
+/** No-op copier for tests that exercise access routes, not the catalogue copy. */
+const stubCatalogueCopier: CatalogueCopier = {
+  copyCatalogueIntoProject: () => Promise.resolve(ok({ copiedProperties: 0, copiedModules: 0 })),
+};
 
 class CapturingEmail implements EmailSender {
   sent: EmailMessage[] = [];
@@ -141,7 +148,7 @@ describe('Access administration and service tokens over HTTP (M1.12 first half)'
       permissions,
     );
     const projectRepo = new SqliteProjectRepository(connection.kysely);
-    projects = new ProjectService(projectRepo, permissions, accounts);
+    projects = new ProjectService(projectRepo, permissions, accounts, stubCatalogueCopier);
     const grants = new GrantService(accounts, projectRepo, permissions, auditLogRepo);
     const pages = new PageService(
       new SqlitePageRepository(connection.kysely),

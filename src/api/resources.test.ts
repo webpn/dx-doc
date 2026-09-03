@@ -8,6 +8,7 @@ import { PermissionService } from '@project/application/auth/permissions';
 import { ServiceTokenService } from '@project/application/auth/service-token-service';
 import { SessionService } from '@project/application/auth/session-service';
 import { PageService } from '@project/application/page/page-service';
+import type { CatalogueCopier } from '@project/application/ports/catalogue-copier';
 import { ProjectService } from '@project/application/project/project-service';
 import type { ProjectCreateInput } from '@project/application/validation/schemas';
 import { SqliteAccountRepository } from '@project/infrastructure/persistence/sqlite-account-repository';
@@ -23,6 +24,7 @@ import { SqliteServiceTokenRepository } from '@project/infrastructure/persistenc
 import { SqliteSessionRepository } from '@project/infrastructure/persistence/sqlite-session-repository';
 import { SqliteAuditLogRepository } from '@project/infrastructure/persistence/sqlite-tracking-repositories';
 import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
+import { ok } from '@project/shared/result';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -39,6 +41,11 @@ const PASSWORD = 'correct-horse-battery-staple';
 function t(): string {
   return new Date().toISOString();
 }
+
+/** No-op copier for tests that exercise CRUD routes, not the catalogue copy. */
+const stubCatalogueCopier: CatalogueCopier = {
+  copyCatalogueIntoProject: () => Promise.resolve(ok({ copiedProperties: 0, copiedModules: 0 })),
+};
 
 describe('Project and Page REST routes (REQ-API-001)', () => {
   let dir: string;
@@ -105,6 +112,9 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
       new SqliteProjectRepository(connection.kysely),
       permissions,
       accounts,
+      // This file exercises CRUD routes, not the catalogue copy; the real
+      // copier is wired in the composition root (composition-root.test.ts).
+      stubCatalogueCopier,
       () => new Date(),
       () => randomUuid(),
     );

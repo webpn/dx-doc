@@ -1,3 +1,4 @@
+import { ok } from '@project/shared/result';
 import { describe, expect, it } from 'vitest';
 
 import { PermissionService } from '../auth/permissions';
@@ -10,6 +11,7 @@ import type {
   ProjectGrant,
   UserAccount,
 } from '../ports/account-repository';
+import type { CatalogueCopier, CatalogueCopyCounts } from '../ports/catalogue-copier';
 import type { ProjectRecord, ProjectRepository } from '../ports/project-repository';
 import type { ProjectCreateInput } from '../validation/schemas';
 
@@ -31,7 +33,22 @@ class StubPermissions extends PermissionService {
   }
 }
 
-/** In-memory accounts: only the role lookup + grant write the service needs. */
+/** Records every catalogue copy the service triggers (REQ-DOM-019). */
+class RecordingCatalogueCopier implements CatalogueCopier {
+  calls: { companyId: string; projectId: string }[] = [];
+
+  copyCatalogueIntoProject(
+    companyId: string,
+    projectId: string,
+  ): Promise<{ ok: true; value: CatalogueCopyCounts } | { ok: false; error: never }> {
+    this.calls.push({ companyId, projectId });
+    return Promise.resolve(ok({ copiedProperties: 0, copiedModules: 0 }));
+  }
+}
+
+/**
+ * In-memory accounts: only the role lookup + grant write the service needs.
+ */
 class FakeAccounts implements AccountRepository {
   roles = new Map<string, CompanyRole>();
   grants: ProjectGrant[] = [];
@@ -188,6 +205,7 @@ function build(): { projects: FakeProjects; accounts: FakeAccounts; service: Pro
     projects,
     new StubPermissions({}),
     accounts,
+    new RecordingCatalogueCopier(),
     () => FIXED_NOW,
     () => 'id-' + String(projects.projects.size),
   );
@@ -207,6 +225,55 @@ describe('ProjectService.create (REQ-FDN-003, REQ-IMP-003)', () => {
       expect(stored?.name).toBe('Web analytics');
       expect(stored?.lifecycleState).toBe('active');
     }
+  });
+
+  it('copies the company catalogue into the project at creation (REQ-DOM-019, Critical Business Rule 3)', async () => {
+    const projects = new FakeProjects();
+    const accounts = new FakeAccounts();
+    seedCompanyRoles(accounts, 'c1');
+    const copier = new RecordingCatalogueCopier();
+    const service = new ProjectService(
+      projects,
+      new StubPermissions({}),
+      accounts,
+      copier,
+      () => FIXED_NOW,
+      () => 'id',
+    );
+
+    const result = await service.create('u1', 'c1', input());
+
+    expect(result.ok).toBe(true);
+    expect(copier.calls).toHaveLength(1);
+    if (result.ok) {
+      expect(copier.calls[0]).toEqual({ companyId: 'c1', projectId: result.value.projectId });
+    }
+  });
+
+  it('does not copy the catalogue again on the custom_id upsert path (REQ-DOM-019)', async () => {
+    const projects = new FakeProjects();
+    const accounts = new FakeAccounts();
+    seedCompanyRoles(accounts, 'c1');
+    const copier = new RecordingCatalogueCopier();
+    const service = new ProjectService(
+      projects,
+      new StubPermissions({}),
+      accounts,
+      copier,
+      () => FIXED_NOW,
+      () => 'id',
+    );
+
+    await service.create('u1', 'c1', input({ customId: 'legacy:web' }));
+    const copiesAfterFirstCreate = copier.calls.length;
+
+    const repeated = await service.create('u1', 'c1', input({ customId: 'legacy:web' }));
+    expect(repeated.ok).toBe(true);
+
+    // The first write was a real creation and copied the catalogue; the
+    // second was an upsert of the same custom_id and must not copy again.
+    expect(copiesAfterFirstCreate).toBe(1);
+    expect(copier.calls.length).toBe(copiesAfterFirstCreate);
   });
 
   it('rejects an invalid payload with uniform validation issues', async () => {
@@ -231,6 +298,7 @@ describe('ProjectService.create (REQ-FDN-003, REQ-IMP-003)', () => {
       projects,
       new StubPermissions({ company: false }),
       accounts,
+      new RecordingCatalogueCopier(),
       () => FIXED_NOW,
       () => 'id',
     );
@@ -300,6 +368,7 @@ describe('ProjectService.update + get', () => {
       projects,
       new StubPermissions({ project: false }),
       new FakeAccounts(),
+      new RecordingCatalogueCopier(),
       () => FIXED_NOW,
       () => 'id',
     );

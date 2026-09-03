@@ -16,6 +16,7 @@ import type { AuditLogRepository } from '@project/application/ports/tracking-rep
 import type { ProjectService } from '@project/application/project/project-service';
 import type { TrackingService } from '@project/application/tracking/tracking-service';
 import { InMemorySearchIndex } from '@project/infrastructure/search/in-memory-search';
+import { BcryptPasswordHasher } from '@project/infrastructure/security/bcrypt-password-hasher';
 import { InMemoryObjectStorage } from '@project/infrastructure/storage/in-memory-storage';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -435,5 +436,211 @@ describe('composition root — first-run and readiness (M1.11)', () => {
     ).toThrow(/only 'sqlite' exists through R1/);
 
     rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+// ── Catalogue copy at project creation (REQ-DOM-019, Critical Business Rule 3) ──
+
+describe('catalogue copy at project creation over HTTP (REQ-DOM-019, Critical Business Rule 3)', () => {
+  /**
+   * Seed a company with the four roles and an admin user the routes can
+   * authenticate. Optionally seed the company catalogue (one property, one
+   * module referencing it, both `project_id` null).
+   */
+  async function seedCompanyAndCatalogue(
+    composition: Composition,
+    withCatalogue: boolean,
+  ): Promise<void> {
+    const nowIso = new Date().toISOString();
+    await composition.connection.kysely
+      .insertInto('company')
+      .values({ id: 'c1', name: 'Acme', slug: 'acme', created_at: nowIso, updated_at: nowIso })
+      .execute();
+    for (const name of ['admin', 'project_manager', 'editor', 'viewer']) {
+      await composition.connection.kysely
+        .insertInto('roles')
+        .values({
+          id: `role-${name}`,
+          company_id: 'c1',
+          name,
+          created_at: nowIso,
+          updated_at: nowIso,
+        })
+        .execute();
+    }
+    const hasher = new BcryptPasswordHasher();
+    await composition.connection.kysely
+      .insertInto('users')
+      .values({
+        id: 'u-admin',
+        company_id: 'c1',
+        email: 'admin@acme.test',
+        password_hash: await hasher.hash(ADMIN_PASSWORD),
+        role_id: 'role-admin',
+        created_at: nowIso,
+        updated_at: nowIso,
+      })
+      .execute();
+
+    if (withCatalogue) {
+      await composition.connection.kysely
+        .insertInto('properties')
+        .values({
+          id: 'cat-prop-1',
+          company_id: 'c1',
+          project_id: null,
+          name: 'global_user_id',
+          business_label: null,
+          description: null,
+          data_source: 'other',
+          type: 'string',
+          format_pattern: null,
+          allowed_values: null,
+          example_values: null,
+          pii_flag: 0,
+          hashing_policy: null,
+          status: 'active',
+          introduced_in_version: null,
+          analysis_notes: null,
+          aep_field_group: null,
+          parent_property_id: null,
+          derived_from: null,
+          custom_id: null,
+          created_at: nowIso,
+          updated_at: nowIso,
+        })
+        .execute();
+      await composition.connection.kysely
+        .insertInto('modules')
+        .values({
+          id: 'cat-mod-1',
+          company_id: 'c1',
+          project_id: null,
+          name: 'Global Identity',
+          description: null,
+          custom_id: null,
+          created_at: nowIso,
+          updated_at: nowIso,
+        })
+        .execute();
+      await composition.connection.kysely
+        .insertInto('module_properties')
+        .values({ module_id: 'cat-mod-1', property_id: 'cat-prop-1', created_at: nowIso })
+        .execute();
+    }
+  }
+
+  async function loginAsAdmin(composition: Composition): Promise<string> {
+    const login = await composition.app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { companyId: 'c1', email: 'admin@acme.test', password: ADMIN_PASSWORD },
+    });
+    expect(login.statusCode).toBe(200);
+    return (
+      String(login.headers['set-cookie'] ?? '')
+        .split(';')[0]
+        ?.split('=')[1] ?? ''
+    );
+  }
+
+  it('POST /api/projects auto-copies the company catalogue and the manual copy endpoint stays idempotent', async () => {
+    const composition = testComposition();
+    await applyMigrations(composition.connection);
+    await seedCompanyAndCatalogue(composition, true);
+    const cookie = await loginAsAdmin(composition);
+
+    // Create the project through the real HTTP route.
+    const created = await composition.app.inject({
+      method: 'POST',
+      url: '/api/projects',
+      headers: { cookie: `dxdoc_session=${cookie}` },
+      payload: { companyId: 'c1', name: 'Web', slug: 'web', platform: 'web' },
+    });
+    expect(created.statusCode).toBe(201);
+    const projectId = created.json<{ id: string }>().id;
+
+    // Project-scoped copies exist, with their own ids — never the catalogue
+    // originals (no live link, REQ-DOM-019).
+    const props = await composition.connection.kysely
+      .selectFrom('properties')
+      .selectAll()
+      .where('project_id', '=', projectId)
+      .execute();
+    const mods = await composition.connection.kysely
+      .selectFrom('modules')
+      .selectAll()
+      .where('project_id', '=', projectId)
+      .execute();
+    expect(props).toHaveLength(1);
+    expect(props[0]?.name).toBe('global_user_id');
+    expect(props[0]?.id).not.toBe('cat-prop-1');
+    expect(mods).toHaveLength(1);
+    expect(mods[0]?.name).toBe('Global Identity');
+    expect(mods[0]?.id).not.toBe('cat-mod-1');
+
+    // The copied module references the copied property, not the catalogue one.
+    const modProps = await composition.connection.kysely
+      .selectFrom('module_properties')
+      .selectAll()
+      .where('module_id', '=', mods[0]?.id ?? '')
+      .execute();
+    expect(modProps.map((mp) => mp.property_id)).toEqual([props[0]?.id ?? '']);
+
+    // Re-running the manual copy endpoint (the standalone catalogue screen's
+    // pull) after the auto-copy adds nothing.
+    const reRun = await composition.app.inject({
+      method: 'POST',
+      url: `/api/companies/c1/projects/${projectId}/copy-catalogue`,
+      headers: { cookie: `dxdoc_session=${cookie}` },
+      payload: { propertyIds: ['cat-prop-1'], moduleIds: ['cat-mod-1'] },
+    });
+    expect(reRun.statusCode).toBe(200);
+    expect(reRun.json()).toEqual({ copiedProperties: 0, copiedModules: 0 });
+    expect(
+      await composition.connection.kysely
+        .selectFrom('properties')
+        .selectAll()
+        .where('project_id', '=', projectId)
+        .execute(),
+    ).toHaveLength(1);
+    expect(
+      await composition.connection.kysely
+        .selectFrom('modules')
+        .selectAll()
+        .where('project_id', '=', projectId)
+        .execute(),
+    ).toHaveLength(1);
+  });
+
+  it('POST /api/projects creates no project-scoped rows when the company catalogue is empty', async () => {
+    const composition = testComposition();
+    await applyMigrations(composition.connection);
+    await seedCompanyAndCatalogue(composition, false);
+    const cookie = await loginAsAdmin(composition);
+
+    const created = await composition.app.inject({
+      method: 'POST',
+      url: '/api/projects',
+      headers: { cookie: `dxdoc_session=${cookie}` },
+      payload: { companyId: 'c1', name: 'Bare', slug: 'bare', platform: 'web' },
+    });
+    expect(created.statusCode).toBe(201);
+    const projectId = created.json<{ id: string }>().id;
+
+    expect(
+      await composition.connection.kysely
+        .selectFrom('properties')
+        .selectAll()
+        .where('project_id', '=', projectId)
+        .execute(),
+    ).toHaveLength(0);
+    expect(
+      await composition.connection.kysely
+        .selectFrom('modules')
+        .selectAll()
+        .where('project_id', '=', projectId)
+        .execute(),
+    ).toHaveLength(0);
   });
 });

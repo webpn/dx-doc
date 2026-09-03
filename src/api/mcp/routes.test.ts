@@ -159,8 +159,9 @@ describe('MCP Server (M1.3, REQ-API-003, REQ-API-004, REQ-API-006, D37, D38)', (
     const versionRepo = new SqliteVersionRepository(connection.kysely);
     const sharedPasswordRepo = new SqliteSharedPasswordRepository(connection.kysely);
 
-    const projectService = new ProjectService(projectRepo, permissions, accounts);
-    const pageService = new PageService(pageRepo, projectRepo, permissions);
+    // TrackingService is constructed before ProjectService: it implements the
+    // CatalogueCopier port ProjectService requires (REQ-DOM-019), mirroring the
+    // composition-root wiring.
     const trackingService = new TrackingService(
       propRepo,
       modRepo,
@@ -180,6 +181,9 @@ describe('MCP Server (M1.3, REQ-API-003, REQ-API-004, REQ-API-006, D37, D38)', (
       permissions,
       sessions,
     );
+
+    const projectService = new ProjectService(projectRepo, permissions, accounts, trackingService);
+    const pageService = new PageService(pageRepo, projectRepo, permissions);
 
     const mcpHandler = new McpServerHandler(
       projectService,

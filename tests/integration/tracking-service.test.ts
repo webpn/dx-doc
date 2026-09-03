@@ -20,6 +20,7 @@ import path from 'node:path';
 
 import { PermissionService } from '@project/application/auth/permissions';
 import { SessionService } from '@project/application/auth/session-service';
+import { ProjectService } from '@project/application/project/project-service';
 import { TrackingService } from '@project/application/tracking/tracking-service';
 import { SqliteAccountRepository } from '@project/infrastructure/persistence/sqlite-account-repository';
 import {
@@ -64,6 +65,11 @@ describe('TrackingService (M1.1 Application Service)', () => {
   let navRepo: SqliteNavigationEventRepository;
   let trkRepo: SqliteTrackingRepository;
   let auditRepo: SqliteAuditLogRepository;
+  // Shared wiring for the auto-copy block: the composition-ready pieces a
+  // ProjectService needs beside the TrackingService it already exists here.
+  let accounts: SqliteAccountRepository;
+  let projectRepo: SqliteProjectRepository;
+  let permissions: PermissionService;
 
   const companyId = 'comp-10';
   const projectId = 'proj-10';
@@ -168,9 +174,9 @@ describe('TrackingService (M1.1 Application Service)', () => {
       ])
       .execute();
 
-    const accountRepo = new SqliteAccountRepository(connection.kysely);
-    const permissions = new PermissionService(accountRepo);
-    const projectRepo = new SqliteProjectRepository(connection.kysely);
+    accounts = new SqliteAccountRepository(connection.kysely);
+    permissions = new PermissionService(accounts);
+    projectRepo = new SqliteProjectRepository(connection.kysely);
     const pageRepo = new SqlitePageRepository(connection.kysely);
     propRepo = new SqlitePropertyRepository(connection.kysely);
     modRepo = new SqliteModuleRepository(connection.kysely);
@@ -357,6 +363,198 @@ describe('TrackingService (M1.1 Application Service)', () => {
     const copiedModuleProps = await modRepo.getModulePropertyIds(copiedModuleId);
     expect(copiedModuleProps).toEqual([copiedPropertyId]);
     expect(copiedModuleProps).not.toContain(catPropRes.value.propertyId);
+  });
+
+  describe('automatic catalogue copy at project creation (REQ-DOM-019, Critical Business Rule 3)', () => {
+    let projectService: ProjectService;
+
+    beforeEach(() => {
+      // The composition-root wiring: ProjectService receives the same
+      // TrackingService that owns the copy capability.
+      projectService = new ProjectService(projectRepo, permissions, accounts, trackingService);
+    });
+
+    /** Seed one catalogue property and one catalogue module using it. */
+    async function seedCatalogueItem(): Promise<{
+      cataloguePropertyId: string;
+      catalogueModuleId: string;
+    }> {
+      const catProp = await trackingService.createProperty(adminId, companyId, null, {
+        name: 'global_user_id',
+        businessLabel: 'Global User ID',
+      });
+      expect(catProp.ok).toBe(true);
+      if (!catProp.ok) throw new Error('seed catalogue property failed');
+
+      const catMod = await trackingService.createModule(adminId, companyId, null, {
+        name: 'Global Identity',
+        propertyIds: [catProp.value.propertyId],
+      });
+      expect(catMod.ok).toBe(true);
+      if (!catMod.ok) throw new Error('seed catalogue module failed');
+
+      return {
+        cataloguePropertyId: catProp.value.propertyId,
+        catalogueModuleId: catMod.value.moduleId,
+      };
+    }
+
+    it('auto-creates the project-scoped property and module copies at creation (REQ-DOM-019)', async () => {
+      const { cataloguePropertyId, catalogueModuleId } = await seedCatalogueItem();
+
+      const created = await projectService.create(adminId, companyId, {
+        name: 'Fresh project',
+        slug: 'fresh',
+        platform: 'web',
+      });
+      expect(created.ok).toBe(true);
+      if (!created.ok) throw new Error('create failed');
+      const newProjectId = created.value.projectId;
+
+      const projProps = await propRepo.listProperties(companyId, newProjectId);
+      const projMods = await modRepo.listModules(companyId, newProjectId);
+      expect(projProps).toHaveLength(1);
+      expect(projProps[0]).toMatchObject({
+        name: 'global_user_id',
+        projectId: newProjectId,
+        customId: null,
+      });
+      // Independent copy: its own id, never the catalogue original's.
+      expect(projProps[0]?.id).not.toBe(cataloguePropertyId);
+      expect(projMods).toHaveLength(1);
+      expect(projMods[0]).toMatchObject({
+        name: 'Global Identity',
+        projectId: newProjectId,
+        customId: null,
+      });
+      expect(projMods[0]?.id).not.toBe(catalogueModuleId);
+
+      // Self-contained: the copied module references the copied property, not
+      // the catalogue original (no live link by another name).
+      const copiedModuleProps = await modRepo.getModulePropertyIds(projMods[0]?.id ?? '');
+      expect(copiedModuleProps).toEqual([projProps[0]?.id ?? '']);
+      expect(copiedModuleProps).not.toContain(cataloguePropertyId);
+    });
+
+    it('creates nothing extra when the company catalogue is empty (REQ-DOM-019)', async () => {
+      const created = await projectService.create(adminId, companyId, {
+        name: 'Bare project',
+        slug: 'bare',
+        platform: 'web',
+      });
+      expect(created.ok).toBe(true);
+      if (!created.ok) throw new Error('create failed');
+
+      expect(await propRepo.listProperties(companyId, created.value.projectId)).toHaveLength(0);
+      expect(await modRepo.listModules(companyId, created.value.projectId)).toHaveLength(0);
+    });
+
+    it('re-running the manual copy after auto-copy does not duplicate (idempotent, REQ-DOM-019)', async () => {
+      const { cataloguePropertyId, catalogueModuleId } = await seedCatalogueItem();
+
+      const created = await projectService.create(adminId, companyId, {
+        name: 'Idempotent project',
+        slug: 'idempotent',
+        platform: 'web',
+      });
+      expect(created.ok).toBe(true);
+      if (!created.ok) throw new Error('create failed');
+      const newProjectId = created.value.projectId;
+      const propsBefore = await propRepo.listProperties(companyId, newProjectId);
+      const modsBefore = await modRepo.listModules(companyId, newProjectId);
+      expect(propsBefore).toHaveLength(1);
+      expect(modsBefore).toHaveLength(1);
+
+      // The catalogue screen's manual pull sends the catalogue item ids — the
+      // same selection the automatic copy already materialised. The creator
+      // (adminId) holds the auto-granted admin role on the new project
+      // (REQ-SEC-003), so the manual endpoint's `project.edit` gate passes.
+      const reRun = await trackingService.copyCatalogueToProject(adminId, companyId, newProjectId, {
+        propertyIds: [cataloguePropertyId],
+        moduleIds: [catalogueModuleId],
+      });
+      expect(reRun.ok).toBe(true);
+      if (!reRun.ok) throw new Error('re-run failed');
+      expect(reRun.value.copiedProperties).toBe(0);
+      expect(reRun.value.copiedModules).toBe(0);
+
+      expect(await propRepo.listProperties(companyId, newProjectId)).toHaveLength(
+        propsBefore.length,
+      );
+      expect(await modRepo.listModules(companyId, newProjectId)).toHaveLength(modsBefore.length);
+    });
+
+    it('re-invoking the automatic copy is a no-op that keeps module references on the same copies', async () => {
+      await seedCatalogueItem();
+
+      const created = await projectService.create(adminId, companyId, {
+        name: 'Repeatable project',
+        slug: 'repeatable',
+        platform: 'web',
+      });
+      if (!created.ok) throw new Error('create failed');
+      const newProjectId = created.value.projectId;
+
+      const second = await trackingService.copyCatalogueIntoProject(companyId, newProjectId);
+      expect(second.ok).toBe(true);
+      if (!second.ok) throw new Error('second copy failed');
+      expect(second.value).toEqual({ copiedProperties: 0, copiedModules: 0 });
+
+      const props = await propRepo.listProperties(companyId, newProjectId);
+      const mods = await modRepo.listModules(companyId, newProjectId);
+      expect(props).toHaveLength(1);
+      expect(mods).toHaveLength(1);
+
+      const modProps = await modRepo.getModulePropertyIds(mods[0]?.id ?? '');
+      expect(modProps).toEqual([props[0]?.id ?? '']);
+    });
+
+    it('copies are project-scoped and never bleed across projects (REQ-DOM-028)', async () => {
+      const { cataloguePropertyId, catalogueModuleId } = await seedCatalogueItem();
+
+      const a = await projectService.create(adminId, companyId, {
+        name: 'Project A',
+        slug: 'project-a',
+        platform: 'web',
+      });
+      const b = await projectService.create(adminId, companyId, {
+        name: 'Project B',
+        slug: 'project-b',
+        platform: 'web',
+      });
+      expect(a.ok).toBe(true);
+      expect(b.ok).toBe(true);
+      if (!a.ok || !b.ok) throw new Error('create failed');
+      const aId = a.value.projectId;
+      const bId = b.value.projectId;
+
+      const aProps = await propRepo.listProperties(companyId, aId);
+      const bProps = await propRepo.listProperties(companyId, bId);
+      const aMods = await modRepo.listModules(companyId, aId);
+      const bMods = await modRepo.listModules(companyId, bId);
+
+      // Each project owns its own copies: distinct ids per project, and never
+      // the catalogue originals — a project cannot reach another project's rows
+      // (REQ-DOM-028), and neither can it reach the catalogue by reference.
+      expect(aProps).toHaveLength(1);
+      expect(bProps).toHaveLength(1);
+      expect(aProps[0]?.id).not.toBe(bProps[0]?.id);
+      expect(aProps[0]?.id).not.toBe(cataloguePropertyId);
+      expect(bProps[0]?.id).not.toBe(cataloguePropertyId);
+      expect(aMods[0]?.id).not.toBe(bMods[0]?.id);
+      expect(aMods[0]?.id).not.toBe(catalogueModuleId);
+
+      const aModProps = await modRepo.getModulePropertyIds(aMods[0]?.id ?? '');
+      const bModProps = await modRepo.getModulePropertyIds(bMods[0]?.id ?? '');
+      expect(aModProps).toEqual([aProps[0]?.id ?? '']);
+      expect(bModProps).toEqual([bProps[0]?.id ?? '']);
+
+      // The catalogue rows are untouched: still company-scoped, still the
+      // originals.
+      const catalogueProps = await propRepo.listProperties(companyId, null);
+      expect(catalogueProps).toHaveLength(1);
+      expect(catalogueProps[0]?.id).toBe(cataloguePropertyId);
+    });
   });
 
   describe('opt-in propagation of module changes (REQ-DOM-007)', () => {

@@ -4,6 +4,7 @@ import { err, ok, type Result } from '@project/shared';
 
 import type { PermissionService } from '../auth/permissions';
 import type { AccountRepository } from '../ports/account-repository';
+import type { CatalogueCopier } from '../ports/catalogue-copier';
 import type { ProjectRepository, ProjectRecord } from '../ports/project-repository';
 import type { ValidationIssue } from '../validation/issues';
 import { projectCreateSchema, projectUpdateSchema } from '../validation/schemas';
@@ -15,18 +16,25 @@ export type ProjectServiceError =
   | { kind: 'not_found' }
   | { kind: 'validation'; issues: ValidationIssue[] }
   | { kind: 'duplicate_custom_id' }
-  | { kind: 'stale_write'; currentUpdatedAt: string };
+  | { kind: 'stale_write'; currentUpdatedAt: string }
+  | { kind: 'catalogue_copy_failed' };
 
 /**
  * Project CRUD (REQ-FDN-003, REQ-API-001). All writes go through the shared
  * validation layer — every rule defined in projectCreateSchema/updateSchema
  * applies identically when called via HTTP, the MCP server, or a direct call.
+ *
+ * `catalogueCopier` is required, not optional: the company catalogue is copied
+ * into every new project at creation (REQ-DOM-019, Critical Business Rule 3),
+ * so a construction site that omits it would silently create projects without
+ * their catalogue — the exact forget-the-copy failure this design removes.
  */
 export class ProjectService {
   constructor(
     private readonly projects: ProjectRepository,
     private readonly permissions: PermissionService,
     private readonly accounts: AccountRepository,
+    private readonly catalogueCopier: CatalogueCopier,
     private readonly now: () => Date = () => new Date(),
     private readonly newId: () => string = () => randomUUID(),
   ) {}
@@ -101,6 +109,17 @@ export class ProjectService {
         createdAt: nowIso,
         updatedAt: nowIso,
       });
+    }
+
+    // Critical Business Rule 3 (REQ-DOM-019): the company catalogue is copied
+    // into every new project at creation. The copy runs inside the application
+    // flow shared by every entry point (HTTP route, MCP server, direct calls),
+    // so a caller of `create` cannot forget it. The copier is idempotent, so
+    // the later manual pull (the standalone catalogue screen) cannot duplicate
+    // what was copied here.
+    const copy = await this.catalogueCopier.copyCatalogueIntoProject(companyId, projectId);
+    if (!copy.ok) {
+      return err({ kind: 'catalogue_copy_failed' });
     }
 
     return ok({ projectId, created: true });
