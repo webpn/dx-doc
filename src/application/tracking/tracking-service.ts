@@ -143,6 +143,15 @@ interface TrackingTemplateConfig {
   pageId?: string;
   navigationEventId?: string;
   moduleIds?: string[];
+  propertyIds?: string[];
+  specificValues?: TrackingTemplateSpecificValue[];
+}
+
+interface TrackingTemplateSpecificValue {
+  propertyId?: string;
+  propertyCustomId?: string;
+  value: string;
+  description?: string;
 }
 
 function parseTrackingTemplateConfig(configJson: string | null): TrackingTemplateConfig {
@@ -159,6 +168,35 @@ function parseTrackingTemplateConfig(configJson: string | null): TrackingTemplat
     }
     if (Array.isArray(record.moduleIds) && record.moduleIds.every((id) => typeof id === 'string')) {
       config.moduleIds = record.moduleIds;
+    }
+    if (
+      Array.isArray(record.propertyIds) &&
+      record.propertyIds.every((id) => typeof id === 'string')
+    ) {
+      config.propertyIds = record.propertyIds;
+    }
+    if (Array.isArray(record.specificValues)) {
+      const specificValues = record.specificValues.flatMap(
+        (entry): TrackingTemplateSpecificValue[] => {
+          if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) return [];
+          const value = entry as Record<string, unknown>;
+          const propertyId = typeof value.propertyId === 'string' ? value.propertyId : undefined;
+          const propertyCustomId =
+            typeof value.propertyCustomId === 'string' ? value.propertyCustomId : undefined;
+          if ((propertyId === undefined) === (propertyCustomId === undefined)) return [];
+          if (typeof value.value !== 'string' || value.value.length === 0) return [];
+          const specificValue: TrackingTemplateSpecificValue = {
+            value: value.value,
+          };
+          if (propertyId !== undefined) specificValue.propertyId = propertyId;
+          if (propertyCustomId !== undefined) specificValue.propertyCustomId = propertyCustomId;
+          if (typeof value.description === 'string') specificValue.description = value.description;
+          return [specificValue];
+        },
+      );
+      if (specificValues.length === record.specificValues.length) {
+        config.specificValues = specificValues;
+      }
     }
     return config;
   } catch {
@@ -1695,12 +1733,75 @@ export class TrackingService implements CatalogueCopier {
     }
 
     let templateConfig: TrackingTemplateConfig = {};
+    let templateCompanyId: string | undefined;
     if (parsed.value.templateId !== undefined) {
       const template = await this.templates.getTemplateById(parsed.value.templateId);
       if (!template || (template.projectId !== null && template.projectId !== projectId)) {
         return err({ kind: 'not_found' });
       }
       templateConfig = parseTrackingTemplateConfig(template.configJson);
+      templateCompanyId = template.companyId;
+    }
+
+    const project = await this.projects.getProjectById(projectId);
+    if (!project) return err({ kind: 'not_found' });
+
+    const seededModulePropertyIds = new Set<string>();
+    if (templateConfig.moduleIds !== undefined) {
+      for (const moduleId of templateConfig.moduleIds) {
+        const mod = await this.modules.getModuleById(moduleId);
+        // REQ-DOM-028: catalogue modules (projectId null) may seed a project.
+        if (!mod || (mod.projectId !== null && mod.projectId !== projectId)) {
+          return err({ kind: 'cross_project_reference' });
+        }
+        for (const propertyId of await this.modules.getModulePropertyIds(moduleId)) {
+          seededModulePropertyIds.add(propertyId);
+        }
+      }
+    }
+
+    const seededPropertyIds = new Set(seededModulePropertyIds);
+    for (const propertyId of templateConfig.propertyIds ?? []) {
+      const property = await this.properties.getPropertyById(propertyId);
+      if (!property || (property.projectId !== null && property.projectId !== projectId)) {
+        return err({ kind: 'cross_project_reference' });
+      }
+      seededPropertyIds.add(propertyId);
+    }
+
+    const defaultSpecificValues: TrackingTemplateSpecificValue[] = [];
+    for (const defaultValue of templateConfig.specificValues ?? []) {
+      const property =
+        defaultValue.propertyId !== undefined
+          ? await this.properties.getPropertyById(defaultValue.propertyId)
+          : ((await this.properties.getPropertyByCustomId(
+              templateCompanyId ?? project.companyId,
+              projectId,
+              defaultValue.propertyCustomId ?? '',
+            )) ??
+            (await this.properties.getPropertyByCustomId(
+              templateCompanyId ?? project.companyId,
+              null,
+              defaultValue.propertyCustomId ?? '',
+            )));
+      if (
+        !property ||
+        (property.projectId !== null && property.projectId !== projectId) ||
+        !seededPropertyIds.has(property.id)
+      ) {
+        return err({
+          kind: 'validation',
+          issues: [
+            {
+              field: 'configJson.specificValues',
+              code: 'unseeded_property',
+              message:
+                'Every default specific value must reference a property seeded by the template',
+            },
+          ],
+        });
+      }
+      defaultSpecificValues.push({ ...defaultValue, propertyId: property.id });
     }
 
     const navigationEventId = templateConfig.navigationEventId ?? parsed.value.navigationEventId;
@@ -1721,6 +1822,34 @@ export class TrackingService implements CatalogueCopier {
     const trackingId = this.newId();
     const nowIso = this.now().toISOString();
 
+    const trackingProperties: TrackingProperty[] = [];
+    for (const propertyId of templateConfig.propertyIds ?? []) {
+      trackingProperties.push({
+        id: this.newId(),
+        trackingId,
+        propertyId,
+        source: 'direct',
+        presence: 'always',
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      });
+    }
+
+    let compositionState = {
+      trackingId,
+      appliedModuleIds: templateConfig.moduleIds ?? [],
+      trackingProperties,
+    };
+    for (const moduleId of templateConfig.moduleIds ?? []) {
+      compositionState = applyModuleToTracking(
+        compositionState,
+        moduleId,
+        await this.modules.getModulePropertyIds(moduleId),
+        this.newId,
+        nowIso,
+      );
+    }
+
     await this.trackings.createTracking({
       id: trackingId,
       projectId,
@@ -1734,53 +1863,40 @@ export class TrackingService implements CatalogueCopier {
       updatedAt: nowIso,
     });
 
-    if (templateConfig.moduleIds !== undefined) {
-      for (const moduleId of templateConfig.moduleIds) {
-        const mod = await this.modules.getModuleById(moduleId);
-        // REQ-DOM-028: Check project match — catalogue modules (projectId null) are allowed
-        if (!mod || (mod.projectId !== null && mod.projectId !== projectId)) {
-          return err({ kind: 'cross_project_reference' });
-        }
-      }
-    }
-
     if (templateConfig.moduleIds !== undefined && templateConfig.moduleIds.length > 0) {
       await this.trackings.setTrackingModules(trackingId, templateConfig.moduleIds, nowIso);
-
-      // Attaching a module is not the same as carrying its properties:
-      // `setTrackingModules` only writes the join rows. REQ-DOM-009 promises a
-      // blueprint with "preselected modules, preconfigured custom properties",
-      // so materialise them through the same domain rule `applyModuleToTracking`
-      // uses — otherwise the seeded tracking arrives inert, and default specific
-      // values would be impossible (they hang off a trackingPropertyId).
-      let state = {
-        trackingId,
-        appliedModuleIds: templateConfig.moduleIds,
-        trackingProperties: [] as TrackingProperty[],
-      };
-      for (const moduleId of templateConfig.moduleIds) {
-        const modPropIds = await this.modules.getModulePropertyIds(moduleId);
-        state = applyModuleToTracking(state, moduleId, modPropIds, this.newId, nowIso);
-      }
-      if (state.trackingProperties.length > 0) {
-        await this.trackings.setTrackingProperties(state.trackingProperties);
-      }
+    }
+    if (compositionState.trackingProperties.length > 0) {
+      await this.trackings.setTrackingProperties(compositionState.trackingProperties);
+    }
+    if (defaultSpecificValues.length > 0) {
+      const trackingPropertyByPropertyId = new Map(
+        compositionState.trackingProperties.map((property) => [property.propertyId, property.id]),
+      );
+      await this.trackings.setSpecificValues(
+        defaultSpecificValues.map((specificValue) => ({
+          id: this.newId(),
+          trackingPropertyId:
+            trackingPropertyByPropertyId.get(specificValue.propertyId ?? '') ?? '',
+          value: specificValue.value,
+          description: specificValue.description ?? null,
+          createdAt: nowIso,
+          updatedAt: nowIso,
+        })),
+      );
     }
 
-    const project = await this.projects.getProjectById(projectId);
-    if (project) {
-      await this.auditLogs.appendLog({
-        id: this.newId(),
-        companyId: project.companyId,
-        projectId,
-        actorId,
-        action: 'tracking.created',
-        entityType: 'tracking',
-        entityId: trackingId,
-        details: { name: parsed.value.name, slug: parsed.value.slug },
-        createdAt: nowIso,
-      });
-    }
+    await this.auditLogs.appendLog({
+      id: this.newId(),
+      companyId: project.companyId,
+      projectId,
+      actorId,
+      action: 'tracking.created',
+      entityType: 'tracking',
+      entityId: trackingId,
+      details: { name: parsed.value.name, slug: parsed.value.slug },
+      createdAt: nowIso,
+    });
 
     return ok({ trackingId });
   }

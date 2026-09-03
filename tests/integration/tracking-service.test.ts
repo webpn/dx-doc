@@ -716,6 +716,13 @@ describe('TrackingService (M1.1 Application Service)', () => {
       configJson: JSON.stringify({
         navigationEventId: nav.value.eventId,
         moduleIds: [mod.value.moduleId],
+        specificValues: [
+          {
+            propertyId: prop.value.propertyId,
+            value: 'checkout_[step]',
+            description: 'The current checkout step',
+          },
+        ],
       }),
     });
     if (!tpl.ok) throw new Error('tpl fail');
@@ -734,6 +741,50 @@ describe('TrackingService (M1.1 Application Service)', () => {
     // The module is attached; its properties must be present too.
     const tps = await trkRepo.getTrackingProperties(trk.value.trackingId);
     expect(tps.map((tp) => tp.propertyId)).toEqual([prop.value.propertyId]);
+    const specificValues = await trkRepo.getSpecificValuesForTrackingProperty(tps[0]?.id ?? '');
+    expect(specificValues).toMatchObject([
+      { value: 'checkout_[step]', description: 'The current checkout step' },
+    ]);
+  });
+
+  it('rejects a template default for a property outside the seeded set before creating a tracking', async () => {
+    const seeded = await trackingService.createProperty(editorId, companyId, projectId, {
+      name: 'page_name',
+    });
+    const unseeded = await trackingService.createProperty(editorId, companyId, projectId, {
+      name: 'action_name',
+    });
+    const module = await trackingService.createModule(editorId, companyId, projectId, {
+      name: 'Page view properties',
+      propertyIds: seeded.ok ? [seeded.value.propertyId] : [],
+    });
+    const nav = await trackingService.createNavigationEvent(editorId, projectId, {
+      name: 'screen_view',
+    });
+    if (!seeded.ok || !unseeded.ok || !module.ok || !nav.ok) throw new Error('setup failed');
+
+    const template = await trackingService.createTrackingTemplate(editorId, companyId, projectId, {
+      name: 'Invalid defaults',
+      configJson: JSON.stringify({
+        navigationEventId: nav.value.eventId,
+        moduleIds: [module.value.moduleId],
+        specificValues: [{ propertyId: unseeded.value.propertyId, value: 'click' }],
+      }),
+    });
+    if (!template.ok) throw new Error('template setup failed');
+
+    const result = await trackingService.createTracking(editorId, projectId, {
+      name: 'Should not exist',
+      slug: 'should-not-exist',
+      navigationEventId: nav.value.eventId,
+      templateId: template.value.templateId,
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { kind: 'validation' },
+    });
+    expect(await trkRepo.getTrackingByProjectAndSlug(projectId, 'should-not-exist')).toBeNull();
   });
 
   it('copies a module’s properties even when only the module was selected (REQ-DOM-019)', async () => {
