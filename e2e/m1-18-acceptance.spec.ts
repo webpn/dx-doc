@@ -32,7 +32,7 @@ test('editor authors, publishes, and reads project content through the browser',
   // Diagnostic: capture console errors for debugging API failures
   page.on('console', (msg) => {
     if (msg.type() === 'error') {
-      console.log(`[CONSOLE ERROR] ${msg.text()}`);
+      console.warn(`[CONSOLE ERROR] ${msg.text()}`);
     }
   });
 
@@ -42,13 +42,13 @@ test('editor authors, publishes, and reads project content through the browser',
     const url = response.url();
     if (url.includes('/api/')) {
       const status = response.status();
-      console.log(`[API] ${String(status)} ${url}`);
+      console.warn(`[API] ${String(status)} ${url}`);
       if (status >= 400) {
         try {
           const body: unknown = await response.json();
-          console.log(`[API ERROR BODY] ${url}: ${JSON.stringify(body)}`);
+          console.warn(`[API ERROR BODY] ${url}: ${JSON.stringify(body)}`);
         } catch {
-          console.log(`[API ERROR BODY] ${url}: <no json body>`);
+          console.warn(`[API ERROR BODY] ${url}: <no json body>`);
         }
       }
     }
@@ -66,10 +66,9 @@ test('editor authors, publishes, and reads project content through the browser',
   expect(companyId).toBeDefined();
 
   // The instance administrator can create the company, but has no company
-  // membership. The first Admin is provisioned for the new company, but the
-  // product's project-creation flow establishes the project grant for the
-  // seeded/bootstrap administrator (the authorized actor used by the M1.15
-  // browser flow).
+  // membership. The provisioned first Admin signs in below and creates the
+  // project, so the project-creation auto-grant lands on the company admin
+  // (REQ-SEC-003) — not on the seeded/bootstrap administrator.
   await page.context().clearCookies();
   await page.goto('/password-reset');
   await page.getByLabel('Email address').fill(companyAdminEmail);
@@ -100,12 +99,17 @@ test('editor authors, publishes, and reads project content through the browser',
   await page.getByLabel('Slug').fill(projectSlug);
   await page.getByLabel('Platform').selectOption('web');
   await page.getByRole('button', { name: 'Create project' }).click();
-  await expect(page).toHaveURL(/\/projects\/[^/]+$/);
-  const projectId = /\/projects\/([^/]+)$/.exec(page.url())?.[1];
+  // The pre-navigation URL (/companies/:id/projects/new) also matches a naive
+  // /projects/:id pattern and yields projectId "new" — exclude it so a slow
+  // navigation cannot silently poison every downstream step. The heading proves
+  // the new project page actually rendered (same pattern as M1.15).
+  await expect(page).toHaveURL(/\/projects\/(?!new$)[^/]+$/);
+  const projectId = /\/projects\/(?!new$)([^/]+)$/.exec(page.url())?.[1];
   expect(projectId).toBeDefined();
+  await expect(page.getByRole('heading', { name: 'R1 Acceptance Project' })).toBeVisible();
 
   // Diagnostic: verify the extracted IDs before using them downstream.
-  console.log(
+  console.warn(
     `[IDS] url=${page.url()} companyId=${String(companyId)} projectId=${String(projectId)}`,
   );
 
@@ -200,7 +204,9 @@ test('editor authors, publishes, and reads project content through the browser',
   await expect(page.getByRole('link', { name: /Administer|Edit|Manage|Dashboard/i })).toHaveCount(
     0,
   );
-  await expect(page.getByRole('button', { name: /Save|Edit|Publish/i })).toHaveCount(0);
+  // Word boundaries: the reader nav holds a "Published guide" page button,
+  // which a substring match would falsely flag as an authoring control.
+  await expect(page.getByRole('button', { name: /\b(Save|Edit|Publish)\b/i })).toHaveCount(0);
 });
 
 test('reader access entry screen is reachable without an authenticated shell', async ({ page }) => {
