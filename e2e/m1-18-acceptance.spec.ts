@@ -16,6 +16,7 @@ import { loginAsAdmin, readLatestResetTokenFromMailpit } from './acceptance-help
 
 const adminEmail = 'admin@e2e.test';
 const adminPassword = 'new-admin-password-1';
+const companyAdminPassword = 'company-admin-password-1';
 const editorPassword = 'editor-password-1';
 const sharedPassword = 'reader-password-1';
 
@@ -58,6 +59,10 @@ test('editor authors, publishes, and reads project content through the browser',
   await page.getByLabel('Company ID').fill(String(companyId));
   await page.getByLabel('Password').fill(adminPassword);
   await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('heading', { name: 'Choose a new password' })).toBeVisible();
+  await page.getByLabel('Current password').fill(adminPassword);
+  await page.getByLabel('New password').fill(companyAdminPassword);
+  await page.getByRole('button', { name: 'Save password' }).click();
   await expect(page.getByRole('heading', { name: 'Your projects' })).toBeVisible();
 
   await page.goto(`/companies/${String(companyId)}/projects/new`);
