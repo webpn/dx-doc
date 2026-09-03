@@ -60,7 +60,7 @@ test('editor authors project content through the browser until the shared-passwo
   await page.getByLabel('Password').fill(sharedPassword);
   await page.getByLabel('Label (optional)').fill('Agency reader');
   await page.getByRole('button', { name: 'Create shared password' }).click();
-  await expect(page.getByText(/Shared password created/)).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Agency reader' })).toBeVisible();
   await page.getByLabel('Invite by email').fill(editorEmail);
   await page.getByRole('button', { name: 'Send invite' }).click();
   await expect(page.getByText('Invitation sent.')).toBeVisible();
