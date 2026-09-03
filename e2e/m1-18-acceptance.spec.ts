@@ -97,7 +97,7 @@ test('editor authors, publishes, and reads project content through the browser',
     has: page.getByRole('heading', { name: 'Create a shared password', exact: true }),
   });
   await expect(
-    page.getByRole('button', { name: 'Revoke access for admin@e2e.test' }),
+    page.getByRole('button', { name: `Revoke access for ${companyAdminEmail}` }),
   ).toBeVisible();
   await expect(sharedPasswordForm).toBeVisible();
   await sharedPasswordForm.getByLabel('Password').fill(sharedPassword);
