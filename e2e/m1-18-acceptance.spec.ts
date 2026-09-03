@@ -52,7 +52,9 @@ test('editor authors project content through the browser until the shared-passwo
   // project opens with the copied catalogue available to the project; assert
   // that its catalogue screen is reachable before creating project-local data.
   await page.goto(`/projects/${String(projectId)}/catalogue`);
-  await expect(page.getByRole('heading', { name: 'Copy company catalogue' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Copy from the company catalogue' }),
+  ).toBeVisible();
 
   await page.goto(`/companies/${String(companyId)}/projects/${String(projectId)}/access`);
   await page.getByLabel('Password').fill(sharedPassword);
