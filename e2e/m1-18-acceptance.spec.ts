@@ -208,7 +208,7 @@ async function createFreePages(page: Page, projectId: string): Promise<void> {
   await page.getByLabel('Slug').fill('published-guide');
   await page.getByRole('button', { name: 'Create free page' }).click();
   await expect(page.getByRole('heading', { name: 'Edit free page' })).toBeVisible();
-  await page.getByLabel('Content').locator('[contenteditable="true"]').fill('Published content');
+  await page.getByRole('textbox', { name: 'editable markdown' }).fill('Published content');
   await page.getByRole('button', { name: 'Save free page' }).click();
   await expect(page.getByText('Free page saved.')).toBeVisible();
 
