@@ -7,13 +7,16 @@ import type * as Queries from '../queries';
 
 import { PageEditorPage } from './page-editor-page';
 
-const { update, pageData, pagesData, trackingsData, flowsData } = vi.hoisted(() => ({
-  update: vi.fn(),
-  pageData: vi.fn(),
-  pagesData: vi.fn(),
-  trackingsData: vi.fn(),
-  flowsData: vi.fn(),
-}));
+const { update, pageData, pagesData, trackingsData, flowsData, navigationEventsData } = vi.hoisted(
+  () => ({
+    update: vi.fn(),
+    pageData: vi.fn(),
+    pagesData: vi.fn(),
+    trackingsData: vi.fn(),
+    flowsData: vi.fn(),
+    navigationEventsData: vi.fn(),
+  }),
+);
 
 vi.mock('../queries', async (importOriginal) => {
   const actual = await importOriginal<typeof Queries>();
@@ -24,6 +27,7 @@ vi.mock('../queries', async (importOriginal) => {
     useTrackings: () => trackingsData() as unknown,
     useUpdatePage: () => ({ mutateAsync: update, isPending: false }) as unknown,
     useFlows: () => flowsData() as unknown,
+    useNavigationEvents: () => navigationEventsData() as unknown,
   };
 });
 
@@ -64,6 +68,7 @@ describe('PageEditorPage (REQ-DOM-001, REQ-AUTH-001)', () => {
     // The sidebar inside ProjectWorkspace reads the project's flows; without a
     // return value the mock yields undefined and the sidebar render throws.
     flowsData.mockReturnValue({ data: [], isLoading: false, error: null });
+    navigationEventsData.mockReturnValue({ data: [], isLoading: false, error: null });
   });
 
   function renderEditor(): ReturnType<typeof renderWithProviders> {

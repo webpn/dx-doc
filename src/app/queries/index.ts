@@ -45,6 +45,7 @@ export {
   useTrackings,
   useTracking,
   useNavigationEvents,
+  useCreateNavigationEvent,
   useModules,
   useProperties,
   useCreateTracking,

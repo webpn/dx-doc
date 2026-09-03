@@ -62,6 +62,12 @@ export interface NavigationEvent {
   updatedAt: string;
 }
 
+export interface NavigationEventCreateInput {
+  name: string;
+  description?: string;
+  active?: boolean;
+}
+
 export interface TrackingCreateInput {
   name: string;
   slug: string;
@@ -162,6 +168,12 @@ export const trackingsApi = {
 export const navigationEventsApi = {
   list: (projectId: string): Promise<NavigationEvent[]> =>
     apiRequest<NavigationEvent[]>(`/api/projects/${projectId}/navigation-events`),
+
+  create: (projectId: string, input: NavigationEventCreateInput): Promise<{ id: string }> =>
+    apiRequest<{ id: string }>(`/api/projects/${projectId}/navigation-events`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
 };
 
 export interface Module {

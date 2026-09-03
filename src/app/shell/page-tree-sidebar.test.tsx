@@ -6,15 +6,23 @@ import type * as Queries from '../queries';
 
 import { PageTreeSidebar } from './page-tree-sidebar';
 
-const { pagesData, flowsData, trackingsData, projectData, propertiesData, modulesData } =
-  vi.hoisted(() => ({
-    pagesData: vi.fn(),
-    flowsData: vi.fn(),
-    trackingsData: vi.fn(),
-    projectData: vi.fn(),
-    propertiesData: vi.fn(),
-    modulesData: vi.fn(),
-  }));
+const {
+  pagesData,
+  flowsData,
+  trackingsData,
+  navigationEventsData,
+  projectData,
+  propertiesData,
+  modulesData,
+} = vi.hoisted(() => ({
+  pagesData: vi.fn(),
+  flowsData: vi.fn(),
+  trackingsData: vi.fn(),
+  navigationEventsData: vi.fn(),
+  projectData: vi.fn(),
+  propertiesData: vi.fn(),
+  modulesData: vi.fn(),
+}));
 
 vi.mock('../queries', async (importOriginal) => {
   const actual = await importOriginal<typeof Queries>();
@@ -23,6 +31,7 @@ vi.mock('../queries', async (importOriginal) => {
     usePages: () => pagesData() as unknown,
     useFlows: () => flowsData() as unknown,
     useTrackings: () => trackingsData() as unknown,
+    useNavigationEvents: () => navigationEventsData() as unknown,
     useProject: () => projectData() as unknown,
     useProperties: () => propertiesData() as unknown,
     useModules: () => modulesData() as unknown,
@@ -47,6 +56,12 @@ describe('PageTreeSidebar (REQ-NAV-001)', () => {
     pagesData.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
     flowsData.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
     trackingsData.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
+    navigationEventsData.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
     projectData.mockReturnValue({
       data: { id: 'prj_1', companyId: 'cmp_1', name: 'Web analytics' },
       isLoading: false,
@@ -142,6 +157,21 @@ describe('PageTreeSidebar (REQ-NAV-001)', () => {
 
     const create = screen.getByRole('link', { name: 'New tracking' });
     expect(create).toHaveAttribute('href', '/projects/prj_1/trackings/new');
+  });
+
+  it('lists navigation events and offers creating one', async () => {
+    navigationEventsData.mockReturnValue({
+      data: [{ id: 'evt1', name: 'Checkout completed' }],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    renderSidebar();
+
+    expect(await screen.findByText('Checkout completed')).toBeInTheDocument();
+    const create = screen.getByRole('link', { name: 'New navigation event' });
+    expect(create).toHaveAttribute('href', '/projects/prj_1/navigation-events/new');
   });
 
   it('lists project properties with links to their editors and offers creating one', async () => {

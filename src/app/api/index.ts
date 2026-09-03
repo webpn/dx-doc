@@ -92,6 +92,7 @@ export {
   type RemovePropertyResult,
   type SpecificValue,
   type NavigationEvent,
+  type NavigationEventCreateInput,
   type Module,
   type DataLayerProperty,
   type PropertyDataSource,

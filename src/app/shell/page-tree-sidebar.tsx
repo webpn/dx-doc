@@ -7,6 +7,7 @@ import { apiErrorMessageKey, useTranslate } from '../i18n';
 import {
   useFlows,
   useModules,
+  useNavigationEvents,
   usePages,
   useProject,
   useProperties,
@@ -110,6 +111,7 @@ export function PageTreeSidebar(props: PageTreeSidebarProps): ReactElement {
   const pages = usePages(projectId);
   const flows = useFlows(projectId);
   const trackings = useTrackings(projectId);
+  const navigationEvents = useNavigationEvents(projectId);
   // Properties and modules are company-scoped with a project filter; the
   // project supplies the company scope, exactly as the catalogue screen does.
   const companyId = useProject(projectId).data?.companyId;
@@ -213,6 +215,39 @@ export function PageTreeSidebar(props: PageTreeSidebarProps): ReactElement {
               >
                 {tracking.name}
               </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <div className="mb-3 mt-6 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-[var(--color-ink)]">
+          {t('navigationEvent.list.title')}
+        </h2>
+        <Button asChild size="sm" variant="ghost">
+          <Link to={`/projects/${projectId}/navigation-events/new`}>
+            {t('navigationEvent.list.create')}
+          </Link>
+        </Button>
+      </div>
+
+      {navigationEvents.isLoading ? <Skeleton className="h-24" /> : null}
+
+      {navigationEvents.isError ? (
+        <Alert variant="error">{t(apiErrorMessageKey(navigationEvents.error))}</Alert>
+      ) : null}
+
+      {navigationEvents.data?.length === 0 ? (
+        <p className="text-sm text-[var(--color-muted)]">{t('navigationEvent.list.empty')}</p>
+      ) : null}
+
+      {navigationEvents.data !== undefined && navigationEvents.data.length > 0 ? (
+        <ul>
+          {navigationEvents.data.map((navigationEvent) => (
+            <li key={navigationEvent.id}>
+              <span className="block rounded-md px-2 py-1.5 text-sm text-[var(--color-ink)]">
+                {navigationEvent.name}
+              </span>
             </li>
           ))}
         </ul>

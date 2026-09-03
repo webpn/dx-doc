@@ -23,6 +23,7 @@ import { FreePageEditorPage } from './shell/free-page-editor-page';
 import { FreePageListPage } from './shell/free-page-list-page';
 import { ModuleCreatePage } from './shell/module-create-page';
 import { ModuleEditorPage } from './shell/module-editor-page';
+import { NavigationEventCreatePage } from './shell/navigation-event-create-page';
 import { PageCreatePage } from './shell/page-create-page';
 import { PageEditorPage } from './shell/page-editor-page';
 import { ProjectAccessPage } from './shell/project-access-page';
@@ -124,6 +125,10 @@ export function App(): ReactElement {
           path="/projects/:projectId/destinations/:destinationId"
         />
         <Route element={<ModuleCreatePage />} path="/projects/:projectId/modules/new" />
+        <Route
+          element={<NavigationEventCreatePage />}
+          path="/projects/:projectId/navigation-events/new"
+        />
         <Route element={<ModuleEditorPage />} path="/projects/:projectId/modules/:moduleId" />
         <Route element={<FlowListPage />} path="/projects/:projectId/flows" />
         <Route element={<FlowCreatePage />} path="/projects/:projectId/flows/new" />

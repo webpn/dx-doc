@@ -286,6 +286,19 @@ export const en = {
   'tracking.list.empty': 'No trackings yet.',
   'tracking.list.create': 'New tracking',
 
+  // Navigation event creation (REQ-DOM-002)
+  'navigationEvent.list.title': 'Navigation events',
+  'navigationEvent.list.empty': 'No navigation events yet.',
+  'navigationEvent.list.create': 'New navigation event',
+  'navigationEvent.create.title': 'New navigation event',
+  'navigationEvent.create.subtitle': 'Define an event that can trigger a tracking.',
+  'navigationEvent.create.nameLabel': 'Name',
+  'navigationEvent.create.descriptionLabel': 'Description',
+  'navigationEvent.create.activeLabel': 'Active',
+  'navigationEvent.create.submit': 'Create navigation event',
+  'navigationEvent.create.submitting': 'Creating…',
+  'navigationEvent.create.missingName': 'Enter a name.',
+
   // Tracking editor (REQ-DOM-002, REQ-DOM-008, REQ-DOM-027)
   'tracking.edit.title': 'Edit tracking',
   'tracking.edit.subtitle': 'What is measured, where it fires, and the properties it carries.',

@@ -11,6 +11,7 @@ import {
   type DestinationUpdateInput,
   type ModuleCreateInput,
   type ModuleUpdateInput,
+  type NavigationEventCreateInput,
   type Presence,
   type PropertyCreateInput,
   type PropertyUpdateInput,
@@ -42,6 +43,16 @@ export function useNavigationEvents(projectId: string | undefined) {
     queryKey: queryKeys.navigationEvents(projectId ?? ''),
     queryFn: () => navigationEventsApi.list(projectId ?? ''),
     enabled: projectId !== undefined,
+  });
+}
+
+export function useCreateNavigationEvent(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: NavigationEventCreateInput) => navigationEventsApi.create(projectId, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.navigationEvents(projectId) });
+    },
   });
 }
 

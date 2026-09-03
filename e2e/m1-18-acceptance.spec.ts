@@ -9,17 +9,16 @@ import { loginAsAdmin, readLatestResetTokenFromMailpit } from './acceptance-help
  * from Mailpit, which stands in for opening the email client.
  *
  * The final reader part is marked at the exact first unavailable screen. The
- * current client has no project shared-password management screen, and the
- * current project has no browser screen for creating the navigation event a
- * tracking requires. Keeping those blockers executable prevents this file from
- * becoming a false green release claim.
+ * current client has no project shared-password management screen. Keeping
+ * that blocker executable prevents this file from becoming a false green
+ * release claim.
  */
 
 const adminEmail = 'admin@e2e.test';
 const adminPassword = 'new-admin-password-1';
 const editorPassword = 'editor-password-1';
 
-test('editor authors project content through the browser until the navigation-event blocker', async ({
+test('editor authors project content through the browser until the shared-password blocker', async ({
   page,
   request,
 }) => {
@@ -89,33 +88,15 @@ test('editor authors project content through the browser until the navigation-ev
   await createFreePages(page, String(projectId));
   await createFlow(page, String(projectId));
 
-  // Publication is reachable from the project workspace even though this
-  // fixture cannot yet create a valid tracking. Assert the real UI surface,
-  // but do not claim that a meaningful version was published.
+  await createNavigationEvent(page, String(projectId));
+  await createTracking(page, String(projectId));
+
+  // Publication is reachable from the project workspace. Assert the real UI
+  // surface, but do not claim that a meaningful version was published.
   await page.goto(`/projects/${String(projectId)}`);
   await page.getByRole('button', { name: 'Publish' }).click();
   await expect(page.getByRole('heading', { name: 'Publish version' })).toBeVisible();
   await page.getByRole('button', { name: 'Cancel' }).click();
-
-  // A tracking cannot be created honestly without a project navigation event.
-  // There is no browser route for creating one, so stop here rather than using
-  // direct API/database setup to manufacture an acceptance fixture.
-  await page.goto(`/projects/${String(projectId)}/trackings/new`);
-  await expect(page.getByRole('heading', { name: 'New tracking' })).toBeVisible();
-  await expect(page.getByLabel('Navigation event')).toHaveValue('');
-  await page.getByLabel('Name').fill('Checkout completed');
-  await page.getByLabel('Slug').fill('checkout-completed');
-  await page.getByRole('button', { name: 'Create tracking' }).click();
-  await expect(page.getByText('Choose a navigation event.')).toBeVisible();
-  test.info().annotations.push({
-    type: 'blocker',
-    description:
-      'No browser navigation-event creation screen exists; tracking creation cannot proceed without bypassing the acceptance constraint.',
-  });
-  test.skip(
-    true,
-    'Blocked: the current browser UI cannot create the navigation event required by a tracking.',
-  );
 });
 
 test('reader acceptance stops at shared-password management blocker', async ({ page }) => {
@@ -179,4 +160,22 @@ async function createFlow(page: Page, projectId: string): Promise<void> {
   await page.getByLabel('Slug').fill('checkout-journey');
   await page.getByRole('button', { name: 'Create flow' }).click();
   await expect(page.getByRole('heading', { name: 'Edit flow' })).toBeVisible();
+}
+
+async function createNavigationEvent(page: Page, projectId: string): Promise<void> {
+  await page.goto(`/projects/${projectId}/navigation-events/new`);
+  await page.getByLabel('Name').fill('Checkout completed');
+  await page.getByLabel('Description').fill('The checkout confirmation appears.');
+  await page.getByRole('button', { name: 'Create navigation event' }).click();
+  await expect(page).toHaveURL(new RegExp(`/projects/${projectId}$`));
+}
+
+async function createTracking(page: Page, projectId: string): Promise<void> {
+  await page.goto(`/projects/${projectId}/trackings/new`);
+  await page.getByLabel('Name').fill('Checkout completed');
+  await page.getByLabel('Slug').fill('checkout-completed');
+  await page.getByLabel('Navigation event').selectOption({ label: 'Checkout completed' });
+  await page.getByLabel('Page').selectOption({ label: 'Checkout' });
+  await page.getByRole('button', { name: 'Create tracking' }).click();
+  await expect(page.getByRole('heading', { name: 'Edit tracking' })).toBeVisible();
 }
