@@ -29,6 +29,13 @@ test('editor authors, publishes, and reads project content through the browser',
   const companyAdminEmail = `r1-admin-${suffix}@e2e.test`;
   const editorEmail = `r1-editor-${suffix}@e2e.test`;
 
+  // Diagnostic: capture console errors for debugging API failures
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') {
+      console.log(`[CONSOLE ERROR] ${msg.text()}`);
+    }
+  });
+
   await loginAsAdmin(page);
 
   await page.getByRole('link', { name: 'Create a company' }).click();
@@ -79,6 +86,11 @@ test('editor authors, publishes, and reads project content through the browser',
   const projectId = /\/projects\/([^/]+)$/.exec(page.url())?.[1];
   expect(projectId).toBeDefined();
 
+  // Diagnostic: verify the extracted IDs before using them downstream.
+  console.log(
+    `[IDS] url=${page.url()} companyId=${String(companyId)} projectId=${String(projectId)}`,
+  );
+
   // Project creation is the only automatic catalogue-copy path. The new
   // project opens with the copied catalogue available to the project; assert
   // that its catalogue screen is reachable before creating project-local data.
@@ -86,6 +98,24 @@ test('editor authors, publishes, and reads project content through the browser',
   await expect(
     page.getByRole('heading', { name: 'Copy from the company catalogue' }),
   ).toBeVisible();
+
+  // Diagnostic: log all API responses to capture status codes and error bodies
+  // for the failing grants and shared-passwords calls.
+  page.on('response', async (response) => {
+    const url = response.url();
+    if (url.includes('/api/')) {
+      const status = response.status();
+      console.log(`[API] ${String(status)} ${url}`);
+      if (status >= 400) {
+        try {
+          const body: unknown = await response.json();
+          console.log(`[API ERROR BODY] ${url}: ${JSON.stringify(body)}`);
+        } catch {
+          console.log(`[API ERROR BODY] ${url}: <no json body>`);
+        }
+      }
+    }
+  });
 
   await page.goto(`/companies/${String(companyId)}/projects/${String(projectId)}/access`);
   const sharedPasswordHeading = page.getByRole('heading', {
