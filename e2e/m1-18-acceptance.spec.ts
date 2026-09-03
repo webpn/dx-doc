@@ -14,7 +14,6 @@ import { loginAsAdmin, readLatestResetTokenFromMailpit } from './acceptance-help
  * takes over before project creation and project-scoped setup.
  */
 
-const adminEmail = 'admin@e2e.test';
 const adminPassword = 'new-admin-password-1';
 const companyAdminPassword = 'company-admin-password-1';
 const editorPassword = 'editor-password-1';
@@ -27,6 +26,7 @@ test('editor authors, publishes, and reads project content through the browser',
   const suffix = Date.now().toString(36);
   const companySlug = `r1-company-${suffix}`;
   const projectSlug = `r1-project-${suffix}`;
+  const companyAdminEmail = `r1-admin-${suffix}@e2e.test`;
   const editorEmail = `r1-editor-${suffix}@e2e.test`;
 
   await loginAsAdmin(page);
@@ -34,7 +34,7 @@ test('editor authors, publishes, and reads project content through the browser',
   await page.getByRole('link', { name: 'Create a company' }).click();
   await page.getByLabel('Company name').fill('R1 Acceptance Company');
   await page.getByLabel('Slug').fill(companySlug);
-  await page.getByLabel('First administrator email').fill(adminEmail);
+  await page.getByLabel('First administrator email').fill(companyAdminEmail);
   await page.getByRole('button', { name: 'Create company' }).click();
   await expect(page).toHaveURL(/\/companies\/[^/]+\/projects$/);
   const companyId = /\/companies\/([^/]+)\/projects/.exec(page.url())?.[1];
@@ -46,16 +46,16 @@ test('editor authors, publishes, and reads project content through the browser',
   // project-scoped access-management endpoints (REQ-SEC-003/005).
   await page.context().clearCookies();
   await page.goto('/password-reset');
-  await page.getByLabel('Email address').fill(adminEmail);
+  await page.getByLabel('Email address').fill(companyAdminEmail);
   await page.getByLabel('Company ID').fill(String(companyId));
   await page.getByRole('button', { name: 'Send reset link' }).click();
   await expect(page.getByText(/reset link is on its way/i)).toBeVisible();
-  const adminResetToken = await readLatestResetTokenFromMailpit(request, adminEmail);
+  const adminResetToken = await readLatestResetTokenFromMailpit(request, companyAdminEmail);
   await page.goto(`/password-reset/confirm?token=${adminResetToken}`);
   await page.getByLabel('New password').fill(adminPassword);
   await page.getByRole('button', { name: 'Save password' }).click();
   await page.getByRole('link', { name: 'Continue to sign in' }).click();
-  await page.getByLabel('Email address').fill(adminEmail);
+  await page.getByLabel('Email address').fill(companyAdminEmail);
   await page.getByLabel('Company ID').fill(String(companyId));
   await page.getByLabel('Password').fill(adminPassword);
   await page.getByRole('button', { name: 'Sign in' }).click();
@@ -95,11 +95,9 @@ test('editor authors, publishes, and reads project content through the browser',
   const sharedPasswordForm = page.locator('form').filter({
     has: page.getByRole('heading', { name: 'Create a shared password', exact: true }),
   });
-  const noPermissionMessage = page.getByText(
-    'Only project Admins and Project Managers can create or revoke shared passwords.',
-    { exact: true },
-  );
-  await expect(sharedPasswordForm.or(noPermissionMessage)).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: `Revoke access for ${companyAdminEmail}` }),
+  ).toBeVisible();
   await expect(sharedPasswordForm).toBeVisible();
   await sharedPasswordForm.getByLabel('Password').fill(sharedPassword);
   await page.getByLabel('Label (optional)').fill('Agency reader');
@@ -108,6 +106,10 @@ test('editor authors, publishes, and reads project content through the browser',
   await page.getByLabel('Invite by email').fill(editorEmail);
   await page.getByRole('button', { name: 'Send invite' }).click();
   await expect(page.getByText('Invitation sent.')).toBeVisible();
+  const roleSelect = page.getByRole('combobox', { name: `Role for ${editorEmail}` });
+  await expect(roleSelect).toBeVisible();
+  await roleSelect.selectOption('editor');
+  await expect(roleSelect).toHaveValue('editor');
   // Request the first password through the product's reset screen. Mailpit is
   // only used as the test email client because there is no browser UI for
   // reading an email's one-time link.
@@ -118,7 +120,6 @@ test('editor authors, publishes, and reads project content through the browser',
   await page.getByRole('button', { name: 'Send reset link' }).click();
   await expect(page.getByText(/reset link is on its way/i)).toBeVisible();
   const resetToken = await readLatestResetTokenFromMailpit(request, editorEmail);
-  await page.getByRole('combobox', { name: `Role for ${editorEmail}` }).selectOption('editor');
 
   await page.goto(`/password-reset/confirm?token=${resetToken}`);
   await page.getByLabel('New password').fill(editorPassword);
