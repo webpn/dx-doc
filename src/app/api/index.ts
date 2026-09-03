@@ -36,6 +36,11 @@ export {
   ROLE_NAMES,
 } from './grants';
 export { instanceAdminApi, type InstanceAdminStepUp, type StepUpOpenInput } from './instance-admin';
+export {
+  sharedPasswordsApi,
+  type SharedPasswordCreateInput,
+  type SharedPasswordRecord,
+} from './shared-passwords';
 export { usersApi } from './users';
 export { assetsApi, type AssetRecord, type AssetUploadResult } from './assets';
 export {

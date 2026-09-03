@@ -19,6 +19,11 @@ export {
 export { useVerifySharedPassword, usePublishedReaderContent } from './reader';
 export { useProjectSearch } from './search';
 export { useGrants, useSetGrant, useRemoveGrant } from './grants';
+export {
+  useSharedPasswords,
+  useCreateSharedPassword,
+  useRemoveSharedPassword,
+} from './shared-passwords';
 export { useInviteUser } from './users';
 export { usePages, usePage, useCreatePage, useUpdatePage, useDeletePage } from './pages';
 export {

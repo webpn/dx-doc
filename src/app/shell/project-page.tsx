@@ -71,6 +71,12 @@ export function ProjectPage(): ReactElement {
           >
             {t('project.search.open')}
           </Link>
+          <Link
+            className="inline-flex h-10 w-fit items-center rounded-md border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-ink)]"
+            to={`/projects/${project.data.id}/reader-access`}
+          >
+            {t('project.readerLink')}
+          </Link>
           <Button
             onClick={() => {
               setPublishOpen(true);

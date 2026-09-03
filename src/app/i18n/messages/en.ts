@@ -595,6 +595,34 @@ export const en = {
   'reader.notPublished.description':
     'Nothing has been published for this project yet. Check back once the team publishes a version.',
 
+  // Project shared-password management (M1.18, REQ-SEC-005)
+  'access.passwords.title': 'Shared passwords',
+  'access.passwords.description':
+    'Give readers password-protected access to this project’s published documentation.',
+  'access.passwords.loadError': 'Shared passwords could not be loaded.',
+  'access.passwords.empty': 'No shared passwords have been created for this project yet.',
+  'access.passwords.labelColumn': 'Label',
+  'access.passwords.expiresColumn': 'Expires',
+  'access.passwords.statusColumn': 'Status',
+  'access.passwords.actionsColumn': 'Actions',
+  'access.passwords.active': 'Active',
+  'access.passwords.expired': 'Expired',
+  'access.passwords.never': 'Never',
+  'access.passwords.revoke': 'Revoke',
+  'access.passwords.revokeFor': 'Revoke shared password {label}',
+  'access.passwords.createTitle': 'Create a shared password',
+  'access.passwords.labelLabel': 'Label (optional)',
+  'access.passwords.passwordLabel': 'Password',
+  'access.passwords.expiryLabel': 'Expiry (optional)',
+  'access.passwords.submit': 'Create shared password',
+  'access.passwords.submitting': 'Creating…',
+  'access.passwords.missingPassword': 'Enter a password.',
+  'access.passwords.created':
+    'Shared password created. Share the password you entered with the reader.',
+  'access.passwords.unauthorized':
+    'Only project Admins and Project Managers can create or revoke shared passwords.',
+  'project.readerLink': 'Open reader access',
+
   // Publish flow (M1.17, REQ-VER-002, REQ-VER-004, REQ-VER-005)
   'publish.indicator.one': '1 unpublished change.',
   'publish.indicator.many': '{count} unpublished changes.',

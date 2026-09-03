@@ -20,8 +20,18 @@ import { useState, type ReactElement, type SyntheticEvent } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { ROLE_NAMES, type RoleName } from '../api';
-import { apiErrorMessageKey, useTranslate } from '../i18n';
-import { queryKeys, useGrants, useInviteUser, useRemoveGrant, useSetGrant } from '../queries';
+import { apiErrorMessageKey, useFormatters, useTranslate } from '../i18n';
+import {
+  queryKeys,
+  useCreateSharedPassword,
+  useGrants,
+  useInviteUser,
+  useRemoveGrant,
+  useRemoveSharedPassword,
+  useSetGrant,
+  useSharedPasswords,
+} from '../queries';
+import { useSessionStore } from '../stores/session-store';
 
 /**
  * Who can reach this project, and in which role (M1.15).
@@ -34,16 +44,26 @@ import { queryKeys, useGrants, useInviteUser, useRemoveGrant, useSetGrant } from
  */
 export function ProjectAccessPage(): ReactElement {
   const t = useTranslate();
+  const { formatDateTime } = useFormatters();
   const queryClient = useQueryClient();
   const { companyId, projectId } = useParams<{ companyId: string; projectId: string }>();
   const grants = useGrants(projectId ?? '');
   const inviteUser = useInviteUser(companyId ?? '');
   const setGrant = useSetGrant(projectId ?? '');
   const removeGrant = useRemoveGrant(projectId ?? '');
+  const sharedPasswords = useSharedPasswords(projectId ?? '');
+  const createSharedPassword = useCreateSharedPassword(projectId ?? '');
+  const removeSharedPassword = useRemoveSharedPassword(projectId ?? '');
+  const session = useSessionStore((state) => state.session);
 
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordNotice, setPasswordNotice] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [passwordLabel, setPasswordLabel] = useState('');
+  const [expiresAt, setExpiresAt] = useState('');
 
   async function handleInvite(event: SyntheticEvent): Promise<void> {
     event.preventDefault();
@@ -86,7 +106,48 @@ export function ProjectAccessPage(): ReactElement {
     }
   }
 
+  async function handleCreatePassword(event: SyntheticEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    setPasswordError(null);
+    setPasswordNotice(null);
+    if (password === '') {
+      setPasswordError(t('access.passwords.missingPassword'));
+      return;
+    }
+
+    try {
+      await createSharedPassword.mutateAsync({
+        password,
+        ...(passwordLabel.trim() === '' ? {} : { label: passwordLabel.trim() }),
+        ...(expiresAt === '' ? {} : { expiresAt: new Date(expiresAt).toISOString() }),
+      });
+      setPasswordNotice(t('access.passwords.created'));
+      setPassword('');
+      setPasswordLabel('');
+      setExpiresAt('');
+    } catch (cause) {
+      setPasswordError(t(apiErrorMessageKey(cause)));
+    }
+  }
+
+  async function handleRevokePassword(id: string): Promise<void> {
+    setPasswordError(null);
+    try {
+      await removeSharedPassword.mutateAsync(id);
+    } catch (cause) {
+      setPasswordError(t(apiErrorMessageKey(cause)));
+    }
+  }
+
   const rows = grants.data?.grants ?? [];
+  const passwordRows = sharedPasswords.data ?? [];
+  const canManagePasswords =
+    session?.instanceAdmin === true ||
+    rows.some(
+      (row) =>
+        row.userId === session?.userId &&
+        (row.roleName === 'admin' || row.roleName === 'project_manager'),
+    );
 
   return (
     <div className="grid gap-6">
@@ -157,6 +218,116 @@ export function ProjectAccessPage(): ReactElement {
             </TableBody>
           </Table>
         ) : null}
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('access.passwords.title')}</CardTitle>
+          <CardDescription>{t('access.passwords.description')}</CardDescription>
+        </CardHeader>
+        {sharedPasswords.isLoading ? <Skeleton className="h-24" /> : null}
+        {sharedPasswords.isError ? (
+          <Alert variant="error">{t('access.passwords.loadError')}</Alert>
+        ) : null}
+        {!sharedPasswords.isLoading && !sharedPasswords.isError && passwordRows.length === 0 ? (
+          <p className="text-[var(--color-muted)]">{t('access.passwords.empty')}</p>
+        ) : null}
+        {passwordRows.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('access.passwords.labelColumn')}</TableHead>
+                <TableHead>{t('access.passwords.expiresColumn')}</TableHead>
+                <TableHead>{t('access.passwords.statusColumn')}</TableHead>
+                {canManagePasswords ? (
+                  <TableHead>{t('access.passwords.actionsColumn')}</TableHead>
+                ) : null}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {passwordRows.map((row) => {
+                const expired = row.expiresAt !== null && Date.parse(row.expiresAt) <= Date.now();
+                const label = row.label ?? row.id;
+                return (
+                  <TableRow key={row.id}>
+                    <TableCell>{label}</TableCell>
+                    <TableCell>
+                      {row.expiresAt === null
+                        ? t('access.passwords.never')
+                        : formatDateTime(row.expiresAt)}
+                    </TableCell>
+                    <TableCell>
+                      {expired ? t('access.passwords.expired') : t('access.passwords.active')}
+                    </TableCell>
+                    {canManagePasswords ? (
+                      <TableCell>
+                        <Button
+                          aria-label={t('access.passwords.revokeFor', { label })}
+                          onClick={() => {
+                            void handleRevokePassword(row.id);
+                          }}
+                          type="button"
+                          variant="secondary"
+                        >
+                          {t('access.passwords.revoke')}
+                        </Button>
+                      </TableCell>
+                    ) : null}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        ) : null}
+        {canManagePasswords ? (
+          <form className="mt-6 grid gap-4" onSubmit={(event) => void handleCreatePassword(event)}>
+            <h3 className="text-lg font-semibold text-[var(--color-ink)]">
+              {t('access.passwords.createTitle')}
+            </h3>
+            <Field htmlFor="shared-password-label" label={t('access.passwords.labelLabel')}>
+              <Input
+                id="shared-password-label"
+                onChange={(event) => {
+                  setPasswordLabel(event.target.value);
+                }}
+                value={passwordLabel}
+              />
+            </Field>
+            <Field htmlFor="shared-password-value" label={t('access.passwords.passwordLabel')}>
+              <Input
+                autoComplete="new-password"
+                id="shared-password-value"
+                minLength={6}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                }}
+                type="password"
+                value={password}
+              />
+            </Field>
+            <Field htmlFor="shared-password-expiry" label={t('access.passwords.expiryLabel')}>
+              <Input
+                id="shared-password-expiry"
+                onChange={(event) => {
+                  setExpiresAt(event.target.value);
+                }}
+                type="datetime-local"
+                value={expiresAt}
+              />
+            </Field>
+            {passwordNotice !== null ? <Alert variant="success">{passwordNotice}</Alert> : null}
+            {passwordError !== null ? <Alert variant="error">{passwordError}</Alert> : null}
+            <Button disabled={createSharedPassword.isPending} type="submit">
+              {createSharedPassword.isPending
+                ? t('access.passwords.submitting')
+                : t('access.passwords.submit')}
+            </Button>
+          </form>
+        ) : (
+          <p className="mt-6 text-sm text-[var(--color-muted)]">
+            {t('access.passwords.unauthorized')}
+          </p>
+        )}
       </Card>
 
       <Card>

@@ -10,6 +10,7 @@ export const queryKeys = {
   projects: (companyId: string) => ['companies', companyId, 'projects'] as const,
   project: (projectId: string) => ['projects', projectId] as const,
   grants: (projectId: string) => ['projects', projectId, 'grants'] as const,
+  sharedPasswords: (projectId: string) => ['projects', projectId, 'shared-passwords'] as const,
   pages: (projectId: string) => ['projects', projectId, 'pages'] as const,
   page: (pageId: string) => ['pages', pageId] as const,
   freePages: (companyId: string, projectId: string | null) =>

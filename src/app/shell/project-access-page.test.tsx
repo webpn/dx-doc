@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderWithProviders } from '../../../tests/support/render-with-providers';
 import type { RoleName } from '../api';
+import { useSessionStore } from '../stores/session-store';
 
 import { ProjectAccessPage } from './project-access-page';
 
@@ -20,6 +21,24 @@ import { ProjectAccessPage } from './project-access-page';
 const invite = vi.fn();
 const setGrant = vi.fn();
 const removeGrant = vi.fn();
+const createSharedPassword = vi.fn();
+const removeSharedPassword = vi.fn();
+const sharedPasswordQuery = vi.fn<
+  () => {
+    data:
+      | {
+          id: string;
+          projectId: string;
+          label: string | null;
+          expiresAt: string | null;
+          createdAt: string;
+          updatedAt: string;
+        }[]
+      | undefined;
+    isLoading: boolean;
+    isError: boolean;
+  }
+>();
 // Typed so the mocked hook's return value is not `any`: an untyped vi.fn() here
 // makes every `grants()` call an unsafe return.
 const grants = vi.fn<
@@ -35,13 +54,28 @@ vi.mock('../queries', () => ({
   useSetGrant: () => ({ mutateAsync: setGrant, isPending: false }),
   useRemoveGrant: () => ({ mutateAsync: removeGrant, isPending: false }),
   useGrants: () => grants(),
+  useSharedPasswords: () => sharedPasswordQuery(),
+  useCreateSharedPassword: () => ({ mutateAsync: createSharedPassword, isPending: false }),
+  useRemoveSharedPassword: () => ({ mutateAsync: removeSharedPassword, isPending: false }),
 }));
 
 beforeEach(() => {
   invite.mockReset();
   setGrant.mockReset();
   removeGrant.mockReset();
+  sharedPasswordQuery.mockReset();
+  createSharedPassword.mockReset();
+  removeSharedPassword.mockReset();
   grants.mockReset();
+  useSessionStore.setState({
+    session: {
+      userId: 'usr_1',
+      companyId: 'cmp_1',
+      passwordChangeRequired: false,
+      instanceAdmin: false,
+    },
+  });
+  sharedPasswordQuery.mockReturnValue({ data: [], isLoading: false, isError: false });
   grants.mockReturnValue({ data: { grants: [] }, isLoading: false, isError: false });
 });
 
@@ -53,6 +87,98 @@ const route = '/companies/cmp_1/projects/prj_1/access';
 const routePath = '/companies/:companyId/projects/:projectId/access';
 
 describe('ProjectAccessPage', () => {
+  it('lists shared passwords without exposing their secrets', async () => {
+    sharedPasswordQuery.mockReturnValue({
+      data: [
+        {
+          id: 'sp_1',
+          projectId: 'prj_1',
+          label: 'Agency',
+          expiresAt: null,
+          createdAt: '2026-09-01T00:00:00.000Z',
+          updatedAt: '2026-09-01T00:00:00.000Z',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+    });
+    grants.mockReturnValue({
+      data: { grants: [{ userId: 'usr_1', email: 'usr1@acme.test', roleName: 'admin' }] },
+      isLoading: false,
+      isError: false,
+    });
+
+    renderWithProviders(<ProjectAccessPage />, { route, routePath });
+
+    expect(await screen.findByText('Agency')).toBeInTheDocument();
+    expect(screen.getByText('Never')).toBeInTheDocument();
+    expect(screen.queryByText(/hash|secret/i)).not.toBeInTheDocument();
+  });
+
+  it('creates a shared password with its optional expiry', async () => {
+    const user = userEvent.setup();
+    grants.mockReturnValue({
+      data: { grants: [{ userId: 'usr_1', email: 'usr1@acme.test', roleName: 'project_manager' }] },
+      isLoading: false,
+      isError: false,
+    });
+    createSharedPassword.mockResolvedValue({ id: 'sp_2' });
+
+    renderWithProviders(<ProjectAccessPage />, { route, routePath });
+
+    await user.type(screen.getByLabelText('Label (optional)'), 'Agency');
+    await user.type(screen.getByLabelText('Password'), 'reader-password');
+    await user.type(screen.getByLabelText('Expiry (optional)'), '2030-01-01T12:00');
+    await user.click(screen.getByRole('button', { name: 'Create shared password' }));
+
+    await waitFor(() => {
+      expect(createSharedPassword).toHaveBeenCalledWith({
+        password: 'reader-password',
+        label: 'Agency',
+        expiresAt: new Date('2030-01-01T12:00').toISOString(),
+      });
+    });
+  });
+
+  it('revokes a shared password', async () => {
+    const user = userEvent.setup();
+    grants.mockReturnValue({
+      data: { grants: [{ userId: 'usr_1', email: 'usr1@acme.test', roleName: 'admin' }] },
+      isLoading: false,
+      isError: false,
+    });
+    sharedPasswordQuery.mockReturnValue({
+      data: [
+        {
+          id: 'sp_1',
+          projectId: 'prj_1',
+          label: 'Agency',
+          expiresAt: null,
+          createdAt: '2026-09-01T00:00:00.000Z',
+          updatedAt: '2026-09-01T00:00:00.000Z',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+    });
+    removeSharedPassword.mockResolvedValue({ ok: true });
+
+    renderWithProviders(<ProjectAccessPage />, { route, routePath });
+    await user.click(await screen.findByRole('button', { name: 'Revoke shared password Agency' }));
+
+    await waitFor(() => {
+      expect(removeSharedPassword).toHaveBeenCalledWith('sp_1');
+    });
+  });
+
+  it('shows a shared-password loading error', async () => {
+    sharedPasswordQuery.mockReturnValue({ data: undefined, isLoading: false, isError: true });
+
+    renderWithProviders(<ProjectAccessPage />, { route, routePath });
+
+    expect(await screen.findByText('Shared passwords could not be loaded.')).toBeInTheDocument();
+  });
+
   it('lists current grants with their roles', async () => {
     grants.mockReturnValue({
       data: {

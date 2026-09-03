@@ -8,15 +8,14 @@ import { loginAsAdmin, readLatestResetTokenFromMailpit } from './acceptance-help
  * authoring. The only non-product request is reading an invitation reset link
  * from Mailpit, which stands in for opening the email client.
  *
- * The final reader part is marked at the exact first unavailable screen. The
- * current client has no project shared-password management screen. Keeping
- * that blocker executable prevents this file from becoming a false green
- * release claim.
+ * The reader part uses the browser management and verification screens. It
+ * stops only if the authored project still cannot produce a published snapshot.
  */
 
 const adminEmail = 'admin@e2e.test';
 const adminPassword = 'new-admin-password-1';
 const editorPassword = 'editor-password-1';
+const sharedPassword = 'reader-password-1';
 
 test('editor authors project content through the browser until the shared-password blocker', async ({
   page,
@@ -56,6 +55,10 @@ test('editor authors project content through the browser until the shared-passwo
   await expect(page.getByRole('heading', { name: 'Copy company catalogue' })).toBeVisible();
 
   await page.goto(`/companies/${String(companyId)}/projects/${String(projectId)}/access`);
+  await page.getByLabel('Password').fill(sharedPassword);
+  await page.getByLabel('Label (optional)').fill('Agency reader');
+  await page.getByRole('button', { name: 'Create shared password' }).click();
+  await expect(page.getByText(/Shared password created/)).toBeVisible();
   await page.getByLabel('Invite by email').fill(editorEmail);
   await page.getByRole('button', { name: 'Send invite' }).click();
   await expect(page.getByText('Invitation sent.')).toBeVisible();
@@ -97,17 +100,23 @@ test('editor authors project content through the browser until the shared-passwo
   await page.getByRole('button', { name: 'Publish' }).click();
   await expect(page.getByRole('heading', { name: 'Publish version' })).toBeVisible();
   await page.getByRole('button', { name: 'Cancel' }).click();
-});
 
-test('reader acceptance stops at shared-password management blocker', async ({ page }) => {
-  await page.goto('/projects/unavailable/reader-access');
-  await expect(page.getByRole('heading', { name: 'Access published documentation' })).toBeVisible();
+  await page.getByRole('link', { name: 'Open reader access' }).click();
+  await page.getByLabel('Shared password').fill(sharedPassword);
+  await page.getByRole('button', { name: 'Open documentation' }).click();
+  await expect(page).toHaveURL(new RegExp(`/projects/${String(projectId)}/reader$`));
+  await expect(page.getByRole('heading', { name: 'Nothing published yet' })).toBeVisible();
   test.info().annotations.push({
     type: 'blocker',
     description:
-      'No browser screen exists to configure the project shared password required for reader access.',
+      'The current authoring flow reaches publication review but does not create a published snapshot, so the read-only published view cannot be demonstrated.',
   });
-  test.skip(true, 'Blocked: the current client has no project shared-password management screen.');
+  test.skip(true, 'Blocked: no published snapshot is available for this authored project.');
+});
+
+test('reader access entry screen is reachable without an authenticated shell', async ({ page }) => {
+  await page.goto('/projects/unavailable/reader-access');
+  await expect(page.getByRole('heading', { name: 'Access published documentation' })).toBeVisible();
 });
 
 async function createPage(page: Page, projectId: string): Promise<void> {
