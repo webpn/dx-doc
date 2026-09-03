@@ -36,6 +36,24 @@ test('editor authors, publishes, and reads project content through the browser',
     }
   });
 
+  // Diagnostic: log all API responses to capture status codes and error bodies.
+  // Attached up front so project creation is captured too.
+  page.on('response', async (response) => {
+    const url = response.url();
+    if (url.includes('/api/')) {
+      const status = response.status();
+      console.log(`[API] ${String(status)} ${url}`);
+      if (status >= 400) {
+        try {
+          const body: unknown = await response.json();
+          console.log(`[API ERROR BODY] ${url}: ${JSON.stringify(body)}`);
+        } catch {
+          console.log(`[API ERROR BODY] ${url}: <no json body>`);
+        }
+      }
+    }
+  });
+
   await loginAsAdmin(page);
 
   await page.getByRole('link', { name: 'Create a company' }).click();
@@ -98,24 +116,6 @@ test('editor authors, publishes, and reads project content through the browser',
   await expect(
     page.getByRole('heading', { name: 'Copy from the company catalogue' }),
   ).toBeVisible();
-
-  // Diagnostic: log all API responses to capture status codes and error bodies
-  // for the failing grants and shared-passwords calls.
-  page.on('response', async (response) => {
-    const url = response.url();
-    if (url.includes('/api/')) {
-      const status = response.status();
-      console.log(`[API] ${String(status)} ${url}`);
-      if (status >= 400) {
-        try {
-          const body: unknown = await response.json();
-          console.log(`[API ERROR BODY] ${url}: ${JSON.stringify(body)}`);
-        } catch {
-          console.log(`[API ERROR BODY] ${url}: <no json body>`);
-        }
-      }
-    }
-  });
 
   await page.goto(`/companies/${String(companyId)}/projects/${String(projectId)}/access`);
   const sharedPasswordHeading = page.getByRole('heading', {
