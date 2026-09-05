@@ -214,9 +214,7 @@ describe('PageService.create (REQ-DOM-001, REQ-IMP-003)', () => {
       'p',
     );
 
-    expect(
-      await service.create('u1', 'proj-1', { name: 'X', parentId: 'other-page' }),
-    ).toEqual({
+    expect(await service.create('u1', 'proj-1', { name: 'X', parentId: 'other-page' })).toEqual({
       ok: false,
       error: { kind: 'cross_project_parent' },
     });
@@ -393,11 +391,7 @@ describe('PageService slugs — system-generated (auto-managed-slugs)', () => {
 
   it('regenerates the slug on custom_id upsert with a new name', async () => {
     const { pages, service } = build();
-    const first = await service.create(
-      'u1',
-      'proj-1',
-      { name: 'Home', customId: 'legacy:home' },
-    );
+    const first = await service.create('u1', 'proj-1', { name: 'Home', customId: 'legacy:home' });
     const pageId = first.ok ? first.value.pageId : '';
 
     await service.create('u1', 'proj-1', { name: 'Homepage', customId: 'legacy:home' });
