@@ -23,7 +23,7 @@ vi.mock('../queries', async (importOriginal) => {
   };
 });
 
-const HOME_PAGE = { id: 'pg1', name: 'Home', slug: 'home' };
+const HOME_PAGE = { id: 'pg1', name: 'Home' };
 const PAGE_VIEW_EVENT = { id: 'evt1', name: 'Page view' };
 
 describe('TrackingCreatePage (REQ-DOM-002)', () => {

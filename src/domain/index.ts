@@ -5,3 +5,4 @@
 export * from './entities';
 export * from './composition';
 export * from './mermaid';
+export * from './slug';

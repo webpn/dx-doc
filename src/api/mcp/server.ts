@@ -355,11 +355,10 @@ export const MCP_TOOLS: McpTool[] = [
       properties: {
         projectId: { type: 'string', description: 'Project ID' },
         name: { type: 'string', description: 'Page name' },
-        slug: { type: 'string', description: 'Page slug' },
         parentId: { type: 'string', description: 'Parent Page ID (optional)' },
         customId: { type: 'string', description: 'External source custom_id (optional)' },
       },
-      required: ['projectId', 'name', 'slug'],
+      required: ['projectId', 'name'],
     },
   },
   {

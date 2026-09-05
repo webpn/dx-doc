@@ -27,7 +27,6 @@ function toProject(row: ProjectRow): ProjectRecord {
     id: row.id,
     companyId: row.company_id,
     name: row.name,
-    slug: row.slug,
     description: row.description,
     icon: row.icon,
     platform: row.platform as Platform,
@@ -44,14 +43,19 @@ function toProject(row: ProjectRow): ProjectRecord {
 export class SqliteProjectRepository implements ProjectRepository {
   constructor(private readonly db: Db) {}
 
-  async createProject(project: ProjectRecord): Promise<void> {
+  /**
+   * The live slug is internal-only (auto-managed-slugs): it is written to
+   * the `slug` column from the separate argument and stripped from every
+   * record the mappers return, so it never serializes.
+   */
+  async createProject(project: ProjectRecord, slug: string): Promise<void> {
     await this.db
       .insertInto('projects')
       .values({
         id: project.id,
         company_id: project.companyId,
         name: project.name,
-        slug: project.slug,
+        slug,
         description: project.description,
         icon: project.icon,
         platform: project.platform,
@@ -104,12 +108,16 @@ export class SqliteProjectRepository implements ProjectRepository {
     return rows.map((r) => toProject(r));
   }
 
-  async updateProject(project: ProjectRecord, expectedUpdatedAt?: string): Promise<boolean> {
+  async updateProject(
+    project: ProjectRecord,
+    slug?: string,
+    expectedUpdatedAt?: string,
+  ): Promise<boolean> {
     let query = this.db
       .updateTable('projects')
       .set({
         name: project.name,
-        slug: project.slug,
+        ...(slug !== undefined ? { slug } : {}),
         description: project.description,
         icon: project.icon,
         platform: project.platform,

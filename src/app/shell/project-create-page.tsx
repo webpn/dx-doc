@@ -34,7 +34,6 @@ export function ProjectCreatePage(): ReactElement {
   const createProject = useCreateProject(companyId ?? '');
 
   const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
   const [platform, setPlatform] = useState<Platform | ''>('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -45,10 +44,6 @@ export function ProjectCreatePage(): ReactElement {
 
     if (name.trim() === '') {
       setError(t('project.create.missingName'));
-      return;
-    }
-    if (slug.trim() === '') {
-      setError(t('project.create.missingSlug'));
       return;
     }
     if (platform === '') {
@@ -64,7 +59,6 @@ export function ProjectCreatePage(): ReactElement {
     try {
       const { id } = await createProject.mutateAsync({
         name: name.trim(),
-        slug: slug.trim(),
         platform,
         ...(trimmedDescription === '' ? {} : { description: trimmedDescription }),
       });
@@ -94,20 +88,6 @@ export function ProjectCreatePage(): ReactElement {
               setName(event.target.value);
             }}
             value={name}
-          />
-        </Field>
-
-        <Field
-          hint={t('project.create.slugHint')}
-          htmlFor="project-slug"
-          label={t('project.create.slugLabel')}
-        >
-          <Input
-            id="project-slug"
-            onChange={(event) => {
-              setSlug(event.target.value);
-            }}
-            value={slug}
           />
         </Field>
 

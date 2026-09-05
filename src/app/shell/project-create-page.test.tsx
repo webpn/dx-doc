@@ -46,17 +46,21 @@ describe('ProjectCreatePage', () => {
     renderWithProviders(<ProjectCreatePage />, { route, routePath });
 
     await user.type(screen.getByLabelText('Project name'), 'Marketing site');
-    await user.type(screen.getByLabelText('Slug'), 'marketing-site');
     await user.selectOptions(screen.getByLabelText('Platform'), 'web');
     await user.click(screen.getByRole('button', { name: 'Create project' }));
 
     await waitFor(() => {
       expect(createProject).toHaveBeenCalledWith({
         name: 'Marketing site',
-        slug: 'marketing-site',
         platform: 'web',
       });
     });
+  });
+
+  it('does not ask for a slug — it is server-generated', () => {
+    renderWithProviders(<ProjectCreatePage />, { route, routePath });
+
+    expect(screen.queryByLabelText('Slug')).not.toBeInTheDocument();
   });
 
   it('requires a platform choice rather than defaulting to one', async () => {
@@ -65,7 +69,6 @@ describe('ProjectCreatePage', () => {
     renderWithProviders(<ProjectCreatePage />, { route, routePath });
 
     await user.type(screen.getByLabelText('Project name'), 'Marketing site');
-    await user.type(screen.getByLabelText('Slug'), 'marketing-site');
     await user.click(screen.getByRole('button', { name: 'Create project' }));
 
     expect(createProject).not.toHaveBeenCalled();
@@ -79,7 +82,6 @@ describe('ProjectCreatePage', () => {
     renderWithProviders(<ProjectCreatePage />, { route, routePath });
 
     await user.type(screen.getByLabelText('Project name'), 'Marketing site');
-    await user.type(screen.getByLabelText('Slug'), 'marketing-site');
     await user.selectOptions(screen.getByLabelText('Platform'), 'ios');
     await user.click(screen.getByRole('button', { name: 'Create project' }));
 
@@ -101,7 +103,6 @@ describe('ProjectCreatePage', () => {
     renderWithProviders(<ProjectCreatePage />, { route, routePath });
 
     await user.type(screen.getByLabelText('Project name'), 'Marketing site');
-    await user.type(screen.getByLabelText('Slug'), 'marketing-site');
     await user.selectOptions(screen.getByLabelText('Platform'), 'web');
     await user.click(screen.getByRole('button', { name: 'Create project' }));
 

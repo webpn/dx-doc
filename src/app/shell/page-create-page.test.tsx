@@ -21,7 +21,7 @@ vi.mock('../queries', async (importOriginal) => {
   };
 });
 
-const HOME_PAGE = { id: 'pg1', name: 'Home', slug: 'home' };
+const HOME_PAGE = { id: 'pg1', name: 'Home' };
 
 describe('PageCreatePage (REQ-DOM-001)', () => {
   beforeEach(() => {
@@ -46,15 +46,10 @@ describe('PageCreatePage (REQ-DOM-001)', () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it('rejects an empty slug', async () => {
-    const user = userEvent.setup();
+  it('does not ask for a slug — it is server-generated', () => {
     renderCreate();
 
-    await user.type(screen.getByLabelText('Name'), 'Checkout');
-    await user.click(screen.getByRole('button', { name: 'Create page' }));
-
-    expect(await screen.findByText('Enter a slug.')).toBeInTheDocument();
-    expect(create).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText('Slug')).not.toBeInTheDocument();
   });
 
   it('offers the project’s other pages as a parent choice', () => {
@@ -69,11 +64,10 @@ describe('PageCreatePage (REQ-DOM-001)', () => {
     renderCreate();
 
     await user.type(screen.getByLabelText('Name'), 'Checkout');
-    await user.type(screen.getByLabelText('Slug'), 'checkout');
     await user.click(screen.getByRole('button', { name: 'Create page' }));
 
     await waitFor(() => {
-      expect(create).toHaveBeenCalledWith({ name: 'Checkout', slug: 'checkout' });
+      expect(create).toHaveBeenCalledWith({ name: 'Checkout' });
     });
   });
 
@@ -83,14 +77,12 @@ describe('PageCreatePage (REQ-DOM-001)', () => {
     renderCreate();
 
     await user.type(screen.getByLabelText('Name'), 'Checkout step 2');
-    await user.type(screen.getByLabelText('Slug'), 'checkout-step-2');
     await user.selectOptions(screen.getByLabelText('Parent page'), 'pg1');
     await user.click(screen.getByRole('button', { name: 'Create page' }));
 
     await waitFor(() => {
       expect(create).toHaveBeenCalledWith({
         name: 'Checkout step 2',
-        slug: 'checkout-step-2',
         parentId: 'pg1',
       });
     });

@@ -19,7 +19,6 @@ function project(overrides: Partial<ProjectRecord>): ProjectRecord {
     id: 'p1',
     companyId: 'c1',
     name: 'Web',
-    slug: 'web',
     platform: 'web',
     description: null,
     icon: null,
@@ -61,13 +60,15 @@ describe('SqliteProjectRepository (against the real schema)', () => {
   });
 
   it('creates and reads a project back', async () => {
-    await repo.createProject(project({}));
+    await repo.createProject(project({}), 'web');
 
     const stored = await repo.getProjectById('p1');
     expect(stored?.name).toBe('Web');
     expect(stored?.platform).toBe('web');
     expect(stored?.lifecycleState).toBe('active');
     expect(stored?.customId).toBeNull();
+    // UUID-only shape: the internal slug never serializes.
+    expect(stored !== null && 'slug' in stored).toBe(false);
 
     const list = await repo.listProjectsForCompany('c1');
     expect(list).toHaveLength(1);
@@ -75,21 +76,21 @@ describe('SqliteProjectRepository (against the real schema)', () => {
   });
 
   it('finds by company + slug', async () => {
-    await repo.createProject(project({}));
+    await repo.createProject(project({}), 'web');
 
     expect((await repo.getProjectByCompanyAndSlug('c1', 'web'))?.id).toBe('p1');
     expect(await repo.getProjectByCompanyAndSlug('c1', 'nope')).toBeNull();
   });
 
   it('finds by custom_id scoped to the company', async () => {
-    await repo.createProject(project({ customId: 'legacy:web' }));
+    await repo.createProject(project({ customId: 'legacy:web' }), 'web');
 
     expect((await repo.getProjectByCustomId('c1', 'legacy:web'))?.id).toBe('p1');
     expect(await repo.getProjectByCustomId('other-company', 'legacy:web')).toBeNull();
   });
 
   it('updates a project', async () => {
-    await repo.createProject(project({}));
+    await repo.createProject(project({}), 'web');
 
     const stored = await repo.getProjectById('p1');
     if (stored === null) {
@@ -97,10 +98,25 @@ describe('SqliteProjectRepository (against the real schema)', () => {
     }
     stored.name = 'Renamed';
     stored.customId = 'legacy:web';
-    await repo.updateProject(stored);
+    await repo.updateProject(stored, 'renamed');
 
     const reloaded = await repo.getProjectById('p1');
     expect(reloaded?.name).toBe('Renamed');
     expect(reloaded?.customId).toBe('legacy:web');
+    // The regenerated slug resolves through the internal lookup only.
+    expect((await repo.getProjectByCompanyAndSlug('c1', 'renamed'))?.id).toBe('p1');
+  });
+
+  it('leaves the slug untouched when no slug is passed', async () => {
+    await repo.createProject(project({}), 'web');
+
+    const stored = await repo.getProjectById('p1');
+    if (stored === null) {
+      throw new Error('expected project to exist');
+    }
+    stored.description = 'lorem';
+    await repo.updateProject(stored);
+
+    expect((await repo.getProjectByCompanyAndSlug('c1', 'web'))?.id).toBe('p1');
   });
 });
