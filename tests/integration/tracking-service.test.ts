@@ -409,7 +409,7 @@ describe('TrackingService (M1.1 Application Service)', () => {
 
       const created = await projectService.create(adminId, companyId, {
         name: 'Fresh project',
-                platform: 'web',
+        platform: 'web',
       });
       expect(created.ok).toBe(true);
       if (!created.ok) throw new Error('create failed');
@@ -443,7 +443,7 @@ describe('TrackingService (M1.1 Application Service)', () => {
     it('creates nothing extra when the company catalogue is empty (REQ-DOM-019)', async () => {
       const created = await projectService.create(adminId, companyId, {
         name: 'Bare project',
-                platform: 'web',
+        platform: 'web',
       });
       expect(created.ok).toBe(true);
       if (!created.ok) throw new Error('create failed');
@@ -457,7 +457,7 @@ describe('TrackingService (M1.1 Application Service)', () => {
 
       const created = await projectService.create(adminId, companyId, {
         name: 'Idempotent project',
-                platform: 'web',
+        platform: 'web',
       });
       expect(created.ok).toBe(true);
       if (!created.ok) throw new Error('create failed');
@@ -491,7 +491,7 @@ describe('TrackingService (M1.1 Application Service)', () => {
 
       const created = await projectService.create(adminId, companyId, {
         name: 'Repeatable project',
-                platform: 'web',
+        platform: 'web',
       });
       if (!created.ok) throw new Error('create failed');
       const newProjectId = created.value.projectId;

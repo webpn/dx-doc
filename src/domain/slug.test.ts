@@ -30,7 +30,7 @@ describe('slugify (auto-managed-slugs)', () => {
 
 describe('resolveUniqueSlug (auto-managed-slugs)', () => {
   it('returns the base when it is free', async () => {
-    await expect(resolveUniqueSlug('checkout-funnel', async () => null)).resolves.toBe(
+    await expect(resolveUniqueSlug('checkout-funnel', () => Promise.resolve(null))).resolves.toBe(
       'checkout-funnel',
     );
   });
@@ -39,15 +39,15 @@ describe('resolveUniqueSlug (auto-managed-slugs)', () => {
     const taken = new Set(['checkout-funnel', 'checkout-funnel-2']);
 
     await expect(
-      resolveUniqueSlug('checkout-funnel', async (slug: string) => taken.has(slug)),
+      resolveUniqueSlug('checkout-funnel', (slug: string) => Promise.resolve(taken.has(slug))),
     ).resolves.toBe('checkout-funnel-3');
   });
 
   it('keeps suffixed candidates within 120 characters', async () => {
     const base = 'a'.repeat(120);
 
-    const slug = await resolveUniqueSlug(base, async (candidate: string) =>
-      candidate === base ? true : null,
+    const slug = await resolveUniqueSlug(base, (candidate: string) =>
+      Promise.resolve(candidate === base ? true : null),
     );
 
     expect(slug).toHaveLength(120);

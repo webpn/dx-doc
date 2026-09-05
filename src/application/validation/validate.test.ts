@@ -44,9 +44,9 @@ describe('validate (REQ-FDN-010)', () => {
   });
 
   it('rejects an empty custom_id but accepts a valid one', () => {
-    expect(
-      validate(projectCreateSchema, { name: 'A', platform: 'web', customId: '' }).ok,
-    ).toBe(false);
+    expect(validate(projectCreateSchema, { name: 'A', platform: 'web', customId: '' }).ok).toBe(
+      false,
+    );
     expect(validate(projectCreateSchema, { name: 'A', platform: 'web', customId: 'x' }).ok).toBe(
       true,
     );
@@ -83,9 +83,7 @@ describe('validate (REQ-FDN-010)', () => {
 
 describe('validate — system-generated project/page slugs (auto-managed-slugs)', () => {
   it('accepts a project create without a slug', () => {
-    expect(validate(projectCreateSchema, { name: 'Web analytics', platform: 'web' }).ok).toBe(
-      true,
-    );
+    expect(validate(projectCreateSchema, { name: 'Web analytics', platform: 'web' }).ok).toBe(true);
   });
 
   it('accepts a page create without a slug', () => {
@@ -93,9 +91,10 @@ describe('validate — system-generated project/page slugs (auto-managed-slugs)'
   });
 
   it('rejects a slug in project create and update bodies', () => {
-    for (const schema of [projectCreateSchema, projectUpdateSchema]) {
-      const result = validate(schema, { name: 'Web analytics', slug: 'web-analytics' });
-
+    for (const result of [
+      validate(projectCreateSchema, { name: 'Web analytics', slug: 'web-analytics' }),
+      validate(projectUpdateSchema, { name: 'Web analytics', slug: 'web-analytics' }),
+    ]) {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error.some((i) => i.field === 'slug')).toBe(true);
@@ -104,9 +103,10 @@ describe('validate — system-generated project/page slugs (auto-managed-slugs)'
   });
 
   it('rejects a slug in page create and update bodies', () => {
-    for (const schema of [pageCreateSchema, pageUpdateSchema]) {
-      const result = validate(schema, { name: 'Home', slug: 'home' });
-
+    for (const result of [
+      validate(pageCreateSchema, { name: 'Home', slug: 'home' }),
+      validate(pageUpdateSchema, { name: 'Home', slug: 'home' }),
+    ]) {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error.some((i) => i.field === 'slug')).toBe(true);

@@ -68,7 +68,7 @@ One deployed instance hosts multiple Companies. A Company is the tenant boundary
 
 **Must** · R0 · [M0.2](../milestones.md#m02--persistence-foundation) · spec §5, §6.2 · **Implemented** · Issue: — · PR: —
 
-A Project is one product on one platform, and is the unit of access control, versioning and publication. Projects carry name, slug, description, icon, platform (Web / iOS / Android / Flutter / React), tag manager, integration settings and lifecycle state. Grouping is by optional labels only.
+A Project is one product on one platform, and is the unit of access control, versioning and publication. Projects carry name, description, icon, platform (Web / iOS / Android / Flutter / React), tag manager, integration settings and lifecycle state. The slug is system-generated from the name — regenerated on rename with no redirect, stored internal-only, and never accepted in inputs or serialized in records and API responses (which are UUID-only). Grouping is by optional labels only.
 
 **Acceptance**
 

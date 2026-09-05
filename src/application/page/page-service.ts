@@ -1,8 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-import { err, ok, type Result } from '@project/shared';
-
 import { resolveUniqueSlug, slugify } from '@project/domain/slug';
+import { err, ok, type Result } from '@project/shared';
 
 import type { PermissionService } from '../auth/permissions';
 import type { PageRepository, PageRecord } from '../ports/page-repository';
@@ -155,7 +154,9 @@ export class PageService {
     // Rename regenerates the slug (old slug abandoned, no redirect); a
     // non-rename update leaves the internal slug untouched.
     const slug =
-      data.name !== undefined ? await this.uniqueSlug(page.projectId, data.name, pageId) : undefined;
+      data.name !== undefined
+        ? await this.uniqueSlug(page.projectId, data.name, pageId)
+        : undefined;
     if (data.parentId !== undefined) page.parentId = data.parentId ?? null;
     if (data.description !== undefined) page.description = data.description;
     page.updatedAt = this.now().toISOString();

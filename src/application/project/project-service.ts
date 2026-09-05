@@ -1,8 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-import { err, ok, type Result } from '@project/shared';
-
 import { resolveUniqueSlug, slugify } from '@project/domain/slug';
+import { err, ok, type Result } from '@project/shared';
 
 import type { PermissionService } from '../auth/permissions';
 import type { AccountRepository } from '../ports/account-repository';
@@ -196,7 +195,9 @@ export class ProjectService {
     // Rename regenerates the slug (old slug abandoned, no redirect); a
     // non-rename update leaves the internal slug untouched.
     const slug =
-      data.name !== undefined ? await this.uniqueSlug(project.companyId, data.name, projectId) : undefined;
+      data.name !== undefined
+        ? await this.uniqueSlug(project.companyId, data.name, projectId)
+        : undefined;
     if (data.description !== undefined) project.description = data.description ?? null;
     if (data.icon !== undefined) project.icon = data.icon ?? null;
     if (data.platform !== undefined) project.platform = data.platform;
@@ -219,11 +220,7 @@ export class ProjectService {
    * renamed) counts as free, so a rename that normalizes to the same base
    * keeps its slug. DB unique constraints stay the race backstop.
    */
-  private async uniqueSlug(
-    companyId: string,
-    name: string,
-    excludeId?: string,
-  ): Promise<string> {
+  private async uniqueSlug(companyId: string, name: string, excludeId?: string): Promise<string> {
     return resolveUniqueSlug(slugify(name), async (slug) => {
       const hit = await this.projects.getProjectByCompanyAndSlug(companyId, slug);
       return hit !== null && hit.id !== excludeId;
