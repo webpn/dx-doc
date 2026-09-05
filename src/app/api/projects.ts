@@ -7,7 +7,6 @@ export interface ProjectRecord {
   id: string;
   companyId: string;
   name: string;
-  slug: string;
   description: string | null;
   icon: string | null;
   platform: Platform;
@@ -21,7 +20,6 @@ export interface ProjectRecord {
 
 export interface ProjectCreateInput {
   name: string;
-  slug: string;
   description?: string;
   icon?: string;
   platform: Platform;

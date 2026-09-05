@@ -17,7 +17,7 @@ import { useCreatePage, usePages } from '../queries';
 /**
  * Create a page/screen inside a project (REQ-DOM-001).
  *
- * Only name, slug and an optional parent are asked here; the behavioural
+ * Only a name and an optional parent are asked here; the behavioural
  * description is filled in afterwards in the page editor, matching how a
  * free page is created before its content exists.
  */
@@ -29,7 +29,6 @@ export function PageCreatePage(): ReactElement {
   const createPage = useCreatePage(projectId ?? '');
 
   const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
   const [parentId, setParentId] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -41,15 +40,10 @@ export function PageCreatePage(): ReactElement {
       setError(t('page.create.missingName'));
       return;
     }
-    if (slug.trim() === '') {
-      setError(t('page.create.missingSlug'));
-      return;
-    }
 
     try {
       const { id } = await createPage.mutateAsync({
         name: name.trim(),
-        slug: slug.trim(),
         // An omitted parentId means "no parent"; the API treats the absent
         // key and an empty string differently, so only a real id is sent.
         ...(parentId === '' ? {} : { parentId }),
@@ -75,16 +69,6 @@ export function PageCreatePage(): ReactElement {
               setName(event.target.value);
             }}
             value={name}
-          />
-        </Field>
-
-        <Field htmlFor="page-create-slug" label={t('page.create.slugLabel')}>
-          <Input
-            id="page-create-slug"
-            onChange={(event) => {
-              setSlug(event.target.value);
-            }}
-            value={slug}
           />
         </Field>
 

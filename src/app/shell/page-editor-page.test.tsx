@@ -51,7 +51,6 @@ const PAGE = {
   projectId: 'prj_1',
   parentId: null,
   name: 'Home',
-  slug: 'home',
   description: '## Behaviour\n\nShown after login.',
   customId: null,
   createdAt: '2026-01-01T00:00:00.000Z',
@@ -78,12 +77,12 @@ describe('PageEditorPage (REQ-DOM-001, REQ-AUTH-001)', () => {
     });
   }
 
-  it('loads the stored name, slug and description', async () => {
+  it('loads the stored name and description, with no slug field', async () => {
     renderEditor();
 
     expect(await screen.findByDisplayValue('Home')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('home')).toBeInTheDocument();
     expect(screen.getByLabelText('Description')).toHaveValue('## Behaviour\n\nShown after login.');
+    expect(screen.queryByLabelText('Slug')).not.toBeInTheDocument();
   });
 
   it('saves an edited description with the loaded updatedAt as the concurrency guard', async () => {
@@ -103,11 +102,15 @@ describe('PageEditorPage (REQ-DOM-001, REQ-AUTH-001)', () => {
         }),
       );
     });
+    // The slug is server-generated: renaming sends the new name and the
+    // server derives the slug, so the payload never carries one.
+    const [payload] = update.mock.calls[0] as [Record<string, unknown>];
+    expect('slug' in payload).toBe(false);
   });
 
   it('offers only other pages as a parent, never the page itself', async () => {
     pagesData.mockReturnValue({
-      data: [PAGE, { ...PAGE, id: 'pg2', name: 'Checkout', slug: 'checkout' }],
+      data: [PAGE, { ...PAGE, id: 'pg2', name: 'Checkout' }],
       isPending: false,
       error: null,
     });

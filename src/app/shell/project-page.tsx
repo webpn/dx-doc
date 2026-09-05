@@ -45,9 +45,7 @@ export function ProjectPage(): ReactElement {
     <ProjectWorkspace projectId={project.data.id}>
       <Card>
         <h1 className="text-2xl font-bold text-[var(--color-ink)]">{project.data.name}</h1>
-        <p className="mt-2 text-[var(--color-muted)]">
-          {project.data.platform} · {project.data.slug}
-        </p>
+        <p className="mt-2 text-[var(--color-muted)]">{project.data.platform}</p>
         <UnpublishedChangesIndicator
           companyId={project.data.companyId}
           projectId={project.data.id}

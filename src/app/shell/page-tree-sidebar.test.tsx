@@ -38,18 +38,17 @@ vi.mock('../queries', async (importOriginal) => {
   };
 });
 
-const HOME = { id: 'pg1', name: 'Home', slug: 'home', parentId: null };
-const CHECKOUT = { id: 'pg2', name: 'Checkout', slug: 'checkout', parentId: null };
+const HOME = { id: 'pg1', name: 'Home', parentId: null };
+const CHECKOUT = { id: 'pg2', name: 'Checkout', parentId: null };
 const CHECKOUT_STEP_2 = {
   id: 'pg3',
   name: 'Checkout step 2',
-  slug: 'checkout-step-2',
   parentId: 'pg2',
 };
 // Declares a parent that is not in the list — e.g. it belongs to another
 // project's response the client never received, or was deleted after this
 // list was fetched. It must still render, at the top level, never vanish.
-const ORPHAN = { id: 'pg4', name: 'Orphan page', slug: 'orphan', parentId: 'missing' };
+const ORPHAN = { id: 'pg4', name: 'Orphan page', parentId: 'missing' };
 
 describe('PageTreeSidebar (REQ-NAV-001)', () => {
   beforeEach(() => {

@@ -156,8 +156,6 @@ export const en = {
   'project.create.title': 'Create a project',
   'project.create.description': 'A project holds one tracking plan for one platform.',
   'project.create.nameLabel': 'Project name',
-  'project.create.slugLabel': 'Slug',
-  'project.create.slugHint': 'Used in URLs. Lowercase letters, numbers and hyphens.',
   'project.create.platformLabel': 'Platform',
   'project.create.platformPlaceholder': 'Choose a platform',
   'project.create.descriptionLabel': 'Description',
@@ -165,7 +163,6 @@ export const en = {
   'project.create.submit': 'Create project',
   'project.create.submitting': 'Creating…',
   'project.create.missingName': 'Enter a project name.',
-  'project.create.missingSlug': 'Enter a slug.',
   'project.create.missingPlatform': 'Choose a platform.',
 
   // Project access (REQ-SEC-012 — invite and grant are separate steps)
@@ -197,7 +194,6 @@ export const en = {
   'page.edit.title': 'Edit page',
   'page.edit.subtitle': 'Name, place in the hierarchy, and what the screen does.',
   'page.edit.name': 'Name',
-  'page.edit.slug': 'Slug',
   'page.edit.parent': 'Parent page',
   'page.edit.parentNone': 'No parent (top level)',
   'page.edit.description': 'Description',
@@ -206,21 +202,18 @@ export const en = {
   'page.edit.loading': 'Loading page…',
   'page.edit.loadError': 'This page could not be loaded.',
   'page.edit.missingName': 'Enter a name.',
-  'page.edit.missingSlug': 'Enter a slug.',
   'page.edit.trackingRecap': 'What is tracked here',
   'page.edit.trackingRecapEmpty': 'No trackings are attached to this page yet.',
 
   // Page creation (REQ-DOM-001)
   'page.create.title': 'New page',
-  'page.create.subtitle': 'Give it a name and a slug; the description can be filled in after.',
+  'page.create.subtitle': 'Give it a name; the description can be filled in after.',
   'page.create.nameLabel': 'Name',
-  'page.create.slugLabel': 'Slug',
   'page.create.parentLabel': 'Parent page',
   'page.create.parentNone': 'No parent (top level)',
   'page.create.submit': 'Create page',
   'page.create.submitting': 'Creating…',
   'page.create.missingName': 'Enter a name.',
-  'page.create.missingSlug': 'Enter a slug.',
 
   // Page hierarchy sidebar (REQ-NAV-001)
   'page.tree.title': 'Pages',
