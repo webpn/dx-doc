@@ -2,14 +2,14 @@
 
 ## Review Workload Forecast
 
-| Field | Value |
-|-------|-------|
-| Estimated changed lines | ~660 |
-| 400-line budget risk | High |
-| Chained PRs recommended | No |
-| Suggested split | Single PR with size:exception |
-| Delivery strategy | single-pr |
-| Chain strategy | size-exception |
+| Field                   | Value                         |
+| ----------------------- | ----------------------------- |
+| Estimated changed lines | ~660                          |
+| 400-line budget risk    | High                          |
+| Chained PRs recommended | No                            |
+| Suggested split         | Single PR with size:exception |
+| Delivery strategy       | single-pr                     |
+| Chain strategy          | size-exception                |
 
 Decision needed before apply: Yes
 Chained PRs recommended: No
@@ -18,9 +18,9 @@ Chain strategy: size-exception
 
 ### Suggested Work Units
 
-| Unit | Goal | Likely PR | Focused test command | Runtime harness | Rollback boundary |
-|------|------|-----------|----------------------|-----------------|-------------------|
-| 1 | System-generated UUID-only slugs for project/page | Single PR (size:exception) | `npm test` | N/A — no runtime process; verification via vitest + gates | Revert single PR; no migration to roll back |
+| Unit | Goal                                              | Likely PR                  | Focused test command | Runtime harness                                           | Rollback boundary                           |
+| ---- | ------------------------------------------------- | -------------------------- | -------------------- | --------------------------------------------------------- | ------------------------------------------- |
+| 1    | System-generated UUID-only slugs for project/page | Single PR (size:exception) | `npm test`           | N/A — no runtime process; verification via vitest + gates | Revert single PR; no migration to roll back |
 
 ## Phase 1: Foundation (domain helper)
 
