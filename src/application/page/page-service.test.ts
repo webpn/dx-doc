@@ -21,12 +21,14 @@ class StubPermissions extends PermissionService {
 
 class FakePages implements PageRepository {
   pages = new Map<string, PageRecord>();
+  slugs = new Map<string, string>();
   customToId = new Map<string, string>();
   blockers: PageDeletionBlockers = { childPages: 0, trackings: 0, flowNodes: 0 };
   deleted: string[] = [];
 
-  createPage(page: PageRecord): Promise<void> {
+  createPage(page: PageRecord, slug: string): Promise<void> {
     this.pages.set(page.id, page);
+    this.slugs.set(page.id, slug);
     if (page.customId) {
       this.customToId.set(page.customId, page.id);
     }
@@ -39,7 +41,7 @@ class FakePages implements PageRepository {
 
   getPageByProjectAndSlug(projectId: string, slug: string): Promise<PageRecord | null> {
     for (const p of this.pages.values()) {
-      if (p.projectId === projectId && p.slug === slug) {
+      if (p.projectId === projectId && this.slugs.get(p.id) === slug) {
         return Promise.resolve(p);
       }
     }
@@ -66,16 +68,23 @@ class FakePages implements PageRepository {
     return Promise.resolve(result);
   }
 
-  updatePage(page: PageRecord, expectedUpdatedAt?: string): Promise<boolean> {
+  updatePage(page: PageRecord, slug?: string, expectedUpdatedAt?: string): Promise<boolean> {
     const existing = this.pages.get(page.id);
     if (expectedUpdatedAt !== undefined && existing?.updatedAt !== expectedUpdatedAt) {
       return Promise.resolve(false);
     }
     this.pages.set(page.id, page);
+    if (slug !== undefined) {
+      this.slugs.set(page.id, slug);
+    }
     if (page.customId) {
       this.customToId.set(page.customId, page.id);
     }
     return Promise.resolve(true);
+  }
+
+  slugOf(id: string): string | undefined {
+    return this.slugs.get(id);
   }
 
   getPageDeletionBlockers(): Promise<PageDeletionBlockers> {
@@ -92,7 +101,7 @@ class FakePages implements PageRepository {
 class FakeProjects implements ProjectRepository {
   projects = new Map<string, ProjectRecord>();
 
-  createProject(p: ProjectRecord): Promise<void> {
+  createProject(p: ProjectRecord, _slug: string): Promise<void> {
     this.projects.set(p.id, p);
     return Promise.resolve();
   }
@@ -108,7 +117,7 @@ class FakeProjects implements ProjectRepository {
   listProjectsForCompany(_c: string): Promise<ProjectRecord[]> {
     return Promise.resolve(Array.from(this.projects.values()));
   }
-  updateProject(p: ProjectRecord, expectedUpdatedAt?: string): Promise<boolean> {
+  updateProject(p: ProjectRecord, _slug?: string, expectedUpdatedAt?: string): Promise<boolean> {
     const existing = this.projects.get(p.id);
     if (expectedUpdatedAt !== undefined && existing?.updatedAt !== expectedUpdatedAt) {
       return Promise.resolve(false);
@@ -125,7 +134,6 @@ function build(): { pages: FakePages; projects: FakeProjects; service: PageServi
     id: 'proj-1',
     companyId: 'c1',
     name: 'Web',
-    slug: 'web',
     platform: 'web',
     description: null,
     icon: null,
@@ -150,7 +158,7 @@ describe('PageService.create (REQ-DOM-001, REQ-IMP-003)', () => {
   it('an Editor creates a page in a project', async () => {
     const { pages, service } = build();
 
-    const result = await service.create('u1', 'proj-1', { name: 'Home', slug: 'home' });
+    const result = await service.create('u1', 'proj-1', { name: 'Home' });
 
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -164,12 +172,10 @@ describe('PageService.create (REQ-DOM-001, REQ-IMP-003)', () => {
 
     const first = await service.create('u1', 'proj-1', {
       name: 'Home',
-      slug: 'home',
       customId: 'legacy:home',
     });
     const second = await service.create('u1', 'proj-1', {
       name: 'Homepage',
-      slug: 'home',
       customId: 'legacy:home',
     });
 
@@ -185,7 +191,7 @@ describe('PageService.create (REQ-DOM-001, REQ-IMP-003)', () => {
 
   it('returns not_found when the project does not exist', async () => {
     const { service } = build();
-    expect(await service.create('u1', 'missing', { name: 'X', slug: 'x' })).toEqual({
+    expect(await service.create('u1', 'missing', { name: 'X' })).toEqual({
       ok: false,
       error: { kind: 'not_found' },
     });
@@ -194,20 +200,22 @@ describe('PageService.create (REQ-DOM-001, REQ-IMP-003)', () => {
   it('rejects a parent from another project', async () => {
     const { pages, projects, service } = build();
     projects.projects.set('proj-2', { ...FIXED_PROJECT, id: 'proj-2' });
-    await pages.createPage({
-      id: 'other-page',
-      projectId: 'proj-2',
-      parentId: null,
-      name: 'P',
-      slug: 'p',
-      description: null,
-      customId: null,
-      createdAt: FIXED_NOW.toISOString(),
-      updatedAt: FIXED_NOW.toISOString(),
-    });
+    await pages.createPage(
+      {
+        id: 'other-page',
+        projectId: 'proj-2',
+        parentId: null,
+        name: 'P',
+        description: null,
+        customId: null,
+        createdAt: FIXED_NOW.toISOString(),
+        updatedAt: FIXED_NOW.toISOString(),
+      },
+      'p',
+    );
 
     expect(
-      await service.create('u1', 'proj-1', { name: 'X', slug: 'x', parentId: 'other-page' }),
+      await service.create('u1', 'proj-1', { name: 'X', parentId: 'other-page' }),
     ).toEqual({
       ok: false,
       error: { kind: 'cross_project_parent' },
@@ -226,7 +234,7 @@ describe('PageService.create (REQ-DOM-001, REQ-IMP-003)', () => {
       () => 'page',
     );
 
-    expect(await service.create('viewer', 'proj-1', { name: 'X', slug: 'x' })).toEqual({
+    expect(await service.create('viewer', 'proj-1', { name: 'X' })).toEqual({
       ok: false,
       error: { kind: 'forbidden' },
     });
@@ -237,7 +245,6 @@ const FIXED_PROJECT: ProjectRecord = {
   id: 'proj-1',
   companyId: 'c1',
   name: 'Web',
-  slug: 'web',
   platform: 'web',
   description: null,
   icon: null,
@@ -252,7 +259,7 @@ const FIXED_PROJECT: ProjectRecord = {
 describe('PageService.update + get', () => {
   it('updates a page', async () => {
     const { pages, service } = build();
-    const created = await service.create('u1', 'proj-1', { name: 'Home', slug: 'home' });
+    const created = await service.create('u1', 'proj-1', { name: 'Home' });
     const id = created.ok ? created.value.pageId : '';
 
     expect(await service.update('u1', id, { name: 'Homepage' })).toEqual({
@@ -271,7 +278,7 @@ describe('PageService.update + get', () => {
 describe('PageService.delete (ADR-0025)', () => {
   it('deletes an unreferenced page', async () => {
     const { pages, service } = build();
-    const created = await service.create('u1', 'proj-1', { name: 'Home', slug: 'home' });
+    const created = await service.create('u1', 'proj-1', { name: 'Home' });
     const id = created.ok ? created.value.pageId : '';
 
     expect(await service.delete('u1', id)).toEqual({ ok: true, value: { ok: true } });
@@ -280,7 +287,7 @@ describe('PageService.delete (ADR-0025)', () => {
 
   it('refuses to delete a page with child pages, trackings or flow nodes', async () => {
     const { pages, service } = build();
-    const created = await service.create('u1', 'proj-1', { name: 'Home', slug: 'home' });
+    const created = await service.create('u1', 'proj-1', { name: 'Home' });
     const id = created.ok ? created.value.pageId : '';
     pages.blockers = { childPages: 2, trackings: 1, flowNodes: 3 };
 
@@ -308,17 +315,19 @@ describe('PageService.delete (ADR-0025)', () => {
     const pages = new FakePages();
     const projects = new FakeProjects();
     projects.projects.set('proj-1', { ...FIXED_PROJECT, id: 'proj-1' });
-    await pages.createPage({
-      id: 'pg1',
-      projectId: 'proj-1',
-      parentId: null,
-      name: 'Home',
-      slug: 'home',
-      description: null,
-      customId: null,
-      createdAt: FIXED_NOW.toISOString(),
-      updatedAt: FIXED_NOW.toISOString(),
-    });
+    await pages.createPage(
+      {
+        id: 'pg1',
+        projectId: 'proj-1',
+        parentId: null,
+        name: 'Home',
+        description: null,
+        customId: null,
+        createdAt: FIXED_NOW.toISOString(),
+        updatedAt: FIXED_NOW.toISOString(),
+      },
+      'home',
+    );
     const service = new PageService(pages, projects, new StubPermissions({ project: false }));
 
     expect(await service.delete('viewer', 'pg1')).toEqual({
@@ -328,10 +337,92 @@ describe('PageService.delete (ADR-0025)', () => {
   });
 });
 
+describe('PageService slugs — system-generated (auto-managed-slugs)', () => {
+  it('generates the slug from the name on create', async () => {
+    const { pages, service } = build();
+
+    const created = await service.create('u1', 'proj-1', { name: 'Product Home' });
+
+    expect(created.ok).toBe(true);
+    if (created.ok) {
+      expect(pages.slugOf(created.value.pageId)).toBe('product-home');
+    }
+  });
+
+  it('appends a numeric suffix on collision within the project', async () => {
+    const { pages, service } = build();
+
+    const first = await service.create('u1', 'proj-1', { name: 'Product Home' });
+    const second = await service.create('u1', 'proj-1', { name: 'Product Home' });
+
+    expect(first.ok).toBe(true);
+    expect(second.ok).toBe(true);
+    if (first.ok && second.ok) {
+      expect(pages.slugOf(first.value.pageId)).toBe('product-home');
+      expect(pages.slugOf(second.value.pageId)).toBe('product-home-2');
+    }
+  });
+
+  it('scopes uniqueness to the project', async () => {
+    const { pages, projects, service } = build();
+    projects.projects.set('proj-2', { ...FIXED_PROJECT, id: 'proj-2' });
+
+    const a = await service.create('u1', 'proj-1', { name: 'Product Home' });
+    const b = await service.create('u1', 'proj-2', { name: 'Product Home' });
+
+    expect(a.ok).toBe(true);
+    expect(b.ok).toBe(true);
+    if (a.ok && b.ok) {
+      expect(pages.slugOf(a.value.pageId)).toBe('product-home');
+      expect(pages.slugOf(b.value.pageId)).toBe('product-home');
+    }
+  });
+
+  it('regenerates the slug on rename and keeps it when the name is unchanged', async () => {
+    const { pages, service } = build();
+    const created = await service.create('u1', 'proj-1', { name: 'Old Name' });
+    const pageId = created.ok ? created.value.pageId : '';
+    expect(pages.slugOf(pageId)).toBe('old-name');
+
+    await service.update('u1', pageId, { name: 'New Name' });
+    expect(pages.slugOf(pageId)).toBe('new-name');
+
+    await service.update('u1', pageId, { description: 'lorem' });
+    expect(pages.slugOf(pageId)).toBe('new-name');
+  });
+
+  it('regenerates the slug on custom_id upsert with a new name', async () => {
+    const { pages, service } = build();
+    const first = await service.create(
+      'u1',
+      'proj-1',
+      { name: 'Home', customId: 'legacy:home' },
+    );
+    const pageId = first.ok ? first.value.pageId : '';
+
+    await service.create('u1', 'proj-1', { name: 'Homepage', customId: 'legacy:home' });
+
+    expect(pages.slugOf(pageId)).toBe('homepage');
+  });
+
+  it('returns slug-free records', async () => {
+    const { service } = build();
+    const created = await service.create('u1', 'proj-1', { name: 'Home' });
+    const pageId = created.ok ? created.value.pageId : '';
+
+    const got = await service.get('u1', pageId);
+
+    expect(got.ok).toBe(true);
+    if (got.ok) {
+      expect('slug' in got.value).toBe(false);
+    }
+  });
+});
+
 describe('PageService.update — Optimistic concurrency (REQ-AUTH-005, ADR-0016)', () => {
   it('accepts update with matching expectedUpdatedAt', async () => {
     const { pages, service } = build();
-    const created = await service.create('u1', 'proj-1', { name: 'Home', slug: 'home' });
+    const created = await service.create('u1', 'proj-1', { name: 'Home' });
     const pageId = created.ok ? created.value.pageId : '';
     const page = await pages.getPageById(pageId);
     if (!page) throw new Error('page not found');
@@ -346,7 +437,7 @@ describe('PageService.update — Optimistic concurrency (REQ-AUTH-005, ADR-0016)
 
   it('rejects update with wrong expectedUpdatedAt', async () => {
     const { service } = build();
-    const created = await service.create('u1', 'proj-1', { name: 'Home', slug: 'home' });
+    const created = await service.create('u1', 'proj-1', { name: 'Home' });
     const pageId = created.ok ? created.value.pageId : '';
 
     // Update with obviously wrong expectedUpdatedAt fails

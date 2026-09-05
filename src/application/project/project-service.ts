@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 
 import { err, ok, type Result } from '@project/shared';
 
+import { resolveUniqueSlug, slugify } from '@project/domain/slug';
+
 import type { PermissionService } from '../auth/permissions';
 import type { AccountRepository } from '../ports/account-repository';
 import type { CatalogueCopier } from '../ports/catalogue-copier';
@@ -54,41 +56,45 @@ export class ProjectService {
     }
 
     // Idempotent upsert: a write with a `custom_id` that already exists
-    // updates the existing entity (REQ-IMP-003).
+    // updates the existing entity (REQ-IMP-003). The slug regenerates from
+    // the new name like a rename; the old slug is abandoned (no redirect).
     const data = parsed.value;
     if (data.customId !== undefined) {
       const existing = await this.projects.getProjectByCustomId(companyId, data.customId);
       if (existing !== null) {
         existing.name = data.name;
-        existing.slug = data.slug;
+        const slug = await this.uniqueSlug(companyId, data.name, existing.id);
         existing.description = data.description ?? existing.description;
         existing.icon = data.icon ?? existing.icon;
         existing.tagManager = data.tagManager ?? existing.tagManager;
         existing.updatedAt = this.now().toISOString();
         // platform and lifecycle_state are not updated on upsert (they are
         // set at creation / changed via dedicated operations).
-        await this.projects.updateProject(existing);
+        await this.projects.updateProject(existing, slug);
         return ok({ projectId: existing.id, created: false });
       }
     }
 
     const projectId = this.newId();
     const nowIso = this.now().toISOString();
-    await this.projects.createProject({
-      id: projectId,
-      companyId,
-      name: data.name,
-      slug: data.slug,
-      description: data.description ?? null,
-      icon: data.icon ?? null,
-      platform: data.platform,
-      tagManager: data.tagManager ?? null,
-      lifecycleState: 'active',
-      integrationSettings: null,
-      customId: data.customId ?? null,
-      createdAt: nowIso,
-      updatedAt: nowIso,
-    });
+    const slug = await this.uniqueSlug(companyId, data.name);
+    await this.projects.createProject(
+      {
+        id: projectId,
+        companyId,
+        name: data.name,
+        description: data.description ?? null,
+        icon: data.icon ?? null,
+        platform: data.platform,
+        tagManager: data.tagManager ?? null,
+        lifecycleState: 'active',
+        integrationSettings: null,
+        customId: data.customId ?? null,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      },
+      slug,
+    );
 
     // M1.12 (REQ-SEC-003): the creator is granted the project's
     // administrator-equivalent role (`admin`) on the project it just created,
@@ -187,13 +193,16 @@ export class ProjectService {
       project.customId = data.customId;
     }
     if (data.name !== undefined) project.name = data.name;
-    if (data.slug !== undefined) project.slug = data.slug;
+    // Rename regenerates the slug (old slug abandoned, no redirect); a
+    // non-rename update leaves the internal slug untouched.
+    const slug =
+      data.name !== undefined ? await this.uniqueSlug(project.companyId, data.name, projectId) : undefined;
     if (data.description !== undefined) project.description = data.description ?? null;
     if (data.icon !== undefined) project.icon = data.icon ?? null;
     if (data.platform !== undefined) project.platform = data.platform;
     if (data.tagManager !== undefined) project.tagManager = data.tagManager ?? null;
     project.updatedAt = this.now().toISOString();
-    const applied = await this.projects.updateProject(project, expectedUpdatedAt);
+    const applied = await this.projects.updateProject(project, slug, expectedUpdatedAt);
     if (!applied) {
       const current = await this.projects.getProjectById(projectId);
       return err({
@@ -202,6 +211,23 @@ export class ProjectService {
       });
     }
     return ok({ ok: true });
+  }
+
+  /**
+   * Derives the live slug from the name and resolves collisions within the
+   * company (`base`, `base-2`, …). A hit on `excludeId` (the entity being
+   * renamed) counts as free, so a rename that normalizes to the same base
+   * keeps its slug. DB unique constraints stay the race backstop.
+   */
+  private async uniqueSlug(
+    companyId: string,
+    name: string,
+    excludeId?: string,
+  ): Promise<string> {
+    return resolveUniqueSlug(slugify(name), async (slug) => {
+      const hit = await this.projects.getProjectByCompanyAndSlug(companyId, slug);
+      return hit !== null && hit.id !== excludeId;
+    });
   }
 }
 

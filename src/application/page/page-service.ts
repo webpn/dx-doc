@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 
 import { err, ok, type Result } from '@project/shared';
 
+import { resolveUniqueSlug, slugify } from '@project/domain/slug';
+
 import type { PermissionService } from '../auth/permissions';
 import type { PageRepository, PageRecord } from '../ports/page-repository';
 import type { ProjectRepository } from '../ports/project-repository';
@@ -50,18 +52,19 @@ export class PageService {
     }
 
     const data = parsed.value;
-    // Idempotent upsert on custom_id (REQ-IMP-003).
+    // Idempotent upsert on custom_id (REQ-IMP-003). The slug regenerates
+    // from the new name like a rename; the old slug is abandoned.
     if (data.customId !== undefined) {
       const existing = await this.pages.getPageByCustomId(projectId, data.customId);
       if (existing !== null) {
         existing.name = data.name;
-        existing.slug = data.slug;
+        const slug = await this.uniqueSlug(projectId, data.name, existing.id);
         existing.parentId = data.parentId ?? existing.parentId;
         // Matches the other fields' re-import semantics: an omitted
         // description leaves the stored one alone rather than erasing it.
         existing.description = data.description ?? existing.description;
         existing.updatedAt = this.now().toISOString();
-        await this.pages.updatePage(existing);
+        await this.pages.updatePage(existing, slug);
         return ok({ pageId: existing.id, created: false });
       }
     }
@@ -79,17 +82,20 @@ export class PageService {
 
     const pageId = this.newId();
     const nowIso = this.now().toISOString();
-    await this.pages.createPage({
-      id: pageId,
-      projectId,
-      parentId,
-      name: data.name,
-      slug: data.slug,
-      description: data.description ?? null,
-      customId: data.customId ?? null,
-      createdAt: nowIso,
-      updatedAt: nowIso,
-    });
+    const slug = await this.uniqueSlug(projectId, data.name);
+    await this.pages.createPage(
+      {
+        id: pageId,
+        projectId,
+        parentId,
+        name: data.name,
+        description: data.description ?? null,
+        customId: data.customId ?? null,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      },
+      slug,
+    );
     return ok({ pageId, created: true });
   }
 
@@ -146,11 +152,14 @@ export class PageService {
       page.customId = data.customId;
     }
     if (data.name !== undefined) page.name = data.name;
-    if (data.slug !== undefined) page.slug = data.slug;
+    // Rename regenerates the slug (old slug abandoned, no redirect); a
+    // non-rename update leaves the internal slug untouched.
+    const slug =
+      data.name !== undefined ? await this.uniqueSlug(page.projectId, data.name, pageId) : undefined;
     if (data.parentId !== undefined) page.parentId = data.parentId ?? null;
     if (data.description !== undefined) page.description = data.description;
     page.updatedAt = this.now().toISOString();
-    const applied = await this.pages.updatePage(page, expectedUpdatedAt);
+    const applied = await this.pages.updatePage(page, slug, expectedUpdatedAt);
     if (!applied) {
       const current = await this.pages.getPageById(pageId);
       return err({
@@ -186,5 +195,18 @@ export class PageService {
 
     await this.pages.deletePage(pageId);
     return ok({ ok: true });
+  }
+
+  /**
+   * Derives the live slug from the name and resolves collisions within the
+   * project (`base`, `base-2`, …). A hit on `excludeId` (the entity being
+   * renamed) counts as free, so a rename that normalizes to the same base
+   * keeps its slug. DB unique constraints stay the race backstop.
+   */
+  private async uniqueSlug(projectId: string, name: string, excludeId?: string): Promise<string> {
+    return resolveUniqueSlug(slugify(name), async (slug) => {
+      const hit = await this.pages.getPageByProjectAndSlug(projectId, slug);
+      return hit !== null && hit.id !== excludeId;
+    });
   }
 }

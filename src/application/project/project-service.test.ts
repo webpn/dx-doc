@@ -136,10 +136,12 @@ function seedCompanyRoles(accounts: FakeAccounts, companyId: string): void {
 
 class FakeProjects implements ProjectRepository {
   projects = new Map<string, ProjectRecord>();
+  slugs = new Map<string, string>();
   customToId = new Map<string, string>();
 
-  createProject(project: ProjectRecord): Promise<void> {
+  createProject(project: ProjectRecord, slug: string): Promise<void> {
     this.projects.set(project.id, project);
+    this.slugs.set(project.id, slug);
     if (project.customId) {
       this.customToId.set(project.customId, project.id);
     }
@@ -152,7 +154,7 @@ class FakeProjects implements ProjectRepository {
 
   getProjectByCompanyAndSlug(companyId: string, slug: string): Promise<ProjectRecord | null> {
     for (const p of this.projects.values()) {
-      if (p.companyId === companyId && p.slug === slug) {
+      if (p.companyId === companyId && this.slugs.get(p.id) === slug) {
         return Promise.resolve(p);
       }
     }
@@ -180,21 +182,32 @@ class FakeProjects implements ProjectRepository {
     );
   }
 
-  updateProject(project: ProjectRecord, expectedUpdatedAt?: string): Promise<boolean> {
+  updateProject(
+    project: ProjectRecord,
+    slug?: string,
+    expectedUpdatedAt?: string,
+  ): Promise<boolean> {
     const existing = this.projects.get(project.id);
     if (expectedUpdatedAt !== undefined && existing?.updatedAt !== expectedUpdatedAt) {
       return Promise.resolve(false);
     }
     this.projects.set(project.id, project);
+    if (slug !== undefined) {
+      this.slugs.set(project.id, slug);
+    }
     if (project.customId) {
       this.customToId.set(project.customId, project.id);
     }
     return Promise.resolve(true);
   }
+
+  slugOf(id: string): string | undefined {
+    return this.slugs.get(id);
+  }
 }
 
 function input(overrides: Partial<ProjectCreateInput> = {}): ProjectCreateInput {
-  return { name: 'Web analytics', slug: 'web-analytics', platform: 'web', ...overrides };
+  return { name: 'Web analytics', platform: 'web', ...overrides };
 }
 
 function build(): { projects: FakeProjects; accounts: FakeAccounts; service: ProjectService } {
@@ -281,7 +294,7 @@ describe('ProjectService.create (REQ-FDN-003, REQ-IMP-003)', () => {
 
     const result = await service.create('u1', 'c1', {
       name: '',
-      slug: '',
+      slug: 'web-analytics',
       platform: 'banana',
     } as unknown as ProjectCreateInput);
 
@@ -346,7 +359,7 @@ describe('ProjectService.update + get', () => {
   it('rejects a custom_id already used by another project in the company', async () => {
     const { service } = build();
     await service.create('u1', 'c1', input({ customId: 'shared' }));
-    const b = await service.create('u1', 'c1', input({ name: 'B', slug: 'b', platform: 'ios' }));
+    const b = await service.create('u1', 'c1', input({ name: 'B', platform: 'ios' }));
     const bId = b.ok ? b.value.projectId : '';
 
     expect(await service.update('u1', bId, { customId: 'shared' })).toEqual({
@@ -388,10 +401,111 @@ describe('ProjectService.update + get', () => {
   });
 });
 
+describe('ProjectService slugs — system-generated (auto-managed-slugs)', () => {
+  it('generates the slug from the name on create', async () => {
+    const { projects, service } = build();
+
+    const created = await service.create('u1', 'c1', input({ name: 'Checkout Funnel' }));
+
+    expect(created.ok).toBe(true);
+    if (created.ok) {
+      expect(projects.slugOf(created.value.projectId)).toBe('checkout-funnel');
+    }
+  });
+
+  it('appends a numeric suffix on collision within the company', async () => {
+    const { projects, service } = build();
+
+    const first = await service.create('u1', 'c1', input({ name: 'Checkout Funnel' }));
+    const second = await service.create('u1', 'c1', input({ name: 'Checkout Funnel' }));
+
+    expect(first.ok).toBe(true);
+    expect(second.ok).toBe(true);
+    if (first.ok && second.ok) {
+      expect(projects.slugOf(first.value.projectId)).toBe('checkout-funnel');
+      expect(projects.slugOf(second.value.projectId)).toBe('checkout-funnel-2');
+    }
+  });
+
+  it('scopes uniqueness to the company', async () => {
+    const projects = new FakeProjects();
+    const accounts = new FakeAccounts();
+    seedCompanyRoles(accounts, 'c1');
+    seedCompanyRoles(accounts, 'c2');
+    const service = new ProjectService(
+      projects,
+      new StubPermissions({}),
+      accounts,
+      new RecordingCatalogueCopier(),
+      () => FIXED_NOW,
+      () => 'id-' + String(projects.projects.size),
+    );
+
+    const a = await service.create('u1', 'c1', input({ name: 'Checkout Funnel' }));
+    const b = await service.create('u1', 'c2', input({ name: 'Checkout Funnel' }));
+
+    expect(a.ok).toBe(true);
+    expect(b.ok).toBe(true);
+    if (a.ok && b.ok) {
+      expect(projects.slugOf(a.value.projectId)).toBe('checkout-funnel');
+      expect(projects.slugOf(b.value.projectId)).toBe('checkout-funnel');
+    }
+  });
+
+  it('regenerates the slug on rename and keeps it when the name is unchanged', async () => {
+    const { projects, service } = build();
+    const created = await service.create('u1', 'c1', input({ name: 'Old Name' }));
+    const projectId = created.ok ? created.value.projectId : '';
+    expect(projects.slugOf(projectId)).toBe('old-name');
+
+    await service.update('u1', projectId, { name: 'New Name' });
+    expect(projects.slugOf(projectId)).toBe('new-name');
+
+    await service.update('u1', projectId, { description: 'lorem' });
+    expect(projects.slugOf(projectId)).toBe('new-name');
+  });
+
+  it('keeps the slug when a rename normalizes to the same base (self-hit)', async () => {
+    const { projects, service } = build();
+    const created = await service.create('u1', 'c1', input({ name: 'Web analytics' }));
+    const projectId = created.ok ? created.value.projectId : '';
+
+    await service.update('u1', projectId, { name: 'Web  analytics' });
+
+    expect(projects.slugOf(projectId)).toBe('web-analytics');
+  });
+
+  it('regenerates the slug on custom_id upsert with a new name', async () => {
+    const { projects, service } = build();
+    const first = await service.create(
+      'u1',
+      'c1',
+      input({ name: 'Web analytics', customId: 'legacy:web' }),
+    );
+    const projectId = first.ok ? first.value.projectId : '';
+
+    await service.create('u1', 'c1', input({ name: 'Renamed', customId: 'legacy:web' }));
+
+    expect(projects.slugOf(projectId)).toBe('renamed');
+  });
+
+  it('returns slug-free records', async () => {
+    const { service } = build();
+    const created = await service.create('u1', 'c1', input());
+    const projectId = created.ok ? created.value.projectId : '';
+
+    const got = await service.get('u1', projectId);
+
+    expect(got.ok).toBe(true);
+    if (got.ok) {
+      expect('slug' in got.value).toBe(false);
+    }
+  });
+});
 describe('ProjectService.update — Optimistic concurrency (REQ-AUTH-005, ADR-0016)', () => {
   it('accepts update with matching expectedUpdatedAt', async () => {
     const { projects, service } = build();
-    const created = await service.create('u1', 'c1', { name: 'Web', slug: 'web', platform: 'web' });
+    const created = await service.create('u1', 'c1', { name: 'Web', platform: 'web' });
     const projectId = created.ok ? created.value.projectId : '';
     const project = await projects.getProjectById(projectId);
     if (!project) throw new Error('project not found');
@@ -406,7 +520,7 @@ describe('ProjectService.update — Optimistic concurrency (REQ-AUTH-005, ADR-00
 
   it('rejects update with wrong expectedUpdatedAt', async () => {
     const { service } = build();
-    const created = await service.create('u1', 'c1', { name: 'Web', slug: 'web', platform: 'web' });
+    const created = await service.create('u1', 'c1', { name: 'Web', platform: 'web' });
     const projectId = created.ok ? created.value.projectId : '';
 
     // Update with obviously wrong expectedUpdatedAt fails

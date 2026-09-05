@@ -38,7 +38,6 @@ function toPage(row: PageRow): PageRecord {
     projectId: row.project_id,
     parentId: row.parent_id,
     name: row.name,
-    slug: row.slug,
     description: row.description,
     customId: row.custom_id,
     createdAt: row.created_at,
@@ -50,7 +49,12 @@ function toPage(row: PageRow): PageRecord {
 export class SqlitePageRepository implements PageRepository {
   constructor(private readonly db: Db) {}
 
-  async createPage(page: PageRecord): Promise<void> {
+  /**
+   * The live slug is internal-only (auto-managed-slugs): it is written to
+   * the `slug` column from the separate argument and stripped from every
+   * record the mappers return, so it never serializes.
+   */
+  async createPage(page: PageRecord, slug: string): Promise<void> {
     await this.db
       .insertInto('pages')
       .values({
@@ -58,7 +62,7 @@ export class SqlitePageRepository implements PageRepository {
         project_id: page.projectId,
         parent_id: page.parentId,
         name: page.name,
-        slug: page.slug,
+        slug,
         description: page.description,
         custom_id: page.customId,
         created_at: page.createdAt,
@@ -106,12 +110,12 @@ export class SqlitePageRepository implements PageRepository {
     return rows.map(toPage);
   }
 
-  async updatePage(page: PageRecord, expectedUpdatedAt?: string): Promise<boolean> {
+  async updatePage(page: PageRecord, slug?: string, expectedUpdatedAt?: string): Promise<boolean> {
     let query = this.db
       .updateTable('pages')
       .set({
         name: page.name,
-        slug: page.slug,
+        ...(slug !== undefined ? { slug } : {}),
         parent_id: page.parentId,
         description: page.description,
         custom_id: page.customId,

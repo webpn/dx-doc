@@ -118,7 +118,7 @@ class FakeAccounts implements AccountRepository {
 class FakeProjects implements ProjectRepository {
   projects = new Map<string, ProjectRecord>();
 
-  createProject(project: ProjectRecord): Promise<void> {
+  createProject(project: ProjectRecord, _slug: string): Promise<void> {
     this.projects.set(project.id, project);
     return Promise.resolve();
   }
@@ -127,9 +127,9 @@ class FakeProjects implements ProjectRepository {
     return Promise.resolve(this.projects.get(id) ?? null);
   }
 
-  getProjectByCompanyAndSlug(companyId: string, slug: string): Promise<ProjectRecord | null> {
+  getProjectByCompanyAndSlug(companyId: string, _slug: string): Promise<ProjectRecord | null> {
     for (const p of this.projects.values()) {
-      if (p.companyId === companyId && p.slug === slug) {
+      if (p.companyId === companyId) {
         return Promise.resolve(p);
       }
     }
@@ -146,7 +146,11 @@ class FakeProjects implements ProjectRepository {
     );
   }
 
-  updateProject(project: ProjectRecord, expectedUpdatedAt?: string): Promise<boolean> {
+  updateProject(
+    project: ProjectRecord,
+    _slug?: string,
+    expectedUpdatedAt?: string,
+  ): Promise<boolean> {
     const existing = this.projects.get(project.id);
     if (expectedUpdatedAt !== undefined && existing?.updatedAt !== expectedUpdatedAt) {
       return Promise.resolve(false);
@@ -168,7 +172,6 @@ function seedCompany(accounts: FakeAccounts, projects: FakeProjects, companyId: 
     id: 'p1',
     companyId,
     name: 'Web',
-    slug: 'web',
     description: null,
     icon: null,
     platform: 'web',

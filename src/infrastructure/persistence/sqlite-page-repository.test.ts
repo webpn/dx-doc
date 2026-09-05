@@ -20,7 +20,6 @@ function page(overrides: Partial<PageRecord>): PageRecord {
     projectId: 'proj-1',
     parentId: null,
     name: 'Home',
-    slug: 'home',
     description: null,
     customId: null,
     createdAt: t(),
@@ -69,16 +68,17 @@ describe('SqlitePageRepository (against the real schema)', () => {
   });
 
   it('creates and reads a page back', async () => {
-    await repo.createPage(page({}));
+    await repo.createPage(page({}), 'home');
 
     const stored = await repo.getPageById('pg1');
     expect(stored?.name).toBe('Home');
-    expect(stored?.slug).toBe('home');
     expect(stored?.parentId).toBeNull();
+    // UUID-only shape: the internal slug never serializes.
+    expect(stored !== null && 'slug' in stored).toBe(false);
   });
 
   it('finds by project + slug', async () => {
-    await repo.createPage(page({}));
+    await repo.createPage(page({}), 'home');
 
     expect((await repo.getPageByProjectAndSlug('proj-1', 'home'))?.id).toBe('pg1');
     expect(await repo.getPageByProjectAndSlug('proj-1', 'nope')).toBeNull();
@@ -101,19 +101,19 @@ describe('SqlitePageRepository (against the real schema)', () => {
       '```',
     ].join('\n');
 
-    await repo.createPage(page({ description }));
+    await repo.createPage(page({ description }), 'home');
 
     expect((await repo.getPageById('pg1'))?.description).toBe(description);
   });
 
   it('treats an undescribed page as null, not empty string', async () => {
-    await repo.createPage(page({}));
+    await repo.createPage(page({}), 'home');
 
     expect((await repo.getPageById('pg1'))?.description).toBeNull();
   });
 
   it('updates a description without touching the rest of the page', async () => {
-    await repo.createPage(page({ description: 'first' }));
+    await repo.createPage(page({ description: 'first' }), 'home');
     const stored = await repo.getPageById('pg1');
     if (stored === null) throw new Error('page was not stored');
 
@@ -122,19 +122,20 @@ describe('SqlitePageRepository (against the real schema)', () => {
     const updated = await repo.getPageById('pg1');
     expect(updated?.description).toBe('second');
     expect(updated?.name).toBe('Home');
-    expect(updated?.slug).toBe('home');
+    // A slug-less update leaves the internal slug resolving as before.
+    expect((await repo.getPageByProjectAndSlug('proj-1', 'home'))?.id).toBe('pg1');
   });
 
   it('finds by custom_id scoped to the project', async () => {
-    await repo.createPage(page({ customId: 'legacy:home' }));
+    await repo.createPage(page({ customId: 'legacy:home' }), 'home');
 
     expect((await repo.getPageByCustomId('proj-1', 'legacy:home'))?.id).toBe('pg1');
     expect(await repo.getPageByCustomId('other-project', 'legacy:home')).toBeNull();
   });
 
   it('updates a page and its parent', async () => {
-    await repo.createPage(page({}));
-    await repo.createPage(page({ id: 'pg2', name: 'Child', slug: 'child' }));
+    await repo.createPage(page({}), 'home');
+    await repo.createPage(page({ id: 'pg2', name: 'Child' }), 'child');
 
     const stored = await repo.getPageById('pg1');
     if (stored === null) {
@@ -151,7 +152,7 @@ describe('SqlitePageRepository (against the real schema)', () => {
 
   describe('deletion (ADR-0025)', () => {
     it('deletes a page with nothing referencing it', async () => {
-      await repo.createPage(page({}));
+      await repo.createPage(page({}), 'home');
 
       await repo.deletePage('pg1');
 
@@ -159,7 +160,7 @@ describe('SqlitePageRepository (against the real schema)', () => {
     });
 
     it('reports zero blockers for an unreferenced page', async () => {
-      await repo.createPage(page({}));
+      await repo.createPage(page({}), 'home');
 
       expect(await repo.getPageDeletionBlockers('pg1')).toEqual({
         childPages: 0,
@@ -169,14 +170,14 @@ describe('SqlitePageRepository (against the real schema)', () => {
     });
 
     it('counts a child page as a blocker', async () => {
-      await repo.createPage(page({}));
-      await repo.createPage(page({ id: 'pg2', parentId: 'pg1', name: 'Child', slug: 'child' }));
+      await repo.createPage(page({}), 'home');
+      await repo.createPage(page({ id: 'pg2', parentId: 'pg1', name: 'Child' }), 'child');
 
       expect((await repo.getPageDeletionBlockers('pg1')).childPages).toBe(1);
     });
 
     it('counts an attached tracking as a blocker', async () => {
-      await repo.createPage(page({}));
+      await repo.createPage(page({}), 'home');
       await connection.kysely
         .insertInto('navigation_events')
         .values({
@@ -205,7 +206,7 @@ describe('SqlitePageRepository (against the real schema)', () => {
     });
 
     it('counts a flow node placed on the page as a blocker', async () => {
-      await repo.createPage(page({}));
+      await repo.createPage(page({}), 'home');
       await connection.kysely
         .insertInto('flows')
         .values({
