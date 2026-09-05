@@ -73,3 +73,27 @@
 - Mode: single PR with size:exception (maintainer-approved for this run)
 - Boundary: all 17 tasks (Phases 1–5), one deliverable scope, verification included
 - Estimated review budget impact: Phase 5 adds ~220 lines of churn (mostly deletions); counted total now within the approved size:exception — review Phases 1–4 and 5 separately
+
+## Phase 6 Remediation: docs-wording assertion (verify FAIL follow-up)
+
+- Task: spec scenario "Docs state system-generated" had no automated covering test (verify-report PARTIAL). No product behavior touched.
+- Completed: 6.1 (RED→GREEN `tests/docs-system-generated-slugs.test.ts`, 5 tests), 6.2 (four gates green: typecheck 0, lint 0 errors, format:check clean, `npm test` 85 files / 630 passed / 6 skipped).
+- Scope note: no ledger operations — orchestrator decision: native attempt ledger cannot be settled in this repo state; progress recorded here only.
+
+### TDD Cycle Evidence (Phase 6)
+
+| Task | Test File                                   | Layer | RED                                                                                                                                                                                                                         | GREEN    | TRIANGULATE                                                                      | REFACTOR    |
+| ---- | ------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------- | ----------- |
+| 6.1  | `tests/docs-system-generated-slugs.test.ts` | Unit  | Pre-change phrasing assertion failed as expected; first negative draft failed against current "never user-supplied" wording (design flaw caught); revised negation-aware negative failed on injected affirmative regression | 5/5 pass | 5 cases (positive wording ×2, negative instruction ×2, company-exception pin ×1) | None needed |
+
+### Phase 6 Design Notes
+
+- Positive assertions anchor on the actual reworded phrases from commit `5f3e8b9`: REQ-FDN-003 `system-generated from the name`, ADR-0004 `system-generated server-side`, plus `regenerated on rename` in both. No whole-file snapshots.
+- Negative assertions flag only _affirmative_ user-supplied instructions: sentences matching user-supplied (or supplied/provided-by-user/client variants) without a negation (`never`/`not`/`no longer`/`n't`), excluding company sentences so the company slug exception cannot trip them. The exception itself is pinned (`company slug remains user-supplied`).
+- Pre-change wording (commit `5f3e8b9^`: REQ listed `slug` among carried fields, ADR had no project/page slug-source statement) carries no affirmative token, so the negative targets genuine future regressions; a full revert is caught by the positives.
+
+### Work Unit Evidence (Phase 6)
+
+| Unit                   | Focused test command + result                                                         | Runtime harness + result                                 | Rollback boundary                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Docs-wording assertion | `npx vitest run tests/docs-system-generated-slugs.test.ts` → 5/5 (RED steps observed) | N/A — file-wording assertion, no runtime boundary exists | Revert commit; `tests/docs-system-generated-slugs.test.ts` + Phase 6 task/progress entries only |

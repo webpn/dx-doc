@@ -55,3 +55,8 @@ Client delta ~220 → ~1,100 vs 800 budget (+300 over; size:exception holds; rev
 - [x] 5.3 GREEN: strip `slug` from `src/app/api/projects.ts` + `src/app/api/pages.ts` (records/inputs), `src/app/shell/project-create-page.tsx` + `src/app/shell/page-create-page.tsx` + `src/app/shell/page-editor-page.tsx` (state/field/payload), `src/app/shell/project-list-page.tsx` + `src/app/shell/project-page.tsx`, `src/app/i18n/messages/en.ts` (project/page keys) to pass 5.2
 - [x] 5.4 Grep-proof: `rg -n slug src/app/api src/app/shell` shows project/page slug-free (company keys only)
 - [x] 5.5 Run gates `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`; all MUST pass
+
+## Phase 6: Verify-remediation (docs-wording assertion)
+
+- [x] 6.1 RED→GREEN: add `tests/docs-system-generated-slugs.test.ts` asserting REQ-FDN-003 (`system-generated from the name`) + ADR-0004 (`system-generated server-side`) wording and no affirmative user-supplied project/page instruction (company exception pinned); Test-first: `npx vitest run tests/docs-system-generated-slugs.test.ts`
+- [x] 6.2 Run gates `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`; all MUST pass
