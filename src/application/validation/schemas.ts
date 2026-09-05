@@ -19,6 +19,17 @@ const slug = z
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'slug must be lowercase letters, digits and single hyphens');
 
 /**
+ * Project/page slugs are system-generated from the name and regenerate on
+ * rename (auto-managed-slugs). The field rejects any supplied value in the
+ * shared layer so every entry point (API, MCP, direct calls) enforces it;
+ * the company slug above stays user-supplied. Update schemas inherit this
+ * through `.partial()`.
+ */
+const rejectedSlug = z
+  .never({ message: 'slug is system-generated and must not be supplied' })
+  .optional();
+
+/**
  * An optional `custom_id` — the orthogonal idempotency key (REQ-IMP-003, D30).
  * It is never a foreign key; dx-doc references always use the immutable `id`.
  */
@@ -62,7 +73,7 @@ export const projectCreateSchema = z.object({
     .trim()
     .min(1, 'name is required')
     .max(120, 'name must be 120 characters or fewer'),
-  slug,
+  slug: rejectedSlug,
   description: z.string().max(4000, 'description must be 4000 characters or fewer').optional(),
   icon: z.string().max(200, 'icon must be 200 characters or fewer').optional(),
   platform: z.enum(PLATFORMS, {
@@ -84,7 +95,7 @@ export const pageCreateSchema = z.object({
     .trim()
     .min(1, 'name is required')
     .max(120, 'name must be 120 characters or fewer'),
-  slug,
+  slug: rejectedSlug,
   parentId: z.string().min(1, 'parent_id must not be empty').optional(),
   // Markdown (REQ-AUTH-001); screenshots are image references inside it
   // (REQ-AUTH-002). Same budget as a tracking description, the closest
