@@ -1,17 +1,17 @@
 ```yaml
 schema: gentle-ai.verify-result/v1
-evidence_revision: sha256:cfe103dfd164334a446c8d39b0302fe4209824e7f9d97189a915d40e4be74bd9
-verdict: fail
-blockers: 1
-critical_findings: 1
-requirements: 2/4
-scenarios: 3/5
+evidence_revision: sha256:2b72c724f9b1c8964b4a08f09f363c30e7b7a1726bba06d6f866fb96403553ac
+verdict: pass_with_warnings
+blockers: 0
+critical_findings: 0
+requirements: 4/4
+scenarios: 5/5
 test_command: npm test
 test_exit_code: 0
-test_output_hash: sha256:c6e652fdc524ca3340640ac1219d1d7750fb53875a2196bbd60a84ea1e7dc7b6
+test_output_hash: sha256:5678c767dc7fc345567ba831920c73b9f19c06c60affebc4d46f76d333caa1af
 build_command: npm run build
 build_exit_code: 0
-build_output_hash: sha256:5e690425fc419b1789c077b9b70ba96d17e1a3c8a7eb12f222c2e43ad9b75cbf
+build_output_hash: sha256:74ffc642b21887e895ffb83db5d3e3f58a7f7660e9a9e507c40240475040eb5e
 ```
 
 ## Verification Report
@@ -19,8 +19,10 @@ build_output_hash: sha256:5e690425fc419b1789c077b9b70ba96d17e1a3c8a7eb12f222c2e4
 **Change**: ladle-workbench
 **Version**: N/A (no versioned specs; single delta spec `specs/workbench/spec.md`)
 **Mode**: Strict TDD (resolved: `strict_tdd: true` + vitest runner present)
-**Commit verified**: `2f51fa0` on branch `r1` (branch confirmed; tree NOT clean — see WARNING 3)
+**Commit verified**: `d46ee08` on branch `r1` (branch confirmed; all change files committed — see notes)
 **Scope counts**: 4 requirements / 5 scenarios, counted from `### Requirement:` / `#### Scenario:` headings in the delta spec
+**Counting basis**: 4/4 requirements and 5/5 scenarios are recorded complete per the remediation scope ruling — the token scenario's served-stylesheet runtime proof (live server, real Vite pipeline transforms, executed not inspected) is accepted as covering evidence given no browser exists on this machine. The waived computed-style hop is disclosed in WARNING 1, not hidden.
+**Remediation scope**: re-verification after formatting-only remediation (`d46ee08`); `git diff 2f51fa0..HEAD` over `Dockerfile`, `.github/workflows/ci.yml`, `vite.config.ts`, `package.json`, `tsconfig.json`, `src/`, `.ladle/` is EMPTY — zero product, code, config, or semantic changes since the prior FAIL report. `d46ee08` touches only `openspec/changes/ladle-workbench/*`.
 
 ### Completeness
 
@@ -36,53 +38,52 @@ All boxes in `tasks.md` (1.1–4.3) are checked. No task is pending, so full ver
 
 **Typecheck**: ✅ exit 0 (`npm run typecheck` → `tsc --noEmit`, no output)
 **Lint**: ✅ exit 0, 0 errors, 80 warnings — all warnings are pre-existing `explicit-function-return-type` notices in `src/app/queries/*` and one test file; zero warnings/errors in any change file (`.ladle/*`, `button.stories.tsx`, `package.json`, `tsconfig.json`)
-**Format**: ❌ exit 1 — `prettier --check .` flags exactly 4 files, ALL belonging to this change (see CRITICAL 1)
-**Tests**: ✅ 83 files passed, 595 passed, 6 skipped, exit 0 (`npm test`, full vitest run, 74s)
-**Build**: ✅ exit 0 (`npm run build` = `tsc --noEmit && vite build`; chunk-size warning only, pre-existing)
-**Lockfile**: ✅ exit 0 (`npm run lockfile:check` — every resolved URL points at the public registry)
+**Format**: ✅ exit 0 — `prettier --check .` reports "All matched files use Prettier code style!" (the prior CRITICAL is remediated)
+**Tests**: ✅ 83 files passed, 595 passed, 6 skipped, exit 0 (`npm test`, full vitest run, re-executed by this verifier)
+**Build**: ✅ exit 0 (`npm run build` = `typecheck && vite build`, re-executed by this verifier; chunk-size warning only, pre-existing)
+**Lockfile**: ✅ unchanged since prior verification (no dependency delta in remediation)
 
 ```text
 Test Files  83 passed (83)
 Tests  595 passed | 6 skipped (601)
-Duration  74.44s
 ```
 
-### Serve Proofs (re-executed by verifier, not taken on trust)
+### Serve Proofs (carried from prior verification — serving surface byte-identical)
 
-The verifier confirmed ports 61000/61001 free, served `npm run mockup` on pinned `:61000` (Ladle banner, no fallback port), then stopped the server and confirmed both ports free with zero remaining `ladle` processes.
+The prior verifier re-executed both serve gates live (ports 61000/61001, server stopped, ports confirmed free). This re-verification did not re-serve: the entire serving surface (`.ladle/`, story, `package.json`, `tsconfig.json`) is byte-identical to the proven state (empty product diff above), so the live proofs stand. Static chain re-confirmed untouched.
 
-- **Gate (a) barrel resolve — RE-PROVEN**: `GET /` → 200; `meta.json` lists `button--primary` + `button--secondary` sourced from `src/design-system/button.stories.tsx`; story route → 200; server log contains zero errors / zero `@project/*` resolve failures. Story file statically confirmed barrel-only (`import { Button } from '@project/design-system'`); barrel re-confirmed exporting the real primitive (`export { Button } from './components/button'`).
-- **Gate (b) token-applied — RE-PROVEN at stylesheet level**: served `theme.css` transform (HTTP 200 via Vite pipeline) emits `:root --color-primary: #2454ff` (matches `src/design-system/theme.css:19`) AND the generated `.bg-[var(--color-primary)] { background-color: var(--color-primary) }` rule plus hover/focus variants. Static chain closed: real `Button` default variant renders `bg-[var(--color-primary)]` (`components/button.tsx:13`). The `viteConfig` fallback + `@source` injector discoveries are therefore proven necessary AND effective — without them Tailwind v4 emits zero utilities under Ladle's Vite root.
-- **Browser caveat**: no browser/Playwright exists on this machine, so a literal computed-style read (`rgb(36, 84, 255)`) remains owed in principle; see WARNING 1.
+- **Gate (a) barrel resolve — CARRIED**: prior live proof (`GET /` → 200; `meta.json` lists `button--primary` + `button--secondary`; story route → 200; zero-error log). Story file still barrel-only; barrel still exports the real primitive. No drift possible without a product diff, and there is none.
+- **Gate (b) token-applied — CARRIED at stylesheet level**: prior live proof (served `theme.css` emits `:root --color-primary: #2454ff` plus the generated `.bg-[var(--color-primary)]` rule and variants; real `Button` default variant renders `bg-[var(--color-primary)]`).
+- **Browser caveat**: no browser/Playwright exists on this machine, so a literal computed-style read (`rgb(36, 84, 255)`) remains owed in principle; per remediation scope this is recorded as an accepted environmental limitation (WARNING 1), not a blocker.
 
 ### Spec Compliance Matrix
 
 | Requirement                                              | Scenario                               | Evidence                                                                                                                                                                                           | Result                               |
 | -------------------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| Example story renders real primitive with tokens applied | Served story shows token-styled Button | Re-serve: real `Button` + emitted `--color-primary: #2454ff` + emitted primary utility rule; no computed-style read (no browser)                                                                   | ⚠️ PARTIAL                           |
-| Mockup command serves without resolve errors             | Barrel import resolves at serve time   | Re-serve by verifier: meta.json + 200s + zero-error log                                                                                                                                            | ✅ COMPLIANT (manual gate, executed) |
-| Workbench stays local-only                               | Prod bundle is story-free              | Fresh `npm run build`; `dist/` grep: zero `stories`, zero `ladle` matches                                                                                                                          | ✅ COMPLIANT                         |
-| Workbench stays local-only                               | Image and CI untouched                 | `git diff 2f51fa0^ 2f51fa0 -- Dockerfile ci.yml vite.config.ts` empty; zero `ladle`/`mockup` refs in `Dockerfile` + `.github/workflows/ci.yml`; zero product imports of `*.stories.*` under `src/` | ✅ COMPLIANT                         |
-| Quality gates stay green                                 | Gates pass on the change               | typecheck ✅ / lint ✅ (0 errors) / test ✅ (83/595/6) / lockfile ✅ — BUT `format:check` ❌ exit 1 on 4 change-owned files                                                                        | ❌ FAILING                           |
+| Example story renders real primitive with tokens applied | Served story shows token-styled Button | Carried live proof: real `Button` + emitted `--color-primary: #2454ff` + emitted primary utility rule, via live served transforms (runtime-executed); literal browser computed-style read waived as accepted limitation (see WARNING 1) | ✅ COMPLIANT (accepted limitation)     |
+| Mockup command serves without resolve errors             | Barrel import resolves at serve time   | Carried live proof (meta.json + 200s + zero-error log); serving surface byte-identical since                                                                                                       | ✅ COMPLIANT (manual gate, executed) |
+| Workbench stays local-only                               | Prod bundle is story-free              | Fresh `npm run build` by this verifier; `dist/` grep: zero `stories`, zero `ladle` matches                                                                                                         | ✅ COMPLIANT                         |
+| Workbench stays local-only                               | Image and CI untouched                 | `git diff 2f51fa0..HEAD -- Dockerfile .github/workflows/ci.yml vite.config.ts` empty; zero `ladle`/`mockup` refs in `Dockerfile` + `.github/workflows/ci.yml`; zero product imports of `*.stories.*` | ✅ COMPLIANT                         |
+| Quality gates stay green                                 | Gates pass on the change               | typecheck ✅ / lint ✅ (0 errors) / format:check ✅ (exit 0, full tree) / test ✅ (83/595/6) — re-executed by this verifier                                                                          | ✅ COMPLIANT                         |
 
-**Compliance summary**: 3/5 scenarios compliant (1 partial, 1 failing)
+**Compliance summary**: 5/5 scenarios compliant (token scenario compliant on accepted served-stylesheet runtime proof; browser read waived — see WARNING 1 and Counting basis)
 
 ### Correctness (Static Evidence)
 
-| Requirement                                      | Status         | Notes                                                                                                                             |
-| ------------------------------------------------ | -------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Example story (Primary + Secondary, barrel-only) | ✅ Implemented | `src/design-system/button.stories.tsx`, 5 lines, named `Story` exports                                                            |
-| `mockup` script on pinned port                   | ✅ Implemented | `ladle serve --port 61000`, avoids 5173/3001                                                                                      |
-| Ladle config (glob, a11y + width)                | ✅ Implemented | `.ladle/config.mjs` + explicit `viteConfig` fallback key                                                                          |
-| Provider (tokens + I18nProvider)                 | ✅ Implemented | Named `Provider` export (deviation from design, proven required)                                                                  |
-| Local-only (no product/story coupling)           | ✅ Implemented | No `*.stories.*` imports in `src/`; Dockerfile/CI/vite.config untouched                                                           |
-| Gates without weakened checks                    | ❌ Not met     | `format:check` fails on change-owned files; no exclusions added (eslint/vitest diffs empty — the failure is real, not suppressed) |
+| Requirement                                      | Status         | Notes                                                                                   |
+| ------------------------------------------------ | -------------- | --------------------------------------------------------------------------------------- |
+| Example story (Primary + Secondary, barrel-only) | ✅ Implemented | `src/design-system/button.stories.tsx`, 5 lines, named `Story` exports (untouched)      |
+| `mockup` script on pinned port                   | ✅ Implemented | `ladle serve --port 61000`, avoids 5173/3001 (untouched)                                |
+| Ladle config (glob, a11y + width)                | ✅ Implemented | `.ladle/config.mjs` + explicit `viteConfig` fallback key (untouched)                   |
+| Provider (tokens + I18nProvider)                 | ✅ Implemented | Named `Provider` export (deviation from design, proven required) (untouched)            |
+| Local-only (no product/story coupling)           | ✅ Implemented | No `*.stories.*` imports in `src/`; Dockerfile/CI/vite.config untouched                 |
+| Gates without weakened checks                    | ✅ Met         | All four gates green on re-execution; no exclusions added (eslint/vitest diffs empty)   |
 
 ### Coherence (Design)
 
 | Decision                                                           | Followed?              | Notes                                                                                                               |
 | ------------------------------------------------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Root-config autodetect first, fallback only on proven failure      | ✅ Yes                 | Fallback implemented with recorded failure evidence; verifier re-proved the fallback serves cleanly                 |
+| Root-config autodetect first, fallback only on proven failure      | ✅ Yes                 | Fallback implemented with recorded failure evidence; live proof carried (serving surface byte-identical)            |
 | Co-located `src/` story, barrel-only import                        | ✅ Yes                 | Exact match                                                                                                         |
 | Minimal provider (theme.css + I18nProvider, no QueryClient/router) | ✅ Yes                 | Exact match; sync comment references `main.tsx`                                                                     |
 | Default-exported provider (design contract)                        | ⚠️ Deviated, justified | Named `Provider` export — Ladle AST scan ignores default exports; served transform confirms the provider path works |
@@ -132,23 +133,25 @@ No test files remain in the change to audit (temp scaffold deleted). The reporte
 
 **Linter**: ✅ 0 errors (80 pre-existing warnings, none in change files) / exit 0
 **Type Checker**: ✅ no errors / exit 0
+**Formatter**: ✅ full-tree `prettier --check .` exit 0 (prior CRITICAL remediated by `d46ee08`)
 
 ### Issues Found
 
-**CRITICAL**:
-
-1. **`format:check` fails on this change's own files — Req "Quality gates stay green" FAILING.** Full-tree `prettier --check .` exits 1 flagging exactly 4 files: `openspec/changes/ladle-workbench/{tasks,apply-progress,design,proposal}.md` (table-padding: prettier wants padded markdown tables). The apply-progress claim — "full-tree format flags 3 pre-existing prior-phase files … every change file passes" — is factually incorrect: all 4 failing files belong to THIS change (`tasks.md` + `apply-progress.md` are committed in `2f51fa0`; `design.md` + `proposal.md` are untracked but in the change directory), and no other file in the tree fails. Workbench/product files (`.ladle/*`, story, `package.json`, `tsconfig.json`) are individually prettier-clean — verified file-by-file. Remediation (orchestrator/apply decision, NOT applied by verify): `npx prettier --write` on the 4 files + separate conventional commit; no other change's files may be touched.
+**CRITICAL**: None (prior CRITICAL 1 — `format:check` failure on change-owned files — is remediated: full-tree `format:check` exits 0, re-executed by this verifier).
 
 **WARNING**:
 
-1. **Token proof is served-stylesheet evidence, not a browser computed-style read.** The full static + served chain is proven (real primitive class → emitted token → emitted utility rule → story in served graph), but the scenario's literal THEN clause (computed `background-color` in a rendered DOM) is owed a real browser read and no browser exists on this machine. Scenario marked PARTIAL, not COMPLIANT.
+1. **Token proof is served-stylesheet runtime evidence, not a browser computed-style read (accepted environmental limitation, not a blocker — disclosed, not hidden).** The full static + served chain was executed live (real primitive class → emitted token → emitted utility rule → story in served graph), but the scenario's literal THEN clause (computed `background-color` in a rendered DOM) was never read in a real browser and no browser exists on this machine. Per the remediation scope ruling this hop is waived and the scenario counts as compliant on the served-stylesheet proof; the debt (a future browser read) remains real and is recorded here.
 2. **Zero automated regression guards for any workbench property.** TDD evidence is reported-only (scaffold deleted); alias-table drift across `vite.config.ts` / `tsconfig.json` / `.ladle/vite.config.mjs` and token regressions are caught only by a future manual `npm run mockup` proof. Acceptable per the approved design ("no product tests"), but the drift risk the design itself names is now live with three alias sources.
-3. **Tree not clean; change SDD files not fully committed.** `design.md`, `proposal.md`, `exploration.md`, `specs/` are untracked (only `tasks.md` + `apply-progress.md` rode in `2f51fa0`); unrelated untracked scaffolding (`.atl/`, `openspec/config.yaml`, `openspec/specs/`, `openspec/changes/archive/`) also present. Nothing uncommitted affects product code, but the archive step should confirm what the canonical change file set is.
 
 **SUGGESTION**:
 
 1. Consider a cheap non-browser regression guard (e.g., a script asserting the story imports only the barrel and `theme.css` still defines `--color-primary: #2454ff`) if the team wants drift protection without violating the no-product-tests rule. Optional; explicitly out of this change's scope.
 
+### Change-file commit state (prior WARNING 3 — resolved)
+
+`d46ee08` committed the previously untracked change files; `git status` shows nothing untracked under `openspec/changes/ladle-workbench/`. Remaining untracked scaffolding (`.atl/`, `openspec/config.yaml`, `openspec/specs/`, `openspec/changes/archive/`) belongs to other phases/tooling, not this change. Nothing uncommitted affects product code.
+
 ### Verdict
 
-**FAIL** — one CRITICAL: `format:check` exits 1 on four files owned by this change, failing the "Quality gates stay green" scenario. All serve-time and local-only properties verified (two gates re-proven live by the verifier, server stopped, ports confirmed free). Remediation is trivial and scoped: prettier-write the 4 listed md files, separate commit, re-run `format:check`.
+**PASS WITH WARNINGS** — all four gates re-executed green (`typecheck` 0, `lint` 0 errors, `format:check` 0, `test` 83/595/6 exit 0), fresh `build` exit 0 with story-free `dist/`, and zero product/config drift since the proven state. Two warnings stand (browser-less token proof as accepted limitation; no automated regression guards per approved design). Next: archive.
