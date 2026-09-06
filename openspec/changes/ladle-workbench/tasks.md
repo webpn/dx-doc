@@ -2,14 +2,14 @@
 
 ## Review Workload Forecast
 
-| Field | Value |
-|-------|-------|
+| Field                   | Value                  |
+| ----------------------- | ---------------------- |
 | Estimated changed lines | ~60 added (+ lockfile) |
-| 400-line budget risk | Low |
-| Chained PRs recommended | No |
-| Suggested split | Single PR |
-| Delivery strategy | single-pr |
-| Chain strategy | pending |
+| 400-line budget risk    | Low                    |
+| Chained PRs recommended | No                     |
+| Suggested split         | Single PR              |
+| Delivery strategy       | single-pr              |
+| Chain strategy          | pending                |
 
 Decision needed before apply: No
 Chained PRs recommended: No
@@ -18,9 +18,9 @@ Chain strategy: pending
 
 ### Suggested Work Units
 
-| Unit | Goal | Likely PR | Focused test command | Runtime harness | Rollback boundary |
-|------|------|-----------|----------------------|-----------------|-------------------|
-| 1 | Local-only Ladle workbench + Button story, serve-proven | PR 1 | `npm run typecheck && npm run lint && npm run format:check && npm test` | `npm run mockup` serve on 61000, open Button story, confirm render + token color | Delete `.ladle/`, story, `mockup` script; remove dep, reinstall |
+| Unit | Goal                                                    | Likely PR | Focused test command                                                    | Runtime harness                                                                  | Rollback boundary                                               |
+| ---- | ------------------------------------------------------- | --------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| 1    | Local-only Ladle workbench + Button story, serve-proven | PR 1      | `npm run typecheck && npm run lint && npm run format:check && npm test` | `npm run mockup` serve on 61000, open Button story, confirm render + token color | Delete `.ladle/`, story, `mockup` script; remove dep, reinstall |
 
 ## Phase 1: Foundation (tooling setup)
 

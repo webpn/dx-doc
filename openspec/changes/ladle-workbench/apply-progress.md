@@ -20,24 +20,24 @@
 
 ### Files Changed
 
-| File | Action | What Was Done |
-|------|--------|---------------|
-| `package.json` | Modified | `@ladle/react ^5.1.1` devDep + `mockup` script |
-| `package-lock.json` | Modified | InstallSide-effect of 1.1 (public registry, check green) |
-| `.ladle/config.mjs` | Created | Stories glob, a11y + width addons, `viteConfig` fallback key |
-| `.ladle/vite.config.mjs` | Created | Fallback Vite config: alias table + tailwind + `@source` injector (see deviations) |
-| `.ladle/components.tsx` | Created | Token import + `I18nProvider` wrapper, named `Provider` export |
-| `src/design-system/button.stories.tsx` | Created | Barrel-only `Button` story, `Primary` + `Secondary` |
-| `tsconfig.json` | Modified | Added `.ladle/**/*.tsx` to include (task 3.3 trip proven) |
-| `openspec/changes/ladle-workbench/tasks.md` | Modified | All boxes marked `[x]` |
-| `Dockerfile`, `.github/workflows/ci.yml`, `vite.config.ts`, product code | Untouched | Verified by diff |
+| File                                                                     | Action    | What Was Done                                                                      |
+| ------------------------------------------------------------------------ | --------- | ---------------------------------------------------------------------------------- |
+| `package.json`                                                           | Modified  | `@ladle/react ^5.1.1` devDep + `mockup` script                                     |
+| `package-lock.json`                                                      | Modified  | InstallSide-effect of 1.1 (public registry, check green)                           |
+| `.ladle/config.mjs`                                                      | Created   | Stories glob, a11y + width addons, `viteConfig` fallback key                       |
+| `.ladle/vite.config.mjs`                                                 | Created   | Fallback Vite config: alias table + tailwind + `@source` injector (see deviations) |
+| `.ladle/components.tsx`                                                  | Created   | Token import + `I18nProvider` wrapper, named `Provider` export                     |
+| `src/design-system/button.stories.tsx`                                   | Created   | Barrel-only `Button` story, `Primary` + `Secondary`                                |
+| `tsconfig.json`                                                          | Modified  | Added `.ladle/**/*.tsx` to include (task 3.3 trip proven)                          |
+| `openspec/changes/ladle-workbench/tasks.md`                              | Modified  | All boxes marked `[x]`                                                             |
+| `Dockerfile`, `.github/workflows/ci.yml`, `vite.config.ts`, product code | Untouched | Verified by diff                                                                   |
 
 ### TDD Cycle Evidence
 
-| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
-|------|-----------|-------|------------|-----|-------|-------------|----------|
-| 1.1–1.3, 2.1 | — (structural) | — | `npm test` baseline 83/595/6-skipped captured pre-change | ➖ N/A | ➖ N/A | ➖ Skipped: purely structural config/wiring, one possible output each | ➖ None needed |
-| 2.2 | `src/design-system/button.stories.test.tsx` (temporary scaffold, deleted after GREEN per design "no product tests") | Integration (jsdom + RTL) | N/A (new file) | ✅ import of non-existent `./button.stories` failed, 1 file failed | ✅ 2/2 passed after story written | ✅ 2 cases: default-variant Primary + secondary-variant Secondary, both real render + role/name assertions, zero mocks | ➖ None needed: 4-line story, no duplication |
+| Task         | Test File                                                                                                           | Layer                     | Safety Net                                               | RED                                                                | GREEN                             | TRIANGULATE                                                                                                            | REFACTOR                                     |
+| ------------ | ------------------------------------------------------------------------------------------------------------------- | ------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| 1.1–1.3, 2.1 | — (structural)                                                                                                      | —                         | `npm test` baseline 83/595/6-skipped captured pre-change | ➖ N/A                                                             | ➖ N/A                            | ➖ Skipped: purely structural config/wiring, one possible output each                                                  | ➖ None needed                               |
+| 2.2          | `src/design-system/button.stories.test.tsx` (temporary scaffold, deleted after GREEN per design "no product tests") | Integration (jsdom + RTL) | N/A (new file)                                           | ✅ import of non-existent `./button.stories` failed, 1 file failed | ✅ 2/2 passed after story written | ✅ 2 cases: default-variant Primary + secondary-variant Secondary, both real render + role/name assertions, zero mocks | ➖ None needed: 4-line story, no duplication |
 
 ### Test Summary
 
@@ -49,11 +49,11 @@
 
 ### Work Unit Evidence
 
-| Evidence | Value |
-|---|---|
-| Focused test command and exact result | `npx vitest run src/design-system/button.stories.test.tsx --project ui` → RED: 1 failed (no tests, import error); GREEN: 1 passed, 2/2 tests |
+| Evidence                                          | Value                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Focused test command and exact result             | `npx vitest run src/design-system/button.stories.test.tsx --project ui` → RED: 1 failed (no tests, import error); GREEN: 1 passed, 2/2 tests                                                                                                                                                                     |
 | Runtime harness command/scenario and exact result | `npm run mockup` on :61000 → shell 200, meta.json lists `button--primary`/`button--secondary`, story/barrel/button/cn/provider/i18n modules all HTTP 200, server log zero errors; served theme.css contains `--color-primary: #2454ff` + `.bg-[var(--color-primary)] { background-color: var(--color-primary) }` |
-| Rollback boundary | Delete `.ladle/`, `src/design-system/button.stories.tsx`, `mockup` script; remove `@ladle/react`, reinstall; revert tsconfig include. No product code touched. |
+| Rollback boundary                                 | Delete `.ladle/`, `src/design-system/button.stories.tsx`, `mockup` script; remove `@ladle/react`, reinstall; revert tsconfig include. No product code touched.                                                                                                                                                   |
 
 ### Deviations from Design
 
