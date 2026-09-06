@@ -27,12 +27,14 @@
     "docs:check-index": "node scripts/docs-index.mjs check",
     "docs:generate-index": "node scripts/docs-index.mjs generate",
     "lockfile:check": "node scripts/lockfile-registry.mjs check",
-    "lockfile:normalize": "node scripts/lockfile-registry.mjs normalize"
+    "lockfile:normalize": "node scripts/lockfile-registry.mjs normalize",
+    "mockup": "ladle serve --port 61000"
   },
   "engines": {
     "node": ">=22.0.0"
   },
   "devDependencies": {
+    "@ladle/react": "^5.1.1",
     "@playwright/test": "^1.62.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",

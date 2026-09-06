@@ -42,6 +42,7 @@
     "tests",
     "e2e",
     "spikes",
+    ".ladle/**/*.tsx",
     "vite.config.ts",
     "playwright.config.ts",
     "scripts",
