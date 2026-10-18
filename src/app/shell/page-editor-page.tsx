@@ -18,7 +18,7 @@ import { usePage, usePages, useProject, useTrackings, useUpdatePage } from '../q
 import { ProjectWorkspace } from './project-workspace';
 
 /**
- * Edit one page: name, slug, parent and behavioural description (REQ-DOM-001).
+ * Edit one page: name, parent and behavioural description (REQ-DOM-001).
  *
  * The description is Markdown through the shared editor (REQ-AUTH-001), so
  * screenshots are pasted straight into it as uploaded-asset references
@@ -41,7 +41,6 @@ export function PageEditorPage(): ReactElement {
   const updatePage = useUpdatePage(pageId ?? '', projectId ?? '');
 
   const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
   const [parentId, setParentId] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +54,6 @@ export function PageEditorPage(): ReactElement {
   useEffect(() => {
     if (loaded === undefined) return;
     setName(loaded.name);
-    setSlug(loaded.slug);
     setParentId(loaded.parentId ?? '');
     setDescription(loaded.description ?? '');
   }, [loaded]);
@@ -69,16 +67,11 @@ export function PageEditorPage(): ReactElement {
       setError(t('page.edit.missingName'));
       return;
     }
-    if (slug.trim() === '') {
-      setError(t('page.edit.missingSlug'));
-      return;
-    }
     if (loaded === undefined) return;
 
     try {
       await updatePage.mutateAsync({
         name: name.trim(),
-        slug: slug.trim(),
         // An omitted parentId means "no parent"; the API treats the absent
         // key and an empty string differently, so send only a real id.
         ...(parentId === '' ? {} : { parentId }),
@@ -118,15 +111,6 @@ export function PageEditorPage(): ReactElement {
                 setName(e.target.value);
               }}
               value={name}
-            />
-          </Field>
-          <Field htmlFor="page-slug" label={t('page.edit.slug')}>
-            <Input
-              id="page-slug"
-              onChange={(e) => {
-                setSlug(e.target.value);
-              }}
-              value={slug}
             />
           </Field>
           <Field htmlFor="page-parent" label={t('page.edit.parent')}>

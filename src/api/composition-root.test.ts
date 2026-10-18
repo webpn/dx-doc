@@ -555,7 +555,7 @@ describe('catalogue copy at project creation over HTTP (REQ-DOM-019, Critical Bu
       method: 'POST',
       url: '/api/projects',
       headers: { cookie: `dxdoc_session=${cookie}` },
-      payload: { companyId: 'c1', name: 'Web', slug: 'web', platform: 'web' },
+      payload: { companyId: 'c1', name: 'Web', platform: 'web' },
     });
     expect(created.statusCode).toBe(201);
     const projectId = created.json<{ id: string }>().id;
@@ -623,7 +623,7 @@ describe('catalogue copy at project creation over HTTP (REQ-DOM-019, Critical Bu
       method: 'POST',
       url: '/api/projects',
       headers: { cookie: `dxdoc_session=${cookie}` },
-      payload: { companyId: 'c1', name: 'Bare', slug: 'bare', platform: 'web' },
+      payload: { companyId: 'c1', name: 'Bare', platform: 'web' },
     });
     expect(created.statusCode).toBe(201);
     const projectId = created.json<{ id: string }>().id;

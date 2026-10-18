@@ -21,7 +21,7 @@ vi.mock('../queries', async (importOriginal) => {
   };
 });
 
-const PROJECT = { id: 'prj_1', companyId: 'cmp_1', name: 'Acme app', slug: 'acme' };
+const PROJECT = { id: 'prj_1', companyId: 'cmp_1', name: 'Acme app' };
 
 describe('FreePageCreatePage (REQ-AUTH-003)', () => {
   beforeEach(() => {

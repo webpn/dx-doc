@@ -21,7 +21,7 @@ Every entity carries an **immutable internal ID** that is separate from its user
 - Is the primary key in the database and the canonical reference in API responses.
 - Is never exposed as a user-editable field.
 
-The **slug** is a human-readable, URL-safe string derived from the name. It may change when the name changes. The **name** is the user-visible label and may also change.
+The **slug** is a human-readable, URL-safe string derived from the name. It may change when the name changes. The **name** is the user-visible label and may also change. For projects and pages the slug is system-generated server-side — never user-supplied, regenerated on rename with no redirect — and internal-only: records and API responses carry the UUID alone. The company slug remains user-supplied.
 
 API endpoints use the internal ID for entity references. The slug may be used for human-friendly URLs but is resolved to the internal ID server-side.
 

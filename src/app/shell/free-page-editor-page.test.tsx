@@ -42,7 +42,7 @@ vi.mock('../editor', () => ({
   ),
 }));
 
-const PROJECT = { id: 'prj_1', companyId: 'cmp_1', name: 'Acme app', slug: 'acme' };
+const PROJECT = { id: 'prj_1', companyId: 'cmp_1', name: 'Acme app' };
 
 const FREE_PAGE = {
   id: 'fp1',

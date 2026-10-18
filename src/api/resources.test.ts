@@ -168,7 +168,7 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
 
   it('rejects an invalid project identically through the HTTP API and a direct service call', async () => {
     const token = await loginToken();
-    const invalid = { name: '', slug: '', platform: 'banana' };
+    const invalid = { name: '', platform: 'banana' };
 
     const http = await app.inject({
       method: 'POST',
@@ -200,7 +200,6 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
       payload: {
         companyId: 'c1',
         name: 'Web',
-        slug: 'web',
         platform: 'web',
         customId: 'legacy:web',
       },
@@ -216,7 +215,6 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
       payload: {
         companyId: 'c1',
         name: 'Renamed',
-        slug: 'web',
         platform: 'web',
         customId: 'legacy:web',
       },
@@ -235,14 +233,17 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
       headers: { cookie: `dxdoc_session=${token}` },
     });
     expect(got.statusCode).toBe(200);
-    expect(got.json<{ name: string }>().name).toBe('Renamed');
+    const gotBody = got.json<{ name: string }>();
+    expect(gotBody.name).toBe('Renamed');
+    // UUID-only shape: no slug in project responses.
+    expect('slug' in gotBody).toBe(false);
   });
 
   it('requires authentication for writes', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/projects',
-      payload: { companyId: 'c1', name: 'Web', slug: 'web', platform: 'web' },
+      payload: { companyId: 'c1', name: 'Web', platform: 'web' },
     });
     expect(res.statusCode).toBe(401);
   });
@@ -253,7 +254,7 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
       method: 'POST',
       url: '/api/projects',
       headers: { cookie: `dxdoc_session=${token}` },
-      payload: { companyId: 'c1', name: 'Web', slug: 'web', platform: 'web' },
+      payload: { companyId: 'c1', name: 'Web', platform: 'web' },
     });
     const projectId = project.json<{ id: string }>().id;
     // The creator's auto-grant (M1.12) already carries the edit rights page
@@ -262,7 +263,7 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
       method: 'POST',
       url: `/api/projects/${projectId}/pages`,
       headers: { cookie: `dxdoc_session=${token}` },
-      payload: { name: 'Home', slug: 'home' },
+      payload: { name: 'Home' },
     });
     expect(created.statusCode).toBe(201);
     const pageId = created.json<{ id: string }>().id;
@@ -273,7 +274,43 @@ describe('Project and Page REST routes (REQ-API-001)', () => {
       headers: { cookie: `dxdoc_session=${token}` },
     });
     expect(got.statusCode).toBe(200);
-    expect(got.json<{ name: string }>().name).toBe('Home');
+    const gotBody = got.json<{ name: string }>();
+    expect(gotBody.name).toBe('Home');
+    // UUID-only shape: no slug in page responses.
+    expect('slug' in gotBody).toBe(false);
+  });
+
+  it('rejects a project create carrying a slug', async () => {
+    const token = await loginToken();
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/projects',
+      headers: { cookie: `dxdoc_session=${token}` },
+      payload: { companyId: 'c1', name: 'Web', slug: 'web', platform: 'web' },
+    });
+
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('rejects a page create carrying a slug', async () => {
+    const token = await loginToken();
+    const project = await app.inject({
+      method: 'POST',
+      url: '/api/projects',
+      headers: { cookie: `dxdoc_session=${token}` },
+      payload: { companyId: 'c1', name: 'Web', platform: 'web' },
+    });
+    const projectId = project.json<{ id: string }>().id;
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectId}/pages`,
+      headers: { cookie: `dxdoc_session=${token}` },
+      payload: { name: 'Home', slug: 'home' },
+    });
+
+    expect(res.statusCode).toBe(400);
   });
 });
 

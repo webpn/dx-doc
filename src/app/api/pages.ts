@@ -10,7 +10,6 @@ export interface Page {
   projectId: string;
   parentId: string | null;
   name: string;
-  slug: string;
   description: string | null;
   customId: string | null;
   createdAt: string;
@@ -19,7 +18,6 @@ export interface Page {
 
 export interface PageCreateInput {
   name: string;
-  slug: string;
   parentId?: string;
   description?: string;
   customId?: string;
@@ -27,7 +25,6 @@ export interface PageCreateInput {
 
 export interface PageUpdateInput {
   name?: string;
-  slug?: string;
   parentId?: string;
   description?: string;
   customId?: string;

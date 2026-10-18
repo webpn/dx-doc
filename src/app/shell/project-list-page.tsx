@@ -110,9 +110,7 @@ export function ProjectListPage(): ReactElement {
                 <span className="text-base font-semibold text-[var(--color-ink)]">
                   {project.name}
                 </span>
-                <span className="text-sm text-[var(--color-muted)]">
-                  {project.platform} · {project.slug}
-                </span>
+                <span className="text-sm text-[var(--color-muted)]">{project.platform}</span>
                 <Button
                   onClick={() => {
                     void navigate(`/projects/${project.id}`);

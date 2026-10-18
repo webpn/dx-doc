@@ -12,7 +12,6 @@ vi.mock('../queries', () => ({
       id: 'prj_1',
       companyId: 'cmp_1',
       name: 'Marketing site',
-      slug: 'marketing-site',
       platform: 'web',
     },
     isLoading: false,

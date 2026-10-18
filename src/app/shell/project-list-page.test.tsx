@@ -59,7 +59,6 @@ describe('ProjectListPage', () => {
           id: 'p1',
           companyId: 'c1',
           name: 'Marketing site',
-          slug: 'marketing-site',
           description: null,
           icon: null,
           platform: 'web',
@@ -75,7 +74,7 @@ describe('ProjectListPage', () => {
     renderWithProviders(<ProjectListPage />);
 
     expect(await screen.findByText('Marketing site')).toBeInTheDocument();
-    expect(screen.getByText('web · marketing-site')).toBeInTheDocument();
+    expect(screen.getByText('web')).toBeInTheDocument();
   });
 
   it('scopes to the company in the URL, which outranks the session company', async () => {

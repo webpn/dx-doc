@@ -59,7 +59,7 @@ class FakeAssets implements AssetRepository {
 
 class FakeProjects implements ProjectRepository {
   projects = new Map<string, ProjectRecord>();
-  createProject(p: ProjectRecord): Promise<void> {
+  createProject(p: ProjectRecord, _slug: string): Promise<void> {
     this.projects.set(p.id, p);
     return Promise.resolve();
   }
@@ -75,7 +75,7 @@ class FakeProjects implements ProjectRepository {
   listProjectsForCompany(): Promise<ProjectRecord[]> {
     return Promise.resolve([...this.projects.values()]);
   }
-  updateProject(p: ProjectRecord, expectedUpdatedAt?: string): Promise<boolean> {
+  updateProject(p: ProjectRecord, _slug?: string, expectedUpdatedAt?: string): Promise<boolean> {
     const existing = this.projects.get(p.id);
     if (expectedUpdatedAt !== undefined && existing?.updatedAt !== expectedUpdatedAt) {
       return Promise.resolve(false);
@@ -135,7 +135,6 @@ function build(
     id: 'proj-1',
     companyId: 'c1',
     name: 'Web',
-    slug: 'web',
     platform: 'web',
     description: null,
     icon: null,

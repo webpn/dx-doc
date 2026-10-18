@@ -214,12 +214,12 @@ describe('Access administration and service tokens over HTTP (M1.12 first half)'
     );
   }
 
-  async function createProject(adminCookie: string, name: string, slug: string): Promise<string> {
+  async function createProject(adminCookie: string, name: string): Promise<string> {
     const res = await app.inject({
       method: 'POST',
       url: '/api/projects',
       headers: { cookie: `dxdoc_session=${adminCookie}` },
-      payload: { companyId: 'c1', name, slug, platform: 'web' },
+      payload: { companyId: 'c1', name, platform: 'web' },
     });
     expect(res.statusCode).toBe(201);
     return res.json<{ id: string }>().id;
@@ -227,7 +227,7 @@ describe('Access administration and service tokens over HTTP (M1.12 first half)'
 
   it('a newly created project is readable by its creator with no manual database write (REQ-SEC-003 exit)', async () => {
     const adminCookie = await loginToken('admin@acme.test');
-    const projectId = await createProject(adminCookie, 'Web', 'web');
+    const projectId = await createProject(adminCookie, 'Web');
 
     const got = await app.inject({
       method: 'GET',
@@ -251,8 +251,8 @@ describe('Access administration and service tokens over HTTP (M1.12 first half)'
   it('an Admin grants a Viewer on one project and that Viewer reaches it and no other (REQ-SEC-003 exit)', async () => {
     const adminCookie = await loginToken('admin@acme.test');
     const viewerCookie = await loginToken('viewer@acme.test');
-    const projectA = await createProject(adminCookie, 'Alpha', 'alpha');
-    const projectB = await createProject(adminCookie, 'Beta', 'beta');
+    const projectA = await createProject(adminCookie, 'Alpha');
+    const projectB = await createProject(adminCookie, 'Beta');
 
     // Before the grant: the Viewer reaches neither.
     const beforeA = await app.inject({
@@ -321,7 +321,7 @@ describe('Access administration and service tokens over HTTP (M1.12 first half)'
       .execute();
     const adminCookie = await loginToken('admin@acme.test');
     const editorCookie = await loginToken('editor@acme.test');
-    const projectId = await createProject(adminCookie, 'Web', 'web');
+    const projectId = await createProject(adminCookie, 'Web');
 
     const attempt = await app.inject({
       method: 'PUT',
@@ -350,7 +350,7 @@ describe('Access administration and service tokens over HTTP (M1.12 first half)'
   it('a deactivated user session stops working within one request (REQ-SEC-013)', async () => {
     const adminCookie = await loginToken('admin@acme.test');
     const viewerCookie = await loginToken('viewer@acme.test');
-    const projectId = await createProject(adminCookie, 'Web', 'web');
+    const projectId = await createProject(adminCookie, 'Web');
     // Grant the Viewer so the session is demonstrably live before deactivation.
     await app.inject({
       method: 'PUT',
@@ -584,7 +584,7 @@ describe('Access administration and service tokens over HTTP (M1.12 first half)'
 
   it('issues, lists and revokes service tokens; the revoked token dies within one request (REQ-API-009)', async () => {
     const adminCookie = await loginToken('admin@acme.test');
-    const projectId = await createProject(adminCookie, 'Web', 'web');
+    const projectId = await createProject(adminCookie, 'Web');
 
     const issued = await app.inject({
       method: 'POST',
@@ -633,7 +633,7 @@ describe('Access administration and service tokens over HTTP (M1.12 first half)'
 
   it('a service token stops working when its owner is deactivated, within one request (REQ-API-009, REQ-SEC-013)', async () => {
     const adminCookie = await loginToken('admin@acme.test');
-    const projectId = await createProject(adminCookie, 'Web', 'web');
+    const projectId = await createProject(adminCookie, 'Web');
     const issued = await app.inject({
       method: 'POST',
       url: '/api/auth/tokens',
